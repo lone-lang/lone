@@ -9,7 +9,8 @@
  *
  **/
 
-long system_call(long n, long _1, long _2, long _3, long _4, long _5, long _6)
+static long
+system_call(long n, long _1, long _2, long _3, long _4, long _5, long _6)
 {
 	register long x8 __asm__("x8") = n;
 	register long x0 __asm__("x0") = _1;
