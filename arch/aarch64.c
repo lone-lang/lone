@@ -61,10 +61,10 @@ __asm__
 "lsl x2, x2, 3"                  "\n"  //       x2 =    x2 * 8
 "add x2, x1, x2"                 "\n"  // envp: x2 =  argv + x2
 "mov x3, x2"                     "\n"  //       x3 =  envp
-".find0:"                        "\n"  //       find0:
+"0:"                             "\n"  //       null finder loop:
 "ldr x8, [x3], 8"                "\n"  //       x8 = *x3
                                        //       x3 =  x3 + 8
-"cbnz x8, .find0"                "\n"  //       goto find0 if x8 != 0
+"cbnz x8, 0b"                    "\n"  //       goto loop if x8 != 0
                                        // auxv: x3
 
 "and sp, x1, -16"                "\n"  // ensure 16 byte alignment
