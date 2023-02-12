@@ -15,6 +15,11 @@ static ssize_t linux_write(int fd, const void *buffer, size_t count)
 	return system_call_3(__NR_write, fd, (long) buffer, count);
 }
 
+struct lone_bytes {
+	size_t count;
+	char *pointer;
+};
+
 #if __BITS_PER_LONG == 64
 typedef __u64 auxiliary_value;
 #elif __BITS_PER_LONG == 32
