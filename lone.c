@@ -4,6 +4,12 @@
 typedef __kernel_size_t size_t;
 typedef __kernel_ssize_t ssize_t;
 
+static void __attribute__((noreturn)) linux_exit(int code)
+{
+	system_call_1(__NR_exit, code);
+	__builtin_unreachable();
+}
+
 #if __BITS_PER_LONG == 64
 typedef __u64 auxiliary_value;
 #elif __BITS_PER_LONG == 32
