@@ -1,6 +1,9 @@
 #include <linux/types.h>
 #include <linux/unistd.h>
 
+typedef __kernel_size_t size_t;
+typedef __kernel_ssize_t ssize_t;
+
 #if __BITS_PER_LONG == 64
 typedef __u64 auxiliary_value;
 #elif __BITS_PER_LONG == 32
