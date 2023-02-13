@@ -31,6 +31,17 @@ struct lone_value {
 	};
 };
 
+static struct lone_value *lone_evaluate(struct lone_value *value)
+{
+	switch (value->type) {
+	case LONE_BYTES:
+		return value;
+		break;
+	default:
+		linux_exit(-1);
+	}
+}
+
 #if __BITS_PER_LONG == 64
 typedef __u64 auxiliary_value;
 #elif __BITS_PER_LONG == 32
