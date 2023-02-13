@@ -68,7 +68,14 @@ struct auxiliary {
 
 long lone(int count, char **arguments, char **environment, struct auxiliary *values)
 {
-	static const char hello[] = "Hello world, from lone\n";
-	system_call(__NR_write, 1, (long) hello, sizeof(hello) - 1, 0, 0, 0);
+	static char hello[] = "Hello world, from lone\n";
+	static struct lone_bytes hello_value = { sizeof(hello) - 1, hello };
+
+	static struct lone_value stack[] = {
+		{ .type = LONE_BYTES, .bytes = &hello_value },
+	};
+
+	lone_print(lone_evaluate(stack));
+
 	return 0;
 }
