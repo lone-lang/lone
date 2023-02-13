@@ -10,6 +10,11 @@ static void __attribute__((noreturn)) linux_exit(int code)
 	__builtin_unreachable();
 }
 
+static ssize_t linux_read(int fd, const void *buffer, size_t count)
+{
+	return system_call_3(__NR_read, fd, (long) buffer, count);
+}
+
 static ssize_t linux_write(int fd, const void *buffer, size_t count)
 {
 	return system_call_3(__NR_write, fd, (long) buffer, count);
