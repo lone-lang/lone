@@ -40,6 +40,9 @@ struct lone_value {
 static struct lone_value *lone_read(char *buffer, size_t size)
 {
 	size = linux_read(0, buffer, size);
+	if (size == 0) {
+		linux_exit(0);
+	}
 
 	static struct lone_bytes static_bytes;
 	static struct lone_value static_value;
