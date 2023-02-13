@@ -24,6 +24,13 @@ struct lone_bytes {
 	char *pointer;
 };
 
+struct lone_value {
+	enum lone_type type;
+	union {
+		struct lone_bytes *bytes;
+	};
+};
+
 #if __BITS_PER_LONG == 64
 typedef __u64 auxiliary_value;
 #elif __BITS_PER_LONG == 32
