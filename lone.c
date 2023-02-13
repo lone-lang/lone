@@ -36,6 +36,22 @@ struct lone_value {
 	};
 };
 
+
+static struct lone_value *lone_read(char *buffer, size_t size)
+{
+	size = linux_read(0, buffer, size);
+
+	static struct lone_bytes static_bytes;
+	static struct lone_value static_value;
+
+	static_bytes.count = size;
+	static_bytes.pointer = buffer;
+	static_value.type = LONE_BYTES;
+	static_value.bytes = &static_bytes;
+
+	return &static_value;
+}
+
 static struct lone_value *lone_evaluate(struct lone_value *value)
 {
 	switch (value->type) {
