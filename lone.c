@@ -15,6 +15,10 @@ static ssize_t linux_write(int fd, const void *buffer, size_t count)
 	return system_call_3(__NR_write, fd, (long) buffer, count);
 }
 
+enum lone_type {
+	LONE_BYTES = 0,
+};
+
 struct lone_bytes {
 	size_t count;
 	char *pointer;
