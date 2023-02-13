@@ -32,7 +32,7 @@ struct lone_bytes {
 struct lone_value {
 	enum lone_type type;
 	union {
-		struct lone_bytes *bytes;
+		struct lone_bytes bytes;
 	};
 };
 
@@ -44,13 +44,10 @@ static struct lone_value *lone_read(char *buffer, size_t size)
 		linux_exit(0);
 	}
 
-	static struct lone_bytes static_bytes;
 	static struct lone_value static_value;
 
-	static_bytes.count = size;
-	static_bytes.pointer = buffer;
 	static_value.type = LONE_BYTES;
-	static_value.bytes = &static_bytes;
+	static_value.bytes = (struct lone_bytes) { size, buffer };
 
 	return &static_value;
 }
@@ -70,7 +67,7 @@ static void lone_print(struct lone_value *value)
 {
 	switch (value->type) {
 	case LONE_BYTES:
-		linux_write(1, value->bytes->pointer, value->bytes->count);
+		linux_write(1, value->bytes.pointer, value->bytes.count);
 		break;
 	default:
 		linux_exit(-2);
