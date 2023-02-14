@@ -65,6 +65,18 @@ static struct lone_value *lone_bytes_create(struct lone_lisp *lone, unsigned cha
 	return value;
 }
 
+static int lone_is_space(char c)
+{
+	switch (c) {
+	case ' ':
+	case '\t':
+	case '\n':
+		return 1;
+	default:
+		return 0;
+	}
+}
+
 static struct lone_value *lone_read(char *buffer, size_t size)
 {
 	size = linux_read(0, buffer, size);
