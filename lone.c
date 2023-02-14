@@ -77,6 +77,29 @@ static int lone_is_space(char c)
 	}
 }
 
+static struct lone_value *lone_parse(struct lone_lisp *lone, struct lone_value *value)
+{
+	unsigned char *input = value->bytes.pointer;
+	size_t size = value->bytes.count;
+
+	for (size_t i = 0; i < size; ++i) {
+		if (lone_is_space(input[i])) {
+			continue;
+		} else if (input[i] == '"') {
+			size_t start = i + 1, end = start;
+			do {
+				if (end >= size) {
+					goto parse_failed;
+				}
+			} while (input[end++] != '"');
+			return lone_bytes_create(lone, input + start, end - start - 1);
+		}
+	}
+
+parse_failed:
+	linux_exit(-1);
+}
+
 static struct lone_value *lone_read_all_input(struct lone_lisp *lone, int fd)
 {
 	#define LONE_BUFFER_SIZE 4096
