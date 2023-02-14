@@ -125,19 +125,9 @@ static struct lone_value *lone_read_all_input(struct lone_lisp *lone, int fd)
 	return lone_bytes_create(lone, input, total_read);
 }
 
-static struct lone_value *lone_read(char *buffer, size_t size)
+static struct lone_value *lone_read(struct lone_lisp *lone, int fd)
 {
-	size = linux_read(0, buffer, size);
-	if (size == 0) {
-		linux_exit(0);
-	}
-
-	static struct lone_value static_value;
-
-	static_value.type = LONE_BYTES;
-	static_value.bytes = (struct lone_bytes) { size, buffer };
-
-	return &static_value;
+	return lone_parse(lone, lone_read_all_input(lone, fd));
 }
 
 static struct lone_value *lone_evaluate(struct lone_value *value)
@@ -177,11 +167,11 @@ struct auxiliary {
 
 long lone(int count, char **arguments, char **environment, struct auxiliary *values)
 {
-	static char buffer[4096];
+	#define LONE_MEMORY_SIZE 65536
+	static unsigned char memory[LONE_MEMORY_SIZE];
+	struct lone_lisp lone = { memory, sizeof(memory), 0 };
 
-	while (1) {
-		lone_print(lone_evaluate(lone_read(buffer, sizeof(buffer))));
-	}
+	lone_print(lone_evaluate(lone_read(&lone, 0)));
 
 	return 0;
 }
