@@ -23,6 +23,7 @@ static ssize_t linux_write(int fd, const void *buffer, size_t count)
 struct lone_lisp {
 	unsigned char *memory;
 	size_t capacity;
+	size_t allocated;
 };
 
 enum lone_type {
@@ -40,6 +41,15 @@ struct lone_value {
 		struct lone_bytes bytes;
 	};
 };
+
+static void *lone_allocate(struct lone_lisp *lone, size_t size)
+{
+	if (lone->allocated + size > lone->capacity)
+		linux_exit(-1);
+	void *allocation = lone->memory + lone->allocated;
+	lone->allocated += size;
+	return allocation;
+}
 
 
 static struct lone_value *lone_read(char *buffer, size_t size)
