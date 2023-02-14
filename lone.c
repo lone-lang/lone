@@ -70,7 +70,7 @@ static void lone_print(struct lone_value *value)
 		linux_write(1, value->bytes.pointer, value->bytes.count);
 		break;
 	default:
-		linux_exit(-2);
+		linux_exit(-1);
 	}
 }
 
