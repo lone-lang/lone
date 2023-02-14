@@ -26,7 +26,7 @@ enum lone_type {
 
 struct lone_bytes {
 	size_t count;
-	char *pointer;
+	unsigned char *pointer;
 };
 
 struct lone_value {
