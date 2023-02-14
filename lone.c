@@ -20,6 +20,11 @@ static ssize_t linux_write(int fd, const void *buffer, size_t count)
 	return system_call_3(__NR_write, fd, (long) buffer, count);
 }
 
+struct lone_lisp {
+	unsigned char *memory;
+	size_t capacity;
+};
+
 enum lone_type {
 	LONE_BYTES = 0,
 };
