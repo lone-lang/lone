@@ -130,7 +130,7 @@ static struct lone_value *lone_read(struct lone_lisp *lone, int fd)
 	return lone_parse(lone, lone_read_all_input(lone, fd));
 }
 
-static struct lone_value *lone_evaluate(struct lone_value *value)
+static struct lone_value *lone_evaluate(struct lone_lisp *lone, struct lone_value *value)
 {
 	switch (value->type) {
 	case LONE_BYTES:
@@ -141,7 +141,7 @@ static struct lone_value *lone_evaluate(struct lone_value *value)
 	}
 }
 
-static void lone_print(struct lone_value *value)
+static void lone_print(struct lone_lisp *lone, struct lone_value *value)
 {
 	switch (value->type) {
 	case LONE_BYTES:
@@ -171,7 +171,7 @@ long lone(int count, char **arguments, char **environment, struct auxiliary *val
 	static unsigned char memory[LONE_MEMORY_SIZE];
 	struct lone_lisp lone = { memory, sizeof(memory), 0 };
 
-	lone_print(lone_evaluate(lone_read(&lone, 0)));
+	lone_print(&lone, lone_evaluate(&lone, lone_read(&lone, 0)));
 
 	return 0;
 }
