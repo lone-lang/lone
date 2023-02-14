@@ -56,6 +56,15 @@ static struct lone_value *lone_value_create(struct lone_lisp *lone)
 	return lone_allocate(lone, sizeof(struct lone_value));
 }
 
+static struct lone_value *lone_bytes_create(struct lone_lisp *lone, unsigned char *pointer, size_t count)
+{
+	struct lone_value *value = lone_value_create(lone);
+	value->type = LONE_BYTES;
+	value->bytes.count = count;
+	value->bytes.pointer = pointer;
+	return value;
+}
+
 static struct lone_value *lone_read(char *buffer, size_t size)
 {
 	size = linux_read(0, buffer, size);
