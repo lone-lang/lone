@@ -51,6 +51,10 @@ static void *lone_allocate(struct lone_lisp *lone, size_t size)
 	return allocation;
 }
 
+static struct lone_value *lone_value_create(struct lone_lisp *lone)
+{
+	return lone_allocate(lone, sizeof(struct lone_value));
+}
 
 static struct lone_value *lone_read(char *buffer, size_t size)
 {
