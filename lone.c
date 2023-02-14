@@ -77,6 +77,17 @@ static int lone_is_space(char c)
 	}
 }
 
+static ssize_t lone_bytes_find(char byte, unsigned char *bytes, size_t size)
+{
+	size_t i = 0;
+
+	do {
+		if (i >= size) { return -1; }
+	} while (bytes[i++] != byte);
+
+	return i;
+}
+
 static struct lone_value *lone_parse(struct lone_lisp *lone, struct lone_value *value)
 {
 	unsigned char *input = value->bytes.pointer;
@@ -85,14 +96,17 @@ static struct lone_value *lone_parse(struct lone_lisp *lone, struct lone_value *
 	for (size_t i = 0; i < size; ++i) {
 		if (lone_is_space(input[i])) {
 			continue;
-		} else if (input[i] == '"') {
-			size_t start = i + 1, end = start;
-			do {
-				if (end >= size) {
-					goto parse_failed;
-				}
-			} while (input[end++] != '"');
-			return lone_bytes_create(lone, input + start, end - start - 1);
+		} else {
+			size_t start = i, remaining = size - start, end = 0;
+			unsigned char *position = input + start;
+			switch (*position) {
+			case '"':
+				end = lone_bytes_find('"', position + 1, remaining - 1);
+				if (end < 0) { goto parse_failed; }
+				return lone_bytes_create(lone, position + 1, end - 1);
+			default:
+				goto parse_failed;
+			}
 		}
 	}
 
