@@ -86,17 +86,6 @@ static struct lone_value *lone_list_create_nil(struct lone_lisp *lone)
 	return lone_list_create(lone, 0, 0);
 }
 
-static ssize_t lone_bytes_find(char byte, unsigned char *bytes, size_t size)
-{
-	size_t i = 0;
-
-	do {
-		if (i >= size) { return -1; }
-	} while (bytes[i++] != byte);
-
-	return i;
-}
-
 static struct lone_value *lone_list_set(struct lone_value *list, struct lone_value *value)
 {
 	return list->list.first = value;
@@ -131,6 +120,17 @@ static int lone_lexer_match_byte(unsigned char byte, unsigned char target)
 	}
 }
 
+static ssize_t lone_lexer_find_byte(char byte, unsigned char *bytes, size_t size)
+{
+	size_t i = 0;
+
+	do {
+		if (i >= size) { return -1; }
+	} while (!lone_lexer_match_byte(bytes[i++], byte));
+
+	return i;
+}
+
 static struct lone_value *lone_lex(struct lone_lisp *lone, struct lone_value *value)
 {
 	struct lone_value *first = lone_list_create_nil(lone), *current = first;
@@ -145,7 +145,7 @@ static struct lone_value *lone_lex(struct lone_lisp *lone, struct lone_value *va
 			unsigned char *position = input + start;
 			switch (*position) {
 			case '"':
-				end = lone_bytes_find('"', position + 1, remaining - 1);
+				end = lone_lexer_find_byte('"', position + 1, remaining - 1);
 				if (end < 0) { goto lex_failed; }
 				lone_list_set(current, lone_bytes_create(lone, position, end + 1));
 				break;
