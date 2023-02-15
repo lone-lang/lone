@@ -28,6 +28,7 @@ struct lone_lisp {
 
 enum lone_type {
 	LONE_BYTES = 0,
+	LONE_LIST = 1,
 };
 
 struct lone_bytes {
@@ -35,10 +36,16 @@ struct lone_bytes {
 	unsigned char *pointer;
 };
 
+struct lone_list {
+	struct lone_value *first;
+	struct lone_value *rest;
+};
+
 struct lone_value {
 	enum lone_type type;
 	union {
 		struct lone_bytes bytes;
+		struct lone_list list;
 	};
 };
 
