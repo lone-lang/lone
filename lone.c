@@ -86,18 +86,6 @@ static struct lone_value *lone_list_create_nil(struct lone_lisp *lone)
 	return lone_list_create(lone, 0, 0);
 }
 
-static int lone_is_space(char c)
-{
-	switch (c) {
-	case ' ':
-	case '\t':
-	case '\n':
-		return 1;
-	default:
-		return 0;
-	}
-}
-
 static ssize_t lone_bytes_find(char byte, unsigned char *bytes, size_t size)
 {
 	size_t i = 0;
@@ -127,6 +115,22 @@ static struct lone_value *lone_list_last(struct lone_value *list)
 	return list;
 }
 
+static int lone_lexer_match_byte(unsigned char byte, unsigned char target)
+{
+	if (target == ' ') {
+		switch (byte) {
+		case ' ':
+		case '\t':
+		case '\n':
+			return 1;
+		default:
+			return 0;
+		}
+	} else {
+		return byte == target;
+	}
+}
+
 static struct lone_value *lone_lex(struct lone_lisp *lone, struct lone_value *value)
 {
 	struct lone_value *first = lone_list_create_nil(lone), *current = first;
@@ -134,7 +138,7 @@ static struct lone_value *lone_lex(struct lone_lisp *lone, struct lone_value *va
 	size_t size = value->bytes.count;
 
 	for (size_t i = 0; i < size; ++i) {
-		if (lone_is_space(input[i])) {
+		if (lone_lexer_match_byte(input[i], ' ')) {
 			continue;
 		} else {
 			size_t start = i, remaining = size - start, end = 0;
