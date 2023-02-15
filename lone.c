@@ -225,7 +225,7 @@ static void lone_print(struct lone_lisp *lone, struct lone_value *value, int fd)
 		lone_print(lone, value->list.rest, fd);
 		break;
 	case LONE_BYTES:
-		linux_write(1, value->bytes.pointer, value->bytes.count);
+		linux_write(fd, value->bytes.pointer, value->bytes.count);
 		break;
 	default:
 		linux_exit(-1);
