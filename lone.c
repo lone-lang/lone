@@ -72,6 +72,15 @@ static struct lone_value *lone_bytes_create(struct lone_lisp *lone, unsigned cha
 	return value;
 }
 
+static struct lone_value *lone_list_create(struct lone_lisp *lone, struct lone_value *first, struct lone_value *rest)
+{
+	struct lone_value *value = lone_value_create(lone);
+	value->type = LONE_LIST;
+	value->list.first = first;
+	value->list.rest = rest;
+	return value;
+}
+
 static int lone_is_space(char c)
 {
 	switch (c) {
