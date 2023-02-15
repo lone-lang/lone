@@ -81,6 +81,11 @@ static struct lone_value *lone_list_create(struct lone_lisp *lone, struct lone_v
 	return value;
 }
 
+static struct lone_value *lone_list_create_nil(struct lone_lisp *lone)
+{
+	return lone_list_create(lone, 0, 0);
+}
+
 static int lone_is_space(char c)
 {
 	switch (c) {
