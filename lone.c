@@ -169,6 +169,7 @@ static struct lone_value *lone_evaluate(struct lone_lisp *lone, struct lone_valu
 {
 	switch (value->type) {
 	case LONE_BYTES:
+	case LONE_LIST:
 		return value;
 		break;
 	default:
