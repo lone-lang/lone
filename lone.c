@@ -109,6 +109,16 @@ static ssize_t lone_bytes_find(char byte, unsigned char *bytes, size_t size)
 	return i;
 }
 
+static struct lone_value *lone_list_set(struct lone_value *list, struct lone_value *value)
+{
+	return list->list.first = value;
+}
+
+static struct lone_value *lone_list_append(struct lone_value *list, struct lone_value *rest)
+{
+	return list->list.rest = rest;
+}
+
 static struct lone_value *lone_parse(struct lone_lisp *lone, struct lone_value *value)
 {
 	unsigned char *input = value->bytes.pointer;
