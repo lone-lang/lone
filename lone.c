@@ -179,7 +179,14 @@ static struct lone_value *lone_evaluate(struct lone_lisp *lone, struct lone_valu
 
 static void lone_print(struct lone_lisp *lone, struct lone_value *value)
 {
+	if (value == 0)
+		return;
+
 	switch (value->type) {
+	case LONE_LIST:
+		lone_print(lone, value->list.first);
+		lone_print(lone, value->list.rest);
+		break;
 	case LONE_BYTES:
 		linux_write(1, value->bytes.pointer, value->bytes.count);
 		break;
