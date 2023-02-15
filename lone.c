@@ -146,14 +146,8 @@ static struct lone_value *lone_lex(struct lone_lisp *lone, struct lone_value *va
 				lone_list_set(current, lone_bytes_create(lone, position, end + 1));
 				break;
 			case '(':
+			case ')':
 				lone_list_set(current, lone_bytes_create(lone, position, 1));
-				end = lone_bytes_find(')', position + 1, remaining - 1);
-				if (end < 0) { goto lex_failed; }
-				struct lone_value *middle = lone_bytes_create(lone, position + 1, end - 1);
-				middle = lone_lex(lone, middle);
-				current = lone_list_append(current, middle);
-				current = lone_list_last(current);
-				lone_list_set(current, lone_bytes_create(lone, position + end, 1));
 				break;
 			default:
 				goto lex_failed;
