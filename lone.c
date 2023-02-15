@@ -119,6 +119,14 @@ static struct lone_value *lone_list_append(struct lone_value *list, struct lone_
 	return list->list.rest = rest;
 }
 
+static struct lone_value *lone_list_last(struct lone_value *list)
+{
+	while (list->list.rest != 0) {
+		list = list->list.rest;
+	}
+	return list;
+}
+
 static struct lone_value *lone_parse(struct lone_lisp *lone, struct lone_value *value)
 {
 	unsigned char *input = value->bytes.pointer;
