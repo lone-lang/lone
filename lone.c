@@ -127,8 +127,9 @@ static struct lone_value *lone_list_last(struct lone_value *list)
 	return list;
 }
 
-static struct lone_value *lone_parse(struct lone_lisp *lone, struct lone_value *value)
+static struct lone_value *lone_lex(struct lone_lisp *lone, struct lone_value *value)
 {
+	struct lone_value *first = lone_list_create_nil(lone), *current = first;
 	unsigned char *input = value->bytes.pointer;
 	size_t size = value->bytes.count;
 
@@ -141,16 +142,26 @@ static struct lone_value *lone_parse(struct lone_lisp *lone, struct lone_value *
 			switch (*position) {
 			case '"':
 				end = lone_bytes_find('"', position + 1, remaining - 1);
-				if (end < 0) { goto parse_failed; }
-				return lone_bytes_create(lone, position + 1, end - 1);
+				if (end < 0) { goto lex_failed; }
+				lone_list_set(current, lone_bytes_create(lone, position, end + 1));
+				break;
 			default:
-				goto parse_failed;
+				goto lex_failed;
 			}
+			current = lone_list_append(current, lone_list_create_nil(lone));
+			i += end;
 		}
 	}
 
-parse_failed:
+	return first;
+
+lex_failed:
 	linux_exit(-1);
+}
+
+static struct lone_value *lone_parse(struct lone_lisp *lone, struct lone_value *value)
+{
+	return lone_lex(lone, value);
 }
 
 static struct lone_value *lone_read_all_input(struct lone_lisp *lone, int fd)
