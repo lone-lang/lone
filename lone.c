@@ -159,6 +159,7 @@ static struct lone_value *lone_list_last(struct lone_value *list)
    │        ◦ If found digit then look for more digits and tokenize all     │
    │        ◦ If found " then find the next " and tokenize it all           │
    │        ◦ If found ( or ) just tokenize them as is                      │
+   │        ◦ Tokenize everything else unmodified as a symbol               │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
 static int lone_lexer_match_byte(unsigned char byte, unsigned char target)
@@ -218,7 +219,8 @@ static struct lone_value *lone_lex(struct lone_lisp *lone, struct lone_value *va
 				lone_list_set(current, lone_bytes_create(lone, position, 1));
 				break;
 			default:
-				goto lex_failed;
+				while (end < remaining && !lone_lexer_match_byte(position[++end], ' '));
+				lone_list_set(current, lone_bytes_create(lone, position, end));
 			}
 			current = lone_list_append(current, lone_list_create_nil(lone));
 			i += end;
