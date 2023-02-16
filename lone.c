@@ -156,6 +156,7 @@ static struct lone_value *lone_list_last(struct lone_value *list)
    │    The lexical analysis algorithm can be broken down as follows:       │
    │                                                                        │
    │        ◦ Skip all whitespace until it finds something                  │
+   │        ◦ If found sign before digits take note and process the digits  │
    │        ◦ If found digit then look for more digits and tokenize all     │
    │        ◦ If found " then find the next " and tokenize it all           │
    │        ◦ If found ( or ) just tokenize them as is                      │
@@ -203,10 +204,22 @@ static struct lone_value *lone_lex(struct lone_lisp *lone, struct lone_value *va
 		} else {
 			size_t start = i, remaining = size - start, end = 0;
 			unsigned char *position = input + start;
+
+			int is_signed_number =
+				   ((*position == '+') || (*position == '-'))
+				&& (start < size - 1) // is this the last char?
+				&& lone_lexer_match_byte(position[1], '1');
+			if (is_signed_number) {
+				// make sure we tokenize as a number
+				++position;
+			}
+
 			switch (*position) {
 			case '0': case '1': case '2': case '3': case '4':
 			case '5': case '6': case '7': case '8': case '9':
 				while (end < remaining && lone_lexer_match_byte(position[++end], '1'));
+				// include the sign in the token if present
+				if (is_signed_number) { --position; ++end; }
 				lone_list_set(current, lone_bytes_create(lone, position, end));
 				break;
 			case '"':
