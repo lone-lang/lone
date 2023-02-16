@@ -1,11 +1,23 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later */
 
+/* ╭─────────────────────────────┨ LONE LISP ┠──────────────────────────────╮
+   │                                                                        │
+   │                       The standalone Linux Lisp                        │
+   │                                                                        │
+   ╰────────────────────────────────────────────────────────────────────────╯ */
 #include <linux/types.h>
 #include <linux/unistd.h>
 
 typedef __kernel_size_t size_t;
 typedef __kernel_ssize_t ssize_t;
 
+/* ╭────────────────────────────────────────────────────────────────────────╮
+   │                                                                        │
+   │    Definitions for essential Linux system calls used by lone.          │
+   │    The exit system call is adorned with compiler annotations           │
+   │    for better code generation.                                         │
+   │                                                                        │
+   ╰────────────────────────────────────────────────────────────────────────╯ */
 static void __attribute__((noreturn)) linux_exit(int code)
 {
 	system_call_1(__NR_exit, code);
@@ -22,6 +34,21 @@ static ssize_t linux_write(int fd, const void *buffer, size_t count)
 	return system_call_3(__NR_write, fd, (long) buffer, count);
 }
 
+/* ╭──────────────────────────┨ LONE LISP TYPES ┠───────────────────────────╮
+   │                                                                        │
+   │    Lone is designed to work without any dependencies except Linux,     │
+   │    so it does not make use of even the system's C library.             │
+   │    In order to bootstrap itself in such harsh conditions,              │
+   │    it must be given some memory to work with.                          │
+   │    The lone_linux structure holds that memory.                         │
+   │                                                                        │
+   │    Lone implements dynamic data types as a tagged union.               │
+   │    Supported types are:                                                │
+   │                                                                        │
+   │        ◦ Bytes    the binary data and low level string type            │
+   │        ◦ List     the linked list and tree type                        │
+   │                                                                        │
+   ╰────────────────────────────────────────────────────────────────────────╯ */
 struct lone_lisp {
 	unsigned char *memory;
 	size_t capacity;
@@ -51,6 +78,11 @@ struct lone_value {
 	};
 };
 
+/* ╭────────────────────┨ LONE LISP MEMORY ALLOCATION ┠─────────────────────╮
+   │                                                                        │
+   │    Lone will allocate from its internal memory at first.               │
+   │                                                                        │
+   ╰────────────────────────────────────────────────────────────────────────╯ */
 static void *lone_allocate(struct lone_lisp *lone, size_t size)
 {
 	if (lone->allocated + size > lone->capacity)
@@ -106,6 +138,28 @@ static struct lone_value *lone_list_last(struct lone_value *list)
 	return list;
 }
 
+/* ╭──────────────────────────┨ LONE LISP LEXER ┠───────────────────────────╮
+   │                                                                        │
+   │    The lexer or tokenizer transforms a linear stream of characters     │
+   │    into a linear stream of tokens suitable for parser consumption.     │
+   │    This gets rid of insignificant whitespace and reduces the size      │
+   │    of the parser's input significantly.                                │
+   │                                                                        │
+   │    The lone lisp lexer receives as input a single lone bytes value     │
+   │    containing the full source code to be processed and it outputs      │
+   │    a lone list of each lisp token found in the input. For example:     │
+   │                                                                        │
+   │        lexer ← lone_bytes = [ ("abc" ("zxc") ]                         │
+   │        lexer → lone_list  = { [(] → ["abc"] → [(] → ["zxc"] → [)] }    │
+   │                                                                        │
+   │    Note that parentheses are not matched at this stage.                │
+   │    The lexical analysis algorithm can be broken down as follows:       │
+   │                                                                        │
+   │        ◦ Skip all whitespace until it finds something                  │
+   │        ◦ If found " then find the next " and tokenize it all           │
+   │        ◦ If found ( or ) just tokenize them as is                      │
+   │                                                                        │
+   ╰────────────────────────────────────────────────────────────────────────╯ */
 static int lone_lexer_match_byte(unsigned char byte, unsigned char target)
 {
 	if (target == ' ') {
@@ -234,6 +288,18 @@ static void lone_print(struct lone_lisp *lone, struct lone_value *value, int fd)
 	}
 }
 
+/* ╭───────────────────────┨ LONE LISP ENTRY POINT ┠────────────────────────╮
+   │                                                                        │
+   │    Linux places argument, environment and auxiliary value arrays       │
+   │    on the stack before jumping to the entry point of the process.      │
+   │    Architecture-specific code collects this data and passes it to      │
+   │    the lone function which begins execution of the lisp code.          │
+   │                                                                        │
+   │    During early initialization, lone has no dynamic memory             │
+   │    allocation capabilities and so this function statically             │
+   │    allocates 64 KiB of memory for the early bootstrapping process.     │
+   │                                                                        │
+   ╰────────────────────────────────────────────────────────────────────────╯ */
 #if __BITS_PER_LONG == 64
 typedef __u64 auxiliary_value;
 #elif __BITS_PER_LONG == 32
