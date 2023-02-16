@@ -218,6 +218,7 @@ static struct lone_value *lone_lex(struct lone_lisp *lone, struct lone_value *va
 			case '0': case '1': case '2': case '3': case '4':
 			case '5': case '6': case '7': case '8': case '9':
 				while ((end + 1) < remaining && lone_lexer_match_byte(position[++end], '1'));
+				if (!lone_lexer_match_byte(position[end], ' ')) { goto lex_failed; }
 				// include the sign in the token if present
 				if (is_signed_number) { --position; ++end; }
 				lone_list_set(current, lone_bytes_create(lone, position, end));
