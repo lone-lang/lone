@@ -264,6 +264,8 @@ static int lone_lexer_consume_bytes(struct lone_lisp *lone, struct lone_lexer *l
 	++end;
 	lone_lexer_consume(lexer);
 
+	if ((current = lone_lexer_peek(lexer)) && *current != ')' && !lone_lexer_match_byte(*current, ' ')) { return 1; }
+
 	lone_list_set(list, lone_bytes_create(lone, start, end));
 	return 0;
 }
