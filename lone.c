@@ -137,22 +137,11 @@ static struct lone_value *lone_list_append(struct lone_value *list, struct lone_
    │    This gets rid of insignificant whitespace and reduces the size      │
    │    of the parser's input significantly.                                │
    │                                                                        │
-   │    The lone lisp lexer receives as input a single lone bytes value     │
-   │    containing the full source code to be processed and it outputs      │
-   │    a lone list of each lisp token found in the input. For example:     │
+   │    It consists of an input buffer, its current position in it          │
+   │    as well as two functions:                                           │
    │                                                                        │
-   │        lexer ← lone_bytes = [ ("abc" ("zxc") ]                         │
-   │        lexer → lone_list  = { [(] → ["abc"] → [(] → ["zxc"] → [)] }    │
-   │                                                                        │
-   │    Note that parentheses are not matched at this stage.                │
-   │    The lexical analysis algorithm can be broken down as follows:       │
-   │                                                                        │
-   │        ◦ Skip all whitespace until it finds something                  │
-   │        ◦ If found sign before digits take note and process the digits  │
-   │        ◦ If found digit then look for more digits and tokenize all     │
-   │        ◦ If found " then find the next " and tokenize it all           │
-   │        ◦ If found ( or ) just tokenize them as is                      │
-   │        ◦ Tokenize everything else unmodified as a symbol               │
+   │        ◦ peek(k) which returns the character at i+k                    │
+   │        ◦ consume(k) which advances i by k positions                    │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
 struct lone_lexer {
@@ -160,6 +149,13 @@ struct lone_lexer {
 	size_t position;
 };
 
+/* ╭────────────────────────────────────────────────────────────────────────╮
+   │                                                                        │
+   │    The peek(k) function returns the k-th element from the input        │
+   │    starting from the current input position, with peek(0) being        │
+   │    the current character and peek(k) being look ahead for k > 1.       │
+   │                                                                        │
+   ╰────────────────────────────────────────────────────────────────────────╯ */
 static unsigned char *lone_lexer_peek_k(struct lone_lexer *lexer, size_t k)
 {
 	if (lexer->position + k > lexer->input.count)
@@ -172,6 +168,12 @@ static unsigned char *lone_lexer_peek(struct lone_lexer *lexer)
 	return lone_lexer_peek_k(lexer, 0);
 }
 
+/* ╭────────────────────────────────────────────────────────────────────────╮
+   │                                                                        │
+   │    The consume(k) function advances the input position by k.           │
+   │    This progresses through the input, consuming it.                    │
+   │                                                                        │
+   ╰────────────────────────────────────────────────────────────────────────╯ */
 static void lone_lexer_consume_k(struct lone_lexer *lexer, size_t k)
 {
 	lexer->position += k;
@@ -200,6 +202,13 @@ static int lone_lexer_match_byte(unsigned char byte, unsigned char target)
 	}
 }
 
+/* ╭────────────────────────────────────────────────────────────────────────╮
+   │                                                                        │
+   │    Analyzes a number and adds it to the tokens list if valid.          │
+   │                                                                        │
+   │    ([+-]?[0-9]+)[) \n\t]                                               │
+   │                                                                        │
+   ╰────────────────────────────────────────────────────────────────────────╯ */
 static int lone_lexer_consume_number(struct lone_lisp *lone, struct lone_lexer *lexer, struct lone_value *list)
 {
 	unsigned char *current, *start = lone_lexer_peek(lexer);
@@ -232,6 +241,13 @@ static int lone_lexer_consume_number(struct lone_lisp *lone, struct lone_lexer *
 
 }
 
+/* ╭────────────────────────────────────────────────────────────────────────╮
+   │                                                                        │
+   │    Analyzes a symbol and adds it to the tokens list if valid.          │
+   │                                                                        │
+   │    (.*)[) \n\t]                                                        │
+   │                                                                        │
+   ╰────────────────────────────────────────────────────────────────────────╯ */
 static int lone_lexer_consume_symbol(struct lone_lisp *lone, struct lone_lexer *lexer, struct lone_value *list)
 {
 	unsigned char *current, *start = lone_lexer_peek(lexer);
@@ -247,6 +263,13 @@ static int lone_lexer_consume_symbol(struct lone_lisp *lone, struct lone_lexer *
 	return 0;
 }
 
+/* ╭────────────────────────────────────────────────────────────────────────╮
+   │                                                                        │
+   │    Analyzes a string and adds it to the tokens list if valid.          │
+   │                                                                        │
+   │    (".*")[) \n\t]                                                      │
+   │                                                                        │
+   ╰────────────────────────────────────────────────────────────────────────╯ */
 static int lone_lexer_consume_bytes(struct lone_lisp *lone, struct lone_lexer *lexer, struct lone_value *list)
 {
 	unsigned char *current, *start = lone_lexer_peek(lexer);
@@ -270,6 +293,14 @@ static int lone_lexer_consume_bytes(struct lone_lisp *lone, struct lone_lexer *l
 	return 0;
 }
 
+/* ╭────────────────────────────────────────────────────────────────────────╮
+   │                                                                        │
+   │    Analyzes opening and closing parentheses                            │
+   │    and adds them to the tokens list if valid.                          │
+   │                                                                        │
+   │    ([()])                                                              │
+   │                                                                        │
+   ╰────────────────────────────────────────────────────────────────────────╯ */
 static int lone_lexer_consume_parenthesis(struct lone_lisp *lone, struct lone_lexer *lexer, struct lone_value *list)
 {
 	unsigned char *parenthesis = lone_lexer_peek(lexer);
@@ -286,6 +317,27 @@ static int lone_lexer_consume_parenthesis(struct lone_lisp *lone, struct lone_le
 	return 0;
 }
 
+/* ╭────────────────────────────────────────────────────────────────────────╮
+   │                                                                        │
+   │    The lone lisp lexer receives as input a single lone bytes value     │
+   │    containing the full source code to be processed and it outputs      │
+   │    a lone list of each lisp token found in the input. For example:     │
+   │                                                                        │
+   │        lex ← lone_bytes = [ (abc ("zxc") ]                             │
+   │        lex → lone_list  = { [(] → [abc] → [(] → ["zxc"] → [)] }        │
+   │                                                                        │
+   │    Note that parentheses are not matched at this stage.                │
+   │    The lexical analysis algorithm can be summarized as follows:        │
+   │                                                                        │
+   │        ◦ Skip all whitespace until it finds something                  │
+   │        ◦ Fail if tokens aren't separated by spaces or ) at the end     │
+   │        ◦ If found sign before digits tokenize signed number            │
+   │        ◦ If found digit then look for more digits and tokenize         │
+   │        ◦ If found " then find the next " and tokenize                  │
+   │        ◦ If found ( or ) just tokenize them as is without matching     │
+   │        ◦ Tokenize everything else unmodified as a symbol               │
+   │                                                                        │
+   ╰────────────────────────────────────────────────────────────────────────╯ */
 static struct lone_value *lone_lex(struct lone_lisp *lone, struct lone_value *value)
 {
 	struct lone_value *first = lone_list_create_nil(lone), *current = first;
