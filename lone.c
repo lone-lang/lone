@@ -219,6 +219,90 @@ static ssize_t lone_lexer_find_byte(char byte, unsigned char *bytes, size_t size
 	return i;
 }
 
+static int lone_lexer_consume_number(struct lone_lisp *lone, struct lone_lexer *lexer, struct lone_value *list)
+{
+	unsigned char *current, *start = lone_lexer_peek(lexer);
+	if (!start) { return 1; }
+	size_t end = 0;
+
+	switch (*start) {
+	case '+': case '-':
+		lone_lexer_consume(lexer);
+		++end;
+		break;
+	default:
+		break;
+	}
+
+	if ((current = lone_lexer_peek(lexer)) && lone_lexer_match_byte(*current, '1')) {
+		lone_lexer_consume(lexer);
+		++end;
+	} else { return 1; }
+
+	while ((current = lone_lexer_peek(lexer)) && lone_lexer_match_byte(*current, '1')) {
+		lone_lexer_consume(lexer);
+		++end;
+	}
+
+	if (current && *current != ')' && !lone_lexer_match_byte(*current, ' ')) { return 1; }
+
+	lone_list_set(list, lone_bytes_create(lone, start, end));
+	return 0;
+
+}
+
+static int lone_lexer_consume_symbol(struct lone_lisp *lone, struct lone_lexer *lexer, struct lone_value *list)
+{
+	unsigned char *current, *start = lone_lexer_peek(lexer);
+	if (!start) { return 1; }
+	size_t end = 0;
+
+	while ((current = lone_lexer_peek(lexer)) && *current != ')' && !lone_lexer_match_byte(*current, ' ')) {
+		lone_lexer_consume(lexer);
+		++end;
+	}
+
+	lone_list_set(list, lone_bytes_create(lone, start, end));
+	return 0;
+}
+
+static int lone_lexer_consume_bytes(struct lone_lisp *lone, struct lone_lexer *lexer, struct lone_value *list)
+{
+	unsigned char *current, *start = lone_lexer_peek(lexer);
+	if (!start || *start != '"') { return 1; }
+
+	size_t end = 1;
+	lone_lexer_consume(lexer);
+
+	while ((current = lone_lexer_peek(lexer)) && *current != '"') {
+		lone_lexer_consume(lexer);
+		++end;
+	}
+
+	// include "
+	++end;
+	lone_lexer_consume(lexer);
+
+	lone_list_set(list, lone_bytes_create(lone, start, end));
+	return 0;
+}
+
+static int lone_lexer_consume_parenthesis(struct lone_lisp *lone, struct lone_lexer *lexer, struct lone_value *list)
+{
+	unsigned char *parenthesis = lone_lexer_peek(lexer);
+	if (!parenthesis) { return 1; }
+
+	switch (*parenthesis) {
+	case '(': case ')':
+		lone_list_set(list, lone_bytes_create(lone, parenthesis, 1));
+		lone_lexer_consume(lexer);
+		break;
+	default: return 1;
+	}
+
+	return 0;
+}
+
 static struct lone_value *lone_lex(struct lone_lisp *lone, struct lone_value *value)
 {
 	struct lone_value *first = lone_list_create_nil(lone), *current = first;
