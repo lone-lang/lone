@@ -130,14 +130,6 @@ static struct lone_value *lone_list_append(struct lone_value *list, struct lone_
 	return list->list.rest = rest;
 }
 
-static struct lone_value *lone_list_last(struct lone_value *list)
-{
-	while (list->list.rest != 0) {
-		list = list->list.rest;
-	}
-	return list;
-}
-
 /* ╭──────────────────────────┨ LONE LISP LEXER ┠───────────────────────────╮
    │                                                                        │
    │    The lexer or tokenizer transforms a linear stream of characters     │
@@ -206,17 +198,6 @@ static int lone_lexer_match_byte(unsigned char byte, unsigned char target)
 	} else {
 		return byte == target;
 	}
-}
-
-static ssize_t lone_lexer_find_byte(char byte, unsigned char *bytes, size_t size)
-{
-	size_t i = 0;
-
-	do {
-		if (i >= size) { return -1; }
-	} while (!lone_lexer_match_byte(bytes[i++], byte));
-
-	return i;
 }
 
 static int lone_lexer_consume_number(struct lone_lisp *lone, struct lone_lexer *lexer, struct lone_value *list)
