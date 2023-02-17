@@ -306,49 +306,46 @@ static int lone_lexer_consume_parenthesis(struct lone_lisp *lone, struct lone_le
 static struct lone_value *lone_lex(struct lone_lisp *lone, struct lone_value *value)
 {
 	struct lone_value *first = lone_list_create_nil(lone), *current = first;
-	unsigned char *input = value->bytes.pointer;
-	size_t size = value->bytes.count;
+	struct lone_lexer lexer = { value->bytes, 0 };
+	unsigned char *c;
 
-	for (size_t i = 0; i < size; ++i) {
-		if (lone_lexer_match_byte(input[i], ' ')) {
+	while ((c = lone_lexer_peek(&lexer))) {
+		if (lone_lexer_match_byte(*c, ' ')) {
+			lone_lexer_consume(&lexer);
 			continue;
 		} else {
-			size_t start = i, remaining = size - start, end = 0;
-			unsigned char *position = input + start;
+			unsigned char *c1;
+			int failed = 1;
 
-			int is_signed_number =
-				   ((*position == '+') || (*position == '-'))
-				&& (start < size - 1) // is this the last char?
-				&& lone_lexer_match_byte(position[1], '1');
-			if (is_signed_number) {
-				// make sure we tokenize as a number
-				++position;
-			}
-
-			switch (*position) {
+			switch (*c) {
+			case '+': case '-':
+				if ((c1 = lone_lexer_peek_k(&lexer, 1)) && lone_lexer_match_byte(*c1, '1')) {
+					failed = lone_lexer_consume_number(lone, &lexer, current);
+				} else {
+					failed = lone_lexer_consume_symbol(lone, &lexer, current);
+				}
+				break;
 			case '0': case '1': case '2': case '3': case '4':
 			case '5': case '6': case '7': case '8': case '9':
-				while ((end + 1) < remaining && lone_lexer_match_byte(position[++end], '1'));
-				if (!lone_lexer_match_byte(position[end], ' ')) { goto lex_failed; }
-				// include the sign in the token if present
-				if (is_signed_number) { --position; ++end; }
-				lone_list_set(current, lone_bytes_create(lone, position, end));
+				failed = lone_lexer_consume_number(lone, &lexer, current);
 				break;
 			case '"':
-				end = lone_lexer_find_byte('"', position + 1, remaining - 1);
-				if (end < 0) { goto lex_failed; }
-				lone_list_set(current, lone_bytes_create(lone, position, end + 1));
+				failed = lone_lexer_consume_bytes(lone, &lexer, current);
 				break;
 			case '(':
 			case ')':
-				lone_list_set(current, lone_bytes_create(lone, position, 1));
+				failed = lone_lexer_consume_parenthesis(lone, &lexer, current);
 				break;
 			default:
-				while ((end + 1) < remaining && !lone_lexer_match_byte(position[++end], ' '));
-				lone_list_set(current, lone_bytes_create(lone, position, end));
+				failed = lone_lexer_consume_symbol(lone, &lexer, current);
+				break;
 			}
+
+			if (failed) {
+				goto lex_failed;
+			}
+
 			current = lone_list_append(current, lone_list_create_nil(lone));
-			i += end;
 		}
 	}
 
