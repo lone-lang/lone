@@ -163,6 +163,33 @@ static struct lone_value *lone_list_last(struct lone_value *list)
    │        ◦ Tokenize everything else unmodified as a symbol               │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
+struct lone_lexer {
+	struct lone_bytes input;
+	size_t position;
+};
+
+static unsigned char *lone_lexer_peek_k(struct lone_lexer *lexer, size_t k)
+{
+	if (lexer->position + k > lexer->input.count)
+		return 0;
+	return lexer->input.pointer + lexer->position + k;
+}
+
+static unsigned char *lone_lexer_peek(struct lone_lexer *lexer)
+{
+	return lone_lexer_peek_k(lexer, 0);
+}
+
+static void lone_lexer_consume_k(struct lone_lexer *lexer, size_t k)
+{
+	lexer->position += k;
+}
+
+static void lone_lexer_consume(struct lone_lexer *lexer)
+{
+	lone_lexer_consume_k(lexer, 1);
+}
+
 static int lone_lexer_match_byte(unsigned char byte, unsigned char target)
 {
 	if (target == ' ') {
