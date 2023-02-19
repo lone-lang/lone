@@ -135,6 +135,13 @@ static struct lone_value *lone_list_append(struct lone_value *list, struct lone_
 	return list->list.rest = rest;
 }
 
+static struct lone_value *lone_list_pop(struct lone_value **list)
+{
+	struct lone_value *value = (*list)->list.first;
+	*list = (*list)->list.rest;
+	return value;
+}
+
 /* ╭──────────────────────────┨ LONE LISP LEXER ┠───────────────────────────╮
    │                                                                        │
    │    The lexer or tokenizer transforms a linear stream of characters     │
