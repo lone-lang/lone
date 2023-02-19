@@ -656,17 +656,9 @@ static void lone_print(struct lone_lisp *lone, struct lone_value *value, int fd)
    │    allocates 64 KiB of memory for the early bootstrapping process.     │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
-#if __BITS_PER_LONG == 64
-typedef __u64 auxiliary_value;
-#elif __BITS_PER_LONG == 32
-typedef __u32 auxiliary_value;
-#else
-#error "Unsupported architecture"
-#endif
-
 struct auxiliary {
-	auxiliary_value type;
-	auxiliary_value value;
+	long type;
+	long value;
 };
 
 long lone(int argc, unsigned char **argv, unsigned char **envp, struct auxiliary *auxval)
