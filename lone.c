@@ -495,9 +495,7 @@ static struct lone_value *lone_parse_text(struct lone_lisp *lone, struct lone_va
 
 static struct lone_value *lone_parse_symbol(struct lone_lisp *lone, struct lone_value *token)
 {
-	struct lone_value *symbol = lone_bytes_create(lone, token->bytes.pointer, token->bytes.count);
-	symbol->type = LONE_SYMBOL;
-	return symbol;
+	return lone_symbol_create(lone, token->bytes.pointer, token->bytes.count);
 }
 
 static struct lone_value *lone_parse_atom(struct lone_lisp *lone, struct lone_value *token)
