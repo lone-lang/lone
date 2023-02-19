@@ -704,6 +704,10 @@ static struct lone_value *lone_create_auxiliary_value_pair(struct lone_lisp *lon
 		key = lone_symbol_create_from_c_string(lone, "page-size");
 		value = lone_integer_create(lone, auxiliary_value->value);
 		break;
+	case AT_MINSIGSTKSZ:
+		key = lone_symbol_create_from_c_string(lone, "minimum-signal-delivery-stack-size");
+		value = lone_integer_create(lone, auxiliary_value->value);
+		break;
 	case AT_RANDOM:
 		key = lone_symbol_create_from_c_string(lone, "random");
 		value = lone_bytes_create(lone, (unsigned char *) auxiliary_value->value, 16);
