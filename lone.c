@@ -676,11 +676,17 @@ long lone(int argc, unsigned char **argv, unsigned char **envp, struct auxiliary
 	struct lone_lisp lone = { memory, sizeof(memory), 0 };
 
 	struct lone_value *arguments = lone_list_create_nil(&lone);
+	struct lone_value *environment = lone_list_create_nil(&lone);
 	struct lone_value *head;
 	int i;
 
 	for (i = 0, head = arguments; i < argc; ++i) {
 		lone_list_set(head, lone_text_create_from_c_string(&lone, argv[i]));
+		head = lone_list_append(head, lone_list_create_nil(&lone));
+	}
+
+	for (i = 0, head = environment; envp[i]; ++i) {
+		lone_list_set(head, lone_text_create_from_c_string(&lone, envp[i]));
 		head = lone_list_append(head, lone_list_create_nil(&lone));
 	}
 
