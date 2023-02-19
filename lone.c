@@ -492,8 +492,6 @@ static struct lone_value *lone_evaluate(struct lone_lisp *lone, struct lone_valu
 	case LONE_LIST:
 		return value;
 		break;
-	default:
-		linux_exit(-1);
 	}
 }
 
@@ -517,8 +515,6 @@ static void lone_print(struct lone_lisp *lone, struct lone_value *value, int fd)
 	case LONE_BYTES:
 		linux_write(fd, value->bytes.pointer, value->bytes.count);
 		break;
-	default:
-		linux_exit(-1);
 	}
 }
 
