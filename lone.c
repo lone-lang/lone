@@ -139,6 +139,14 @@ static struct lone_value *lone_text_create(struct lone_lisp *lone, unsigned char
 	return value;
 }
 
+static size_t lone_c_string_length(unsigned char *c_string)
+{
+	unsigned char *end = c_string;
+	if (!end) { return 0; }
+	while (*end) { ++end; }
+	return end - c_string;
+}
+
 static int lone_is_nil(struct lone_value *value)
 {
 	return value->type == LONE_LIST && value->list.first == 0 && value->list.rest == 0;
