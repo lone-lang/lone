@@ -132,6 +132,13 @@ static struct lone_value *lone_integer_create(struct lone_lisp *lone, long integ
 	return value;
 }
 
+static struct lone_value *lone_text_create(struct lone_lisp *lone, unsigned char *text, size_t length)
+{
+	struct lone_value *value = lone_bytes_create(lone, text, length);
+	value->type = LONE_TEXT;
+	return value;
+}
+
 static int lone_is_nil(struct lone_value *value)
 {
 	return value->type == LONE_LIST && value->list.first == 0 && value->list.rest == 0;
