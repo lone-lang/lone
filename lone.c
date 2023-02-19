@@ -684,6 +684,14 @@ static struct lone_value *lone_create_auxiliary_value_pair(struct lone_lisp *lon
 		key = lone_symbol_create_from_c_string(lone, "platform");
 		value = lone_text_create_from_c_string(lone, (unsigned char *) auxiliary_value->value);
 		break;
+	case AT_HWCAP:
+		key = lone_symbol_create_from_c_string(lone, "hardware-capabilities");
+		value = lone_integer_create(lone, auxiliary_value->value);
+		break;
+	case AT_HWCAP2:
+		key = lone_symbol_create_from_c_string(lone, "hardware-capabilities-2");
+		value = lone_integer_create(lone, auxiliary_value->value);
+		break;
 	case AT_EXECFN:
 		key = lone_symbol_create_from_c_string(lone, "executable-file-name");
 		value = lone_text_create_from_c_string(lone, (unsigned char *) auxiliary_value->value);
