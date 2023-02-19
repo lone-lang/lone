@@ -675,6 +675,15 @@ long lone(int argc, unsigned char **argv, unsigned char **envp, struct auxiliary
 	static unsigned char memory[LONE_MEMORY_SIZE];
 	struct lone_lisp lone = { memory, sizeof(memory), 0 };
 
+	struct lone_value *arguments = lone_list_create_nil(&lone);
+	struct lone_value *head;
+	int i;
+
+	for (i = 0, head = arguments; i < argc; ++i) {
+		lone_list_set(head, lone_text_create_from_c_string(&lone, argv[i]));
+		head = lone_list_append(head, lone_list_create_nil(&lone));
+	}
+
 	lone_print(&lone, lone_evaluate(&lone, lone_read(&lone, 0)), 1);
 	linux_write(1, "\n", 1);
 
