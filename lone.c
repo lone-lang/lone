@@ -684,6 +684,10 @@ long lone(int argc, unsigned char **argv, unsigned char **envp, struct auxiliary
 		head = lone_list_append(head, lone_list_create_nil(&lone));
 	}
 
+	linux_write(1, "Arguments: ", sizeof("Arguments: ") - 1);
+	lone_print(&lone, arguments, 1);
+	linux_write(1, "\n", 1);
+
 	lone_print(&lone, lone_evaluate(&lone, lone_read(&lone, 0)), 1);
 	linux_write(1, "\n", 1);
 
