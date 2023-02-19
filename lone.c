@@ -436,9 +436,34 @@ static struct lone_value *lone_parse_list(struct lone_lisp *lone, struct lone_va
 	return first;
 }
 
+static struct lone_value *lone_parse_integer(struct lone_lisp *lone, struct lone_value *token)
+{
+	unsigned char *digits = token->bytes.pointer;
+	size_t count = token->bytes.count, i = 0;
+	long integer = 0;
+
+	switch (*digits) { case '+': case '-': ++i; break; }
+
+	while (i < count) {
+		integer *= 10;
+		integer += digits[i++] - '0';
+	}
+
+	if (*digits == '-') { integer *= -1; }
+
+	return lone_integer_create(lone, integer);
+}
+
 static struct lone_value *lone_parse_atom(struct lone_lisp *lone, struct lone_value *token)
 {
-	return token;
+	switch (*token->bytes.pointer) {
+	case '+': case '-':
+	case '0': case '1': case '2': case '3': case '4':
+	case '5': case '6': case '7': case '8': case '9':
+		return lone_parse_integer(lone, token);
+	default:
+		return token;
+	}
 }
 
 static struct lone_value *lone_parse_tokens(struct lone_lisp *lone, struct lone_value **tokens)
