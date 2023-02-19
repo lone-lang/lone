@@ -504,8 +504,15 @@ static void lone_print(struct lone_lisp *lone, struct lone_value *value, int fd)
 
 	switch (value->type) {
 	case LONE_LIST:
-		lone_print(lone, value->list.first, fd);
-		lone_print(lone, value->list.rest, fd);
+		linux_write(fd, "(", 1);
+		if (value->list.first) {
+			lone_print(lone, value->list.first, fd);
+		}
+		if (value->list.rest) {
+			linux_write(fd, " . ", 3);
+			lone_print(lone, value->list.rest, fd);
+		}
+		linux_write(fd, ")", 1);
 		break;
 	case LONE_BYTES:
 		linux_write(fd, value->bytes.pointer, value->bytes.count);
@@ -547,6 +554,7 @@ long lone(int count, char **arguments, char **environment, struct auxiliary *val
 	struct lone_lisp lone = { memory, sizeof(memory), 0 };
 
 	lone_print(&lone, lone_evaluate(&lone, lone_read(&lone, 0)), 1);
+	linux_write(1, "\n", 1);
 
 	return 0;
 }
