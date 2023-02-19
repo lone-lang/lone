@@ -459,7 +459,7 @@ static struct lone_value *lone_read_all_input(struct lone_lisp *lone, int fd)
 {
 	#define LONE_BUFFER_SIZE 4096
 	unsigned char *input = lone_allocate(lone, LONE_BUFFER_SIZE);
-	size_t bytes_read = 0, total_read = 0;
+	ssize_t bytes_read = 0, total_read = 0;
 
 	while (1) {
 		bytes_read = linux_read(fd, input + total_read, LONE_BUFFER_SIZE);
