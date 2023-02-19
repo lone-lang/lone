@@ -58,6 +58,7 @@ struct lone_lisp {
 enum lone_type {
 	LONE_BYTES = 0,
 	LONE_LIST = 1,
+	LONE_INTEGER = 2,
 };
 
 struct lone_bytes {
@@ -75,6 +76,7 @@ struct lone_value {
 	union {
 		struct lone_bytes bytes;
 		struct lone_list list;
+		unsigned long integer;
 	};
 };
 
@@ -118,6 +120,14 @@ static struct lone_value *lone_list_create(struct lone_lisp *lone, struct lone_v
 static struct lone_value *lone_list_create_nil(struct lone_lisp *lone)
 {
 	return lone_list_create(lone, 0, 0);
+}
+
+static struct lone_value *lone_integer_create(struct lone_lisp *lone, long integer)
+{
+	struct lone_value *value = lone_value_create(lone);
+	value->type = LONE_INTEGER;
+	value->integer = integer;
+	return value;
 }
 
 static int lone_is_nil(struct lone_value *value)
@@ -490,6 +500,7 @@ static struct lone_value *lone_evaluate(struct lone_lisp *lone, struct lone_valu
 	switch (value->type) {
 	case LONE_BYTES:
 	case LONE_LIST:
+	case LONE_INTEGER:
 		return value;
 		break;
 	}
