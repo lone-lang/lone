@@ -402,9 +402,57 @@ lex_failed:
 	linux_exit(-1);
 }
 
+static struct lone_value *lone_parse_tokens(struct lone_lisp *, struct lone_value **);
+
+static struct lone_value *lone_parse_list(struct lone_lisp *lone, struct lone_value **tokens)
+{
+	struct lone_value *list = lone_list_create_nil(lone), *first = list;
+
+	while (1) {
+		if (lone_is_nil(*tokens)) {
+			// expected token or ) but found end of input
+			linux_exit(-1);
+		}
+
+		if (*(*tokens)->list.first->bytes.pointer == ')') {
+			lone_list_pop(tokens);
+			break;
+		}
+
+		lone_list_set(list, lone_parse_tokens(lone, tokens));
+		list = lone_list_append(list, lone_list_create_nil(lone));
+	}
+
+	return first;
+}
+
+static struct lone_value *lone_parse_atom(struct lone_lisp *lone, struct lone_value *token)
+{
+	return token;
+}
+
+static struct lone_value *lone_parse_tokens(struct lone_lisp *lone, struct lone_value **tokens)
+{
+	if ((*tokens)->list.first == 0) { goto parse_failed; }
+	struct lone_value *token = lone_list_pop(tokens);
+
+	switch (*token->bytes.pointer) {
+	case '(':
+		return lone_parse_list(lone, tokens);
+	case ')':
+		goto parse_failed;
+	default:
+		return lone_parse_atom(lone, token);
+	}
+
+parse_failed:
+	linux_exit(-1);
+}
+
 static struct lone_value *lone_parse(struct lone_lisp *lone, struct lone_value *value)
 {
-	return lone_lex(lone, value);
+	struct lone_value *tokens = lone_lex(lone, value);
+	return lone_parse_tokens(lone, &tokens);
 }
 
 static struct lone_value *lone_read_all_input(struct lone_lisp *lone, int fd)
