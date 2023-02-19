@@ -676,6 +676,10 @@ static struct lone_value *lone_create_auxiliary_value_pair(struct lone_lisp *lon
 {
 	struct lone_value *key, *value;
 	switch (auxiliary_value->type) {
+	case AT_BASE_PLATFORM:
+		key = lone_symbol_create_from_c_string(lone, "base-platform");
+		value = lone_text_create_from_c_string(lone, (unsigned char *) auxiliary_value->value);
+		break;
 	case AT_PLATFORM:
 		key = lone_symbol_create_from_c_string(lone, "platform");
 		value = lone_text_create_from_c_string(lone, (unsigned char *) auxiliary_value->value);
