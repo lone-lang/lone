@@ -478,9 +478,7 @@ static struct lone_value *lone_parse_integer(struct lone_lisp *lone, struct lone
 
 static struct lone_value *lone_parse_text(struct lone_lisp *lone, struct lone_value *token)
 {
-	struct lone_value *text = lone_bytes_create(lone, token->bytes.pointer + 1, token->bytes.count - 2);
-	text->type = LONE_TEXT;
-	return text;
+	return lone_text_create(lone, token->bytes.pointer + 1, token->bytes.count - 2);
 }
 
 static struct lone_value *lone_parse_symbol(struct lone_lisp *lone, struct lone_value *token)
