@@ -158,7 +158,7 @@ struct lone_lexer {
    ╰────────────────────────────────────────────────────────────────────────╯ */
 static unsigned char *lone_lexer_peek_k(struct lone_lexer *lexer, size_t k)
 {
-	if (lexer->position + k > lexer->input.count)
+	if (lexer->position + k >= lexer->input.count)
 		return 0;
 	return lexer->input.pointer + lexer->position + k;
 }
