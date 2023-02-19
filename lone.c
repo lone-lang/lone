@@ -60,6 +60,7 @@ enum lone_type {
 	LONE_LIST = 1,
 	LONE_INTEGER = 2,
 	LONE_TEXT = 3,
+	LONE_SYMBOL = 4,
 };
 
 struct lone_bytes {
@@ -462,6 +463,13 @@ static struct lone_value *lone_parse_text(struct lone_lisp *lone, struct lone_va
 	return text;
 }
 
+static struct lone_value *lone_parse_symbol(struct lone_lisp *lone, struct lone_value *token)
+{
+	struct lone_value *symbol = lone_bytes_create(lone, token->bytes.pointer, token->bytes.count);
+	symbol->type = LONE_SYMBOL;
+	return symbol;
+}
+
 static struct lone_value *lone_parse_atom(struct lone_lisp *lone, struct lone_value *token)
 {
 	switch (*token->bytes.pointer) {
@@ -472,7 +480,7 @@ static struct lone_value *lone_parse_atom(struct lone_lisp *lone, struct lone_va
 	case '"':
 		return lone_parse_text(lone, token);
 	default:
-		return token;
+		return lone_parse_symbol(lone, token);
 	}
 }
 
@@ -537,6 +545,7 @@ static struct lone_value *lone_evaluate(struct lone_lisp *lone, struct lone_valu
 	case LONE_LIST:
 	case LONE_INTEGER:
 	case LONE_TEXT:
+	case LONE_SYMBOL:
 		return value;
 		break;
 	}
@@ -603,6 +612,7 @@ static void lone_print(struct lone_lisp *lone, struct lone_value *value, int fd)
 		linux_write(fd, ")", 1);
 		break;
 	case LONE_BYTES:
+	case LONE_SYMBOL:
 		linux_write(fd, value->bytes.pointer, value->bytes.count);
 		break;
 	case LONE_TEXT:
