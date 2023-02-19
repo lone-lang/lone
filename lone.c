@@ -147,6 +147,11 @@ static size_t lone_c_string_length(unsigned char *c_string)
 	return end - c_string;
 }
 
+static struct lone_value *lone_text_create_from_c_string(struct lone_lisp *lone, unsigned char *c_string)
+{
+	return lone_text_create(lone, c_string, lone_c_string_length(c_string));
+}
+
 static int lone_is_nil(struct lone_value *value)
 {
 	return value->type == LONE_LIST && value->list.first == 0 && value->list.rest == 0;
