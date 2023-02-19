@@ -694,6 +694,10 @@ long lone(int argc, unsigned char **argv, unsigned char **envp, struct auxiliary
 	lone_print(&lone, arguments, 1);
 	linux_write(1, "\n", 1);
 
+	linux_write(1, "Environment: ", sizeof("Environment: ") - 1);
+	lone_print(&lone, environment, 1);
+	linux_write(1, "\n", 1);
+
 	lone_print(&lone, lone_evaluate(&lone, lone_read(&lone, 0)), 1);
 	linux_write(1, "\n", 1);
 
