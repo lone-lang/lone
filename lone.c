@@ -120,6 +120,11 @@ static struct lone_value *lone_list_create_nil(struct lone_lisp *lone)
 	return lone_list_create(lone, 0, 0);
 }
 
+static int lone_is_nil(struct lone_value *value)
+{
+	return value->type == LONE_LIST && value->list.first == 0 && value->list.rest == 0;
+}
+
 static struct lone_value *lone_list_set(struct lone_value *list, struct lone_value *value)
 {
 	return list->list.first = value;
