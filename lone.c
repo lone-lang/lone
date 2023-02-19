@@ -159,6 +159,11 @@ static struct lone_value *lone_symbol_create(struct lone_lisp *lone, unsigned ch
 	return value;
 }
 
+static struct lone_value *lone_symbol_create_from_c_string(struct lone_lisp *lone, unsigned char *c_string)
+{
+	return lone_symbol_create(lone, c_string, lone_c_string_length(c_string));
+}
+
 static int lone_is_nil(struct lone_value *value)
 {
 	return value->type == LONE_LIST && value->list.first == 0 && value->list.rest == 0;
