@@ -688,6 +688,10 @@ static struct lone_value *lone_create_auxiliary_value_pair(struct lone_lisp *lon
 		key = lone_symbol_create_from_c_string(lone, "executable-path");
 		value = lone_text_create_from_c_string(lone, (unsigned char *) auxiliary_value->value);
 		break;
+	case AT_PAGESZ:
+		key = lone_symbol_create_from_c_string(lone, "page-size");
+		value = lone_integer_create(lone, auxiliary_value->value);
+		break;
 	default:
 		key = lone_symbol_create_from_c_string(lone, "unknown");
 		value = lone_list_create(lone,
