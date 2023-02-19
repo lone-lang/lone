@@ -669,7 +669,7 @@ struct auxiliary {
 	auxiliary_value value;
 };
 
-long lone(int count, char **arguments, char **environment, struct auxiliary *values)
+long lone(int argc, unsigned char **argv, unsigned char **envp, struct auxiliary *auxval)
 {
 	#define LONE_MEMORY_SIZE 65536
 	static unsigned char memory[LONE_MEMORY_SIZE];
