@@ -531,6 +531,49 @@ static struct lone_value *lone_evaluate(struct lone_lisp *lone, struct lone_valu
 	}
 }
 
+/* ╭────────────────────────────────────────────────────────────────────────╮
+   │                                                                        │
+   │                                      bits = 32    |    bits = 64       │
+   │    digits = ceil(bits * log10(2)) =  10           |    20              │
+   │                                                                        │
+   ╰────────────────────────────────────────────────────────────────────────╯ */
+static void lone_print_integer(int fd, long n)
+{
+
+#if __BITS_PER_LONG == 64
+#define DECIMAL_DIGITS 20
+#elif __BITS_PER_LONG == 32
+#define DECIMAL_DIGITS 10
+#else
+#error "Unsupported architecture"
+#endif
+
+	static char digits[DECIMAL_DIGITS + 1]; /* digits, sign */
+	char *digit = digits + DECIMAL_DIGITS;  /* work backwards */
+	size_t count = 0;
+	int is_negative;
+
+	if (n < 0) {
+		is_negative = 1;
+		n *= -1;
+	} else {
+		is_negative = 0;
+	}
+
+	do {
+		*--digit = '0' + (n % 10);
+		n /= 10;
+		++count;
+	} while (n > 0);
+
+	if (is_negative) {
+		*--digit = '-';
+		++count;
+	}
+
+	linux_write(fd, digit, count);
+}
+
 static void lone_print(struct lone_lisp *lone, struct lone_value *value, int fd)
 {
 	if (value == 0)
@@ -550,6 +593,9 @@ static void lone_print(struct lone_lisp *lone, struct lone_value *value, int fd)
 		break;
 	case LONE_BYTES:
 		linux_write(fd, value->bytes.pointer, value->bytes.count);
+		break;
+	case LONE_INTEGER:
+		lone_print_integer(fd, value->integer);
 		break;
 	}
 }
