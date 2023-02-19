@@ -59,6 +59,7 @@ enum lone_type {
 	LONE_BYTES = 0,
 	LONE_LIST = 1,
 	LONE_INTEGER = 2,
+	LONE_TEXT = 3,
 };
 
 struct lone_bytes {
@@ -454,6 +455,13 @@ static struct lone_value *lone_parse_integer(struct lone_lisp *lone, struct lone
 	return lone_integer_create(lone, integer);
 }
 
+static struct lone_value *lone_parse_text(struct lone_lisp *lone, struct lone_value *token)
+{
+	struct lone_value *text = lone_bytes_create(lone, token->bytes.pointer + 1, token->bytes.count - 2);
+	text->type = LONE_TEXT;
+	return text;
+}
+
 static struct lone_value *lone_parse_atom(struct lone_lisp *lone, struct lone_value *token)
 {
 	switch (*token->bytes.pointer) {
@@ -461,6 +469,8 @@ static struct lone_value *lone_parse_atom(struct lone_lisp *lone, struct lone_va
 	case '0': case '1': case '2': case '3': case '4':
 	case '5': case '6': case '7': case '8': case '9':
 		return lone_parse_integer(lone, token);
+	case '"':
+		return lone_parse_text(lone, token);
 	default:
 		return token;
 	}
@@ -526,6 +536,7 @@ static struct lone_value *lone_evaluate(struct lone_lisp *lone, struct lone_valu
 	case LONE_BYTES:
 	case LONE_LIST:
 	case LONE_INTEGER:
+	case LONE_TEXT:
 		return value;
 		break;
 	}
@@ -593,6 +604,11 @@ static void lone_print(struct lone_lisp *lone, struct lone_value *value, int fd)
 		break;
 	case LONE_BYTES:
 		linux_write(fd, value->bytes.pointer, value->bytes.count);
+		break;
+	case LONE_TEXT:
+		linux_write(fd, "\"", 1);
+		linux_write(fd, value->bytes.pointer, value->bytes.count);
+		linux_write(fd, "\"", 1);
 		break;
 	case LONE_INTEGER:
 		lone_print_integer(fd, value->integer);
