@@ -700,6 +700,22 @@ static struct lone_value *lone_create_auxiliary_value_pair(struct lone_lisp *lon
 		key = lone_symbol_create_from_c_string(lone, "executable-file-descriptor");
 		value = lone_integer_create(lone, auxiliary_value->value);
 		break;
+	case AT_UID:
+		key = lone_symbol_create_from_c_string(lone, "user-id");
+		value = lone_integer_create(lone, auxiliary_value->value);
+		break;
+	case AT_EUID:
+		key = lone_symbol_create_from_c_string(lone, "effective-user-id");
+		value = lone_integer_create(lone, auxiliary_value->value);
+		break;
+	case AT_GID:
+		key = lone_symbol_create_from_c_string(lone, "group-id");
+		value = lone_integer_create(lone, auxiliary_value->value);
+		break;
+	case AT_EGID:
+		key = lone_symbol_create_from_c_string(lone, "effective-group-id");
+		value = lone_integer_create(lone, auxiliary_value->value);
+		break;
 	case AT_PAGESZ:
 		key = lone_symbol_create_from_c_string(lone, "page-size");
 		value = lone_integer_create(lone, auxiliary_value->value);
