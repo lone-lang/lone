@@ -7,6 +7,7 @@
    ╰────────────────────────────────────────────────────────────────────────╯ */
 #include <linux/types.h>
 #include <linux/unistd.h>
+#include <linux/auxvec.h>
 
 typedef __kernel_size_t size_t;
 typedef __kernel_ssize_t ssize_t;
@@ -671,6 +672,27 @@ struct auxiliary {
 	long value;
 };
 
+static struct lone_value *lone_create_auxiliary_value_pair(struct lone_lisp *lone, struct auxiliary *auxiliary_value)
+{
+	struct lone_value *key, *value;
+	switch (auxiliary_value->type) {
+	case AT_PLATFORM:
+		key = lone_symbol_create_from_c_string(lone, "platform");
+		value = lone_text_create_from_c_string(lone, (unsigned char *) auxiliary_value->value);
+		break;
+	case AT_EXECFN:
+		key = lone_symbol_create_from_c_string(lone, "executable-path");
+		value = lone_text_create_from_c_string(lone, (unsigned char *) auxiliary_value->value);
+		break;
+	default:
+		key = lone_symbol_create_from_c_string(lone, "unknown");
+		value = lone_list_create(lone,
+		                         lone_integer_create(lone, auxiliary_value->type),
+		                         lone_integer_create(lone, auxiliary_value->value));
+	}
+	return lone_list_create(lone, key, value);
+}
+
 long lone(int argc, unsigned char **argv, unsigned char **envp, struct auxiliary *auxval)
 {
 	#define LONE_MEMORY_SIZE 65536
@@ -679,6 +701,7 @@ long lone(int argc, unsigned char **argv, unsigned char **envp, struct auxiliary
 
 	struct lone_value *arguments = lone_list_create_nil(&lone);
 	struct lone_value *environment = lone_list_create_nil(&lone);
+	struct lone_value *auxiliary_values = lone_list_create_nil(&lone);
 	struct lone_value *head;
 	int i;
 
@@ -689,6 +712,11 @@ long lone(int argc, unsigned char **argv, unsigned char **envp, struct auxiliary
 
 	for (i = 0, head = environment; envp[i]; ++i) {
 		lone_list_set(head, lone_text_create_from_c_string(&lone, envp[i]));
+		head = lone_list_append(head, lone_list_create_nil(&lone));
+	}
+
+	for (head = auxiliary_values; auxval->type != AT_NULL; ++auxval) {
+		lone_list_set(head, lone_create_auxiliary_value_pair(&lone, auxval));
 		head = lone_list_append(head, lone_list_create_nil(&lone));
 	}
 
