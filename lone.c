@@ -27,12 +27,12 @@ static void __attribute__((noreturn)) linux_exit(int code)
 
 static ssize_t linux_read(int fd, const void *buffer, size_t count)
 {
-	return system_call_3(__NR_read, fd, (long) buffer, count);
+	return system_call_3(__NR_read, fd, (long) buffer, (long) count);
 }
 
 static ssize_t linux_write(int fd, const void *buffer, size_t count)
 {
-	return system_call_3(__NR_write, fd, (long) buffer, count);
+	return system_call_3(__NR_write, fd, (long) buffer, (long) count);
 }
 
 /* ╭──────────────────────────┨ LONE LISP TYPES ┠───────────────────────────╮
