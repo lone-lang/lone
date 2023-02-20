@@ -326,7 +326,7 @@ static int lone_lexer_consume_symbol(struct lone_lisp *lone, struct lone_lexer *
 		++end;
 	}
 
-	lone_list_set(list, lone_bytes_create(lone, start, end));
+	lone_list_set(list, lone_symbol_create(lone, start, end));
 	return 0;
 }
 
@@ -511,13 +511,14 @@ static struct lone_value *lone_parse_symbol(struct lone_lisp *lone, struct lone_
 
 static struct lone_value *lone_parse_atom(struct lone_lisp *lone, struct lone_value *token)
 {
+	/* lexer may already have parsed some types */
+	switch (token->type) {
+	case LONE_SYMBOL:
+		return token;
+	}
+
 	switch (*token->bytes.pointer) {
 	case '+': case '-':
-		if (token->bytes.count > 1 && lone_lexer_match_byte(token->bytes.pointer[1], '1')) {
-			return lone_parse_integer(lone, token);
-		} else {
-			return lone_parse_symbol(lone, token);
-		}
 	case '0': case '1': case '2': case '3': case '4':
 	case '5': case '6': case '7': case '8': case '9':
 		return lone_parse_integer(lone, token);
