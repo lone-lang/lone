@@ -57,11 +57,11 @@ struct lone_lisp {
 };
 
 enum lone_type {
-	LONE_BYTES,
 	LONE_LIST,
-	LONE_INTEGER,
-	LONE_TEXT,
 	LONE_SYMBOL,
+	LONE_TEXT,
+	LONE_BYTES,
+	LONE_INTEGER,
 };
 
 struct lone_bytes {
