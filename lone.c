@@ -729,19 +729,19 @@ static struct lone_value *lone_create_auxiliary_value_pair(struct lone_lisp *lon
 		break;
 	case AT_BASE:
 		key = lone_symbol_create_from_c_string(lone, "interpreter-base-address");
-		value = lone_integer_create(lone, auxiliary_value->value);
+		value = lone_pointer_create(lone, (void *) auxiliary_value->value);
 		break;
 	case AT_ENTRY:
 		key = lone_symbol_create_from_c_string(lone, "entry-point");
-		value = lone_integer_create(lone, auxiliary_value->value);
+		value = lone_pointer_create(lone, (void *) auxiliary_value->value);
 		break;
 	case AT_SYSINFO_EHDR:
 		key = lone_symbol_create_from_c_string(lone, "vDSO");
-		value = lone_integer_create(lone, auxiliary_value->value);
+		value = lone_pointer_create(lone, (void *) auxiliary_value->value);
 		break;
 	case AT_PHDR:
 		key = lone_symbol_create_from_c_string(lone, "program-headers-address");
-		value = lone_integer_create(lone, auxiliary_value->value);
+		value = lone_pointer_create(lone, (void *) auxiliary_value->value);
 		break;
 	case AT_PHENT:
 		key = lone_symbol_create_from_c_string(lone, "program-headers-entry-size");
