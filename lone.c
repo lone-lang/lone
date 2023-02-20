@@ -634,6 +634,32 @@ static void lone_print_integer(int fd, long n)
 	linux_write(fd, digit, count);
 }
 
+static void lone_print_bytes(struct lone_lisp *lone, struct lone_value *bytes, int fd)
+{
+	size_t count = bytes->bytes.count;
+	if (count == 0) { linux_write(fd, "bytes[]", 7); return; }
+
+	static unsigned char hexadecimal[] = "0123456789ABCDEF";
+	size_t size = 2 + count * 2; // size required: "0x" + 2 characters per input byte
+	unsigned char *text = lone_allocate(lone, size);
+	unsigned char *byte = bytes->bytes.pointer;
+	size_t i;
+
+	text[0] = '0';
+	text[1] = 'x';
+
+	for (i = 0; i < count; ++i) {
+		unsigned char low  = (byte[i] & 0x0F) >> 0;
+		unsigned char high = (byte[i] & 0xF0) >> 4;
+		text[2 + (2 * i + 0)] = hexadecimal[high];
+		text[2 + (2 * i + 1)] = hexadecimal[low];
+	}
+
+	linux_write(fd, "bytes[", 6);
+	linux_write(fd, text, size);
+	linux_write(fd, "]", 1);
+}
+
 static void lone_print(struct lone_lisp *, struct lone_value *, int);
 
 static void lone_print_list(struct lone_lisp *lone, struct lone_value *list, int fd)
@@ -667,6 +693,8 @@ static void lone_print(struct lone_lisp *lone, struct lone_value *value, int fd)
 		linux_write(fd, ")", 1);
 		break;
 	case LONE_BYTES:
+		lone_print_bytes(lone, value, fd);
+		break;
 	case LONE_SYMBOL:
 		linux_write(fd, value->bytes.pointer, value->bytes.count);
 		break;
