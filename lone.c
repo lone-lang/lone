@@ -62,6 +62,7 @@ enum lone_type {
 	LONE_TEXT,
 	LONE_BYTES,
 	LONE_INTEGER,
+	LONE_POINTER,
 };
 
 struct lone_bytes {
@@ -80,6 +81,7 @@ struct lone_value {
 		struct lone_bytes bytes;
 		struct lone_list list;
 		long integer;
+		void *pointer;
 	};
 };
 
@@ -130,6 +132,14 @@ static struct lone_value *lone_integer_create(struct lone_lisp *lone, long integ
 	struct lone_value *value = lone_value_create(lone);
 	value->type = LONE_INTEGER;
 	value->integer = integer;
+	return value;
+}
+
+static struct lone_value *lone_pointer_create(struct lone_lisp *lone, void *pointer)
+{
+	struct lone_value *value = lone_value_create(lone);
+	value->type = LONE_POINTER;
+	value->pointer = pointer;
 	return value;
 }
 
@@ -573,6 +583,7 @@ static struct lone_value *lone_evaluate(struct lone_lisp *lone, struct lone_valu
 	case LONE_BYTES:
 	case LONE_LIST:
 	case LONE_INTEGER:
+	case LONE_POINTER:
 	case LONE_TEXT:
 	case LONE_SYMBOL:
 		return value;
@@ -665,6 +676,7 @@ static void lone_print(struct lone_lisp *lone, struct lone_value *value, int fd)
 		linux_write(fd, "\"", 1);
 		break;
 	case LONE_INTEGER:
+	case LONE_POINTER:
 		lone_print_integer(fd, value->integer);
 		break;
 	}
