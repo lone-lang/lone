@@ -623,6 +623,28 @@ static void lone_print_integer(int fd, long n)
 	linux_write(fd, digit, count);
 }
 
+static void lone_print(struct lone_lisp *, struct lone_value *, int);
+
+static void lone_print_list(struct lone_lisp *lone, struct lone_value *list, int fd)
+{
+	if (list == 0 || lone_is_nil(list)) { return; }
+
+	struct lone_value *first = list->list.first,
+	                  *rest  = list->list.rest;
+
+	lone_print(lone, first, fd);
+
+	if (rest->type == LONE_LIST) {
+		if (!lone_is_nil(rest)) {
+			linux_write(fd, " ", 1);
+			lone_print_list(lone, rest, fd);
+		}
+	} else {
+		linux_write(fd, " . ", 3);
+		lone_print(lone, rest, fd);
+	}
+}
+
 static void lone_print(struct lone_lisp *lone, struct lone_value *value, int fd)
 {
 	if (value == 0 || lone_is_nil(value)) { return; }
@@ -630,13 +652,7 @@ static void lone_print(struct lone_lisp *lone, struct lone_value *value, int fd)
 	switch (value->type) {
 	case LONE_LIST:
 		linux_write(fd, "(", 1);
-		if (value->list.first) {
-			lone_print(lone, value->list.first, fd);
-		}
-		if (value->list.rest) {
-			linux_write(fd, " . ", 3);
-			lone_print(lone, value->list.rest, fd);
-		}
+		lone_print_list(lone, value, fd);
 		linux_write(fd, ")", 1);
 		break;
 	case LONE_BYTES:
