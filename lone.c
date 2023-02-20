@@ -792,6 +792,21 @@ static struct lone_value *lone_create_auxiliary_value_pair(struct lone_lisp *lon
 	return lone_list_create(lone, key, value);
 }
 
+static struct lone_value *lone_split_key_value_on(struct lone_lisp *lone, unsigned char *c_string, unsigned char delimiter)
+{
+	unsigned char *key = c_string, *value = 0;
+
+	while (*c_string++) {
+		if (*c_string == delimiter) {
+			*c_string = '\0';
+			value = c_string + 1;
+			break;
+		}
+	}
+
+	return lone_list_create(lone, lone_text_create_from_c_string(lone, key), lone_text_create_from_c_string(lone, value));
+}
+
 long lone(int argc, unsigned char **argv, unsigned char **envp, struct auxiliary *auxval)
 {
 	#define LONE_MEMORY_SIZE 65536
@@ -810,7 +825,7 @@ long lone(int argc, unsigned char **argv, unsigned char **envp, struct auxiliary
 	}
 
 	for (i = 0, head = environment; envp[i]; ++i) {
-		lone_list_set(head, lone_text_create_from_c_string(&lone, envp[i]));
+		lone_list_set(head, lone_split_key_value_on(&lone, envp[i], '='));
 		head = lone_list_append(head, lone_list_create_nil(&lone));
 	}
 
