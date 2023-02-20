@@ -79,7 +79,7 @@ struct lone_value {
 	union {
 		struct lone_bytes bytes;
 		struct lone_list list;
-		unsigned long integer;
+		long integer;
 	};
 };
 
