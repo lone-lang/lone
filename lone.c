@@ -625,8 +625,7 @@ static void lone_print_integer(int fd, long n)
 
 static void lone_print(struct lone_lisp *lone, struct lone_value *value, int fd)
 {
-	if (value == 0)
-		return;
+	if (value == 0 || lone_is_nil(value)) { return; }
 
 	switch (value->type) {
 	case LONE_LIST:
