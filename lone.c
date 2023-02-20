@@ -513,6 +513,11 @@ static struct lone_value *lone_parse_atom(struct lone_lisp *lone, struct lone_va
 {
 	switch (*token->bytes.pointer) {
 	case '+': case '-':
+		if (token->bytes.count > 1 && lone_lexer_match_byte(token->bytes.pointer[1], '1')) {
+			return lone_parse_integer(lone, token);
+		} else {
+			return lone_parse_symbol(lone, token);
+		}
 	case '0': case '1': case '2': case '3': case '4':
 	case '5': case '6': case '7': case '8': case '9':
 		return lone_parse_integer(lone, token);
