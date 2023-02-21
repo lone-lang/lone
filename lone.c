@@ -75,8 +75,8 @@ struct lone_list {
 struct lone_value {
 	enum lone_type type;
 	union {
-		struct lone_bytes bytes;
 		struct lone_list list;
+		struct lone_bytes bytes;   /* also used by texts and symbols */
 		long integer;
 		void *pointer;
 	};
