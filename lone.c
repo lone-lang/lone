@@ -407,9 +407,9 @@ static int lone_lexer_consume_parenthesis(struct lone_lisp *lone, struct lone_le
    │    a lone list of each lisp token found in the input. For example:     │
    │                                                                        │
    │        lex ← lone_bytes = [ (abc ("zxc") ]                             │
-   │        lex → lone_list  = { [(] → [abc] → [(] → ["zxc"] → [)] }        │
+   │        lex → lone_list  = { ( → abc → ( → "zxc" → ) }                  │
    │                                                                        │
-   │    Note that parentheses are not matched at this stage.                │
+   │    Note that the list is linear and parentheses are not matched.       │
    │    The lexical analysis algorithm can be summarized as follows:        │
    │                                                                        │
    │        ◦ Skip all whitespace until it finds something                  │
