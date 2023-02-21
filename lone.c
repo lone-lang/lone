@@ -375,7 +375,7 @@ static int lone_lexer_consume_parenthesis(struct lone_lisp *lone, struct lone_le
 
 	switch (*parenthesis) {
 	case '(': case ')':
-		lone_list_set(list, lone_bytes_create(lone, parenthesis, 1));
+		lone_list_set(list, lone_symbol_create(lone, parenthesis, 1));
 		lone_lexer_consume(lexer);
 		break;
 	default: return 1;
@@ -469,7 +469,9 @@ static struct lone_value *lone_parse_list(struct lone_lisp *lone, struct lone_va
 			linux_exit(-1);
 		}
 
-		if (*(*tokens)->list.first->bytes.pointer == ')') {
+		struct lone_value *current = (*tokens)->list.first;
+
+		if (current->type == LONE_SYMBOL && *current->bytes.pointer == ')') {
 			lone_list_pop(tokens);
 			break;
 		}
@@ -511,12 +513,6 @@ static struct lone_value *lone_parse_symbol(struct lone_lisp *lone, struct lone_
 
 static struct lone_value *lone_parse_atom(struct lone_lisp *lone, struct lone_value *token)
 {
-	/* lexer may already have parsed some types */
-	switch (token->type) {
-	case LONE_SYMBOL:
-		return token;
-	}
-
 	switch (*token->bytes.pointer) {
 	case '+': case '-':
 	case '0': case '1': case '2': case '3': case '4':
@@ -534,11 +530,17 @@ static struct lone_value *lone_parse_tokens(struct lone_lisp *lone, struct lone_
 	if ((*tokens)->list.first == 0) { goto parse_failed; }
 	struct lone_value *token = lone_list_pop(tokens);
 
-	switch (*token->bytes.pointer) {
-	case '(':
-		return lone_parse_list(lone, tokens);
-	case ')':
-		goto parse_failed;
+	/* lexer may already have parsed some types */
+	switch (token->type) {
+	case LONE_SYMBOL:
+		switch (*token->bytes.pointer) {
+		case '(':
+			return lone_parse_list(lone, tokens);
+		case ')':
+			goto parse_failed;
+		default:
+			return token;
+		}
 	default:
 		return lone_parse_atom(lone, token);
 	}
