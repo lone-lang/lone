@@ -39,8 +39,12 @@ static ssize_t linux_write(int fd, const void *buffer, size_t count)
    │    Lone implements dynamic data types as a tagged union.               │
    │    Supported types are:                                                │
    │                                                                        │
-   │        ◦ Bytes    the binary data and low level string type            │
-   │        ◦ List     the linked list and tree type                        │
+   │        ◦ List       the linked list and tree type                      │
+   │        ◦ Symbol     the keyword and interned string type               │
+   │        ◦ Text       the UTF-8 encoded text type                        │
+   │        ◦ Bytes      the binary data and low level string type          │
+   │        ◦ Integer    the signed integer type                            │
+   │        ◦ Pointer    the memory addressing and dereferencing type       │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
 struct lone_lisp {
