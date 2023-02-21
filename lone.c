@@ -135,6 +135,23 @@ static struct lone_value *lone_integer_create(struct lone_lisp *lone, long integ
 	return value;
 }
 
+static struct lone_value *lone_integer_parse(struct lone_lisp *lone, unsigned char *digits, size_t count)
+{
+	size_t i = 0;
+	long integer = 0;
+
+	switch (*digits) { case '+': case '-': ++i; break; }
+
+	while (i < count) {
+		integer *= 10;
+		integer += digits[i++] - '0';
+	}
+
+	if (*digits == '-') { integer *= -1; }
+
+	return lone_integer_create(lone, integer);
+}
+
 static struct lone_value *lone_pointer_create(struct lone_lisp *lone, void *pointer)
 {
 	struct lone_value *value = lone_value_create(lone);
@@ -303,7 +320,7 @@ static int lone_lexer_consume_number(struct lone_lisp *lone, struct lone_lexer *
 
 	if (current && *current != ')' && !lone_lexer_match_byte(*current, ' ')) { return 1; }
 
-	lone_list_set(list, lone_bytes_create(lone, start, end));
+	lone_list_set(list, lone_integer_parse(lone, start, end));
 	return 0;
 
 }
@@ -483,24 +500,6 @@ static struct lone_value *lone_parse_list(struct lone_lisp *lone, struct lone_va
 	return first;
 }
 
-static struct lone_value *lone_parse_integer(struct lone_lisp *lone, struct lone_value *token)
-{
-	unsigned char *digits = token->bytes.pointer;
-	size_t count = token->bytes.count, i = 0;
-	long integer = 0;
-
-	switch (*digits) { case '+': case '-': ++i; break; }
-
-	while (i < count) {
-		integer *= 10;
-		integer += digits[i++] - '0';
-	}
-
-	if (*digits == '-') { integer *= -1; }
-
-	return lone_integer_create(lone, integer);
-}
-
 static struct lone_value *lone_parse_text(struct lone_lisp *lone, struct lone_value *token)
 {
 	return lone_text_create(lone, token->bytes.pointer + 1, token->bytes.count - 2);
@@ -514,10 +513,6 @@ static struct lone_value *lone_parse_symbol(struct lone_lisp *lone, struct lone_
 static struct lone_value *lone_parse_atom(struct lone_lisp *lone, struct lone_value *token)
 {
 	switch (*token->bytes.pointer) {
-	case '+': case '-':
-	case '0': case '1': case '2': case '3': case '4':
-	case '5': case '6': case '7': case '8': case '9':
-		return lone_parse_integer(lone, token);
 	case '"':
 		return lone_parse_text(lone, token);
 	default:
@@ -541,6 +536,8 @@ static struct lone_value *lone_parse_tokens(struct lone_lisp *lone, struct lone_
 		default:
 			return token;
 		}
+	case LONE_INTEGER:
+		return token;
 	default:
 		return lone_parse_atom(lone, token);
 	}
