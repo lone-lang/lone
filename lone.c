@@ -575,7 +575,7 @@ static struct lone_value *lone_read_all_input(struct lone_lisp *lone, int fd)
 		}
 	}
 
-	return lone_bytes_create(lone, input, total_read);
+	return lone_bytes_create(lone, input, (size_t) total_read);
 }
 
 static struct lone_value *lone_read(struct lone_lisp *lone, int fd)
