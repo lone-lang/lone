@@ -164,17 +164,17 @@ static struct lone_value *lone_text_create(struct lone_lisp *lone, unsigned char
 	return value;
 }
 
-static size_t lone_c_string_length(unsigned char *c_string)
+static size_t lone_c_string_length(char *c_string)
 {
-	unsigned char *end = c_string;
+	char *end = c_string;
 	if (!end) { return 0; }
 	while (*end) { ++end; }
 	return end - c_string;
 }
 
-static struct lone_value *lone_text_create_from_c_string(struct lone_lisp *lone, unsigned char *c_string)
+static struct lone_value *lone_text_create_from_c_string(struct lone_lisp *lone, char *c_string)
 {
-	return lone_text_create(lone, c_string, lone_c_string_length(c_string));
+	return lone_text_create(lone, (unsigned char *) c_string, lone_c_string_length(c_string));
 }
 
 static struct lone_value *lone_symbol_create(struct lone_lisp *lone, unsigned char *text, size_t length)
@@ -184,9 +184,9 @@ static struct lone_value *lone_symbol_create(struct lone_lisp *lone, unsigned ch
 	return value;
 }
 
-static struct lone_value *lone_symbol_create_from_c_string(struct lone_lisp *lone, unsigned char *c_string)
+static struct lone_value *lone_symbol_create_from_c_string(struct lone_lisp *lone, char *c_string)
 {
-	return lone_symbol_create(lone, c_string, lone_c_string_length(c_string));
+	return lone_symbol_create(lone, (unsigned char*) c_string, lone_c_string_length(c_string));
 }
 
 static int lone_is_nil(struct lone_value *value)
@@ -821,9 +821,9 @@ static struct lone_value *lone_create_auxiliary_value_pair(struct lone_lisp *lon
 	return lone_list_create(lone, key, value);
 }
 
-static struct lone_value *lone_split_key_value_on(struct lone_lisp *lone, unsigned char *c_string, unsigned char delimiter)
+static struct lone_value *lone_split_key_value_on(struct lone_lisp *lone, char *c_string, char delimiter)
 {
-	unsigned char *key = c_string, *value = 0;
+	char *key = c_string, *value = 0;
 
 	while (*c_string++) {
 		if (*c_string == delimiter) {
@@ -836,7 +836,7 @@ static struct lone_value *lone_split_key_value_on(struct lone_lisp *lone, unsign
 	return lone_list_create(lone, lone_text_create_from_c_string(lone, key), lone_text_create_from_c_string(lone, value));
 }
 
-long lone(int argc, unsigned char **argv, unsigned char **envp, struct auxiliary *auxval)
+long lone(int argc, char **argv, char **envp, struct auxiliary *auxval)
 {
 	#define LONE_MEMORY_SIZE 65536
 	static unsigned char memory[LONE_MEMORY_SIZE];
