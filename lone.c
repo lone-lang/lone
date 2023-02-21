@@ -354,12 +354,14 @@ static int lone_lexer_consume_symbol(struct lone_lisp *lone, struct lone_lexer *
    │    (".*")[) \n\t]                                                      │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
-static int lone_lexer_consume_bytes(struct lone_lisp *lone, struct lone_lexer *lexer, struct lone_value *list)
+static int lone_lexer_consume_text(struct lone_lisp *lone, struct lone_lexer *lexer, struct lone_value *list)
 {
+	size_t end = 0;
 	unsigned char *current, *start = lone_lexer_peek(lexer);
 	if (!start || *start != '"') { return 1; }
 
-	size_t end = 1;
+	// skip leading "
+	++start;
 	lone_lexer_consume(lexer);
 
 	while ((current = lone_lexer_peek(lexer)) && *current != '"') {
@@ -367,13 +369,13 @@ static int lone_lexer_consume_bytes(struct lone_lisp *lone, struct lone_lexer *l
 		++end;
 	}
 
-	// include "
-	++end;
+	// skip trailing "
+	++current;
 	lone_lexer_consume(lexer);
 
-	if ((current = lone_lexer_peek(lexer)) && *current != ')' && !lone_lexer_match_byte(*current, ' ')) { return 1; }
+	if (*current != ')' && !lone_lexer_match_byte(*current, ' ')) { return 1; }
 
-	lone_list_set(list, lone_bytes_create(lone, start, end));
+	lone_list_set(list, lone_text_create(lone, start, end));
 	return 0;
 }
 
@@ -449,7 +451,7 @@ static struct lone_value *lone_lex(struct lone_lisp *lone, struct lone_value *va
 				failed = lone_lexer_consume_number(lone, &lexer, current);
 				break;
 			case '"':
-				failed = lone_lexer_consume_bytes(lone, &lexer, current);
+				failed = lone_lexer_consume_text(lone, &lexer, current);
 				break;
 			case '(':
 			case ')':
@@ -500,26 +502,6 @@ static struct lone_value *lone_parse_list(struct lone_lisp *lone, struct lone_va
 	return first;
 }
 
-static struct lone_value *lone_parse_text(struct lone_lisp *lone, struct lone_value *token)
-{
-	return lone_text_create(lone, token->bytes.pointer + 1, token->bytes.count - 2);
-}
-
-static struct lone_value *lone_parse_symbol(struct lone_lisp *lone, struct lone_value *token)
-{
-	return lone_symbol_create(lone, token->bytes.pointer, token->bytes.count);
-}
-
-static struct lone_value *lone_parse_atom(struct lone_lisp *lone, struct lone_value *token)
-{
-	switch (*token->bytes.pointer) {
-	case '"':
-		return lone_parse_text(lone, token);
-	default:
-		return lone_parse_symbol(lone, token);
-	}
-}
-
 static struct lone_value *lone_parse_tokens(struct lone_lisp *lone, struct lone_value **tokens)
 {
 	if ((*tokens)->list.first == 0) { goto parse_failed; }
@@ -537,9 +519,10 @@ static struct lone_value *lone_parse_tokens(struct lone_lisp *lone, struct lone_
 			return token;
 		}
 	case LONE_INTEGER:
+	case LONE_TEXT:
 		return token;
 	default:
-		return lone_parse_atom(lone, token);
+		linux_exit(-1);
 	}
 
 parse_failed:
