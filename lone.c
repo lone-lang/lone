@@ -174,7 +174,7 @@ static size_t lone_c_string_length(char *c_string)
 
 static struct lone_value *lone_text_create_from_c_string(struct lone_lisp *lone, char *c_string)
 {
-	return lone_text_create(lone, (unsigned char *) c_string, lone_c_string_length(c_string));
+	return lone_text_create(lone, (unsigned char *) c_string, lone_c_string_length(c_string) - 1);
 }
 
 static struct lone_value *lone_symbol_create(struct lone_lisp *lone, unsigned char *text, size_t length)
@@ -186,7 +186,7 @@ static struct lone_value *lone_symbol_create(struct lone_lisp *lone, unsigned ch
 
 static struct lone_value *lone_symbol_create_from_c_string(struct lone_lisp *lone, char *c_string)
 {
-	return lone_symbol_create(lone, (unsigned char*) c_string, lone_c_string_length(c_string));
+	return lone_symbol_create(lone, (unsigned char*) c_string, lone_c_string_length(c_string) - 1);
 }
 
 static int lone_is_nil(struct lone_value *value)
