@@ -166,10 +166,10 @@ static struct lone_value *lone_text_create(struct lone_lisp *lone, unsigned char
 
 static size_t lone_c_string_length(char *c_string)
 {
-	char *end = c_string;
-	if (!end) { return 0; }
-	while (*end) { ++end; }
-	return end - c_string;
+	size_t length = 0;
+	if (!c_string) { return 0; }
+	while (c_string[length++]);
+	return length;
 }
 
 static struct lone_value *lone_text_create_from_c_string(struct lone_lisp *lone, char *c_string)
