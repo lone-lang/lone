@@ -12,13 +12,6 @@
 typedef __kernel_size_t size_t;
 typedef __kernel_ssize_t ssize_t;
 
-/* ╭────────────────────────────────────────────────────────────────────────╮
-   │                                                                        │
-   │    Definitions for essential Linux system calls used by lone.          │
-   │    The exit system call is adorned with compiler annotations           │
-   │    for better code generation.                                         │
-   │                                                                        │
-   ╰────────────────────────────────────────────────────────────────────────╯ */
 static void __attribute__((noreturn)) linux_exit(int code)
 {
 	system_call_1(__NR_exit, code);
