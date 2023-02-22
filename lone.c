@@ -41,12 +41,6 @@ static ssize_t linux_write(int fd, const void *buffer, size_t count)
    │        ◦ Pointer    the memory addressing and dereferencing type       │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
-struct lone_lisp {
-	unsigned char *memory;
-	size_t capacity;
-	size_t allocated;
-};
-
 enum lone_type {
 	LONE_LIST,
 	LONE_SYMBOL,
@@ -87,6 +81,12 @@ struct lone_value {
    │    Lone will allocate from its internal memory at first.               │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
+struct lone_lisp {
+	unsigned char *memory;
+	size_t capacity;
+	size_t allocated;+
+};
+
 static void *lone_allocate(struct lone_lisp *lone, size_t size)
 {
 	if (lone->allocated + size > lone->capacity)
