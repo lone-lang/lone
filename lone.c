@@ -107,6 +107,22 @@ static void lone_lisp_initialize(struct lone_lisp *lone, unsigned char *memory, 
 	lone->values = 0;
 }
 
+static void lone_memory_split(struct lone_memory *block, size_t used)
+{
+	size_t excess = block->size - used;
+
+	/* split block if there's enough space to allocate at least 1 byte */
+	if (excess >= sizeof(struct lone_memory) + 1) {
+		struct lone_memory *new = (struct lone_memory *) (block->pointer + used);
+		new->next = block->next;
+		new->prev = block;
+		new->free = 1;
+		new->size = excess - sizeof(struct lone_memory);
+		block->next = new;
+		block->size -= excess;
+	}
+}
+
 static void *lone_allocate(struct lone_lisp *lone, size_t requested_size)
 {
 	size_t needed_size = requested_size + sizeof(struct lone_memory);
