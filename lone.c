@@ -925,7 +925,9 @@ long lone(int argc, char **argv, char **envp, struct auxiliary *auxval)
 {
 	#define LONE_MEMORY_SIZE 65536
 	static unsigned char memory[LONE_MEMORY_SIZE];
-	struct lone_lisp lone = { memory, sizeof(memory), 0 };
+	struct lone_lisp lone;
+
+	lone_lisp_initialize(&lone, memory, sizeof(memory));
 
 	struct lone_value *arguments = lone_list_create_nil(&lone);
 	struct lone_value *environment = lone_list_create_nil(&lone);
