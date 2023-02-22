@@ -81,6 +81,13 @@ struct lone_value {
    │    Lone will allocate from its internal memory at first.               │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
+struct lone_memory {
+	struct lone_memory *prev, *next;
+	int free;
+	size_t size;
+	unsigned char pointer[];
+};
+
 struct lone_lisp {
 	unsigned char *memory;
 	size_t capacity;
