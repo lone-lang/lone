@@ -30,12 +30,6 @@ static ssize_t linux_write(int fd, const void *buffer, size_t count)
 
 /* ╭──────────────────────────┨ LONE LISP TYPES ┠───────────────────────────╮
    │                                                                        │
-   │    Lone is designed to work without any dependencies except Linux,     │
-   │    so it does not make use of even the system's C library.             │
-   │    In order to bootstrap itself in such harsh conditions,              │
-   │    it must be given some memory to work with.                          │
-   │    The lone_linux structure holds that memory.                         │
-   │                                                                        │
    │    Lone implements dynamic data types as a tagged union.               │
    │    Supported types are:                                                │
    │                                                                        │
@@ -83,6 +77,12 @@ struct lone_value {
 };
 
 /* ╭────────────────────┨ LONE LISP MEMORY ALLOCATION ┠─────────────────────╮
+   │                                                                        │
+   │    Lone is designed to work without any dependencies except Linux,     │
+   │    so it does not make use of even the system's C library.             │
+   │    In order to bootstrap itself in such harsh conditions,              │
+   │    it must be given some memory to work with.                          │
+   │    The lone_linux structure holds that memory.                         │
    │                                                                        │
    │    Lone will allocate from its internal memory at first.               │
    │                                                                        │
