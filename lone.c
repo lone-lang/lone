@@ -178,6 +178,21 @@ static void lone_deallocate_all(struct lone_lisp *lone)
 	lone->values = 0;
 }
 
+static void *lone_reallocate(struct lone_lisp *lone, void *pointer, size_t size)
+{
+	size_t i;
+	struct lone_memory *old = ((struct lone_memory *) pointer) - 1,
+	                   *new = ((struct lone_memory *) lone_allocate(lone, size)) - 1;
+
+	if (pointer) {
+		i = new->size;
+		while (i--) { new->pointer[i] = old->pointer[i]; }
+		lone_deallocate(lone, pointer);
+	}
+
+	return new->pointer;
+}
+
 static struct lone_value *lone_value_create(struct lone_lisp *lone)
 {
 	struct lone_values *values = lone_allocate(lone, sizeof(struct lone_values));
