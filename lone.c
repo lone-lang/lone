@@ -98,6 +98,15 @@ struct lone_lisp {
 	struct lone_values *values;
 };
 
+static void lone_lisp_initialize(struct lone_lisp *lone, unsigned char *memory, size_t size)
+{
+	lone->memory = (struct lone_memory *) memory;
+	lone->memory->prev = lone->memory->next = 0;
+	lone->memory->free = 1;
+	lone->memory->size = size - sizeof(struct lone_memory);
+	lone->values = 0;
+}
+
 static void *lone_allocate(struct lone_lisp *lone, size_t size)
 {
 	if (lone->allocated + size > lone->capacity)
