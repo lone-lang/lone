@@ -635,7 +635,8 @@ static struct lone_value *lone_parse(struct lone_lisp *lone, struct lone_value *
 static struct lone_value *lone_read_all_input(struct lone_lisp *lone, int fd)
 {
 	#define LONE_BUFFER_SIZE 4096
-	unsigned char *input = lone_allocate(lone, LONE_BUFFER_SIZE);
+	size_t size = LONE_BUFFER_SIZE;
+	unsigned char *input = lone_allocate(lone, size);
 	ssize_t bytes_read = 0, total_read = 0;
 
 	while (1) {
@@ -648,7 +649,8 @@ static struct lone_value *lone_read_all_input(struct lone_lisp *lone, int fd)
 		total_read += bytes_read;
 
 		if (bytes_read == LONE_BUFFER_SIZE) {
-			lone_allocate(lone, LONE_BUFFER_SIZE);
+			size += LONE_BUFFER_SIZE;
+			input = lone_reallocate(lone, input, size);
 		} else {
 			break;
 		}
