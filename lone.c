@@ -136,6 +136,7 @@ static void *lone_allocate(struct lone_lisp *lone, size_t requested_size)
 	if (!block) { linux_exit(-1); }
 
 	block->free = 0;
+	lone_memory_split(block, needed_size);
 	block->size -= sizeof(struct lone_memory);
 
 	return block->pointer;
