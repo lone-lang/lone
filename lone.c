@@ -107,13 +107,22 @@ static void lone_lisp_initialize(struct lone_lisp *lone, unsigned char *memory, 
 	lone->values = 0;
 }
 
-static void *lone_allocate(struct lone_lisp *lone, size_t size)
+static void *lone_allocate(struct lone_lisp *lone, size_t requested_size)
 {
-	if (lone->allocated + size > lone->capacity)
-		linux_exit(-1);
-	void *allocation = lone->memory + lone->allocated;
-	lone->allocated += size;
-	return allocation;
+	size_t needed_size = requested_size + sizeof(struct lone_memory);
+	struct lone_memory *block;
+
+	for (block = lone->memory; block; block = block->next) {
+		if (block->free && block->size >= needed_size)
+			break;
+	}
+
+	if (!block) { linux_exit(-1); }
+
+	block->free = 0;
+	block->size -= sizeof(struct lone_memory);
+
+	return block->pointer;
 }
 
 static struct lone_value *lone_value_create(struct lone_lisp *lone)
