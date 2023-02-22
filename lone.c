@@ -167,7 +167,10 @@ static void lone_deallocate(struct lone_lisp *lone, void * pointer)
 
 static struct lone_value *lone_value_create(struct lone_lisp *lone)
 {
-	return lone_allocate(lone, sizeof(struct lone_value));
+	struct lone_values *values = lone_allocate(lone, sizeof(struct lone_values));
+	if (lone->values) { values->next = lone->values; }
+	lone->values = values;
+	return &values->value;
 }
 
 static struct lone_value *lone_bytes_create(struct lone_lisp *lone, unsigned char *pointer, size_t count)
