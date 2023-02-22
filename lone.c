@@ -185,7 +185,17 @@ static void lone_deallocate_all(struct lone_lisp *lone)
 
 	while (value) {
 		next = value->next;
+
+		switch (value->value.type) {
+		case LONE_SYMBOL:
+		case LONE_TEXT:
+		case LONE_BYTES:
+			lone_deallocate(lone, value->value.bytes.pointer);
+			break;
+		}
+
 		lone_deallocate(lone, value);
+
 		value = next;
 	}
 
