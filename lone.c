@@ -926,10 +926,12 @@ static struct lone_value *lone_create_auxiliary_value_pair(struct lone_lisp *lon
 		key = lone_symbol_create_from_c_string(lone, "page-size");
 		value = lone_integer_create(lone, auxiliary_value->as.integer);
 		break;
+#ifdef AT_MINSIGSTKSZ
 	case AT_MINSIGSTKSZ:
 		key = lone_symbol_create_from_c_string(lone, "minimum-signal-delivery-stack-size");
 		value = lone_integer_create(lone, auxiliary_value->as.integer);
 		break;
+#endif
 	case AT_CLKTCK:
 		key = lone_symbol_create_from_c_string(lone, "clock-tick");
 		value = lone_integer_create(lone, auxiliary_value->as.integer);
