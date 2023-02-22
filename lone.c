@@ -94,9 +94,8 @@ struct lone_values {
 };
 
 struct lone_lisp {
-	unsigned char *memory;
-	size_t capacity;
-	size_t allocated;+
+	struct lone_memory *memory;
+	struct lone_values *values;
 };
 
 static void *lone_allocate(struct lone_lisp *lone, size_t size)
