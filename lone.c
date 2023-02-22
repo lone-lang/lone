@@ -762,6 +762,8 @@ static void lone_print_bytes(struct lone_lisp *lone, struct lone_value *bytes, i
 	linux_write(fd, "bytes[", 6);
 	linux_write(fd, text, size);
 	linux_write(fd, "]", 1);
+
+	lone_deallocate(lone, text);
 }
 
 static void lone_print(struct lone_lisp *, struct lone_value *, int);
