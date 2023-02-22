@@ -123,6 +123,20 @@ static void lone_memory_split(struct lone_memory *block, size_t used)
 	}
 }
 
+static void lone_memory_coalesce(struct lone_memory *block)
+{
+	struct lone_memory *next;
+
+	if (block && block->free) {
+		next = block->next;
+		if (next && next->free) {
+			block->size += next->size + sizeof(struct lone_memory);
+			next = block->next = next->next;
+			if (next) { next->prev = block; }
+		}
+	}
+}
+
 static void *lone_allocate(struct lone_lisp *lone, size_t requested_size)
 {
 	size_t needed_size = requested_size + sizeof(struct lone_memory);
