@@ -125,6 +125,12 @@ static void *lone_allocate(struct lone_lisp *lone, size_t requested_size)
 	return block->pointer;
 }
 
+static void lone_deallocate(struct lone_lisp *lone, void * pointer)
+{
+	struct lone_memory *block = ((struct lone_memory *) pointer) - 1;
+	block->free = 1;
+}
+
 static struct lone_value *lone_value_create(struct lone_lisp *lone)
 {
 	return lone_allocate(lone, sizeof(struct lone_value));
