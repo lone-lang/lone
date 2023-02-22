@@ -1,3 +1,11 @@
+define lone-memory-walk
+  while $arg0
+    output *$arg0
+    printf "\n"
+    set var $arg0 = $arg0->next
+  end
+end
+
 define plv
   print-lone-value $arg0
   printf "\n"
