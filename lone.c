@@ -165,6 +165,19 @@ static void lone_deallocate(struct lone_lisp *lone, void * pointer)
 	lone_memory_coalesce(block->prev);
 }
 
+static void lone_deallocate_all(struct lone_lisp *lone)
+{
+	struct lone_values *value = lone->values, *next;
+
+	while (value) {
+		next = value->next;
+		lone_deallocate(lone, value);
+		value = next;
+	}
+
+	lone->values = 0;
+}
+
 static struct lone_value *lone_value_create(struct lone_lisp *lone)
 {
 	struct lone_values *values = lone_allocate(lone, sizeof(struct lone_values));
