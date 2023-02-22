@@ -30,12 +30,6 @@ static ssize_t linux_write(int fd, const void *buffer, size_t count)
 
 /* ╭──────────────────────────┨ LONE LISP TYPES ┠───────────────────────────╮
    │                                                                        │
-   │    Lone is designed to work without any dependencies except Linux,     │
-   │    so it does not make use of even the system's C library.             │
-   │    In order to bootstrap itself in such harsh conditions,              │
-   │    it must be given some memory to work with.                          │
-   │    The lone_linux structure holds that memory.                         │
-   │                                                                        │
    │    Lone implements dynamic data types as a tagged union.               │
    │    Supported types are:                                                │
    │                                                                        │
@@ -47,12 +41,6 @@ static ssize_t linux_write(int fd, const void *buffer, size_t count)
    │        ◦ Pointer    the memory addressing and dereferencing type       │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
-struct lone_lisp {
-	unsigned char *memory;
-	size_t capacity;
-	size_t allocated;
-};
-
 enum lone_type {
 	LONE_LIST,
 	LONE_SYMBOL,
@@ -84,29 +72,164 @@ struct lone_value {
 
 /* ╭────────────────────┨ LONE LISP MEMORY ALLOCATION ┠─────────────────────╮
    │                                                                        │
+   │    Lone is designed to work without any dependencies except Linux,     │
+   │    so it does not make use of even the system's C library.             │
+   │    In order to bootstrap itself in such harsh conditions,              │
+   │    it must be given some memory to work with.                          │
+   │    The lone_linux structure holds that memory.                         │
+   │                                                                        │
    │    Lone will allocate from its internal memory at first.               │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
-static void *lone_allocate(struct lone_lisp *lone, size_t size)
+struct lone_memory {
+	struct lone_memory *prev, *next;
+	int free;
+	size_t size;
+	unsigned char pointer[];
+};
+
+struct lone_values {
+	struct lone_values *next;
+	struct lone_value value;
+};
+
+struct lone_lisp {
+	struct lone_memory *memory;
+	struct lone_values *values;
+};
+
+static void lone_lisp_initialize(struct lone_lisp *lone, unsigned char *memory, size_t size)
 {
-	if (lone->allocated + size > lone->capacity)
-		linux_exit(-1);
-	void *allocation = lone->memory + lone->allocated;
-	lone->allocated += size;
-	return allocation;
+	lone->memory = (struct lone_memory *) memory;
+	lone->memory->prev = lone->memory->next = 0;
+	lone->memory->free = 1;
+	lone->memory->size = size - sizeof(struct lone_memory);
+	lone->values = 0;
+}
+
+static void lone_memory_move(void *from, void *to, size_t count)
+{
+	unsigned char *source = from, *destination = to;
+
+	if (source >= destination) {
+		/* destination is at or behind source, copy forwards */
+		while (count--) { *destination++ = *source++; }
+	} else {
+		/* destination is ahead of source, copy backwards */
+		source += count; destination += count;
+		while (count--) { *--destination = *--source; }
+	}
+}
+
+static void lone_memory_split(struct lone_memory *block, size_t used)
+{
+	size_t excess = block->size - used;
+
+	/* split block if there's enough space to allocate at least 1 byte */
+	if (excess >= sizeof(struct lone_memory) + 1) {
+		struct lone_memory *new = (struct lone_memory *) (block->pointer + used);
+		new->next = block->next;
+		new->prev = block;
+		new->free = 1;
+		new->size = excess - sizeof(struct lone_memory);
+		block->next = new;
+		block->size -= excess;
+	}
+}
+
+static void lone_memory_coalesce(struct lone_memory *block)
+{
+	struct lone_memory *next;
+
+	if (block && block->free) {
+		next = block->next;
+		if (next && next->free) {
+			block->size += next->size + sizeof(struct lone_memory);
+			next = block->next = next->next;
+			if (next) { next->prev = block; }
+		}
+	}
+}
+
+static void *lone_allocate(struct lone_lisp *lone, size_t requested_size)
+{
+	size_t needed_size = requested_size + sizeof(struct lone_memory);
+	struct lone_memory *block;
+
+	for (block = lone->memory; block; block = block->next) {
+		if (block->free && block->size >= needed_size)
+			break;
+	}
+
+	if (!block) { linux_exit(-1); }
+
+	block->free = 0;
+	lone_memory_split(block, needed_size);
+
+	return block->pointer;
+}
+
+static void lone_deallocate(struct lone_lisp *lone, void * pointer)
+{
+	struct lone_memory *block = ((struct lone_memory *) pointer) - 1;
+	block->free = 1;
+
+	lone_memory_coalesce(block);
+	lone_memory_coalesce(block->prev);
+}
+
+static void lone_deallocate_all(struct lone_lisp *lone)
+{
+	struct lone_values *value = lone->values, *next;
+
+	while (value) {
+		next = value->next;
+
+		switch (value->value.type) {
+		case LONE_SYMBOL:
+		case LONE_TEXT:
+		case LONE_BYTES:
+			lone_deallocate(lone, value->value.bytes.pointer);
+			break;
+		}
+
+		lone_deallocate(lone, value);
+
+		value = next;
+	}
+
+	lone->values = 0;
+}
+
+static void *lone_reallocate(struct lone_lisp *lone, void *pointer, size_t size)
+{
+	struct lone_memory *old = ((struct lone_memory *) pointer) - 1,
+	                   *new = ((struct lone_memory *) lone_allocate(lone, size)) - 1;
+
+	if (pointer) {
+		lone_memory_move(old->pointer, new->pointer, new->size < old->size ? new->size : old->size);
+		lone_deallocate(lone, pointer);
+	}
+
+	return new->pointer;
 }
 
 static struct lone_value *lone_value_create(struct lone_lisp *lone)
 {
-	return lone_allocate(lone, sizeof(struct lone_value));
+	struct lone_values *values = lone_allocate(lone, sizeof(struct lone_values));
+	if (lone->values) { values->next = lone->values; }
+	lone->values = values;
+	return &values->value;
 }
 
 static struct lone_value *lone_bytes_create(struct lone_lisp *lone, unsigned char *pointer, size_t count)
 {
 	struct lone_value *value = lone_value_create(lone);
+	unsigned char *copy = lone_allocate(lone, count);
+	lone_memory_move(pointer, copy, count);
 	value->type = LONE_BYTES;
 	value->bytes.count = count;
-	value->bytes.pointer = pointer;
+	value->bytes.pointer = copy;
 	return value;
 }
 
@@ -535,11 +658,13 @@ static struct lone_value *lone_parse(struct lone_lisp *lone, struct lone_value *
 static struct lone_value *lone_read_all_input(struct lone_lisp *lone, int fd)
 {
 	#define LONE_BUFFER_SIZE 4096
-	unsigned char *input = lone_allocate(lone, LONE_BUFFER_SIZE);
+	size_t size = LONE_BUFFER_SIZE;
+	unsigned char *buffer = lone_allocate(lone, size);
 	ssize_t bytes_read = 0, total_read = 0;
+	struct lone_value *input;
 
 	while (1) {
-		bytes_read = linux_read(fd, input + total_read, LONE_BUFFER_SIZE);
+		bytes_read = linux_read(fd, buffer + total_read, LONE_BUFFER_SIZE);
 
 		if (bytes_read < 0) {
 			linux_exit(-1);
@@ -548,13 +673,16 @@ static struct lone_value *lone_read_all_input(struct lone_lisp *lone, int fd)
 		total_read += bytes_read;
 
 		if (bytes_read == LONE_BUFFER_SIZE) {
-			lone_allocate(lone, LONE_BUFFER_SIZE);
+			size += LONE_BUFFER_SIZE;
+			buffer = lone_reallocate(lone, buffer, size);
 		} else {
 			break;
 		}
 	}
 
-	return lone_bytes_create(lone, input, (size_t) total_read);
+	input = lone_bytes_create(lone, buffer, (size_t) total_read);
+	lone_deallocate(lone, buffer);
+	return input;
 }
 
 static struct lone_value *lone_read(struct lone_lisp *lone, int fd)
@@ -643,6 +771,8 @@ static void lone_print_bytes(struct lone_lisp *lone, struct lone_value *bytes, i
 	linux_write(fd, "bytes[", 6);
 	linux_write(fd, text, size);
 	linux_write(fd, "]", 1);
+
+	lone_deallocate(lone, text);
 }
 
 static void lone_print(struct lone_lisp *, struct lone_value *, int);
@@ -840,7 +970,9 @@ long lone(int argc, char **argv, char **envp, struct auxiliary *auxval)
 {
 	#define LONE_MEMORY_SIZE 65536
 	static unsigned char memory[LONE_MEMORY_SIZE];
-	struct lone_lisp lone = { memory, sizeof(memory), 0 };
+	struct lone_lisp lone;
+
+	lone_lisp_initialize(&lone, memory, sizeof(memory));
 
 	struct lone_value *arguments = lone_list_create_nil(&lone);
 	struct lone_value *environment = lone_list_create_nil(&lone);
@@ -877,6 +1009,8 @@ long lone(int argc, char **argv, char **envp, struct auxiliary *auxval)
 
 	lone_print(&lone, lone_evaluate(&lone, lone_read(&lone, 0)), 1);
 	linux_write(1, "\n", 1);
+
+	lone_deallocate_all(&lone);
 
 	return 0;
 }
