@@ -650,11 +650,12 @@ static struct lone_value *lone_read_all_input(struct lone_lisp *lone, int fd)
 {
 	#define LONE_BUFFER_SIZE 4096
 	size_t size = LONE_BUFFER_SIZE;
-	unsigned char *input = lone_allocate(lone, size);
+	unsigned char *buffer = lone_allocate(lone, size);
 	ssize_t bytes_read = 0, total_read = 0;
+	struct lone_value *input;
 
 	while (1) {
-		bytes_read = linux_read(fd, input + total_read, LONE_BUFFER_SIZE);
+		bytes_read = linux_read(fd, buffer + total_read, LONE_BUFFER_SIZE);
 
 		if (bytes_read < 0) {
 			linux_exit(-1);
@@ -664,13 +665,15 @@ static struct lone_value *lone_read_all_input(struct lone_lisp *lone, int fd)
 
 		if (bytes_read == LONE_BUFFER_SIZE) {
 			size += LONE_BUFFER_SIZE;
-			input = lone_reallocate(lone, input, size);
+			buffer = lone_reallocate(lone, buffer, size);
 		} else {
 			break;
 		}
 	}
 
-	return lone_bytes_create(lone, input, (size_t) total_read);
+	input = lone_bytes_create(lone, buffer, (size_t) total_read);
+	lone_deallocate(lone, buffer);
+	return input;
 }
 
 static struct lone_value *lone_read(struct lone_lisp *lone, int fd)
