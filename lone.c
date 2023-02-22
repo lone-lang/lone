@@ -216,9 +216,11 @@ static struct lone_value *lone_value_create(struct lone_lisp *lone)
 static struct lone_value *lone_bytes_create(struct lone_lisp *lone, unsigned char *pointer, size_t count)
 {
 	struct lone_value *value = lone_value_create(lone);
+	unsigned char *copy = lone_allocate(lone, count);
+	lone_memory_move(pointer, copy, count);
 	value->type = LONE_BYTES;
 	value->bytes.count = count;
-	value->bytes.pointer = pointer;
+	value->bytes.pointer = copy;
 	return value;
 }
 
