@@ -88,6 +88,11 @@ struct lone_memory {
 	unsigned char pointer[];
 };
 
+struct lone_values {
+	struct lone_values *next;
+	struct lone_value value;
+};
+
 struct lone_lisp {
 	unsigned char *memory;
 	size_t capacity;
