@@ -81,6 +81,11 @@ struct lone_list {
 	struct lone_value *rest;
 };
 
+struct lone_table_entry {
+	struct lone_value *key;
+	struct lone_value *value;
+};
+
 struct lone_value {
 	enum lone_type type;
 	union {
