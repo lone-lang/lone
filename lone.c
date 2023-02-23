@@ -469,6 +469,21 @@ static void lone_table_set(struct lone_lisp *lone, struct lone_value *table, str
 	if (lone_table_entry_set(entries, capacity, key, value)) { ++table->table.count; }
 }
 
+static struct lone_value *lone_table_get(struct lone_lisp *lone, struct lone_value *table, struct lone_value *key)
+{
+	size_t capacity = table->table.capacity, i;
+	struct lone_table_entry *entries = table->table.entries, *entry;
+
+	i = lone_table_entry_find_index_for(key, entries, capacity);
+	entry = &entries[i];
+
+	if (entry->key) {
+		return entry->value;
+	}
+
+	return lone_list_create_nil(lone);
+}
+
 /* ╭──────────────────────────┨ LONE LISP LEXER ┠───────────────────────────╮
    │                                                                        │
    │    The lexer or tokenizer transforms a linear stream of characters     │
