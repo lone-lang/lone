@@ -355,6 +355,13 @@ static struct lone_value *lone_list_pop(struct lone_value **list)
 	return value;
 }
 
+static int lone_bytes_equals(struct lone_bytes x, struct lone_bytes y)
+{
+	if (x.count != y.count) return 0;
+	for (size_t i = 0; i < x.count; ++i) if (x.pointer[i] != y.pointer[i]) return 0;
+	return 1;
+}
+
 static unsigned long fnv_1a(unsigned char *bytes, size_t count)
 {
 	unsigned long hash = FNV_OFFSET_BASIS;
