@@ -355,6 +355,18 @@ static struct lone_value *lone_list_pop(struct lone_value **list)
 	return value;
 }
 
+static unsigned long fnv_1a(unsigned char *bytes, size_t count)
+{
+	unsigned long hash = FNV_OFFSET_BASIS;
+
+	while (count--) {
+		hash ^= *bytes++;
+		hash *= FNV_PRIME;
+	}
+
+	return hash;
+}
+
 /* ╭──────────────────────────┨ LONE LISP LEXER ┠───────────────────────────╮
    │                                                                        │
    │    The lexer or tokenizer transforms a linear stream of characters     │
