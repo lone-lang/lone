@@ -403,6 +403,11 @@ static unsigned long fnv_1a(unsigned char *bytes, size_t count)
 	return hash;
 }
 
+static inline size_t lone_table_compute_hash_for(struct lone_value *key, size_t capacity)
+{
+	return fnv_1a(key->bytes.pointer, key->bytes.count) % capacity;
+}
+
 /* ╭──────────────────────────┨ LONE LISP LEXER ┠───────────────────────────╮
    │                                                                        │
    │    The lexer or tokenizer transforms a linear stream of characters     │
