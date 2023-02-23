@@ -64,6 +64,7 @@ static ssize_t linux_write(int fd, const void *buffer, size_t count)
    ╰────────────────────────────────────────────────────────────────────────╯ */
 enum lone_type {
 	LONE_LIST,
+	LONE_TABLE,
 	LONE_SYMBOL,
 	LONE_TEXT,
 	LONE_BYTES,
@@ -96,6 +97,7 @@ struct lone_value {
 	enum lone_type type;
 	union {
 		struct lone_list list;
+		struct lone_table table;
 		struct lone_bytes bytes;   /* also used by texts and symbols */
 		long integer;
 		void *pointer;
@@ -746,6 +748,7 @@ static struct lone_value *lone_evaluate(struct lone_lisp *lone, struct lone_valu
 	switch (value->type) {
 	case LONE_BYTES:
 	case LONE_LIST:
+	case LONE_TABLE:
 	case LONE_INTEGER:
 	case LONE_POINTER:
 	case LONE_TEXT:
