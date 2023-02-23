@@ -86,6 +86,12 @@ struct lone_table_entry {
 	struct lone_value *value;
 };
 
+struct lone_table {
+	size_t count;
+	size_t capacity;
+	struct lone_table_entry *entries;
+};
+
 struct lone_value {
 	enum lone_type type;
 	union {
