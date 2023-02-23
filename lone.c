@@ -28,6 +28,20 @@ static ssize_t linux_write(int fd, const void *buffer, size_t count)
 	return system_call_3(__NR_write, fd, (long) buffer, (long) count);
 }
 
+/* ╭────────────────────────────────────────────────────────────────────────╮
+   │                                                                        │
+   │                                      bits = 32    |    bits = 64       │
+   │    digits = ceil(bits * log10(2)) =  10           |    20              │
+   │                                                                        │
+   ╰────────────────────────────────────────────────────────────────────────╯ */
+#if __BITS_PER_LONG == 64
+	#define DECIMAL_DIGITS_PER_LONG 20
+#elif __BITS_PER_LONG == 32
+	#define DECIMAL_DIGITS_PER_LONG 10
+#else
+	#error "Unsupported architecture"
+#endif
+
 /* ╭──────────────────────────┨ LONE LISP TYPES ┠───────────────────────────╮
    │                                                                        │
    │    Lone implements dynamic data types as a tagged union.               │
@@ -704,25 +718,10 @@ static struct lone_value *lone_evaluate(struct lone_lisp *lone, struct lone_valu
 	}
 }
 
-/* ╭────────────────────────────────────────────────────────────────────────╮
-   │                                                                        │
-   │                                      bits = 32    |    bits = 64       │
-   │    digits = ceil(bits * log10(2)) =  10           |    20              │
-   │                                                                        │
-   ╰────────────────────────────────────────────────────────────────────────╯ */
 static void lone_print_integer(int fd, long n)
 {
-
-#if __BITS_PER_LONG == 64
-#define DECIMAL_DIGITS 20
-#elif __BITS_PER_LONG == 32
-#define DECIMAL_DIGITS 10
-#else
-#error "Unsupported architecture"
-#endif
-
-	static char digits[DECIMAL_DIGITS + 1]; /* digits, sign */
-	char *digit = digits + DECIMAL_DIGITS;  /* work backwards */
+	static char digits[DECIMAL_DIGITS_PER_LONG + 1]; /* digits, sign */
+	char *digit = digits + DECIMAL_DIGITS_PER_LONG;  /* work backwards */
 	size_t count = 0;
 	int is_negative;
 
