@@ -933,6 +933,30 @@ static void lone_print_list(struct lone_lisp *lone, struct lone_value *list, int
 	}
 }
 
+static void lone_print_table(struct lone_lisp *lone, struct lone_value *table, int fd)
+{
+	size_t n = table->table.capacity, i;
+	struct lone_table_entry *entries = table->table.entries;
+
+	linux_write(fd, "{ ", 2);
+
+	for (i = 0; i < n; ++i) {
+		struct lone_value *key   = entries[i].key,
+		                  *value = entries[i].value;
+
+
+		if (key) {
+			lone_print(lone, entries[i].key, fd);
+			linux_write(fd, " ", 1);
+			if (value) { lone_print(lone, entries[i].value, fd); }
+			else { linux_write(fd, "nil", 3); }
+			linux_write(fd, " ", 1);
+		}
+	}
+
+	linux_write(fd, "}", 1);
+}
+
 static void lone_print(struct lone_lisp *lone, struct lone_value *value, int fd)
 {
 	if (value == 0 || lone_is_nil(value)) { return; }
@@ -942,6 +966,9 @@ static void lone_print(struct lone_lisp *lone, struct lone_value *value, int fd)
 		linux_write(fd, "(", 1);
 		lone_print_list(lone, value, fd);
 		linux_write(fd, ")", 1);
+		break;
+	case LONE_TABLE:
+		lone_print_table(lone, value, fd);
 		break;
 	case LONE_BYTES:
 		lone_print_bytes(lone, value, fd);
