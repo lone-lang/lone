@@ -1141,19 +1141,30 @@ static struct lone_value *lone_create_auxiliary_value_pair(struct lone_lisp *lon
 	return lone_list_create(lone, key, value);
 }
 
-static struct lone_value *lone_split_key_value_on(struct lone_lisp *lone, char *c_string, char delimiter)
+static struct lone_value *lone_environment_to_table(struct lone_lisp *lone, char **c_strings)
 {
-	char *key = c_string, *value = 0;
+	struct lone_value *table = lone_table_create(lone, 64), *key, *value;
+	char *c_string_key, *c_string_value, *c_string;
 
-	while (*c_string++) {
-		if (*c_string == delimiter) {
-			*c_string = '\0';
-			value = c_string + 1;
-			break;
+	for (/* c_strings */; *c_strings; ++c_strings) {
+		c_string = *c_strings;
+		c_string_key = c_string;
+		c_string_value = "";
+
+		while (*c_string++) {
+			if (*c_string == '=') {
+				*c_string = '\0';
+				c_string_value = c_string + 1;
+				break;
+			}
 		}
+
+		key = lone_text_create_from_c_string(lone, c_string_key);
+		value = lone_text_create_from_c_string(lone, c_string_value);
+		lone_table_set(lone, table, key, value);
 	}
 
-	return lone_list_create(lone, lone_text_create_from_c_string(lone, key), lone_text_create_from_c_string(lone, value));
+	return table;
 }
 
 long lone(int argc, char **argv, char **envp, struct auxiliary *auxval)
@@ -1175,10 +1186,7 @@ long lone(int argc, char **argv, char **envp, struct auxiliary *auxval)
 		head = lone_list_append(head, lone_list_create_nil(&lone));
 	}
 
-	for (i = 0, head = environment; envp[i]; ++i) {
-		lone_list_set(head, lone_split_key_value_on(&lone, envp[i], '='));
-		head = lone_list_append(head, lone_list_create_nil(&lone));
-	}
+	environment = lone_environment_to_table(&lone, envp);
 
 	for (head = auxiliary_values; auxval->type != AT_NULL; ++auxval) {
 		lone_list_set(head, lone_create_auxiliary_value_pair(&lone, auxval));
