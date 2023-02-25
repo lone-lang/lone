@@ -435,6 +435,28 @@ static int lone_table_entry_set(struct lone_table_entry *entries, size_t capacit
 	}
 }
 
+static void lone_table_resize(struct lone_lisp *lone, struct lone_value *table, size_t new_capacity)
+{
+	size_t old_capacity = table->table.capacity, i;
+	struct lone_table_entry *old = table->table.entries,
+	                        *new = lone_allocate(lone, new_capacity * sizeof(*new));
+
+	for (i = 0; i < new_capacity; ++i) {
+		new[i].key = 0;
+		new[i].value = 0;
+	}
+
+	for (i = 0; i < old_capacity; ++i) {
+		if (old[i].key) {
+			lone_table_entry_set(new, new_capacity, old[i].key, old[i].value);
+		}
+	}
+
+	lone_deallocate(lone, old);
+	table->table.entries = new;
+	table->table.capacity = new_capacity;
+}
+
 /* ╭──────────────────────────┨ LONE LISP LEXER ┠───────────────────────────╮
    │                                                                        │
    │    The lexer or tokenizer transforms a linear stream of characters     │
