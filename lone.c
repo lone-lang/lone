@@ -408,6 +408,18 @@ static inline size_t lone_table_compute_hash_for(struct lone_value *key, size_t 
 	return fnv_1a(key->bytes.pointer, key->bytes.count) % capacity;
 }
 
+static size_t lone_table_entry_find_index_for(struct lone_value *key, struct lone_table_entry *entries, size_t capacity)
+{
+	size_t i = lone_table_compute_hash_for(key, capacity);
+	struct lone_table_entry *entry;
+
+	while (1) {
+		entry = &entries[i];
+		if (!entry->key || lone_bytes_equals(entry->key->bytes, key->bytes)) { return i; }
+		i = i < capacity ? i + 1 : 0;
+	}
+}
+
 /* ╭──────────────────────────┨ LONE LISP LEXER ┠───────────────────────────╮
    │                                                                        │
    │    The lexer or tokenizer transforms a linear stream of characters     │
