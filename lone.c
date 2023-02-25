@@ -28,6 +28,27 @@ static ssize_t linux_write(int fd, const void *buffer, size_t count)
 	return system_call_3(__NR_write, fd, (long) buffer, (long) count);
 }
 
+/* ╭────────────────────────────────────────────────────────────────────────╮
+   │                                                                        │
+   │                                      bits = 32    |    bits = 64       │
+   │    digits = ceil(bits * log10(2)) =  10           |    20              │
+   │                                                                        │
+   │    https://en.wikipedia.org/wiki/FNV_hash                              │
+   │    https://datatracker.ietf.org/doc/draft-eastlake-fnv/                │
+   │                                                                        │
+   ╰────────────────────────────────────────────────────────────────────────╯ */
+#if __BITS_PER_LONG == 64
+	#define DECIMAL_DIGITS_PER_LONG 20
+	#define FNV_PRIME 0x00000100000001B3UL
+	#define FNV_OFFSET_BASIS 0xCBF29CE484222325UL
+#elif __BITS_PER_LONG == 32
+	#define DECIMAL_DIGITS_PER_LONG 10
+	#define FNV_PRIME 0x01000193UL
+	#define FNV_OFFSET_BASIS 0x811C9DC5
+#else
+	#error "Unsupported architecture"
+#endif
+
 /* ╭──────────────────────────┨ LONE LISP TYPES ┠───────────────────────────╮
    │                                                                        │
    │    Lone implements dynamic data types as a tagged union.               │
@@ -43,6 +64,7 @@ static ssize_t linux_write(int fd, const void *buffer, size_t count)
    ╰────────────────────────────────────────────────────────────────────────╯ */
 enum lone_type {
 	LONE_LIST,
+	LONE_TABLE,
 	LONE_SYMBOL,
 	LONE_TEXT,
 	LONE_BYTES,
@@ -60,10 +82,22 @@ struct lone_list {
 	struct lone_value *rest;
 };
 
+struct lone_table_entry {
+	struct lone_value *key;
+	struct lone_value *value;
+};
+
+struct lone_table {
+	size_t count;
+	size_t capacity;
+	struct lone_table_entry *entries;
+};
+
 struct lone_value {
 	enum lone_type type;
 	union {
 		struct lone_list list;
+		struct lone_table table;
 		struct lone_bytes bytes;   /* also used by texts and symbols */
 		long integer;
 		void *pointer;
@@ -247,6 +281,22 @@ static struct lone_value *lone_list_create_nil(struct lone_lisp *lone)
 	return lone_list_create(lone, 0, 0);
 }
 
+static struct lone_value *lone_table_create(struct lone_lisp *lone, size_t capacity)
+{
+	struct lone_value *value = lone_value_create(lone);
+	value->type = LONE_TABLE;
+	value->table.capacity = capacity;
+	value->table.count = 0;
+	value->table.entries = lone_allocate(lone, capacity * sizeof(*value->table.entries));
+
+	for (size_t i = 0; i < capacity; ++i) {
+		value->table.entries[i].key = 0;
+		value->table.entries[i].value = 0;
+	}
+
+	return value;
+}
+
 static struct lone_value *lone_integer_create(struct lone_lisp *lone, long integer)
 {
 	struct lone_value *value = lone_value_create(lone);
@@ -332,6 +382,131 @@ static struct lone_value *lone_list_pop(struct lone_value **list)
 	struct lone_value *value = (*list)->list.first;
 	*list = (*list)->list.rest;
 	return value;
+}
+
+static int lone_bytes_equals(struct lone_bytes x, struct lone_bytes y)
+{
+	if (x.count != y.count) return 0;
+	for (size_t i = 0; i < x.count; ++i) if (x.pointer[i] != y.pointer[i]) return 0;
+	return 1;
+}
+
+static unsigned long fnv_1a(unsigned char *bytes, size_t count)
+{
+	unsigned long hash = FNV_OFFSET_BASIS;
+
+	while (count--) {
+		hash ^= *bytes++;
+		hash *= FNV_PRIME;
+	}
+
+	return hash;
+}
+
+static inline size_t lone_table_compute_hash_for(struct lone_value *key, size_t capacity)
+{
+	return fnv_1a(key->bytes.pointer, key->bytes.count) % capacity;
+}
+
+static size_t lone_table_entry_find_index_for(struct lone_value *key, struct lone_table_entry *entries, size_t capacity)
+{
+	size_t i = lone_table_compute_hash_for(key, capacity);
+	struct lone_table_entry *entry;
+
+	while (1) {
+		entry = &entries[i];
+		if (!entry->key || lone_bytes_equals(entry->key->bytes, key->bytes)) { return i; }
+		i = i < capacity ? i + 1 : 0;
+	}
+}
+
+static int lone_table_entry_set(struct lone_table_entry *entries, size_t capacity, struct lone_value *key, struct lone_value *value)
+{
+	size_t i = lone_table_entry_find_index_for(key, entries, capacity);
+	struct lone_table_entry *entry = &entries[i];
+
+	if (entry->key) {
+		entry->value = value;
+		return 0;
+	} else {
+		entry->key = key;
+		entry->value = value;
+		return 1;
+	}
+}
+
+static void lone_table_resize(struct lone_lisp *lone, struct lone_value *table, size_t new_capacity)
+{
+	size_t old_capacity = table->table.capacity, i;
+	struct lone_table_entry *old = table->table.entries,
+	                        *new = lone_allocate(lone, new_capacity * sizeof(*new));
+
+	for (i = 0; i < new_capacity; ++i) {
+		new[i].key = 0;
+		new[i].value = 0;
+	}
+
+	for (i = 0; i < old_capacity; ++i) {
+		if (old[i].key) {
+			lone_table_entry_set(new, new_capacity, old[i].key, old[i].value);
+		}
+	}
+
+	lone_deallocate(lone, old);
+	table->table.entries = new;
+	table->table.capacity = new_capacity;
+}
+
+static void lone_table_set(struct lone_lisp *lone, struct lone_value *table, struct lone_value *key, struct lone_value *value)
+{
+	struct lone_table_entry *entries = table->table.entries;
+	size_t count = table->table.count, capacity = table->table.capacity;
+
+	if (count >= capacity / 2) {
+		lone_table_resize(lone, table, capacity * 2);
+	}
+
+	if (lone_table_entry_set(entries, capacity, key, value)) { ++table->table.count; }
+}
+
+static struct lone_value *lone_table_get(struct lone_lisp *lone, struct lone_value *table, struct lone_value *key)
+{
+	size_t capacity = table->table.capacity, i;
+	struct lone_table_entry *entries = table->table.entries, *entry;
+
+	i = lone_table_entry_find_index_for(key, entries, capacity);
+	entry = &entries[i];
+
+	if (entry->key) {
+		return entry->value;
+	}
+
+	return lone_list_create_nil(lone);
+}
+
+static void lone_table_delete(struct lone_lisp *lone, struct lone_value *table, struct lone_value *key)
+{
+	size_t capacity = table->table.capacity, i, j, k;
+	struct lone_table_entry *entries = table->table.entries;
+
+	i = lone_table_entry_find_index_for(key, entries, capacity);
+
+	if (!entries[i].key) { return; }
+
+	j = i;
+	while (1) {
+		j = (j + 1) % capacity;
+		if (!entries[j].key) { break; }
+		k = lone_table_compute_hash_for(entries[j].key, capacity);
+		if ((j > i && (k <= i || k > j)) || (j < i && (k <= i && k > j))) {
+			entries[i] = entries[j];
+			i = j;
+		}
+	}
+
+	entries[i].key = 0;
+	entries[i].value = 0;
+	--table->table.count;
 }
 
 /* ╭──────────────────────────┨ LONE LISP LEXER ┠───────────────────────────╮
@@ -695,6 +870,7 @@ static struct lone_value *lone_evaluate(struct lone_lisp *lone, struct lone_valu
 	switch (value->type) {
 	case LONE_BYTES:
 	case LONE_LIST:
+	case LONE_TABLE:
 	case LONE_INTEGER:
 	case LONE_POINTER:
 	case LONE_TEXT:
@@ -704,25 +880,10 @@ static struct lone_value *lone_evaluate(struct lone_lisp *lone, struct lone_valu
 	}
 }
 
-/* ╭────────────────────────────────────────────────────────────────────────╮
-   │                                                                        │
-   │                                      bits = 32    |    bits = 64       │
-   │    digits = ceil(bits * log10(2)) =  10           |    20              │
-   │                                                                        │
-   ╰────────────────────────────────────────────────────────────────────────╯ */
 static void lone_print_integer(int fd, long n)
 {
-
-#if __BITS_PER_LONG == 64
-#define DECIMAL_DIGITS 20
-#elif __BITS_PER_LONG == 32
-#define DECIMAL_DIGITS 10
-#else
-#error "Unsupported architecture"
-#endif
-
-	static char digits[DECIMAL_DIGITS + 1]; /* digits, sign */
-	char *digit = digits + DECIMAL_DIGITS;  /* work backwards */
+	static char digits[DECIMAL_DIGITS_PER_LONG + 1]; /* digits, sign */
+	char *digit = digits + DECIMAL_DIGITS_PER_LONG;  /* work backwards */
 	size_t count = 0;
 	int is_negative;
 
@@ -797,6 +958,30 @@ static void lone_print_list(struct lone_lisp *lone, struct lone_value *list, int
 	}
 }
 
+static void lone_print_table(struct lone_lisp *lone, struct lone_value *table, int fd)
+{
+	size_t n = table->table.capacity, i;
+	struct lone_table_entry *entries = table->table.entries;
+
+	linux_write(fd, "{ ", 2);
+
+	for (i = 0; i < n; ++i) {
+		struct lone_value *key   = entries[i].key,
+		                  *value = entries[i].value;
+
+
+		if (key) {
+			lone_print(lone, entries[i].key, fd);
+			linux_write(fd, " ", 1);
+			if (value) { lone_print(lone, entries[i].value, fd); }
+			else { linux_write(fd, "nil", 3); }
+			linux_write(fd, " ", 1);
+		}
+	}
+
+	linux_write(fd, "}", 1);
+}
+
 static void lone_print(struct lone_lisp *lone, struct lone_value *value, int fd)
 {
 	if (value == 0 || lone_is_nil(value)) { return; }
@@ -806,6 +991,9 @@ static void lone_print(struct lone_lisp *lone, struct lone_value *value, int fd)
 		linux_write(fd, "(", 1);
 		lone_print_list(lone, value, fd);
 		linux_write(fd, ")", 1);
+		break;
+	case LONE_TABLE:
+		lone_print_table(lone, value, fd);
 		break;
 	case LONE_BYTES:
 		lone_print_bytes(lone, value, fd);
@@ -846,7 +1034,7 @@ struct auxiliary {
 	} as;
 };
 
-static struct lone_value *lone_create_auxiliary_value_pair(struct lone_lisp *lone, struct auxiliary *auxiliary_value)
+static void lone_auxiliary_value_to_table(struct lone_lisp *lone, struct lone_value *table, struct auxiliary *auxiliary_value)
 {
 	struct lone_value *key, *value;
 	switch (auxiliary_value->type) {
@@ -950,25 +1138,49 @@ static struct lone_value *lone_create_auxiliary_value_pair(struct lone_lisp *lon
 		                         lone_integer_create(lone, auxiliary_value->type),
 		                         lone_integer_create(lone, auxiliary_value->as.integer));
 	}
-	return lone_list_create(lone, key, value);
+
+	lone_table_set(lone, table, key, value);
 }
 
-static struct lone_value *lone_split_key_value_on(struct lone_lisp *lone, char *c_string, char delimiter)
+static struct lone_value *lone_auxiliary_vector_to_table(struct lone_lisp *lone, struct auxiliary *auxiliary_values)
 {
-	char *key = c_string, *value = 0;
+	struct lone_value *table = lone_table_create(lone, 32);
+	size_t i;
 
-	while (*c_string++) {
-		if (*c_string == delimiter) {
-			*c_string = '\0';
-			value = c_string + 1;
-			break;
-		}
+	for (i = 0; auxiliary_values[i].type != AT_NULL; ++i) {
+		lone_auxiliary_value_to_table(lone, table, &auxiliary_values[i]);
 	}
 
-	return lone_list_create(lone, lone_text_create_from_c_string(lone, key), lone_text_create_from_c_string(lone, value));
+	return table;
 }
 
-long lone(int argc, char **argv, char **envp, struct auxiliary *auxval)
+static struct lone_value *lone_environment_to_table(struct lone_lisp *lone, char **c_strings)
+{
+	struct lone_value *table = lone_table_create(lone, 64), *key, *value;
+	char *c_string_key, *c_string_value, *c_string;
+
+	for (/* c_strings */; *c_strings; ++c_strings) {
+		c_string = *c_strings;
+		c_string_key = c_string;
+		c_string_value = "";
+
+		while (*c_string++) {
+			if (*c_string == '=') {
+				*c_string = '\0';
+				c_string_value = c_string + 1;
+				break;
+			}
+		}
+
+		key = lone_text_create_from_c_string(lone, c_string_key);
+		value = lone_text_create_from_c_string(lone, c_string_value);
+		lone_table_set(lone, table, key, value);
+	}
+
+	return table;
+}
+
+long lone(int argc, char **argv, char **envp, struct auxiliary *auxv)
 {
 	#define LONE_MEMORY_SIZE 65536
 	static unsigned char memory[LONE_MEMORY_SIZE];
@@ -987,15 +1199,9 @@ long lone(int argc, char **argv, char **envp, struct auxiliary *auxval)
 		head = lone_list_append(head, lone_list_create_nil(&lone));
 	}
 
-	for (i = 0, head = environment; envp[i]; ++i) {
-		lone_list_set(head, lone_split_key_value_on(&lone, envp[i], '='));
-		head = lone_list_append(head, lone_list_create_nil(&lone));
-	}
+	environment = lone_environment_to_table(&lone, envp);
+	auxiliary_values = lone_auxiliary_vector_to_table(&lone, auxv);
 
-	for (head = auxiliary_values; auxval->type != AT_NULL; ++auxval) {
-		lone_list_set(head, lone_create_auxiliary_value_pair(&lone, auxval));
-		head = lone_list_append(head, lone_list_create_nil(&lone));
-	}
 
 	linux_write(1, "Arguments: ", sizeof("Arguments: ") - 1);
 	lone_print(&lone, arguments, 1);
