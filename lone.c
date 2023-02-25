@@ -1034,7 +1034,7 @@ struct auxiliary {
 	} as;
 };
 
-static struct lone_value *lone_create_auxiliary_value_pair(struct lone_lisp *lone, struct auxiliary *auxiliary_value)
+static void lone_auxiliary_value_to_table(struct lone_lisp *lone, struct lone_value *table, struct auxiliary *auxiliary_value)
 {
 	struct lone_value *key, *value;
 	switch (auxiliary_value->type) {
@@ -1138,7 +1138,20 @@ static struct lone_value *lone_create_auxiliary_value_pair(struct lone_lisp *lon
 		                         lone_integer_create(lone, auxiliary_value->type),
 		                         lone_integer_create(lone, auxiliary_value->as.integer));
 	}
-	return lone_list_create(lone, key, value);
+
+	lone_table_set(lone, table, key, value);
+}
+
+static struct lone_value *lone_auxiliary_vector_to_table(struct lone_lisp *lone, struct auxiliary *auxiliary_values)
+{
+	struct lone_value *table = lone_table_create(lone, 32);
+	size_t i;
+
+	for (i = 0; auxiliary_values[i].type != AT_NULL; ++i) {
+		lone_auxiliary_value_to_table(lone, table, &auxiliary_values[i]);
+	}
+
+	return table;
 }
 
 static struct lone_value *lone_environment_to_table(struct lone_lisp *lone, char **c_strings)
@@ -1167,7 +1180,7 @@ static struct lone_value *lone_environment_to_table(struct lone_lisp *lone, char
 	return table;
 }
 
-long lone(int argc, char **argv, char **envp, struct auxiliary *auxval)
+long lone(int argc, char **argv, char **envp, struct auxiliary *auxv)
 {
 	#define LONE_MEMORY_SIZE 65536
 	static unsigned char memory[LONE_MEMORY_SIZE];
@@ -1187,11 +1200,8 @@ long lone(int argc, char **argv, char **envp, struct auxiliary *auxval)
 	}
 
 	environment = lone_environment_to_table(&lone, envp);
+	auxiliary_values = lone_auxiliary_vector_to_table(&lone, auxv);
 
-	for (head = auxiliary_values; auxval->type != AT_NULL; ++auxval) {
-		lone_list_set(head, lone_create_auxiliary_value_pair(&lone, auxval));
-		head = lone_list_append(head, lone_list_create_nil(&lone));
-	}
 
 	linux_write(1, "Arguments: ", sizeof("Arguments: ") - 1);
 	lone_print(&lone, arguments, 1);
