@@ -37,6 +37,10 @@ define print-lone-value
             else
               if $type == LONE_POINTER
                 print-lone-pointer $arg0
+              else
+                if $type == LONE_TABLE
+                  print-lone-table $arg0
+                end
               end
             end
           end
@@ -68,6 +72,36 @@ define print-lone-list-recursive
     printf ". "
     print-lone-value $rest
   end
+end
+
+define print-lone-table
+  set var $table = $arg0->table
+  printf "table["
+  output $table.count
+  printf ", "
+  output $table.capacity
+  printf "]={\n"
+  set var $i = 0
+  while $i < $table.capacity
+    set var $entry = &$table.entries[$i]
+    if $entry->key
+      printf "\t"
+      output $i
+      printf "\t=>\t"
+      print-lone-table-entry $entry
+      printf "\n"
+    end
+    set var $i = $i + 1
+  end
+  printf "}"
+end
+
+define print-lone-table-entry
+  set var $key = $arg0->key
+  set var $value = $arg0->value
+  print-lone-value $key
+  printf " => "
+  print-lone-value $value
 end
 
 define print-lone-bytes
