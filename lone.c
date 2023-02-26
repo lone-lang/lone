@@ -1020,18 +1020,6 @@ static void lone_print(struct lone_lisp *lone, struct lone_value *value, int fd)
 	}
 }
 
-/* ╭───────────────────────┨ LONE LISP ENTRY POINT ┠────────────────────────╮
-   │                                                                        │
-   │    Linux places argument, environment and auxiliary value arrays       │
-   │    on the stack before jumping to the entry point of the process.      │
-   │    Architecture-specific code collects this data and passes it to      │
-   │    the lone function which begins execution of the lisp code.          │
-   │                                                                        │
-   │    During early initialization, lone has no dynamic memory             │
-   │    allocation capabilities and so this function statically             │
-   │    allocates 64 KiB of memory for the early bootstrapping process.     │
-   │                                                                        │
-   ╰────────────────────────────────────────────────────────────────────────╯ */
 struct auxiliary {
 	long type;
 	union {
@@ -1200,6 +1188,18 @@ static struct lone_value *lone_arguments_to_list(struct lone_lisp *lone, int cou
 	return arguments;
 }
 
+/* ╭───────────────────────┨ LONE LISP ENTRY POINT ┠────────────────────────╮
+   │                                                                        │
+   │    Linux places argument, environment and auxiliary value arrays       │
+   │    on the stack before jumping to the entry point of the process.      │
+   │    Architecture-specific code collects this data and passes it to      │
+   │    the lone function which begins execution of the lisp code.          │
+   │                                                                        │
+   │    During early initialization, lone has no dynamic memory             │
+   │    allocation capabilities and so this function statically             │
+   │    allocates 64 KiB of memory for the early bootstrapping process.     │
+   │                                                                        │
+   ╰────────────────────────────────────────────────────────────────────────╯ */
 long lone(int argc, char **argv, char **envp, struct auxiliary *auxv)
 {
 	#define LONE_MEMORY_SIZE 65536
