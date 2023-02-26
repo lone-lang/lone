@@ -799,6 +799,13 @@ lex_failed:
 	linux_exit(-1);
 }
 
+/* ╭─────────────────────────┨ LONE LISP PARSER ┠───────────────────────────╮
+   │                                                                        │
+   │    The parser transforms a linear sequence of tokens into a nested     │
+   │    sequence of lisp objects suitable for evaluation.                   │
+   │    Its main task is to match nested structures such as lists.          │
+   │                                                                        │
+   ╰────────────────────────────────────────────────────────────────────────╯ */
 static struct lone_value *lone_parse_tokens(struct lone_lisp *, struct lone_value **);
 
 static struct lone_value *lone_parse_list(struct lone_lisp *lone, struct lone_value **tokens)
