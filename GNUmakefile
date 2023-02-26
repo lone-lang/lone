@@ -11,4 +11,8 @@ phony += clean
 clean:
 	rm -f lone
 
+phony += test
+test: lone
+	./test.bash
+
 .PHONY: $(phony)
