@@ -127,7 +127,10 @@ struct lone_lisp {
    │    In order to bootstrap itself in such harsh conditions,              │
    │    it must be given some memory to work with.                          │
    │                                                                        │
-   │    Lone will allocate from its internal memory at first.               │
+   │    Lone manages its own memory with a block-based allocator.           │
+   │    Memory blocks are allocated on a first fit basis.                   │
+   │    They will be split into smaller units when allocated                │
+   │    and merged together with free neighbors when deallocated.           │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
 struct lone_memory {
