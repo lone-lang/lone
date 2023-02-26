@@ -55,6 +55,7 @@ static ssize_t linux_write(int fd, const void *buffer, size_t count)
    │    Supported types are:                                                │
    │                                                                        │
    │        ◦ List       the linked list and tree type                      │
+   │        ◦ Table      the hash table, prototype and object type          │
    │        ◦ Symbol     the keyword and interned string type               │
    │        ◦ Text       the UTF-8 encoded text type                        │
    │        ◦ Bytes      the binary data and low level string type          │
