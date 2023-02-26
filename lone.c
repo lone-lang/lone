@@ -1225,17 +1225,7 @@ long lone(int argc, char **argv, char **envp, struct auxiliary *auxv)
 	struct lone_value *environment = lone_environment_to_table(&lone, envp);
 	struct lone_value *auxiliary_values = lone_auxiliary_vector_to_table(&lone, auxv);
 
-	linux_write(1, "Arguments: ", sizeof("Arguments: ") - 1);
-	lone_print(&lone, arguments, 1);
-	linux_write(1, "\n\n", 2);
-
-	linux_write(1, "Environment: ", sizeof("Environment: ") - 1);
-	lone_print(&lone, environment, 1);
-	linux_write(1, "\n\n", 2);
-
-	linux_write(1, "Auxiliary values: ", sizeof("Auxiliary values: ") - 1);
-	lone_print(&lone, auxiliary_values, 1);
-	linux_write(1, "\n\n", 2);
+	lone_set_environment(&lone, arguments, environment, auxiliary_values);
 
 	lone_print(&lone, lone_evaluate(&lone, lone_read(&lone, 0)), 1);
 	linux_write(1, "\n", 1);
