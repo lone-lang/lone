@@ -1190,6 +1190,17 @@ static struct lone_value *lone_arguments_to_list(struct lone_lisp *lone, int cou
 	return arguments;
 }
 
+static void lone_set_environment(struct lone_lisp *lone, struct lone_value *arguments, struct lone_value *environment, struct lone_value *auxiliary_values)
+{
+	struct lone_value *table = lone_table_create(lone, 16);
+
+	lone_table_set(lone, table, lone_symbol_create_from_c_string(lone, "arguments"), arguments);
+	lone_table_set(lone, table, lone_symbol_create_from_c_string(lone, "environment"), environment);
+	lone_table_set(lone, table, lone_symbol_create_from_c_string(lone, "auxiliary-values"), auxiliary_values);
+
+	lone->environment = table;
+}
+
 /* ╭───────────────────────┨ LONE LISP ENTRY POINT ┠────────────────────────╮
    │                                                                        │
    │    Linux places argument, environment and auxiliary value arrays       │
