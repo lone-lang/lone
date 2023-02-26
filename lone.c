@@ -104,13 +104,25 @@ struct lone_value {
 	};
 };
 
+/* ╭───────────────────────┨ LONE LISP INTERPRETER ┠────────────────────────╮
+   │                                                                        │
+   │    The lone lisp interpreter is composed of all internal state         │
+   │    necessary to process useful programs. It includes memory            │
+   │    and references to all lone objects.                                 │
+   │                                                                        │
+   ╰────────────────────────────────────────────────────────────────────────╯ */
+struct lone_memory;
+struct lone_lisp {
+	struct lone_memory *memory;
+	struct lone_values *values;
+};
+
 /* ╭────────────────────┨ LONE LISP MEMORY ALLOCATION ┠─────────────────────╮
    │                                                                        │
    │    Lone is designed to work without any dependencies except Linux,     │
    │    so it does not make use of even the system's C library.             │
    │    In order to bootstrap itself in such harsh conditions,              │
    │    it must be given some memory to work with.                          │
-   │    The lone_linux structure holds that memory.                         │
    │                                                                        │
    │    Lone will allocate from its internal memory at first.               │
    │                                                                        │
@@ -126,20 +138,6 @@ struct lone_values {
 	struct lone_values *next;
 	struct lone_value value;
 };
-
-struct lone_lisp {
-	struct lone_memory *memory;
-	struct lone_values *values;
-};
-
-static void lone_lisp_initialize(struct lone_lisp *lone, unsigned char *memory, size_t size)
-{
-	lone->memory = (struct lone_memory *) memory;
-	lone->memory->prev = lone->memory->next = 0;
-	lone->memory->free = 1;
-	lone->memory->size = size - sizeof(struct lone_memory);
-	lone->values = 0;
-}
 
 static void lone_memory_move(void *from, void *to, size_t count)
 {
@@ -246,6 +244,15 @@ static void *lone_reallocate(struct lone_lisp *lone, void *pointer, size_t size)
 	}
 
 	return new->pointer;
+}
+
+static void lone_lisp_initialize(struct lone_lisp *lone, unsigned char *memory, size_t size)
+{
+	lone->memory = (struct lone_memory *) memory;
+	lone->memory->prev = lone->memory->next = 0;
+	lone->memory->free = 1;
+	lone->memory->size = size - sizeof(struct lone_memory);
+	lone->values = 0;
 }
 
 static struct lone_value *lone_value_create(struct lone_lisp *lone)
