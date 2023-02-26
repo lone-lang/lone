@@ -1067,6 +1067,11 @@ static void lone_print(struct lone_lisp *lone, struct lone_value *value, int fd)
 	}
 }
 
+/* ╭─────────────────────────┨ LONE LINUX PROCESS ┠─────────────────────────╮
+   │                                                                        │
+   │    Code to access all the parameters Linux passes to its processes.    │
+   │                                                                        │
+   ╰────────────────────────────────────────────────────────────────────────╯ */
 struct auxiliary {
 	long type;
 	union {
