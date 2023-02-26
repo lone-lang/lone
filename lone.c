@@ -484,15 +484,18 @@ static struct lone_value *lone_table_get(struct lone_lisp *lone, struct lone_val
 {
 	size_t capacity = table->table.capacity, i;
 	struct lone_table_entry *entries = table->table.entries, *entry;
+	struct lone_value *prototype = table->table.prototype;
 
 	i = lone_table_entry_find_index_for(key, entries, capacity);
 	entry = &entries[i];
 
 	if (entry->key) {
 		return entry->value;
+	} else if (prototype && !lone_is_nil(prototype)) {
+		return lone_table_get(lone, prototype, key);
+	} else {
+		return lone_list_create_nil(lone);
 	}
-
-	return lone_list_create_nil(lone);
 }
 
 static void lone_table_delete(struct lone_lisp *lone, struct lone_value *table, struct lone_value *key)
