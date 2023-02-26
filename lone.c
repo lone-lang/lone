@@ -865,6 +865,13 @@ static struct lone_value *lone_parse(struct lone_lisp *lone, struct lone_value *
 	return lone_parse_tokens(lone, &tokens);
 }
 
+/* ╭─────────────────────────┨ LONE LISP READER ┠───────────────────────────╮
+   │                                                                        │
+   │    The reader's job is to transform input into lone lisp values.       │
+   │    It accomplishes the task by reading input from a given file         │
+   │    descriptor and then parsing the results.                            │
+   │                                                                        │
+   ╰────────────────────────────────────────────────────────────────────────╯ */
 static struct lone_value *lone_read_all_input(struct lone_lisp *lone, int fd)
 {
 	#define LONE_BUFFER_SIZE 4096
