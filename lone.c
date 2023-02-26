@@ -252,6 +252,11 @@ static void *lone_reallocate(struct lone_lisp *lone, void *pointer, size_t size)
 	return new->pointer;
 }
 
+/* ╭────────────────────────────────────────────────────────────────────────╮
+   │                                                                        │
+   │    Initializers and creation functions for lone's types.               │
+   │                                                                        │
+   ╰────────────────────────────────────────────────────────────────────────╯ */
 static void lone_lisp_initialize(struct lone_lisp *lone, unsigned char *memory, size_t size)
 {
 	lone->memory = (struct lone_memory *) memory;
