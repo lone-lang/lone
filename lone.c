@@ -109,8 +109,8 @@ struct lone_value {
 /* ╭───────────────────────┨ LONE LISP INTERPRETER ┠────────────────────────╮
    │                                                                        │
    │    The lone lisp interpreter is composed of all internal state         │
-   │    necessary to process useful programs. It includes memory            │
-   │    and references to all lone objects.                                 │
+   │    necessary to process useful programs. It includes memory,           │
+   │    the top level lisp environment and references to all objects.       │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
 struct lone_memory;
