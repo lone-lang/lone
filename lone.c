@@ -929,6 +929,11 @@ static struct lone_value *lone_evaluate(struct lone_lisp *lone, struct lone_valu
 	}
 }
 
+/* ╭─────────────────────────┨ LONE LISP PRINTER ┠──────────────────────────╮
+   │                                                                        │
+   │    Transforms lone lisp objects into text in order to write it out.    │
+   │                                                                        │
+   ╰────────────────────────────────────────────────────────────────────────╯ */
 static void lone_print_integer(int fd, long n)
 {
 	static char digits[DECIMAL_DIGITS_PER_LONG + 1]; /* digits, sign */
