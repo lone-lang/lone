@@ -74,6 +74,12 @@ test-executable() {
   compare-status "${test}/status" "${status}" || result="${fail}"
 
   printf "%s %s\n" "${result}" "${name}"
+
+  if [[ "${result}" == "${pass}" ]]; then
+    return 0
+  else
+    return 1
+  fi
 }
 
 run-test() {
@@ -85,9 +91,19 @@ find-tests() {
 }
 
 run-all-tests() {
-  find-tests "${2}" | while IFS= read -r -d '' test_case; do
-    run-test "${1}" "$(remove-prefix "${2}/" "${test_case}")" "${2}"
-  done
+  local failed=no
+
+  while IFS= read -r -d '' test_case; do
+    if ! run-test "${1}" "$(remove-prefix "${2}/" "${test_case}")" "${2}"; then
+      failed=yes
+    fi
+  done < <(find-tests "${2}")
+
+  if [[ "${failed}" == "no" ]]; then
+    return 0
+  else
+    return 1
+  fi
 }
 
 run-all-tests "${lone}" "${tests_directory}"
