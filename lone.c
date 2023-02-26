@@ -115,6 +115,7 @@ struct lone_memory;
 struct lone_lisp {
 	struct lone_memory *memory;
 	struct lone_values *values;
+	struct lone_value *environment;
 };
 
 /* ╭────────────────────┨ LONE LISP MEMORY ALLOCATION ┠─────────────────────╮
@@ -253,6 +254,7 @@ static void lone_lisp_initialize(struct lone_lisp *lone, unsigned char *memory, 
 	lone->memory->free = 1;
 	lone->memory->size = size - sizeof(struct lone_memory);
 	lone->values = 0;
+	lone->environment = 0;
 }
 
 static struct lone_value *lone_value_create(struct lone_lisp *lone)
