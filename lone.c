@@ -907,6 +907,12 @@ static struct lone_value *lone_read(struct lone_lisp *lone, int fd)
 	return lone_parse(lone, lone_read_all_input(lone, fd));
 }
 
+/* ╭────────────────────────┨ LONE LISP EVALUATOR ┠─────────────────────────╮
+   │                                                                        │
+   │    The heart of the language. This is what actually executes code.     │
+   │    Currently supports resolving variable references.                   │
+   │                                                                        │
+   ╰────────────────────────────────────────────────────────────────────────╯ */
 static struct lone_value *lone_evaluate(struct lone_lisp *lone, struct lone_value *value)
 {
 	switch (value->type) {
