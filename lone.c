@@ -91,6 +91,7 @@ struct lone_table {
 	size_t count;
 	size_t capacity;
 	struct lone_table_entry *entries;
+	struct lone_value *prototype;
 };
 
 struct lone_value {
@@ -290,10 +291,11 @@ static struct lone_value *lone_list_create_nil(struct lone_lisp *lone)
 	return lone_list_create(lone, 0, 0);
 }
 
-static struct lone_value *lone_table_create(struct lone_lisp *lone, size_t capacity)
+static struct lone_value *lone_table_create(struct lone_lisp *lone, size_t capacity, struct lone_value *prototype)
 {
 	struct lone_value *value = lone_value_create(lone);
 	value->type = LONE_TABLE;
+	value->table.prototype = prototype;
 	value->table.capacity = capacity;
 	value->table.count = 0;
 	value->table.entries = lone_allocate(lone, capacity * sizeof(*value->table.entries));
@@ -1142,7 +1144,7 @@ static void lone_auxiliary_value_to_table(struct lone_lisp *lone, struct lone_va
 
 static struct lone_value *lone_auxiliary_vector_to_table(struct lone_lisp *lone, struct auxiliary *auxiliary_values)
 {
-	struct lone_value *table = lone_table_create(lone, 32);
+	struct lone_value *table = lone_table_create(lone, 32, 0);
 	size_t i;
 
 	for (i = 0; auxiliary_values[i].type != AT_NULL; ++i) {
@@ -1154,7 +1156,7 @@ static struct lone_value *lone_auxiliary_vector_to_table(struct lone_lisp *lone,
 
 static struct lone_value *lone_environment_to_table(struct lone_lisp *lone, char **c_strings)
 {
-	struct lone_value *table = lone_table_create(lone, 64), *key, *value;
+	struct lone_value *table = lone_table_create(lone, 64, 0), *key, *value;
 	char *c_string_key, *c_string_value, *c_string;
 
 	for (/* c_strings */; *c_strings; ++c_strings) {
@@ -1193,7 +1195,7 @@ static struct lone_value *lone_arguments_to_list(struct lone_lisp *lone, int cou
 
 static void lone_set_environment(struct lone_lisp *lone, struct lone_value *arguments, struct lone_value *environment, struct lone_value *auxiliary_values)
 {
-	struct lone_value *table = lone_table_create(lone, 16);
+	struct lone_value *table = lone_table_create(lone, 16, 0);
 
 	lone_table_set(lone, table, lone_symbol_create_from_c_string(lone, "arguments"), arguments);
 	lone_table_set(lone, table, lone_symbol_create_from_c_string(lone, "environment"), environment);
