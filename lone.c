@@ -1180,6 +1180,19 @@ static struct lone_value *lone_environment_to_table(struct lone_lisp *lone, char
 	return table;
 }
 
+static struct lone_value *lone_arguments_to_list(struct lone_lisp *lone, int count, char **c_strings)
+{
+	struct lone_value *arguments = lone_list_create_nil(lone), *head;
+	size_t i;
+
+	for (i = 0, head = arguments; i < count; ++i) {
+		lone_list_set(head, lone_text_create_from_c_string(lone, c_strings[i]));
+		head = lone_list_append(head, lone_list_create_nil(lone));
+	}
+
+	return arguments;
+}
+
 long lone(int argc, char **argv, char **envp, struct auxiliary *auxv)
 {
 	#define LONE_MEMORY_SIZE 65536
@@ -1188,20 +1201,9 @@ long lone(int argc, char **argv, char **envp, struct auxiliary *auxv)
 
 	lone_lisp_initialize(&lone, memory, sizeof(memory));
 
-	struct lone_value *arguments = lone_list_create_nil(&lone);
-	struct lone_value *environment = lone_list_create_nil(&lone);
-	struct lone_value *auxiliary_values = lone_list_create_nil(&lone);
-	struct lone_value *head;
-	int i;
-
-	for (i = 0, head = arguments; i < argc; ++i) {
-		lone_list_set(head, lone_text_create_from_c_string(&lone, argv[i]));
-		head = lone_list_append(head, lone_list_create_nil(&lone));
-	}
-
-	environment = lone_environment_to_table(&lone, envp);
-	auxiliary_values = lone_auxiliary_vector_to_table(&lone, auxv);
-
+	struct lone_value *arguments = lone_arguments_to_list(&lone, argc, argv);
+	struct lone_value *environment = lone_environment_to_table(&lone, envp);
+	struct lone_value *auxiliary_values = lone_auxiliary_vector_to_table(&lone, auxv);
 
 	linux_write(1, "Arguments: ", sizeof("Arguments: ") - 1);
 	lone_print(&lone, arguments, 1);
