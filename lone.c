@@ -1341,8 +1341,13 @@ long lone(int argc, char **argv, char **envp, struct auxiliary *auxv)
 
 	lone_set_environment(&lone, arguments, environment, auxiliary_values);
 
-	lone_print(&lone, lone_evaluate(&lone, lone_read(&lone, 0)), 1);
-	linux_write(1, "\n", 1);
+	while (!reader.finished) {
+		struct lone_value *value = lone_read(&lone, &reader);
+		if (!value) { return -1; }
+
+		lone_print(&lone, lone_evaluate(&lone, value), 1);
+		linux_write(1, "\n", 1);
+	}
 
 	lone_deallocate_all(&lone);
 
