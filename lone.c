@@ -940,6 +940,8 @@ static struct lone_value *lone_read(struct lone_lisp *lone, int fd)
    ╰────────────────────────────────────────────────────────────────────────╯ */
 static struct lone_value *lone_evaluate(struct lone_lisp *lone, struct lone_value *value)
 {
+	if (value == 0) { return 0; }
+
 	switch (value->type) {
 	case LONE_BYTES:
 	case LONE_LIST:
