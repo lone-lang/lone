@@ -1230,7 +1230,7 @@ static struct lone_value *lone_environment_to_table(struct lone_lisp *lone, char
 static struct lone_value *lone_arguments_to_list(struct lone_lisp *lone, int count, char **c_strings)
 {
 	struct lone_value *arguments = lone_list_create_nil(lone), *head;
-	size_t i;
+	int i;
 
 	for (i = 0, head = arguments; i < count; ++i) {
 		lone_list_set(head, lone_text_create_from_c_string(lone, c_strings[i]));
