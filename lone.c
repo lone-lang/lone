@@ -898,34 +898,35 @@ static struct lone_value *lone_parse(struct lone_lisp *lone, struct lone_value *
 	return lone_parse_tokens(lone, &tokens);
 }
 
-static struct lone_value *lone_read_all_input(struct lone_lisp *lone, int fd)
+static size_t lone_read_from_file_descriptor(struct lone_lisp *lone, struct lone_reader *reader)
 {
-	#define LONE_BUFFER_SIZE 4096
-	size_t size = LONE_BUFFER_SIZE;
-	unsigned char *buffer = lone_allocate(lone, size);
-	ssize_t bytes_read = 0, total_read = 0;
-	struct lone_value *input;
+	unsigned char *buffer = reader->buffer.pointer;
+	size_t size = reader->buffer.count, position = reader->position, allocated = size, bytes_read = 0, total_read = 0;
+	ssize_t read_result = 0;
 
 	while (1) {
-		bytes_read = linux_read(fd, buffer + total_read, LONE_BUFFER_SIZE);
+		read_result = linux_read(reader->file_descriptor, buffer + position, size);
 
-		if (bytes_read < 0) {
+		if (read_result < 0) {
 			linux_exit(-1);
 		}
 
+		bytes_read = (size_t) read_result;
 		total_read += bytes_read;
+		position += bytes_read;
 
-		if (bytes_read == LONE_BUFFER_SIZE) {
-			size += LONE_BUFFER_SIZE;
-			buffer = lone_reallocate(lone, buffer, size);
+		if (bytes_read == size) {
+			allocated += size;
+			buffer = lone_reallocate(lone, buffer, allocated);
 		} else {
 			break;
 		}
 	}
 
-	input = lone_bytes_create(lone, buffer, (size_t) total_read);
-	lone_deallocate(lone, buffer);
-	return input;
+	reader->buffer.pointer = buffer;
+	reader->buffer.count = allocated;
+	reader->position = position;
+	return total_read;
 }
 
 static struct lone_value *lone_read(struct lone_lisp *lone, int fd)
