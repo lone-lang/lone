@@ -559,6 +559,16 @@ struct lone_reader {
 	int finished;
 };
 
+static void lone_reader_initialize(struct lone_lisp *lone, struct lone_reader *reader, size_t buffer_size, int file_descriptor)
+{
+	reader->file_descriptor = file_descriptor;
+	reader->buffer.count = buffer_size;
+	reader->buffer.pointer = lone_allocate(lone, buffer_size);
+	reader->position = 0;
+	reader->remaining_tokens = 0;
+	reader->finished = 0;
+}
+
 /* ╭──────────────────────────┨ LONE LISP LEXER ┠───────────────────────────╮
    │                                                                        │
    │    The lexer or tokenizer transforms a linear stream of characters     │
