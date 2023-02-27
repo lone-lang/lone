@@ -846,7 +846,7 @@ static struct lone_value *lone_parse_list(struct lone_lisp *lone, struct lone_va
 	while (1) {
 		if (lone_is_nil(*tokens)) {
 			// expected token or ) but found end of input
-			linux_exit(-1);
+			return 0;
 		}
 
 		struct lone_value *current = (*tokens)->list.first;
