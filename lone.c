@@ -929,9 +929,32 @@ static size_t lone_read_from_file_descriptor(struct lone_lisp *lone, struct lone
 	return total_read;
 }
 
-static struct lone_value *lone_read(struct lone_lisp *lone, int fd)
+static struct lone_value *lone_read(struct lone_lisp *lone, struct lone_reader *reader)
 {
-	return lone_parse(lone, lone_read_all_input(lone, fd));
+	struct lone_value *value;
+	size_t bytes_read;
+
+	do {
+		bytes_read = lone_read_from_file_descriptor(lone, reader);
+		value = lone_bytes_create(lone, reader->buffer.pointer, reader->position);
+		value = lone_parse(lone, value, &reader->remaining_tokens);
+
+		if (bytes_read == 0) {
+			// there was no more input
+			if (value == 0) {
+				// the parser wanted more bytes
+				return 0;
+			} else if (lone_is_nil(value)) {
+				// the parser consumed all input
+				reader->finished = 1;
+			}
+		}
+
+	} while (value == 0);
+
+	// successfully read a value, reset reader position and return it
+	reader->position = 0;
+	return value;
 }
 
 /* ╭────────────────────────┨ LONE LISP EVALUATOR ┠─────────────────────────╮
