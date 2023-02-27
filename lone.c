@@ -747,15 +747,14 @@ static int lone_lexer_consume_parenthesis(struct lone_lisp *lone, struct lone_le
    │        ◦ Tokenize everything else unmodified as a symbol               │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
-static struct lone_value *lone_lex(struct lone_lisp *lone, struct lone_value *value)
+static struct lone_value *lone_lex(struct lone_lisp *lone, struct lone_lexer *lexer)
 {
 	struct lone_value *first = lone_list_create_nil(lone), *current = first;
-	struct lone_lexer lexer = { value->bytes, 0 };
 	unsigned char *c;
 
-	while ((c = lone_lexer_peek(&lexer))) {
+	while ((c = lone_lexer_peek(lexer))) {
 		if (lone_lexer_match_byte(*c, ' ')) {
-			lone_lexer_consume(&lexer);
+			lone_lexer_consume(lexer);
 			continue;
 		} else {
 			unsigned char *c1;
@@ -763,25 +762,25 @@ static struct lone_value *lone_lex(struct lone_lisp *lone, struct lone_value *va
 
 			switch (*c) {
 			case '+': case '-':
-				if ((c1 = lone_lexer_peek_k(&lexer, 1)) && lone_lexer_match_byte(*c1, '1')) {
-					failed = lone_lexer_consume_number(lone, &lexer, current);
+				if ((c1 = lone_lexer_peek_k(lexer, 1)) && lone_lexer_match_byte(*c1, '1')) {
+					failed = lone_lexer_consume_number(lone, lexer, current);
 				} else {
-					failed = lone_lexer_consume_symbol(lone, &lexer, current);
+					failed = lone_lexer_consume_symbol(lone, lexer, current);
 				}
 				break;
 			case '0': case '1': case '2': case '3': case '4':
 			case '5': case '6': case '7': case '8': case '9':
-				failed = lone_lexer_consume_number(lone, &lexer, current);
+				failed = lone_lexer_consume_number(lone, lexer, current);
 				break;
 			case '"':
-				failed = lone_lexer_consume_text(lone, &lexer, current);
+				failed = lone_lexer_consume_text(lone, lexer, current);
 				break;
 			case '(':
 			case ')':
-				failed = lone_lexer_consume_parenthesis(lone, &lexer, current);
+				failed = lone_lexer_consume_parenthesis(lone, lexer, current);
 				break;
 			default:
-				failed = lone_lexer_consume_symbol(lone, &lexer, current);
+				failed = lone_lexer_consume_symbol(lone, lexer, current);
 				break;
 			}
 
@@ -861,7 +860,8 @@ parse_failed:
 
 static struct lone_value *lone_parse(struct lone_lisp *lone, struct lone_value *value)
 {
-	struct lone_value *tokens = lone_lex(lone, value);
+	struct lone_lexer lexer = { value->bytes, 0 };
+	struct lone_value *tokens = lone_lex(lone, &lexer);
 	return lone_parse_tokens(lone, &tokens);
 }
 
