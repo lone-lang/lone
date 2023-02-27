@@ -397,6 +397,12 @@ static struct lone_value *lone_list_set(struct lone_value *list, struct lone_val
 	return list->list.first = value;
 }
 
+static struct lone_value *lone_list_last(struct lone_value *list)
+{
+	while (!lone_is_nil(list->list.rest)) { list = list->list.rest; }
+	return list;
+}
+
 static struct lone_value *lone_list_append(struct lone_value *list, struct lone_value *rest)
 {
 	return list->list.rest = rest;
