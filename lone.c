@@ -543,6 +543,22 @@ static void lone_table_delete(struct lone_lisp *lone, struct lone_value *table, 
 	--table->table.count;
 }
 
+
+/* ╭─────────────────────────┨ LONE LISP READER ┠───────────────────────────╮
+   │                                                                        │
+   │    The reader's job is to transform input into lone lisp values.       │
+   │    It accomplishes the task by reading input from a given file         │
+   │    descriptor and then parsing the results.                            │
+   │                                                                        │
+   ╰────────────────────────────────────────────────────────────────────────╯ */
+struct lone_reader {
+	int file_descriptor;
+	struct lone_bytes buffer;
+	size_t position;
+	struct lone_value *remaining_tokens;
+	int finished;
+};
+
 /* ╭──────────────────────────┨ LONE LISP LEXER ┠───────────────────────────╮
    │                                                                        │
    │    The lexer or tokenizer transforms a linear stream of characters     │
@@ -871,13 +887,6 @@ static struct lone_value *lone_parse(struct lone_lisp *lone, struct lone_value *
 	return lone_parse_tokens(lone, &tokens);
 }
 
-/* ╭─────────────────────────┨ LONE LISP READER ┠───────────────────────────╮
-   │                                                                        │
-   │    The reader's job is to transform input into lone lisp values.       │
-   │    It accomplishes the task by reading input from a given file         │
-   │    descriptor and then parsing the results.                            │
-   │                                                                        │
-   ╰────────────────────────────────────────────────────────────────────────╯ */
 static struct lone_value *lone_read_all_input(struct lone_lisp *lone, int fd)
 {
 	#define LONE_BUFFER_SIZE 4096
