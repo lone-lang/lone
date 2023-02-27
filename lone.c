@@ -1292,11 +1292,14 @@ static void lone_set_environment(struct lone_lisp *lone, struct lone_value *argu
    ╰────────────────────────────────────────────────────────────────────────╯ */
 long lone(int argc, char **argv, char **envp, struct auxiliary *auxv)
 {
+	#define LONE_BUFFER_SIZE 4096
 	#define LONE_MEMORY_SIZE 65536
 	static unsigned char memory[LONE_MEMORY_SIZE];
 	struct lone_lisp lone;
+	struct lone_reader reader;
 
 	lone_lisp_initialize(&lone, memory, sizeof(memory));
+	lone_reader_initialize(&lone, &reader, LONE_BUFFER_SIZE, 0);
 
 	struct lone_value *arguments = lone_arguments_to_list(&lone, argc, argv);
 	struct lone_value *environment = lone_environment_to_table(&lone, envp);
