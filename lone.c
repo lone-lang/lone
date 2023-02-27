@@ -891,11 +891,20 @@ parse_failed:
 	linux_exit(-1);
 }
 
-static struct lone_value *lone_parse(struct lone_lisp *lone, struct lone_value *value)
+static struct lone_value *lone_parse(struct lone_lisp *lone, struct lone_value *value, struct lone_value **remainder)
 {
 	struct lone_lexer lexer = { value->bytes, 0 };
-	struct lone_value *tokens = lone_lex(lone, &lexer);
-	return lone_parse_tokens(lone, &tokens);
+	struct lone_value *tokens = lone_lex(lone, &lexer), *parsed;
+
+	if (*remainder && !lone_is_nil(*remainder)) {
+		lone_list_append(lone_list_last(*remainder), tokens);
+		tokens = *remainder;
+	}
+
+	parsed = lone_parse_tokens(lone, &tokens);
+
+	*remainder = tokens;
+	return parsed;
 }
 
 static size_t lone_read_from_file_descriptor(struct lone_lisp *lone, struct lone_reader *reader)
