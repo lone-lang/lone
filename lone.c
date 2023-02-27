@@ -865,6 +865,7 @@ static struct lone_value *lone_parse_list(struct lone_lisp *lone, struct lone_va
 
 static struct lone_value *lone_parse_tokens(struct lone_lisp *lone, struct lone_value **tokens)
 {
+	if (lone_is_nil(*tokens)) { return *tokens; }
 	if ((*tokens)->list.first == 0) { goto parse_failed; }
 	struct lone_value *token = lone_list_pop(tokens);
 
