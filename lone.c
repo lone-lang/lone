@@ -759,7 +759,7 @@ static struct lone_value *lone_reader_consume_symbol(struct lone_lisp *lone, str
 		++end;
 	}
 
-	return lone_symbol_create(lone, start, end);
+	return lone_intern(lone, start, end);
 }
 
 /* ╭────────────────────────────────────────────────────────────────────────╮
@@ -809,7 +809,7 @@ static struct lone_value *lone_reader_consume_parenthesis(struct lone_lisp *lone
 	switch (*parenthesis) {
 	case '(': case ')':
 		lone_reader_consume(reader);
-		return lone_symbol_create(lone, parenthesis, 1);
+		return lone_intern(lone, parenthesis, 1);
 		break;
 	default:
 		return 0;
