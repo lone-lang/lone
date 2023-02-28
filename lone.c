@@ -118,6 +118,7 @@ struct lone_lisp {
 	struct lone_memory *memory;
 	struct lone_values *values;
 	struct lone_value *environment;
+	struct lone_value *symbol_table;
 };
 
 /* ╭────────────────────┨ LONE LISP MEMORY ALLOCATION ┠─────────────────────╮
@@ -265,6 +266,7 @@ static void lone_lisp_initialize(struct lone_lisp *lone, unsigned char *memory, 
 	lone->memory->size = size - sizeof(struct lone_memory);
 	lone->values = 0;
 	lone->environment = 0;
+	lone->symbol_table = 0;
 }
 
 static struct lone_value *lone_value_create(struct lone_lisp *lone)
@@ -1287,6 +1289,7 @@ long lone(int argc, char **argv, char **envp, struct auxiliary *auxv)
 	struct lone_reader reader;
 
 	lone_lisp_initialize(&lone, memory, sizeof(memory));
+	lone.symbol_table = lone_table_create(&lone, 256, 0);
 
 	struct lone_value *arguments = lone_arguments_to_list(&lone, argc, argv);
 	struct lone_value *environment = lone_environment_to_table(&lone, envp);
