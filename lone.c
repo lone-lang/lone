@@ -543,33 +543,11 @@ static void lone_table_delete(struct lone_lisp *lone, struct lone_value *table, 
 	--table->table.count;
 }
 
-
 /* ╭─────────────────────────┨ LONE LISP READER ┠───────────────────────────╮
    │                                                                        │
    │    The reader's job is to transform input into lone lisp values.       │
    │    It accomplishes the task by reading input from a given file         │
-   │    descriptor and then parsing the results.                            │
-   │                                                                        │
-   ╰────────────────────────────────────────────────────────────────────────╯ */
-struct lone_reader {
-	int file_descriptor;
-	struct lone_bytes buffer;
-	size_t position;
-	struct lone_value *remaining_tokens;
-	int finished;
-};
-
-static void lone_reader_initialize(struct lone_lisp *lone, struct lone_reader *reader, size_t buffer_size, int file_descriptor)
-{
-	reader->file_descriptor = file_descriptor;
-	reader->buffer.count = buffer_size;
-	reader->buffer.pointer = lone_allocate(lone, buffer_size);
-	reader->position = 0;
-	reader->remaining_tokens = 0;
-	reader->finished = 0;
-}
-
-/* ╭──────────────────────────┨ LONE LISP LEXER ┠───────────────────────────╮
+   │    descriptor and then lexing and parsing the results.                 │
    │                                                                        │
    │    The lexer or tokenizer transforms a linear stream of characters     │
    │    into a linear stream of tokens suitable for parser consumption.     │
@@ -582,11 +560,64 @@ static void lone_reader_initialize(struct lone_lisp *lone, struct lone_reader *r
    │        ◦ peek(k) which returns the character at i+k                    │
    │        ◦ consume(k) which advances i by k positions                    │
    │                                                                        │
+   │    The parser transforms a linear sequence of tokens into a nested     │
+   │    sequence of lisp objects suitable for evaluation.                   │
+   │    Its main task is to match nested structures such as lists.          │
+   │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
-struct lone_lexer {
-	struct lone_bytes input;
-	size_t position;
+struct lone_reader {
+	int file_descriptor;
+	struct {
+		struct lone_bytes bytes;
+		struct {
+			size_t read;
+			size_t write;
+		} position;
+	} buffer;
+	int error;
 };
+
+static void lone_reader_initialize(struct lone_lisp *lone, struct lone_reader *reader, size_t buffer_size, int file_descriptor)
+{
+	reader->file_descriptor = file_descriptor;
+	reader->buffer.bytes.count = buffer_size;
+	reader->buffer.bytes.pointer = lone_allocate(lone, buffer_size);
+	reader->buffer.position.read = 0;
+	reader->buffer.position.write = 0;
+	reader->error = 0;
+}
+
+static size_t lone_reader_fill_buffer(struct lone_lisp *lone, struct lone_reader *reader)
+{
+	unsigned char *buffer = reader->buffer.bytes.pointer;
+	size_t size = reader->buffer.bytes.count, position = reader->buffer.position.write,
+	       allocated = size, bytes_read = 0, total_read = 0;
+	ssize_t read_result = 0;
+
+	while (1) {
+		read_result = linux_read(reader->file_descriptor, buffer + position, size);
+
+		if (read_result < 0) {
+			linux_exit(-1);
+		}
+
+		bytes_read = (size_t) read_result;
+		total_read += bytes_read;
+		position += bytes_read;
+
+		if (bytes_read == size) {
+			allocated += size;
+			buffer = lone_reallocate(lone, buffer, allocated);
+		} else {
+			break;
+		}
+	}
+
+	reader->buffer.bytes.pointer = buffer;
+	reader->buffer.bytes.count = allocated;
+	reader->buffer.position.write = position;
+	return total_read;
+}
 
 /* ╭────────────────────────────────────────────────────────────────────────╮
    │                                                                        │
@@ -595,16 +626,28 @@ struct lone_lexer {
    │    the current character and peek(k) being look ahead for k > 1.       │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
-static unsigned char *lone_lexer_peek_k(struct lone_lexer *lexer, size_t k)
+static unsigned char *lone_reader_peek_k(struct lone_lisp *lone, struct lone_reader *reader, size_t k)
 {
-	if (lexer->position + k >= lexer->input.count)
-		return 0;
-	return lexer->input.pointer + lexer->position + k;
+	size_t read_position = reader->buffer.position.read,
+	       write_position = reader->buffer.position.write,
+	       bytes_read;
+
+	if (read_position + k >= write_position) {
+		// we'd overrun the buffer because there's not enough input
+		// fill it up by reading more first
+		bytes_read = lone_reader_fill_buffer(lone, reader);
+		if (bytes_read <= k) {
+			// wanted at least k bytes but got less
+			return 0;
+		}
+	}
+
+	return reader->buffer.bytes.pointer + read_position + k;
 }
 
-static unsigned char *lone_lexer_peek(struct lone_lexer *lexer)
+static unsigned char *lone_reader_peek(struct lone_lisp *lone, struct lone_reader *reader)
 {
-	return lone_lexer_peek_k(lexer, 0);
+	return lone_reader_peek_k(lone, reader, 0);
 }
 
 /* ╭────────────────────────────────────────────────────────────────────────╮
@@ -613,17 +656,17 @@ static unsigned char *lone_lexer_peek(struct lone_lexer *lexer)
    │    This progresses through the input, consuming it.                    │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
-static void lone_lexer_consume_k(struct lone_lexer *lexer, size_t k)
+static void lone_reader_consume_k(struct lone_reader *reader, size_t k)
 {
-	lexer->position += k;
+	reader->buffer.position.read += k;
 }
 
-static void lone_lexer_consume(struct lone_lexer *lexer)
+static void lone_reader_consume(struct lone_reader *reader)
 {
-	lone_lexer_consume_k(lexer, 1);
+	lone_reader_consume_k(reader, 1);
 }
 
-static int lone_lexer_match_byte(unsigned char byte, unsigned char target)
+static int lone_reader_match_byte(unsigned char byte, unsigned char target)
 {
 	if (target == ' ') {
 		switch (byte) {
@@ -648,36 +691,34 @@ static int lone_lexer_match_byte(unsigned char byte, unsigned char target)
    │    ([+-]?[0-9]+)[) \n\t]                                               │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
-static int lone_lexer_consume_number(struct lone_lisp *lone, struct lone_lexer *lexer, struct lone_value *list)
+static struct lone_value *lone_reader_consume_number(struct lone_lisp *lone, struct lone_reader *reader)
 {
-	unsigned char *current, *start = lone_lexer_peek(lexer);
-	if (!start) { return 1; }
+	unsigned char *current, *start = lone_reader_peek(lone, reader);
+	if (!start) { return 0; }
 	size_t end = 0;
 
 	switch (*start) {
 	case '+': case '-':
-		lone_lexer_consume(lexer);
+		lone_reader_consume(reader);
 		++end;
 		break;
 	default:
 		break;
 	}
 
-	if ((current = lone_lexer_peek(lexer)) && lone_lexer_match_byte(*current, '1')) {
-		lone_lexer_consume(lexer);
+	if ((current = lone_reader_peek(lone, reader)) && lone_reader_match_byte(*current, '1')) {
+		lone_reader_consume(reader);
 		++end;
-	} else { return 1; }
+	} else { return 0; }
 
-	while ((current = lone_lexer_peek(lexer)) && lone_lexer_match_byte(*current, '1')) {
-		lone_lexer_consume(lexer);
+	while ((current = lone_reader_peek(lone, reader)) && lone_reader_match_byte(*current, '1')) {
+		lone_reader_consume(reader);
 		++end;
 	}
 
-	if (current && *current != ')' && !lone_lexer_match_byte(*current, ' ')) { return 1; }
+	if (current && *current != ')' && !lone_reader_match_byte(*current, ' ')) { return 0; }
 
-	lone_list_set(list, lone_integer_parse(lone, start, end));
-	return 0;
-
+	return lone_integer_parse(lone, start, end);
 }
 
 /* ╭────────────────────────────────────────────────────────────────────────╮
@@ -687,19 +728,18 @@ static int lone_lexer_consume_number(struct lone_lisp *lone, struct lone_lexer *
    │    (.*)[) \n\t]                                                        │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
-static int lone_lexer_consume_symbol(struct lone_lisp *lone, struct lone_lexer *lexer, struct lone_value *list)
+static struct lone_value *lone_reader_consume_symbol(struct lone_lisp *lone, struct lone_reader *reader)
 {
-	unsigned char *current, *start = lone_lexer_peek(lexer);
-	if (!start) { return 1; }
+	unsigned char *current, *start = lone_reader_peek(lone, reader);
+	if (!start) { return 0; }
 	size_t end = 0;
 
-	while ((current = lone_lexer_peek(lexer)) && *current != ')' && !lone_lexer_match_byte(*current, ' ')) {
-		lone_lexer_consume(lexer);
+	while ((current = lone_reader_peek(lone, reader)) && *current != ')' && !lone_reader_match_byte(*current, ' ')) {
+		lone_reader_consume(reader);
 		++end;
 	}
 
-	lone_list_set(list, lone_symbol_create(lone, start, end));
-	return 0;
+	return lone_symbol_create(lone, start, end);
 }
 
 /* ╭────────────────────────────────────────────────────────────────────────╮
@@ -709,29 +749,28 @@ static int lone_lexer_consume_symbol(struct lone_lisp *lone, struct lone_lexer *
    │    (".*")[) \n\t]                                                      │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
-static int lone_lexer_consume_text(struct lone_lisp *lone, struct lone_lexer *lexer, struct lone_value *list)
+static struct lone_value *lone_reader_consume_text(struct lone_lisp *lone, struct lone_reader *reader)
 {
 	size_t end = 0;
-	unsigned char *current, *start = lone_lexer_peek(lexer);
-	if (!start || *start != '"') { return 1; }
+	unsigned char *current, *start = lone_reader_peek(lone, reader);
+	if (!start || *start != '"') { return 0; }
 
 	// skip leading "
 	++start;
-	lone_lexer_consume(lexer);
+	lone_reader_consume(reader);
 
-	while ((current = lone_lexer_peek(lexer)) && *current != '"') {
-		lone_lexer_consume(lexer);
+	while ((current = lone_reader_peek(lone, reader)) && *current != '"') {
+		lone_reader_consume(reader);
 		++end;
 	}
 
 	// skip trailing "
 	++current;
-	lone_lexer_consume(lexer);
+	lone_reader_consume(reader);
 
-	if (*current != ')' && !lone_lexer_match_byte(*current, ' ')) { return 1; }
+	if (*current != ')' && !lone_reader_match_byte(*current, ' ')) { return 0; }
 
-	lone_list_set(list, lone_text_create(lone, start, end));
-	return 0;
+	return lone_text_create(lone, start, end);
 }
 
 /* ╭────────────────────────────────────────────────────────────────────────╮
@@ -742,20 +781,19 @@ static int lone_lexer_consume_text(struct lone_lisp *lone, struct lone_lexer *le
    │    ([()])                                                              │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
-static int lone_lexer_consume_parenthesis(struct lone_lisp *lone, struct lone_lexer *lexer, struct lone_value *list)
+static struct lone_value *lone_reader_consume_parenthesis(struct lone_lisp *lone, struct lone_reader *reader)
 {
-	unsigned char *parenthesis = lone_lexer_peek(lexer);
-	if (!parenthesis) { return 1; }
+	unsigned char *parenthesis = lone_reader_peek(lone, reader);
+	if (!parenthesis) { return 0; }
 
 	switch (*parenthesis) {
 	case '(': case ')':
-		lone_list_set(list, lone_symbol_create(lone, parenthesis, 1));
-		lone_lexer_consume(lexer);
+		lone_reader_consume(reader);
+		return lone_symbol_create(lone, parenthesis, 1);
 		break;
-	default: return 1;
+	default:
+		return 0;
 	}
-
-	return 0;
 }
 
 /* ╭────────────────────────────────────────────────────────────────────────╮
@@ -779,102 +817,88 @@ static int lone_lexer_consume_parenthesis(struct lone_lisp *lone, struct lone_le
    │        ◦ Tokenize everything else unmodified as a symbol               │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
-static struct lone_value *lone_lex(struct lone_lisp *lone, struct lone_lexer *lexer)
+static struct lone_value *lone_lex(struct lone_lisp *lone, struct lone_reader *reader)
 {
-	struct lone_value *first = lone_list_create_nil(lone), *current = first;
+	struct lone_value *token = 0;
 	unsigned char *c;
 
-	while ((c = lone_lexer_peek(lexer))) {
-		if (lone_lexer_match_byte(*c, ' ')) {
-			lone_lexer_consume(lexer);
+	while ((c = lone_reader_peek(lone, reader))) {
+		if (lone_reader_match_byte(*c, ' ')) {
+			lone_reader_consume(reader);
 			continue;
 		} else {
 			unsigned char *c1;
-			int failed = 1;
 
 			switch (*c) {
 			case '+': case '-':
-				if ((c1 = lone_lexer_peek_k(lexer, 1)) && lone_lexer_match_byte(*c1, '1')) {
-					failed = lone_lexer_consume_number(lone, lexer, current);
+				if ((c1 = lone_reader_peek_k(lone, reader, 1)) && lone_reader_match_byte(*c1, '1')) {
+					token = lone_reader_consume_number(lone, reader);
 				} else {
-					failed = lone_lexer_consume_symbol(lone, lexer, current);
+					token = lone_reader_consume_symbol(lone, reader);
 				}
 				break;
 			case '0': case '1': case '2': case '3': case '4':
 			case '5': case '6': case '7': case '8': case '9':
-				failed = lone_lexer_consume_number(lone, lexer, current);
+				token = lone_reader_consume_number(lone, reader);
 				break;
 			case '"':
-				failed = lone_lexer_consume_text(lone, lexer, current);
+				token = lone_reader_consume_text(lone, reader);
 				break;
 			case '(':
 			case ')':
-				failed = lone_lexer_consume_parenthesis(lone, lexer, current);
+				token = lone_reader_consume_parenthesis(lone, reader);
 				break;
 			default:
-				failed = lone_lexer_consume_symbol(lone, lexer, current);
+				token = lone_reader_consume_symbol(lone, reader);
 				break;
 			}
 
-			if (failed) {
+			if (token) {
+				break;
+			} else {
 				goto lex_failed;
 			}
-
-			current = lone_list_append(current, lone_list_create_nil(lone));
 		}
 	}
 
-	return first;
+	return token;
 
 lex_failed:
 	linux_exit(-1);
 }
 
-/* ╭─────────────────────────┨ LONE LISP PARSER ┠───────────────────────────╮
-   │                                                                        │
-   │    The parser transforms a linear sequence of tokens into a nested     │
-   │    sequence of lisp objects suitable for evaluation.                   │
-   │    Its main task is to match nested structures such as lists.          │
-   │                                                                        │
-   ╰────────────────────────────────────────────────────────────────────────╯ */
-static struct lone_value *lone_parse_tokens(struct lone_lisp *, struct lone_value **);
+static struct lone_value *lone_parse(struct lone_lisp *, struct lone_reader *, struct lone_value *);
 
-static struct lone_value *lone_parse_list(struct lone_lisp *lone, struct lone_value **tokens)
+static struct lone_value *lone_parse_list(struct lone_lisp *lone, struct lone_reader *reader)
 {
-	struct lone_value *list = lone_list_create_nil(lone), *first = list;
+	struct lone_value *list = lone_list_create_nil(lone), *first = list, *next;
 
 	while (1) {
-		if (lone_is_nil(*tokens)) {
-			// expected token or ) but found end of input
-			return 0;
-		}
+		next = lone_lex(lone, reader);
+		if (!next) { reader->error = 1; return 0; }
 
-		struct lone_value *current = (*tokens)->list.first;
-
-		if (current->type == LONE_SYMBOL && *current->bytes.pointer == ')') {
-			lone_list_pop(tokens);
+		if (next->type == LONE_SYMBOL && *next->bytes.pointer == ')') {
 			break;
 		}
 
-		lone_list_set(list, lone_parse_tokens(lone, tokens));
+		lone_list_set(list, lone_parse(lone, reader, next));
 		list = lone_list_append(list, lone_list_create_nil(lone));
 	}
 
 	return first;
 }
 
-static struct lone_value *lone_parse_tokens(struct lone_lisp *lone, struct lone_value **tokens)
+static struct lone_value *lone_parse(struct lone_lisp *lone, struct lone_reader *reader, struct lone_value *token)
 {
-	if (lone_is_nil(*tokens)) { return *tokens; }
-	if ((*tokens)->list.first == 0) { goto parse_failed; }
-	struct lone_value *token = lone_list_pop(tokens);
+	if (!token) { return 0; }
 
-	/* lexer may already have parsed some types */
+	// lexer has already parsed atoms
+	// parser deals with nested structures
 	switch (token->type) {
 	case LONE_SYMBOL:
 		switch (*token->bytes.pointer) {
 		case '(':
-			return lone_parse_list(lone, tokens);
+			return lone_parse_list(lone, reader);
 		case ')':
 			goto parse_failed;
 		default:
@@ -884,86 +908,16 @@ static struct lone_value *lone_parse_tokens(struct lone_lisp *lone, struct lone_
 	case LONE_TEXT:
 		return token;
 	default:
-		linux_exit(-1);
+		goto parse_failed;
 	}
 
 parse_failed:
 	linux_exit(-1);
 }
 
-static struct lone_value *lone_parse(struct lone_lisp *lone, struct lone_value *value, struct lone_value **remainder)
-{
-	struct lone_lexer lexer = { value->bytes, 0 };
-	struct lone_value *tokens = lone_lex(lone, &lexer), *parsed;
-
-	if (*remainder && !lone_is_nil(*remainder)) {
-		lone_list_append(lone_list_last(*remainder), tokens);
-		tokens = *remainder;
-	}
-
-	parsed = lone_parse_tokens(lone, &tokens);
-
-	*remainder = tokens;
-	return parsed;
-}
-
-static size_t lone_read_from_file_descriptor(struct lone_lisp *lone, struct lone_reader *reader)
-{
-	unsigned char *buffer = reader->buffer.pointer;
-	size_t size = reader->buffer.count, position = reader->position, allocated = size, bytes_read = 0, total_read = 0;
-	ssize_t read_result = 0;
-
-	while (1) {
-		read_result = linux_read(reader->file_descriptor, buffer + position, size);
-
-		if (read_result < 0) {
-			linux_exit(-1);
-		}
-
-		bytes_read = (size_t) read_result;
-		total_read += bytes_read;
-		position += bytes_read;
-
-		if (bytes_read == size) {
-			allocated += size;
-			buffer = lone_reallocate(lone, buffer, allocated);
-		} else {
-			break;
-		}
-	}
-
-	reader->buffer.pointer = buffer;
-	reader->buffer.count = allocated;
-	reader->position = position;
-	return total_read;
-}
-
 static struct lone_value *lone_read(struct lone_lisp *lone, struct lone_reader *reader)
 {
-	struct lone_value *value;
-	size_t bytes_read;
-
-	do {
-		bytes_read = lone_read_from_file_descriptor(lone, reader);
-		value = lone_bytes_create(lone, reader->buffer.pointer, reader->position);
-		value = lone_parse(lone, value, &reader->remaining_tokens);
-
-		if (bytes_read == 0) {
-			// there was no more input
-			if (value == 0) {
-				// the parser wanted more bytes
-				return 0;
-			} else if (lone_is_nil(value)) {
-				// the parser consumed all input
-				reader->finished = 1;
-			}
-		}
-
-	} while (value == 0);
-
-	// successfully read a value, reset reader position and return it
-	reader->position = 0;
-	return value;
+	return lone_parse(lone, reader, lone_lex(lone, reader));
 }
 
 /* ╭────────────────────────┨ LONE LISP EVALUATOR ┠─────────────────────────╮
@@ -1341,9 +1295,15 @@ long lone(int argc, char **argv, char **envp, struct auxiliary *auxv)
 
 	lone_set_environment(&lone, arguments, environment, auxiliary_values);
 
-	while (!reader.finished) {
+	while (1) {
 		struct lone_value *value = lone_read(&lone, &reader);
-		if (!value) { return -1; }
+		if (!value) {
+			if (reader.error) {
+				return -1;
+			} else {
+				break;
+			}
+		}
 
 		lone_print(&lone, lone_evaluate(&lone, value), 1);
 		linux_write(1, "\n", 1);
