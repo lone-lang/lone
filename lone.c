@@ -558,6 +558,11 @@ static struct lone_value *lone_intern(struct lone_lisp *lone, unsigned char *byt
 	return value;
 }
 
+static struct lone_value *lone_intern_c_string(struct lone_lisp *lone, char *c_string)
+{
+	return lone_intern(lone, c_string, lone_c_string_length(c_string) - 1);
+}
+
 /* ╭─────────────────────────┨ LONE LISP READER ┠───────────────────────────╮
    │                                                                        │
    │    The reader's job is to transform input into lone lisp values.       │
