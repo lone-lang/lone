@@ -1287,13 +1287,14 @@ long lone(int argc, char **argv, char **envp, struct auxiliary *auxv)
 	struct lone_reader reader;
 
 	lone_lisp_initialize(&lone, memory, sizeof(memory));
-	lone_reader_initialize(&lone, &reader, LONE_BUFFER_SIZE, 0);
 
 	struct lone_value *arguments = lone_arguments_to_list(&lone, argc, argv);
 	struct lone_value *environment = lone_environment_to_table(&lone, envp);
 	struct lone_value *auxiliary_values = lone_auxiliary_vector_to_table(&lone, auxv);
 
 	lone_set_environment(&lone, arguments, environment, auxiliary_values);
+
+	lone_reader_initialize(&lone, &reader, LONE_BUFFER_SIZE, 0);
 
 	while (1) {
 		struct lone_value *value = lone_read(&lone, &reader);
