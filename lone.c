@@ -1121,101 +1121,101 @@ static void lone_auxiliary_value_to_table(struct lone_lisp *lone, struct lone_va
 	struct lone_value *key, *value;
 	switch (auxiliary_value->type) {
 	case AT_BASE_PLATFORM:
-		key = lone_symbol_create_from_c_string(lone, "base-platform");
+		key = lone_intern_c_string(lone, "base-platform");
 		value = lone_text_create_from_c_string(lone, auxiliary_value->as.c_string);
 		break;
 	case AT_PLATFORM:
-		key = lone_symbol_create_from_c_string(lone, "platform");
+		key = lone_intern_c_string(lone, "platform");
 		value = lone_text_create_from_c_string(lone, auxiliary_value->as.c_string);
 		break;
 	case AT_HWCAP:
-		key = lone_symbol_create_from_c_string(lone, "hardware-capabilities");
+		key = lone_intern_c_string(lone, "hardware-capabilities");
 		value = lone_integer_create(lone, auxiliary_value->as.integer);
 		break;
 	case AT_HWCAP2:
-		key = lone_symbol_create_from_c_string(lone, "hardware-capabilities-2");
+		key = lone_intern_c_string(lone, "hardware-capabilities-2");
 		value = lone_integer_create(lone, auxiliary_value->as.integer);
 		break;
 	case AT_FLAGS:
-		key = lone_symbol_create_from_c_string(lone, "flags");
+		key = lone_intern_c_string(lone, "flags");
 		value = lone_integer_create(lone, auxiliary_value->as.integer);
 		break;
 	case AT_NOTELF:
-		key = lone_symbol_create_from_c_string(lone, "not-ELF");
+		key = lone_intern_c_string(lone, "not-ELF");
 		value = lone_integer_create(lone, auxiliary_value->as.integer);
 		break;
 	case AT_BASE:
-		key = lone_symbol_create_from_c_string(lone, "interpreter-base-address");
+		key = lone_intern_c_string(lone, "interpreter-base-address");
 		value = lone_pointer_create(lone, auxiliary_value->as.pointer);
 		break;
 	case AT_ENTRY:
-		key = lone_symbol_create_from_c_string(lone, "entry-point");
+		key = lone_intern_c_string(lone, "entry-point");
 		value = lone_pointer_create(lone, auxiliary_value->as.pointer);
 		break;
 	case AT_SYSINFO_EHDR:
-		key = lone_symbol_create_from_c_string(lone, "vDSO");
+		key = lone_intern_c_string(lone, "vDSO");
 		value = lone_pointer_create(lone, auxiliary_value->as.pointer);
 		break;
 	case AT_PHDR:
-		key = lone_symbol_create_from_c_string(lone, "program-headers-address");
+		key = lone_intern_c_string(lone, "program-headers-address");
 		value = lone_pointer_create(lone, auxiliary_value->as.pointer);
 		break;
 	case AT_PHENT:
-		key = lone_symbol_create_from_c_string(lone, "program-headers-entry-size");
+		key = lone_intern_c_string(lone, "program-headers-entry-size");
 		value = lone_integer_create(lone, auxiliary_value->as.integer);
 		break;
 	case AT_PHNUM:
-		key = lone_symbol_create_from_c_string(lone, "program-headers-count");
+		key = lone_intern_c_string(lone, "program-headers-count");
 		value = lone_integer_create(lone, auxiliary_value->as.integer);
 		break;
 	case AT_EXECFN:
-		key = lone_symbol_create_from_c_string(lone, "executable-file-name");
+		key = lone_intern_c_string(lone, "executable-file-name");
 		value = lone_text_create_from_c_string(lone, auxiliary_value->as.c_string);
 		break;
 	case AT_EXECFD:
-		key = lone_symbol_create_from_c_string(lone, "executable-file-descriptor");
+		key = lone_intern_c_string(lone, "executable-file-descriptor");
 		value = lone_integer_create(lone, auxiliary_value->as.integer);
 		break;
 	case AT_UID:
-		key = lone_symbol_create_from_c_string(lone, "user-id");
+		key = lone_intern_c_string(lone, "user-id");
 		value = lone_integer_create(lone, auxiliary_value->as.integer);
 		break;
 	case AT_EUID:
-		key = lone_symbol_create_from_c_string(lone, "effective-user-id");
+		key = lone_intern_c_string(lone, "effective-user-id");
 		value = lone_integer_create(lone, auxiliary_value->as.integer);
 		break;
 	case AT_GID:
-		key = lone_symbol_create_from_c_string(lone, "group-id");
+		key = lone_intern_c_string(lone, "group-id");
 		value = lone_integer_create(lone, auxiliary_value->as.integer);
 		break;
 	case AT_EGID:
-		key = lone_symbol_create_from_c_string(lone, "effective-group-id");
+		key = lone_intern_c_string(lone, "effective-group-id");
 		value = lone_integer_create(lone, auxiliary_value->as.integer);
 		break;
 	case AT_PAGESZ:
-		key = lone_symbol_create_from_c_string(lone, "page-size");
+		key = lone_intern_c_string(lone, "page-size");
 		value = lone_integer_create(lone, auxiliary_value->as.integer);
 		break;
 #ifdef AT_MINSIGSTKSZ
 	case AT_MINSIGSTKSZ:
-		key = lone_symbol_create_from_c_string(lone, "minimum-signal-delivery-stack-size");
+		key = lone_intern_c_string(lone, "minimum-signal-delivery-stack-size");
 		value = lone_integer_create(lone, auxiliary_value->as.integer);
 		break;
 #endif
 	case AT_CLKTCK:
-		key = lone_symbol_create_from_c_string(lone, "clock-tick");
+		key = lone_intern_c_string(lone, "clock-tick");
 		value = lone_integer_create(lone, auxiliary_value->as.integer);
 		break;
 	case AT_RANDOM:
-		key = lone_symbol_create_from_c_string(lone, "random");
+		key = lone_intern_c_string(lone, "random");
 		value = lone_bytes_create(lone, auxiliary_value->as.pointer, 16);
 		break;
 	case AT_SECURE:
-		key = lone_symbol_create_from_c_string(lone, "secure");
+		key = lone_intern_c_string(lone, "secure");
 		value = lone_integer_create(lone, auxiliary_value->as.integer);
 		break;
 	default:
-		key = lone_symbol_create_from_c_string(lone, "unknown");
+		key = lone_intern_c_string(lone, "unknown");
 		value = lone_list_create(lone,
 		                         lone_integer_create(lone, auxiliary_value->type),
 		                         lone_integer_create(lone, auxiliary_value->as.integer));
