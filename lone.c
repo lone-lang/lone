@@ -1011,12 +1011,12 @@ static struct lone_value *lone_evaluate(struct lone_lisp *lone, struct lone_valu
 	if (value == 0) { return 0; }
 
 	switch (value->type) {
-	case LONE_BYTES:
 	case LONE_LIST:
 		return lone_evaluate_form(lone, value);
 	case LONE_TABLE:
 	case LONE_INTEGER:
 	case LONE_POINTER:
+	case LONE_BYTES:
 	case LONE_TEXT:
 		return value;
 		break;
