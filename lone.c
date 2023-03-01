@@ -364,12 +364,12 @@ static size_t lone_c_string_length(char *c_string)
 	size_t length = 0;
 	if (!c_string) { return 0; }
 	while (c_string[length++]);
-	return length;
+	return length - 1;
 }
 
 static struct lone_value *lone_text_create_from_c_string(struct lone_lisp *lone, char *c_string)
 {
-	return lone_text_create(lone, (unsigned char *) c_string, lone_c_string_length(c_string) - 1);
+	return lone_text_create(lone, (unsigned char *) c_string, lone_c_string_length(c_string));
 }
 
 static struct lone_value *lone_symbol_create(struct lone_lisp *lone, unsigned char *text, size_t length)
@@ -381,7 +381,7 @@ static struct lone_value *lone_symbol_create(struct lone_lisp *lone, unsigned ch
 
 static struct lone_value *lone_symbol_create_from_c_string(struct lone_lisp *lone, char *c_string)
 {
-	return lone_symbol_create(lone, (unsigned char*) c_string, lone_c_string_length(c_string) - 1);
+	return lone_symbol_create(lone, (unsigned char*) c_string, lone_c_string_length(c_string));
 }
 
 /* ╭────────────────────────────────────────────────────────────────────────╮
@@ -560,7 +560,7 @@ static struct lone_value *lone_intern(struct lone_lisp *lone, unsigned char *byt
 
 static struct lone_value *lone_intern_c_string(struct lone_lisp *lone, char *c_string)
 {
-	return lone_intern(lone, c_string, lone_c_string_length(c_string) - 1);
+	return lone_intern(lone, c_string, lone_c_string_length(c_string));
 }
 
 /* ╭─────────────────────────┨ LONE LISP READER ┠───────────────────────────╮
