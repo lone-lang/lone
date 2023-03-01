@@ -962,9 +962,9 @@ static struct lone_value *lone_read(struct lone_lisp *lone, struct lone_reader *
    │    Currently supports resolving variable references.                   │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
-static struct lone_value *lone_evaluate(struct lone_lisp *, struct lone_value *);
+static struct lone_value *lone_evaluate(struct lone_lisp *, struct lone_value *, struct lone_value *);
 
-static struct lone_value *lone_evaluate_special_form_set(struct lone_lisp *lone, struct lone_value *list)
+static struct lone_value *lone_evaluate_special_form_set(struct lone_lisp *lone, struct lone_value *environment, struct lone_value *list)
 {
 	struct lone_value *variable, *value;
 
@@ -986,33 +986,33 @@ static struct lone_value *lone_evaluate_special_form_set(struct lone_lisp *lone,
 	}
 
 	// (set variable value)
-	value = lone_evaluate(lone, lone_list_first(list));
+	value = lone_evaluate(lone, environment, lone_list_first(list));
 	lone_table_set(lone, lone->environment, variable, value);
 
 	return value;
 }
 
-static struct lone_value *lone_evaluate_form(struct lone_lisp *lone, struct lone_value *list)
+static struct lone_value *lone_evaluate_form(struct lone_lisp *lone, struct lone_value *environment, struct lone_value *list)
 {
 	struct lone_value *first = lone_list_first(list), *rest = lone_list_rest(list);
 
 	// check for special forms
 	if (first->type == LONE_SYMBOL) {
 		if (lone_bytes_equals_c_string(first->bytes, "set")) {
-			return lone_evaluate_special_form_set(lone, rest);
+			return lone_evaluate_special_form_set(lone, environment, rest);
 		}
 	}
 
 	return list;
 }
 
-static struct lone_value *lone_evaluate(struct lone_lisp *lone, struct lone_value *value)
+static struct lone_value *lone_evaluate(struct lone_lisp *lone, struct lone_value *environment, struct lone_value *value)
 {
 	if (value == 0) { return 0; }
 
 	switch (value->type) {
 	case LONE_LIST:
-		return lone_evaluate_form(lone, value);
+		return lone_evaluate_form(lone, environment, value);
 	case LONE_TABLE:
 	case LONE_INTEGER:
 	case LONE_POINTER:
@@ -1020,7 +1020,7 @@ static struct lone_value *lone_evaluate(struct lone_lisp *lone, struct lone_valu
 	case LONE_TEXT:
 		return value;
 	case LONE_SYMBOL:
-		return lone_table_get(lone, lone->environment, value);
+		return lone_table_get(lone, environment, value);
 	}
 }
 
@@ -1387,7 +1387,8 @@ long lone(int argc, char **argv, char **envp, struct auxiliary *auxv)
 			}
 		}
 
-		lone_print(&lone, lone_evaluate(&lone, value), 1);
+		value = lone_evaluate(&lone, lone.environment, value);
+		lone_print(&lone, value, 1);
 		linux_write(1, "\n", 1);
 	}
 
