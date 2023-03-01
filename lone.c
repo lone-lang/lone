@@ -1177,7 +1177,8 @@ static void lone_print_table(struct lone_lisp *lone, struct lone_value *table, i
 
 static void lone_print(struct lone_lisp *lone, struct lone_value *value, int fd)
 {
-	if (value == 0 || lone_is_nil(value)) { return; }
+	if (value == 0) { return; }
+	if (lone_is_nil(value)) { linux_write(fd, "nil", 3); return; }
 
 	switch (value->type) {
 	case LONE_LIST:
