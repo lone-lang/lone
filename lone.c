@@ -576,7 +576,7 @@ static struct lone_value *lone_intern(struct lone_lisp *lone, unsigned char *byt
 
 static struct lone_value *lone_intern_c_string(struct lone_lisp *lone, char *c_string)
 {
-	return lone_intern(lone, c_string, lone_c_string_length(c_string));
+	return lone_intern(lone, (unsigned char *) c_string, lone_c_string_length(c_string));
 }
 
 /* ╭─────────────────────────┨ LONE LISP READER ┠───────────────────────────╮
