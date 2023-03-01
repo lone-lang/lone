@@ -1019,7 +1019,6 @@ static struct lone_value *lone_evaluate(struct lone_lisp *lone, struct lone_valu
 	case LONE_BYTES:
 	case LONE_TEXT:
 		return value;
-		break;
 	case LONE_SYMBOL:
 		return lone_table_get(lone, lone->environment, value);
 	}
