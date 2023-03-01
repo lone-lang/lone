@@ -962,6 +962,18 @@ static struct lone_value *lone_read(struct lone_lisp *lone, struct lone_reader *
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
 static struct lone_value *lone_evaluate(struct lone_lisp *, struct lone_value *, struct lone_value *);
+static void lone_print(struct lone_lisp *, struct lone_value *, int);
+
+static struct lone_value *lone_evaluate_special_form_print(struct lone_lisp *lone, struct lone_value *environment, struct lone_value *list)
+{
+	while (!lone_is_nil(list)) {
+		lone_print(lone, lone_evaluate(lone, environment, lone_list_first(list)), 1);
+		linux_write(1, "\n", 1);
+		list = lone_list_rest(list);
+	}
+
+	return lone_list_create_nil(lone);
+}
 
 static struct lone_value *lone_evaluate_special_form_let(struct lone_lisp *lone, struct lone_value *environment, struct lone_value *list)
 {
@@ -1032,6 +1044,8 @@ static struct lone_value *lone_evaluate_form(struct lone_lisp *lone, struct lone
 			return lone_evaluate_special_form_set(lone, environment, rest);
 		} else if (lone_bytes_equals_c_string(first->bytes, "let")) {
 			return lone_evaluate_special_form_let(lone, environment, rest);
+		} else if (lone_bytes_equals_c_string(first->bytes, "print")) {
+			return lone_evaluate_special_form_print(lone, environment, rest);
 		}
 	}
 
@@ -1116,8 +1130,6 @@ static void lone_print_bytes(struct lone_lisp *lone, struct lone_value *bytes, i
 
 	lone_deallocate(lone, text);
 }
-
-static void lone_print(struct lone_lisp *, struct lone_value *, int);
 
 static void lone_print_list(struct lone_lisp *lone, struct lone_value *list, int fd)
 {
@@ -1420,8 +1432,6 @@ long lone(int argc, char **argv, char **envp, struct auxiliary *auxv)
 		}
 
 		value = lone_evaluate(&lone, lone.environment, value);
-		lone_print(&lone, value, 1);
-		linux_write(1, "\n", 1);
 	}
 
 	lone_deallocate_all(&lone);
