@@ -389,6 +389,16 @@ static struct lone_value *lone_symbol_create_from_c_string(struct lone_lisp *lon
    │    Functions for operating on lone's built-in types.                   │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
+static inline struct lone_value *lone_list_first(struct lone_value *value)
+{
+	return value->list.first;
+}
+
+static inline struct lone_value *lone_list_rest(struct lone_value *value)
+{
+	return value->list.rest;
+}
+
 static int lone_is_nil(struct lone_value *value)
 {
 	return value->type == LONE_LIST && value->list.first == 0 && value->list.rest == 0;
