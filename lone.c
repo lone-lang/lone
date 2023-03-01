@@ -964,6 +964,37 @@ static struct lone_value *lone_read(struct lone_lisp *lone, struct lone_reader *
    ╰────────────────────────────────────────────────────────────────────────╯ */
 static struct lone_value *lone_evaluate(struct lone_lisp *, struct lone_value *, struct lone_value *);
 
+static struct lone_value *lone_evaluate_special_form_let(struct lone_lisp *lone, struct lone_value *environment, struct lone_value *list)
+{
+	struct lone_value *bindings, *first, *second, *rest, *value, *new_environment;
+
+	if (lone_is_nil(list)) { /* empty let form: (let) */ linux_exit(-1); }
+	bindings = lone_list_first(list);
+	if (bindings->type != LONE_LIST) { /* expected list but got something else like: (let 10) */ linux_exit(-1); }
+
+	new_environment = lone_table_create(lone, 8, environment);
+
+	while (1) {
+		if (lone_is_nil(bindings)) { break; }
+		first = lone_list_first(bindings);
+		if (first->type != LONE_SYMBOL) { /* variable names must be symbols */ linux_exit(-1); }
+		rest = lone_list_rest(bindings);
+		if (lone_is_nil(rest)) { /* incomplete variable/value list: (let (x 10 y)) */ linux_exit(-1); }
+		second = lone_list_first(rest);
+		value = lone_evaluate(lone, new_environment, second);
+		lone_table_set(lone, new_environment, first, value);
+		bindings = lone_list_rest(rest);
+	}
+
+	value = lone_list_create_nil(lone);
+
+	while (!lone_is_nil(list = lone_list_rest(list))) {
+		value = lone_evaluate(lone, new_environment, lone_list_first(list));
+	}
+
+	return value;
+}
+
 static struct lone_value *lone_evaluate_special_form_set(struct lone_lisp *lone, struct lone_value *environment, struct lone_value *list)
 {
 	struct lone_value *variable, *value;
@@ -1000,6 +1031,8 @@ static struct lone_value *lone_evaluate_form(struct lone_lisp *lone, struct lone
 	if (first->type == LONE_SYMBOL) {
 		if (lone_bytes_equals_c_string(first->bytes, "set")) {
 			return lone_evaluate_special_form_set(lone, environment, rest);
+		} else if (lone_bytes_equals_c_string(first->bytes, "let")) {
+			return lone_evaluate_special_form_let(lone, environment, rest);
 		}
 	}
 
