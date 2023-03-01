@@ -962,6 +962,50 @@ static struct lone_value *lone_read(struct lone_lisp *lone, struct lone_reader *
    │    Currently supports resolving variable references.                   │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
+static struct lone_value *lone_evaluate(struct lone_lisp *, struct lone_value *);
+
+static struct lone_value *lone_evaluate_special_form_set(struct lone_lisp *lone, struct lone_value *list)
+{
+	struct lone_value *variable, *value;
+
+	if (lone_is_nil(list)) {
+		// empty set form: (set)
+		linux_exit(-1);
+	}
+
+	variable = lone_list_first(list);
+	if (variable->type != LONE_SYMBOL) {
+		// variable names must be symbols
+		linux_exit(-1);
+	}
+
+	list = lone_list_rest(list);
+	if (lone_is_nil(list)) {
+		// value not specified: (set variable)
+		linux_exit(-1);
+	}
+
+	// (set variable value)
+	value = lone_evaluate(lone, lone_list_first(list));
+	lone_table_set(lone, lone->environment, variable, value);
+
+	return value;
+}
+
+static struct lone_value *lone_evaluate_form(struct lone_lisp *lone, struct lone_value *list)
+{
+	struct lone_value *first = lone_list_first(list), *rest = lone_list_rest(list);
+
+	// check for special forms
+	if (first->type == LONE_SYMBOL) {
+		if (lone_bytes_equals_c_string(first->bytes, "set")) {
+			return lone_evaluate_special_form_set(lone, rest);
+		}
+	}
+
+	return list;
+}
+
 static struct lone_value *lone_evaluate(struct lone_lisp *lone, struct lone_value *value)
 {
 	if (value == 0) { return 0; }
@@ -969,6 +1013,7 @@ static struct lone_value *lone_evaluate(struct lone_lisp *lone, struct lone_valu
 	switch (value->type) {
 	case LONE_BYTES:
 	case LONE_LIST:
+		return lone_evaluate_form(lone, value);
 	case LONE_TABLE:
 	case LONE_INTEGER:
 	case LONE_POINTER:
