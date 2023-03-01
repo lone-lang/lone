@@ -826,7 +826,6 @@ static struct lone_value *lone_reader_consume_parenthesis(struct lone_lisp *lone
 	case '(': case ')':
 		lone_reader_consume(reader);
 		return lone_intern(lone, parenthesis, 1);
-		break;
 	default:
 		return 0;
 	}
