@@ -49,14 +49,14 @@ test-executable() {
   local name="${2}"
   local test="${3}"
 
-  local arguments=''
+  local -a arguments=()
   if [[ -f "${test}"/arguments ]]; then
-    arguments="$(xargs < "${test}"/arguments)"
+    readarray -t arguments < "${test}"/arguments
   fi
 
-  local environment=''
+  local -a environment=()
   if [[ -f "${test}"/environment ]]; then
-    environment="$(xargs < "${test}"/environment)"
+    readarray -t environment < "${test}"/environment
   fi
 
   # https://stackoverflow.com/a/59592881
@@ -64,7 +64,7 @@ test-executable() {
     IFS=$'\n' read -r -d '' error;
     IFS=$'\n' read -r -d '' output;
     IFS=$'\n' read -r -d '' status;
-  } < <((printf '\0%s\0%d\0' "$(env -i ${environment} "${executable}" ${arguments} < "${test}/input")" "${?}" 1>&2) 2>&1)
+  } < <((printf '\0%s\0%d\0' "$(env -i "${environment[@]}" "${executable}" "${arguments[@]}" < "${test}/input")" "${?}" 1>&2) 2>&1)
 
   name="${style[test.info]}${name}${style[reset]}"
   local pass="${style[test.pass]}PASS${style[reset]}"
