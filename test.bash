@@ -85,14 +85,8 @@ test-executable() {
 }
 
 run-test() {
-  test-executable "${1}" "${2}" "${3}/${2}"
-  local returned="$?"
-
-  if [[ "${returned}" -ne 0 ]]; then
-    code="${returned}"
-  fi
-
-  tests["${2}"]="${returned}"
+  test-executable "${1}" "${2}" "${3}/${2}" &
+  tests["${2}"]="${!}"
 }
 
 find-tests() {
@@ -103,6 +97,21 @@ run-all-tests() {
   while IFS= read -r -d '' test_case; do
     run-test "${1}" "$(remove-prefix "${2}/" "${test_case}")" "${2}"
   done < <(find-tests "${2}")
+}
+
+collect-test-results() {
+  local returned
+
+  for test_name in "${!tests[@]}"; do
+    wait "${tests[${test_name}]}"
+    returned="${?}"
+
+    tests["${test_name}"]="${returned}"
+
+    if [[ "${returned}" -ne 0 ]]; then
+      code="${returned}"
+    fi
+  done
 }
 
 report() {
@@ -125,5 +134,6 @@ report() {
 }
 
 run-all-tests "${lone}" "${tests_directory}"
+collect-test-results
 report
 exit "${code}"
