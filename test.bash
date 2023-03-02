@@ -59,6 +59,8 @@ test-executable() {
     readarray -t environment < "${test}"/environment
   fi
 
+  local -a command=(env -i "${environment[@]}" "${executable}" "${arguments[@]}")
+
   # https://stackoverflow.com/a/59592881
   {
     IFS=$'\n' read -r -d '' error;
@@ -67,7 +69,7 @@ test-executable() {
   } < <(                                                                                                     \
                                                                                                              \
          (printf '\0%s\0%d\0'                                                                                \
-                 "$(env -i "${environment[@]}" "${executable}" "${arguments[@]}" < "${test}/input")"         \
+                 "$("${command[@]}" < "${test}/input")"                                                      \
                  "${?}"                                                                                      \
                                                                                                              \
        1>&2) 2>&1)
