@@ -10,7 +10,7 @@ declare -A style tests
 if [[ -t 1 ]]; then
   style=(
     [reset]="$(tput sgr0)"
-    [test.name]="$(tput setaf 4)"
+    [test.info]="$(tput setaf 4)"
     [test.pass]="$(tput setaf 2)"
     [test.fail]="$(tput setaf 1)"
   )
@@ -66,11 +66,11 @@ test-executable() {
     IFS=$'\n' read -r -d '' status;
   } < <((printf '\0%s\0%d\0' "$(env -i ${environment} "${executable}" ${arguments} < "${test}/input")" "${?}" 1>&2) 2>&1)
 
+  name="${style[test.info]}${name}${style[reset]}"
   local pass="${style[test.pass]}PASS${style[reset]}"
   local fail="${style[test.fail]}FAIL${style[reset]}"
-  name="${style[test.name]}${name}${style[reset]}"
-
   local result="${pass}"
+
   compare        "${test}/output" "${output}" || result="${fail}"
   compare        "${test}/error"  "${error}"  || result="${fail}"
   compare-status "${test}/status" "${status}" || result="${fail}"
