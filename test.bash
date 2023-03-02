@@ -3,7 +3,7 @@
 lone=${1:-./lone}
 tests_directory=${2:-test}
 
-declare -A style
+declare -A style tests
 
 if [[ -t 1 ]]; then
   style=(
@@ -84,6 +84,7 @@ test-executable() {
 
 run-test() {
   test-executable "${1}" "${2}" "${3}/${2}"
+  tests["${2}"]="$?"
 }
 
 find-tests() {
