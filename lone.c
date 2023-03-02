@@ -975,6 +975,33 @@ static struct lone_value *lone_evaluate_special_form_print(struct lone_lisp *lon
 	return lone_list_create_nil(lone);
 }
 
+static struct lone_value *lone_evaluate_special_form_if(struct lone_lisp *lone, struct lone_value *environment, struct lone_value *list)
+{
+	struct lone_value *value, *consequent, *alternative = 0;
+
+	if (lone_is_nil(list)) { /* empty if form: (if) */ linux_exit(-1); }
+	value = lone_list_first(list);
+	list = lone_list_rest(list);
+
+	if (lone_is_nil(list)) { /* consequent not specified: (if test) */ linux_exit(-1); }
+	consequent = lone_list_first(list);
+	list = lone_list_rest(list);
+
+	if (!lone_is_nil(list)) {
+		alternative = lone_list_first(list);
+		list = lone_list_rest(list);
+		if (!lone_is_nil(list)) { /* too many values (if test consequent alternative extra) */ linux_exit(-1); }
+	}
+
+	if (!lone_is_nil(lone_evaluate(lone, environment, value))) {
+		return lone_evaluate(lone, environment, consequent);
+	} else if (alternative) {
+		return lone_evaluate(lone, environment, alternative);
+	}
+
+	return lone_list_create_nil(lone);
+}
+
 static struct lone_value *lone_evaluate_special_form_let(struct lone_lisp *lone, struct lone_value *environment, struct lone_value *list)
 {
 	struct lone_value *bindings, *first, *second, *rest, *value, *new_environment;
@@ -1044,6 +1071,8 @@ static struct lone_value *lone_evaluate_form(struct lone_lisp *lone, struct lone
 			return lone_evaluate_special_form_set(lone, environment, rest);
 		} else if (lone_bytes_equals_c_string(first->bytes, "let")) {
 			return lone_evaluate_special_form_let(lone, environment, rest);
+		} else if (lone_bytes_equals_c_string(first->bytes, "if")) {
+			return lone_evaluate_special_form_if(lone, environment, rest);
 		} else if (lone_bytes_equals_c_string(first->bytes, "print")) {
 			return lone_evaluate_special_form_print(lone, environment, rest);
 		}
