@@ -64,7 +64,13 @@ test-executable() {
     IFS=$'\n' read -r -d '' error;
     IFS=$'\n' read -r -d '' output;
     IFS=$'\n' read -r -d '' status;
-  } < <((printf '\0%s\0%d\0' "$(env -i "${environment[@]}" "${executable}" "${arguments[@]}" < "${test}/input")" "${?}" 1>&2) 2>&1)
+  } < <(                                                                                                     \
+                                                                                                             \
+         (printf '\0%s\0%d\0'                                                                                \
+                 "$(env -i "${environment[@]}" "${executable}" "${arguments[@]}" < "${test}/input")"         \
+                 "${?}"                                                                                      \
+                                                                                                             \
+       1>&2) 2>&1)
 
   name="${style[test.info]}${name}${style[reset]}"
   local pass="${style[test.pass]}PASS${style[reset]}"
