@@ -39,7 +39,7 @@ compare-status() {
   if [[ "${2}" -eq "${expected}" ]]; then
     return 0
   else
-    printf "Expected status: %d\tReturned status:%d\n" "${expected}" "${2}"
+    printf "Expected status: %d\tReturned status: %d\n" "${expected}" "${2}"
     return 1
   fi
 }
