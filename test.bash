@@ -103,8 +103,27 @@ run-all-tests() {
   while IFS= read -r -d '' test_case; do
     run-test "${1}" "$(remove-prefix "${2}/" "${test_case}")" "${2}"
   done < <(find-tests "${2}")
+}
 
+report() {
+  local total=0 pass=0 fail=0
+
+  for name in "${!tests[@]}"; do
+    total=$((total + 1))
+    if [[ "${tests[${name}]}" -ne 0 ]]; then
+      fail=$((fail + 1))
+      code=1
+    fi
+  done
+
+  pass=$((total - fail))
+
+  printf "%s%d%s + %s%d%s = %s%d%s\n" \
+         "${style[test.pass]}" "${pass}"  "${style[reset]}" \
+         "${style[test.fail]}" "${fail}"  "${style[reset]}" \
+         "${style[test.info]}" "${total}" "${style[reset]}"
 }
 
 run-all-tests "${lone}" "${tests_directory}"
+report
 exit "${code}"
