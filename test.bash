@@ -3,6 +3,8 @@
 lone=${1:-./lone}
 tests_directory=${2:-test}
 
+code=0
+
 declare -A style tests
 
 if [[ -t 1 ]]; then
@@ -84,7 +86,13 @@ test-executable() {
 
 run-test() {
   test-executable "${1}" "${2}" "${3}/${2}"
-  tests["${2}"]="$?"
+  local returned="$?"
+
+  if [[ "${returned}" -ne 0 ]]; then
+    code="${returned}"
+  fi
+
+  tests["${2}"]="${returned}"
 }
 
 find-tests() {
@@ -108,3 +116,4 @@ run-all-tests() {
 }
 
 run-all-tests "${lone}" "${tests_directory}"
+exit "${code}"
