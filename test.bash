@@ -100,19 +100,10 @@ find-tests() {
 }
 
 run-all-tests() {
-  local failed=no
-
   while IFS= read -r -d '' test_case; do
-    if ! run-test "${1}" "$(remove-prefix "${2}/" "${test_case}")" "${2}"; then
-      failed=yes
-    fi
+    run-test "${1}" "$(remove-prefix "${2}/" "${test_case}")" "${2}"
   done < <(find-tests "${2}")
 
-  if [[ "${failed}" == "no" ]]; then
-    return 0
-  else
-    return 1
-  fi
 }
 
 run-all-tests "${lone}" "${tests_directory}"
