@@ -436,7 +436,7 @@ static int lone_bytes_equals(struct lone_bytes x, struct lone_bytes y)
 
 static inline int lone_bytes_equals_c_string(struct lone_bytes bytes, char *c_string)
 {
-	struct lone_bytes c_string_bytes = { lone_c_string_length(c_string), c_string };
+	struct lone_bytes c_string_bytes = { lone_c_string_length(c_string), (unsigned char *) c_string };
 	return lone_bytes_equals(bytes, c_string_bytes);
 }
 
