@@ -993,6 +993,19 @@ static struct lone_value *lone_evaluate_special_form_print(struct lone_lisp *lon
 	return lone_list_create_nil(lone);
 }
 
+static struct lone_value *lone_evaluate_special_form_lambda(struct lone_lisp *lone, struct lone_value *environment, struct lone_value *list)
+{
+	struct lone_value *arguments;
+
+	arguments = lone_list_first(list);
+	if (arguments->type != LONE_LIST) { /* parameters not a list: (lambda 10) */ linux_exit(-1); }
+
+	list = lone_list_rest(list);
+	if (lone_is_nil(list)) { /* no code: (lambda (x)) */ linux_exit(-1); }
+
+	return lone_function_create(lone, arguments, list, environment);
+}
+
 static struct lone_value *lone_evaluate_special_form_if(struct lone_lisp *lone, struct lone_value *environment, struct lone_value *list)
 {
 	struct lone_value *value, *consequent, *alternative = 0;
@@ -1091,6 +1104,8 @@ static struct lone_value *lone_evaluate_form(struct lone_lisp *lone, struct lone
 			return lone_evaluate_special_form_let(lone, environment, rest);
 		} else if (lone_bytes_equals_c_string(first->bytes, "if")) {
 			return lone_evaluate_special_form_if(lone, environment, rest);
+		} else if (lone_bytes_equals_c_string(first->bytes, "lambda")) {
+			return lone_evaluate_special_form_lambda(lone, environment, rest);
 		} else if (lone_bytes_equals_c_string(first->bytes, "print")) {
 			return lone_evaluate_special_form_print(lone, environment, rest);
 		}
