@@ -64,6 +64,7 @@ static ssize_t linux_write(int fd, const void *buffer, size_t count)
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
 enum lone_type {
+	LONE_FUNCTION,
 	LONE_LIST,
 	LONE_TABLE,
 	LONE_SYMBOL,
