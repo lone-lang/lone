@@ -1,0 +1,29 @@
+#!/usr/bin/bash
+
+if [[ -z "${1}" ]]; then
+  1>&2 printf "Test name not specified\n"
+  exit 1
+fi
+
+test_directory=test/"${1}"
+shift
+
+declare -a test_parameters=("${@}")
+
+if (( "${#test_parameters}" == 0 )); then
+  test_parameters+=(input output)
+fi
+
+for test_file in "${test_parameters[@]}"; do
+  case "${test_file}" in
+    input | output | error | status | arguments | environment)
+      test_files+=("${test_directory}"/"${test_file}")
+      ;;
+    *)
+      1>&2 printf "Invalid test file: '%s'\n" "${test_file}"
+      exit 2
+      ;;
+  esac
+done
+
+mkdir -p "${test_directory}" && "${EDITOR}" "${test_files[@]}"
