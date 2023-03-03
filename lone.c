@@ -95,6 +95,12 @@ struct lone_table {
 	struct lone_value *prototype;
 };
 
+struct lone_function {
+	struct lone_value *arguments;      /* the bindings */
+	struct lone_value *code;           /* the lambda */
+	struct lone_value *environment;    /* the closure */
+};
+
 struct lone_value {
 	enum lone_type type;
 	union {
