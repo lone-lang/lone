@@ -1133,6 +1133,34 @@ static struct lone_value *lone_evaluate(struct lone_lisp *lone, struct lone_valu
 	}
 }
 
+static struct lone_value *lone_apply(struct lone_lisp *lone, struct lone_value *environment, struct lone_value *function, struct lone_value *arguments)
+{
+	struct lone_value *new_environment = lone_table_create(lone, 16, function->function.environment),
+	                  *names = function->function.arguments, *code = function->function.code,
+	                  *value;
+
+	while (1) {
+		if (lone_is_nil(names) != lone_is_nil(arguments)) {
+			/* argument number mismatch: ((lambda (x) x) 10 20), ((lambda (x y) y) 10) */
+			linux_exit(-1);
+		} else if (lone_is_nil(names) && lone_is_nil(arguments)) {
+			break;
+		}
+
+		value = lone_evaluate(lone, environment, lone_list_first(arguments));
+		lone_table_set(lone, new_environment, lone_list_first(names), value);
+
+		names = lone_list_rest(names);
+		arguments = lone_list_rest(arguments);
+	}
+
+	do {
+		value = lone_evaluate(lone, new_environment, lone_list_first(code));
+	} while (!lone_is_nil(code = lone_list_rest(code)));
+
+	return value;
+}
+
 /* ╭─────────────────────────┨ LONE LISP PRINTER ┠──────────────────────────╮
    │                                                                        │
    │    Transforms lone lisp objects into text in order to write it out.    │
