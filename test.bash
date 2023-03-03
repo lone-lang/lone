@@ -49,6 +49,10 @@ test-executable() {
   local name="${2}"
   local test="${3}"
 
+  if [[ ! -f "${test}"/input ]]; then
+    return 2
+  fi
+
   local -a arguments=()
   if [[ -f "${test}"/arguments ]]; then
     readarray -t arguments < "${test}"/arguments
