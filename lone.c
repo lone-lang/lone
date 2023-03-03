@@ -1092,6 +1092,8 @@ static struct lone_value *lone_evaluate_special_form_set(struct lone_lisp *lone,
 	return value;
 }
 
+static struct lone_value *lone_apply(struct lone_lisp *, struct lone_value *, struct lone_value *, struct lone_value *);
+
 static struct lone_value *lone_evaluate_form(struct lone_lisp *lone, struct lone_value *environment, struct lone_value *list)
 {
 	struct lone_value *first = lone_list_first(list), *rest = lone_list_rest(list);
@@ -1111,7 +1113,10 @@ static struct lone_value *lone_evaluate_form(struct lone_lisp *lone, struct lone
 		}
 	}
 
-	return list;
+	/* must be a function application if not a special form */
+	first = lone_evaluate(lone, environment, first);
+	if (first->type != LONE_FUNCTION) { /* first element must be a function */ linux_exit(-1); }
+	return lone_apply(lone, environment, first, rest);
 }
 
 static struct lone_value *lone_evaluate(struct lone_lisp *lone, struct lone_value *environment, struct lone_value *value)
