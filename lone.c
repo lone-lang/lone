@@ -310,6 +310,16 @@ static struct lone_value *lone_list_create_nil(struct lone_lisp *lone)
 	return lone_list_create(lone, 0, 0);
 }
 
+static struct lone_value *lone_function_create(struct lone_lisp *lone, struct lone_value *arguments, struct lone_value *code, struct lone_value *environment)
+{
+	struct lone_value *value = lone_value_create(lone);
+	value->type = LONE_FUNCTION;
+	value->function.arguments = arguments;
+	value->function.code = code;
+	value->function.environment = environment;
+	return value;
+}
+
 static struct lone_value *lone_table_create(struct lone_lisp *lone, size_t capacity, struct lone_value *prototype)
 {
 	struct lone_value *value = lone_value_create(lone);
