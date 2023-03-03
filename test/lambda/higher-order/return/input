@@ -1,0 +1,5 @@
+(set returner
+     (lambda (x)
+       (lambda () x)))
+(set return-10 (returner 10))
+(print (return-10))

@@ -1,0 +1,4 @@
+(set applicator (lambda (f x) (lambda () (f x))))
+(set returner (lambda (x) x))
+(set return-10 (applicator returner 10))
+(print (return-10))

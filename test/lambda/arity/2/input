@@ -1,0 +1,2 @@
+(print
+  ((lambda (x y) y x y) 10 20))
