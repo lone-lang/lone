@@ -72,6 +72,7 @@ the successful status code `0` is expected.
     ├── lone.c                    # The lone C source code
     ├── README.md                 # This README file
     ├── test.bash                 # The test script
+    ├── test.new                  # The new test case creation script
     ├── .gdbinit                  # GDB visualization functions lone's data structures
     └── .github/                  # GitHub-specific data
         └── workflows/            # GitHub Actions workflows
