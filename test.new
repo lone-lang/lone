@@ -26,4 +26,4 @@ for test_file in "${test_parameters[@]}"; do
   esac
 done
 
-mkdir -p "${test_directory}" && "${EDITOR}" "${test_files[@]}"
+mkdir -p "${test_directory}" && "${EDITOR:-vim}" "${test_files[@]}"
