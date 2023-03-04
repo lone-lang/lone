@@ -1338,14 +1338,9 @@ static struct lone_value *lone_primitive_integer_operation(struct lone_lisp *lon
 		if (argument->type != LONE_INTEGER) { /* argument is not a number */ linux_exit(-1); }
 
 		switch (operation) {
-		case '+':
-			accumulator += argument->integer;
-			break;
-		default:
-			/* invalid primitive integer operation */
-			linux_exit(-1);
+		case '+': accumulator += argument->integer; break;
+		default: /* invalid primitive integer operation */ linux_exit(-1);
 		}
-
 
 		arguments = lone_list_rest(arguments);
 	} while (!lone_is_nil(arguments));
