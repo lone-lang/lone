@@ -1323,6 +1323,35 @@ static void lone_print(struct lone_lisp *lone, struct lone_value *value, int fd)
 	}
 }
 
+/* ╭───────────────────┨ LONE LISP PRIMITIVE FUNCTIONS ┠────────────────────╮
+   │                                                                        │
+   │    Lone lisp functions implemented in C.                               │
+   │                                                                        │
+   ╰────────────────────────────────────────────────────────────────────────╯ */
+static struct lone_value *lone_primitive_integer_operation(struct lone_lisp *lone, struct lone_value *environment, struct lone_value *arguments, char operation)
+{
+	struct lone_value *argument;
+	long accumulator = 0;
+
+	if (lone_is_nil(arguments)) { /* wasn't given any arguments to add: (+) */ linux_exit(-1); }
+
+	do {
+		argument = lone_list_first(arguments);
+		if (argument->type != LONE_INTEGER) { /* argument is not a number */ linux_exit(-1); }
+
+		switch (operation) {
+		default:
+			/* invalid primitive integer operation */
+			linux_exit(-1);
+		}
+
+
+		arguments = lone_list_rest(arguments);
+	} while (!lone_is_nil(arguments));
+
+	return lone_integer_create(lone, accumulator);
+}
+
 /* ╭─────────────────────────┨ LONE LINUX PROCESS ┠─────────────────────────╮
    │                                                                        │
    │    Code to access all the parameters Linux passes to its processes.    │
