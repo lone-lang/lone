@@ -993,18 +993,6 @@ static struct lone_value *lone_read(struct lone_lisp *lone, struct lone_reader *
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
 static struct lone_value *lone_evaluate(struct lone_lisp *, struct lone_value *, struct lone_value *);
-static void lone_print(struct lone_lisp *, struct lone_value *, int);
-
-static struct lone_value *lone_evaluate_special_form_print(struct lone_lisp *lone, struct lone_value *environment, struct lone_value *list)
-{
-	while (!lone_is_nil(list)) {
-		lone_print(lone, lone_evaluate(lone, environment, lone_list_first(list)), 1);
-		linux_write(1, "\n", 1);
-		list = lone_list_rest(list);
-	}
-
-	return lone_list_create_nil(lone);
-}
 
 static struct lone_value *lone_evaluate_special_form_lambda(struct lone_lisp *lone, struct lone_value *environment, struct lone_value *list)
 {
@@ -1121,8 +1109,6 @@ static struct lone_value *lone_evaluate_form(struct lone_lisp *lone, struct lone
 			return lone_evaluate_special_form_if(lone, environment, rest);
 		} else if (lone_bytes_equals_c_string(first->bytes, "lambda")) {
 			return lone_evaluate_special_form_lambda(lone, environment, rest);
-		} else if (lone_bytes_equals_c_string(first->bytes, "print")) {
-			return lone_evaluate_special_form_print(lone, environment, rest);
 		}
 	}
 
@@ -1191,6 +1177,8 @@ static struct lone_value *lone_apply(struct lone_lisp *lone, struct lone_value *
    │    Transforms lone lisp objects into text in order to write it out.    │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
+static void lone_print(struct lone_lisp *, struct lone_value *, int);
+
 static void lone_print_integer(int fd, long n)
 {
 	static char digits[DECIMAL_DIGITS_PER_LONG + 1]; /* digits, sign */
@@ -1328,6 +1316,17 @@ static void lone_print(struct lone_lisp *lone, struct lone_value *value, int fd)
    │    Lone lisp functions implemented in C.                               │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
+static struct lone_value *lone_primitive_print(struct lone_lisp *lone, struct lone_value *environment, struct lone_value *arguments)
+{
+	while (!lone_is_nil(arguments)) {
+		lone_print(lone, lone_evaluate(lone, environment, lone_list_first(arguments)), 1);
+		linux_write(1, "\n", 1);
+		arguments = lone_list_rest(arguments);
+	}
+
+	return lone_list_create_nil(lone);
+}
+
 static struct lone_value *lone_primitive_integer_operation(struct lone_lisp *lone, struct lone_value *environment, struct lone_value *arguments, char operation)
 {
 	struct lone_value *argument;
@@ -1536,6 +1535,8 @@ static struct lone_value *lone_arguments_to_list(struct lone_lisp *lone, int cou
 static void lone_set_environment(struct lone_lisp *lone, struct lone_value *arguments, struct lone_value *environment, struct lone_value *auxiliary_values)
 {
 	struct lone_value *table = lone_table_create(lone, 16, 0);
+
+	lone_table_set(lone, table, lone_intern_c_string(lone, "print"), lone_primitive_create(lone, lone_primitive_print));
 
 	lone_table_set(lone, table, lone_intern_c_string(lone, "+"), lone_primitive_create(lone, lone_primitive_add));
 
