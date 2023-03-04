@@ -325,6 +325,14 @@ static struct lone_value *lone_function_create(struct lone_lisp *lone, struct lo
 	return value;
 }
 
+static struct lone_value *lone_primitive_create(struct lone_lisp *lone, lone_primitive primitive)
+{
+	struct lone_value *value = lone_value_create(lone);
+	value->type = LONE_PRIMITIVE;
+	value->primitive = primitive;
+	return value;
+}
+
 static struct lone_value *lone_table_create(struct lone_lisp *lone, size_t capacity, struct lone_value *prototype)
 {
 	struct lone_value *value = lone_value_create(lone);
