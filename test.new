@@ -13,22 +13,29 @@ test-file-path() {
   printf "%s/%s" "${test_directory}" "${1}"
 }
 
-declare -a test_parameters=("${@}")
+declare -a arguments=("${@}")
 
-if (( "${#test_parameters}" == 0 )); then
-  test_parameters+=(input output)
+if (( "${#arguments[@]}" == 0 )); then
+  arguments+=(input output)
 fi
 
-for test_file in "${test_parameters[@]}"; do
-  case "${test_file}" in
+declare -A parameters
+
+for parameter in "${arguments[@]}"; do
+  parameters["${parameter}"]="$(test-file-path "${parameter}")"
+done
+
+parameters[input]="$(test-file-path input)"
+
+for parameter in "${!parameters[@]}"; do
+  case "${parameter}" in
     input | output | error | status | arguments | environment)
-      test_files+=("${test_directory}"/"${test_file}")
       ;;
     *)
-      1>&2 printf "Invalid test file: '%s'\n" "${test_file}"
+      1>&2 printf "Invalid test parameter file: '%s'\n" "${parameter}"
       exit 2
       ;;
   esac
 done
 
-mkdir -p "${test_directory}" && "${EDITOR:-vim}" "${test_files[@]}"
+mkdir -p "${test_directory}" && "${EDITOR:-vim}" "${parameters[@]}"
