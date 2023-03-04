@@ -102,6 +102,9 @@ struct lone_function {
 	struct lone_value *environment;    /* the closure */
 };
 
+struct lone_lisp;
+typedef struct lone_value *(*lone_primitive)(struct lone_lisp *lone, struct lone_value *environment, struct lone_value *arguments);
+
 struct lone_value {
 	enum lone_type type;
 	union {
