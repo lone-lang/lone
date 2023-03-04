@@ -1347,6 +1347,7 @@ static struct lone_value *lone_primitive_integer_operation(struct lone_lisp *lon
 		case '+': accumulator += argument->integer; break;
 		case '-': accumulator -= argument->integer; break;
 		case '*': accumulator *= argument->integer; break;
+		case '/': accumulator /= argument->integer; break;
 		default: /* invalid primitive integer operation */ linux_exit(-1);
 		}
 
@@ -1369,6 +1370,11 @@ static struct lone_value *lone_primitive_subtract(struct lone_lisp *lone, struct
 static struct lone_value *lone_primitive_multiply(struct lone_lisp *lone, struct lone_value *environment, struct lone_value *arguments)
 {
 	return lone_primitive_integer_operation(lone, environment, arguments, '*');
+}
+
+static struct lone_value *lone_primitive_divide(struct lone_lisp *lone, struct lone_value *environment, struct lone_value *arguments)
+{
+	return lone_primitive_integer_operation(lone, environment, arguments, '/');
 }
 
 /* ╭─────────────────────────┨ LONE LINUX PROCESS ┠─────────────────────────╮
@@ -1553,6 +1559,7 @@ static void lone_set_environment(struct lone_lisp *lone, struct lone_value *argu
 	lone_table_set(lone, table, lone_intern_c_string(lone, "+"), lone_primitive_create(lone, lone_primitive_add));
 	lone_table_set(lone, table, lone_intern_c_string(lone, "-"), lone_primitive_create(lone, lone_primitive_subtract));
 	lone_table_set(lone, table, lone_intern_c_string(lone, "*"), lone_primitive_create(lone, lone_primitive_multiply));
+	lone_table_set(lone, table, lone_intern_c_string(lone, "/"), lone_primitive_create(lone, lone_primitive_divide));
 
 	lone_table_set(lone, table, lone_intern_c_string(lone, "arguments"), arguments);
 	lone_table_set(lone, table, lone_intern_c_string(lone, "environment"), environment);
