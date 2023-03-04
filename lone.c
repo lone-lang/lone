@@ -65,6 +65,7 @@ static ssize_t linux_write(int fd, const void *buffer, size_t count)
    ╰────────────────────────────────────────────────────────────────────────╯ */
 enum lone_type {
 	LONE_FUNCTION,
+	LONE_PRIMITIVE,
 	LONE_LIST,
 	LONE_TABLE,
 	LONE_SYMBOL,
@@ -1131,6 +1132,7 @@ static struct lone_value *lone_evaluate(struct lone_lisp *lone, struct lone_valu
 	case LONE_LIST:
 		return lone_evaluate_form(lone, environment, value);
 	case LONE_FUNCTION:
+	case LONE_PRIMITIVE:
 	case LONE_TABLE:
 	case LONE_INTEGER:
 	case LONE_POINTER:
