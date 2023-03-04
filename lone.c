@@ -1128,8 +1128,14 @@ static struct lone_value *lone_evaluate_form(struct lone_lisp *lone, struct lone
 
 	/* must be a function application if not a special form */
 	first = lone_evaluate(lone, environment, first);
-	if (first->type != LONE_FUNCTION) { /* first element must be a function */ linux_exit(-1); }
-	return lone_apply(lone, environment, first, rest);
+	switch (first->type) {
+	case LONE_FUNCTION:
+		return lone_apply(lone, environment, first, rest);
+	case LONE_PRIMITIVE:
+		return first->primitive(lone, environment, rest);
+	default:
+		/* first element must be a function */ linux_exit(-1);
+	}
 }
 
 static struct lone_value *lone_evaluate(struct lone_lisp *lone, struct lone_value *environment, struct lone_value *value)
