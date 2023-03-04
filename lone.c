@@ -109,6 +109,7 @@ struct lone_value {
 	enum lone_type type;
 	union {
 		struct lone_function function;
+		lone_primitive primitive;
 		struct lone_list list;
 		struct lone_table table;
 		struct lone_bytes bytes;   /* also used by texts and symbols */
