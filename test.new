@@ -9,6 +9,10 @@ test_name="${1}"
 test_directory=test/"${test_name}"
 shift
 
+test-file-path() {
+  printf "%s/%s" "${test_directory}" "${1}"
+}
+
 declare -a test_parameters=("${@}")
 
 if (( "${#test_parameters}" == 0 )); then
