@@ -1340,6 +1340,9 @@ static struct lone_value *lone_primitive_integer_operation(struct lone_lisp *lon
 		if (argument->type != LONE_INTEGER) { /* argument is not a number */ linux_exit(-1); }
 
 		switch (operation) {
+		case '+':
+			accumulator += argument->integer;
+			break;
 		default:
 			/* invalid primitive integer operation */
 			linux_exit(-1);
@@ -1350,6 +1353,11 @@ static struct lone_value *lone_primitive_integer_operation(struct lone_lisp *lon
 	} while (!lone_is_nil(arguments));
 
 	return lone_integer_create(lone, accumulator);
+}
+
+static struct lone_value *lone_primitive_add(struct lone_lisp *lone, struct lone_value *environment, struct lone_value *arguments)
+{
+	return lone_primitive_integer_operation(lone, environment, arguments, '+');
 }
 
 /* ╭─────────────────────────┨ LONE LINUX PROCESS ┠─────────────────────────╮
