@@ -1537,6 +1537,8 @@ static void lone_set_environment(struct lone_lisp *lone, struct lone_value *argu
 {
 	struct lone_value *table = lone_table_create(lone, 16, 0);
 
+	lone_table_set(lone, table, lone_intern_c_string(lone, "+"), lone_primitive_create(lone, lone_primitive_add));
+
 	lone_table_set(lone, table, lone_intern_c_string(lone, "arguments"), arguments);
 	lone_table_set(lone, table, lone_intern_c_string(lone, "environment"), environment);
 	lone_table_set(lone, table, lone_intern_c_string(lone, "auxiliary-values"), auxiliary_values);
