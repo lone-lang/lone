@@ -5,7 +5,8 @@ if [[ -z "${1}" ]]; then
   exit 1
 fi
 
-test_directory=test/"${1}"
+test_name="${1}"
+test_directory=test/"${test_name}"
 shift
 
 declare -a test_parameters=("${@}")
