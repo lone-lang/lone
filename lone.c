@@ -1329,7 +1329,13 @@ static struct lone_value *lone_primitive_print(struct lone_lisp *lone, struct lo
 static struct lone_value *lone_primitive_integer_operation(struct lone_lisp *lone, struct lone_value *environment, struct lone_value *arguments, char operation)
 {
 	struct lone_value *argument;
-	long accumulator = 0;
+	long accumulator;
+
+	switch (operation) {
+	case '+': case '-': accumulator = 0; break;
+	case '*': case '/': accumulator = 1; break;
+	default: /* invalid primitive integer operation */ linux_exit(-1);
+	}
 
 	if (lone_is_nil(arguments)) { /* wasn't given any arguments to add: (+) */ linux_exit(-1); }
 
