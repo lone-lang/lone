@@ -55,6 +55,14 @@ define print-lone-value
               else
                 if $type == LONE_TABLE
                   print-lone-table $arg0
+                else
+                  if $type == LONE_FUNCTION
+                    print-lone-function $arg0
+                  else
+                    if $type == LONE_PRIMITIVE
+                      print-lone-primitive $arg0
+                    end
+                  end
                 end
               end
             end
@@ -63,6 +71,21 @@ define print-lone-value
       end
     end
   end
+end
+
+define print-lone-function
+  set var $f = $arg0->function
+  printf "f["
+  print-lone-value $f.arguments
+  printf " = "
+  print-lone-value $f.code
+  printf "]"
+end
+
+define print-lone-primitive
+  printf "p["
+  p $arg0->primitive
+  printf "]"
 end
 
 define print-lone-list
