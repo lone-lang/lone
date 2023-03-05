@@ -1,9 +1,24 @@
 define lone-memory-walk
-  while $arg0
-    output *$arg0
+  set var $memory = $arg0->memory
+  set var $free = 0
+  set var $used = 0
+  while $memory
+    if $memory->free
+      set var $free += $memory->size
+    else
+      set var $used += $memory->size
+    end
+    output *$memory
     printf "\n"
-    set var $arg0 = $arg0->next
+    set var $memory = $memory->next
   end
+  set var $total = $free + $used
+  output $free
+  printf " free, "
+  output $used
+  printf " used, "
+  output $total
+  printf " total\n"
 end
 
 define plv
