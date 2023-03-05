@@ -315,6 +315,32 @@ static void lone_mark_all_reachable_values(struct lone_lisp *lone)
 	lone_mark_value(lone->symbol_table);
 }
 
+static void lone_deallocate_all_unmarked_values(struct lone_lisp *lone)
+{
+	struct lone_value_container **values = &lone->values, *value;
+	while ((value = *values)) {
+		if (value->header.marked) {
+			value->header.marked = 0;
+			values = &value->header.next;
+		} else {
+			*values = value->header.next;
+
+			switch (value->value.type) {
+			case LONE_BYTES:
+			case LONE_TEXT:
+			case LONE_SYMBOL:
+				lone_deallocate(lone, value->value.bytes.pointer);
+				break;
+			case LONE_TABLE:
+				lone_deallocate(lone, value->value.table.entries);
+				break;
+			}
+
+			lone_deallocate(lone, value);
+		}
+	}
+}
+
 /* ╭────────────────────────────────────────────────────────────────────────╮
    │                                                                        │
    │    Initializers and creation functions for lone's types.               │
