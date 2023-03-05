@@ -279,6 +279,36 @@ static inline struct lone_value_container *lone_value_to_container(struct lone_v
 	return (struct lone_value_container *) bytes;
 }
 
+static void lone_mark_value(struct lone_value *value)
+{
+	struct lone_value_container *container = lone_value_to_container(value);
+
+	if (!container || container->header.marked == 1) { return; }
+
+	container->header.marked = 1;
+
+	switch (container->value.type) {
+	case LONE_FUNCTION:
+		lone_mark_value(container->value.function.arguments);
+		lone_mark_value(container->value.function.code);
+		lone_mark_value(container->value.function.environment);
+		break;
+	case LONE_LIST:
+		lone_mark_value(container->value.list.first);
+		lone_mark_value(container->value.list.rest);
+		break;
+	case LONE_TABLE:
+		lone_mark_value(container->value.table.prototype);
+		for (size_t i = 0; i < container->value.table.capacity; ++i) {
+			lone_mark_value(container->value.table.entries[i].key);
+			lone_mark_value(container->value.table.entries[i].value);
+		}
+		break;
+	default:
+		break;
+	}
+}
+
 /* ╭────────────────────────────────────────────────────────────────────────╮
    │                                                                        │
    │    Initializers and creation functions for lone's types.               │
