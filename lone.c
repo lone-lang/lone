@@ -1333,15 +1333,11 @@ static struct lone_value *lone_primitive_integer_operation(struct lone_lisp *lon
 
 	switch (operation) {
 	case '+': case '-': accumulator = 0; break;
-	case '*': case '/': accumulator = 1; break;
+	case '*': accumulator = 1; break;
 	default: /* invalid primitive integer operation */ linux_exit(-1);
 	}
 
-	if (lone_is_nil(arguments)) {
-		/* wasn't given any arguments to operate on: (+), (-), (*), (/) */
-		if (operation == '/') { /* for division this doesn't make sense */ linux_exit(-1); }
-		else { /* return the identity */ goto return_accumulator; }
-	}
+	if (lone_is_nil(arguments)) { /* wasn't given any arguments to operate on: (+), (-), (*) */ goto return_accumulator; }
 
 	do {
 		argument = lone_list_first(arguments);
@@ -1351,7 +1347,6 @@ static struct lone_value *lone_primitive_integer_operation(struct lone_lisp *lon
 		case '+': accumulator += argument->integer; break;
 		case '-': accumulator -= argument->integer; break;
 		case '*': accumulator *= argument->integer; break;
-		case '/': accumulator /= argument->integer; break;
 		default: /* invalid primitive integer operation */ linux_exit(-1);
 		}
 
@@ -1379,7 +1374,21 @@ static struct lone_value *lone_primitive_multiply(struct lone_lisp *lone, struct
 
 static struct lone_value *lone_primitive_divide(struct lone_lisp *lone, struct lone_value *environment, struct lone_value *arguments)
 {
-	return lone_primitive_integer_operation(lone, environment, arguments, '/');
+	struct lone_value *dividend, *divisor;
+
+	if (lone_is_nil(arguments)) { /* at least the dividend is required, (/) is invalid */ linux_exit(-1); }
+	dividend = lone_list_first(arguments);
+	if (dividend->type != LONE_INTEGER) { /* can't divide non-numbers: (/ "not a number) */ linux_exit(-1); }
+	arguments = lone_list_rest(arguments);
+
+	if (lone_is_nil(arguments)) {
+		/* not given a divisor, return 1/x instead: (/ 2) = 1/2 */
+		return lone_integer_create(lone, 1 / dividend->integer);
+	} else {
+		/* (/ x a b c ...) = x / (a * b * c * ...) */
+		divisor = lone_primitive_integer_operation(lone, environment, arguments, '*');
+		return lone_integer_create(lone, dividend->integer / divisor->integer);
+	}
 }
 
 /* ╭─────────────────────────┨ LONE LINUX PROCESS ┠─────────────────────────╮
