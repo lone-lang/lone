@@ -1337,7 +1337,11 @@ static struct lone_value *lone_primitive_integer_operation(struct lone_lisp *lon
 	default: /* invalid primitive integer operation */ linux_exit(-1);
 	}
 
-	if (lone_is_nil(arguments)) { /* wasn't given any arguments to add: (+) */ linux_exit(-1); }
+	if (lone_is_nil(arguments)) {
+		/* wasn't given any arguments to operate on: (+), (-), (*), (/) */
+		if (operation == '/') { /* for division this doesn't make sense */ linux_exit(-1); }
+		else { /* return the identity */ goto return_accumulator; }
+	}
 
 	do {
 		argument = lone_list_first(arguments);
@@ -1354,6 +1358,7 @@ static struct lone_value *lone_primitive_integer_operation(struct lone_lisp *lon
 		arguments = lone_list_rest(arguments);
 	} while (!lone_is_nil(arguments));
 
+return_accumulator:
 	return lone_integer_create(lone, accumulator);
 }
 
