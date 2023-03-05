@@ -156,6 +156,7 @@ struct lone_memory {
 
 struct lone_value_header {
 	struct lone_value_container *next;
+	unsigned char marked;
 };
 
 struct lone_value_container {
@@ -291,6 +292,7 @@ static struct lone_value *lone_value_create(struct lone_lisp *lone)
 	struct lone_value_container *container = lone_allocate(lone, sizeof(struct lone_value_container));
 	if (lone->values) { container->header.next = lone->values; }
 	lone->values = container;
+	container->header.marked = 0;
 	return &container->value;
 }
 
