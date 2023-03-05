@@ -27,9 +27,7 @@ define plv
 end
 
 define print-lone-value
-  if ! $arg0
-    printf "NULL"
-  else
+  if $arg0
     set var $type = $arg0->type
     if $type == LONE_LIST
       if ($arg0->list.first == 0) && ($arg0->list.rest == 0)
@@ -70,6 +68,8 @@ define print-lone-value
         end
       end
     end
+  else
+    printf "NULL"
   end
 end
 
