@@ -309,6 +309,12 @@ static void lone_mark_value(struct lone_value *value)
 	}
 }
 
+static void lone_mark_all_reachable_values(struct lone_lisp *lone)
+{
+	lone_mark_value(lone->environment);
+	lone_mark_value(lone->symbol_table);
+}
+
 /* ╭────────────────────────────────────────────────────────────────────────╮
    │                                                                        │
    │    Initializers and creation functions for lone's types.               │
