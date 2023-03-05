@@ -341,6 +341,12 @@ static void lone_deallocate_all_unmarked_values(struct lone_lisp *lone)
 	}
 }
 
+static void lone_garbage_collector(struct lone_lisp *lone)
+{
+	lone_mark_all_reachable_values(lone);
+	lone_deallocate_all_unmarked_values(lone);
+}
+
 /* ╭────────────────────────────────────────────────────────────────────────╮
    │                                                                        │
    │    Initializers and creation functions for lone's types.               │
