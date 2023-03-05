@@ -491,7 +491,6 @@ static inline size_t lone_table_compute_hash_for(struct lone_value *key, size_t 
 static size_t lone_table_entry_find_index_for(struct lone_value *key, struct lone_table_entry *entries, size_t capacity)
 {
 	size_t i = lone_table_compute_hash_for(key, capacity);
-	struct lone_table_entry *entry;
 
 	while (entries[i].key && !lone_bytes_equals(entries[i].key->bytes, key->bytes)) {
 		i = (i + 1) % capacity;
