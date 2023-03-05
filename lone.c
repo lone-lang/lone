@@ -235,29 +235,6 @@ static void lone_deallocate(struct lone_lisp *lone, void * pointer)
 	lone_memory_coalesce(block->prev);
 }
 
-static void lone_deallocate_all(struct lone_lisp *lone)
-{
-	struct lone_value_container *value = lone->values, *next;
-
-	while (value) {
-		next = value->header.next;
-
-		switch (value->value.type) {
-		case LONE_SYMBOL:
-		case LONE_TEXT:
-		case LONE_BYTES:
-			lone_deallocate(lone, value->value.bytes.pointer);
-			break;
-		}
-
-		lone_deallocate(lone, value);
-
-		value = next;
-	}
-
-	lone->values = 0;
-}
-
 static void *lone_reallocate(struct lone_lisp *lone, void *pointer, size_t size)
 {
 	struct lone_memory *old = ((struct lone_memory *) pointer) - 1,
