@@ -271,6 +271,14 @@ static void *lone_reallocate(struct lone_lisp *lone, void *pointer, size_t size)
 	return new->pointer;
 }
 
+static inline struct lone_value_container *lone_value_to_container(struct lone_value* value)
+{
+	if (!value) { return 0; }
+	unsigned char *bytes = (unsigned char *) value;
+	bytes -= __builtin_offsetof(struct lone_value_container, value);
+	return (struct lone_value_container *) bytes;
+}
+
 /* ╭────────────────────────────────────────────────────────────────────────╮
    │                                                                        │
    │    Initializers and creation functions for lone's types.               │
