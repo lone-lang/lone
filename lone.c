@@ -129,7 +129,7 @@ struct lone_value {
 struct lone_memory;
 struct lone_lisp {
 	struct lone_memory *memory;
-	struct lone_values *values;
+	struct lone_value_container *values;
 	struct lone_value *environment;
 	struct lone_value *symbol_table;
 };
@@ -154,8 +154,12 @@ struct lone_memory {
 	unsigned char pointer[];
 };
 
-struct lone_values {
-	struct lone_values *next;
+struct lone_value_header {
+	struct lone_value_container *next;
+};
+
+struct lone_value_container {
+	struct lone_value_header header;
 	struct lone_value value;
 };
 
@@ -232,10 +236,10 @@ static void lone_deallocate(struct lone_lisp *lone, void * pointer)
 
 static void lone_deallocate_all(struct lone_lisp *lone)
 {
-	struct lone_values *value = lone->values, *next;
+	struct lone_value_container *value = lone->values, *next;
 
 	while (value) {
-		next = value->next;
+		next = value->header.next;
 
 		switch (value->value.type) {
 		case LONE_SYMBOL:
@@ -284,10 +288,10 @@ static void lone_lisp_initialize(struct lone_lisp *lone, unsigned char *memory, 
 
 static struct lone_value *lone_value_create(struct lone_lisp *lone)
 {
-	struct lone_values *values = lone_allocate(lone, sizeof(struct lone_values));
-	if (lone->values) { values->next = lone->values; }
-	lone->values = values;
-	return &values->value;
+	struct lone_value_container *container = lone_allocate(lone, sizeof(struct lone_value_container));
+	if (lone->values) { container->header.next = lone->values; }
+	lone->values = container;
+	return &container->value;
 }
 
 static struct lone_value *lone_bytes_create(struct lone_lisp *lone, unsigned char *pointer, size_t count)
