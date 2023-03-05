@@ -1705,9 +1705,9 @@ long lone(int argc, char **argv, char **envp, struct auxiliary *auxv)
 		}
 
 		value = lone_evaluate(&lone, lone.environment, value);
-	}
 
-	lone_deallocate_all(&lone);
+		lone_garbage_collector(&lone);
+	}
 
 	return 0;
 }
