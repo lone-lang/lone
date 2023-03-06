@@ -504,13 +504,6 @@ static struct lone_value *lone_list_append(struct lone_value *list, struct lone_
 	return list->list.rest = rest;
 }
 
-static struct lone_value *lone_list_pop(struct lone_value **list)
-{
-	struct lone_value *value = (*list)->list.first;
-	*list = (*list)->list.rest;
-	return value;
-}
-
 static int lone_bytes_equals(struct lone_bytes x, struct lone_bytes y)
 {
 	if (x.count != y.count) return 0;
