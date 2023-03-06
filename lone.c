@@ -208,7 +208,7 @@ static void lone_memory_coalesce(struct lone_memory *block)
 	}
 }
 
-static void * __attribute__((alloc_size(2))) lone_allocate(struct lone_lisp *lone, size_t requested_size)
+static void * __attribute__((malloc)) __attribute__((alloc_size(2))) lone_allocate(struct lone_lisp *lone, size_t requested_size)
 {
 	size_t needed_size = requested_size + sizeof(struct lone_memory);
 	struct lone_memory *block;
