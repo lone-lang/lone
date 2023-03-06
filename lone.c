@@ -1680,6 +1680,7 @@ static void lone_set_environment(struct lone_lisp *lone, struct lone_value *argu
 {
 	struct lone_value *table = lone_table_create(lone, 16, 0);
 
+	lone_table_set(lone, table, lone_intern_c_string(lone, "system-call"), lone_primitive_create(lone, lone_primitive_linux_system_call));
 	lone_table_set(lone, table, lone_intern_c_string(lone, "print"), lone_primitive_create(lone, lone_primitive_print));
 
 	lone_table_set(lone, table, lone_intern_c_string(lone, "+"), lone_primitive_create(lone, lone_primitive_add));
