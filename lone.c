@@ -1360,6 +1360,17 @@ static void lone_print(struct lone_lisp *lone, struct lone_value *value, int fd)
    │    Lone lisp functions implemented in C.                               │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
+static inline long lone_value_to_linux_system_call_argument(struct lone_value *value)
+{
+	switch (value->type) {
+	case LONE_INTEGER: return value->integer;
+	case LONE_POINTER: return (long) value->pointer;
+	case LONE_BYTES: case LONE_TEXT: case LONE_SYMBOL: return (long) value->bytes.pointer;
+	case LONE_PRIMITIVE: return (long) value->primitive;
+	case LONE_FUNCTION: case LONE_LIST: case LONE_TABLE: linux_exit(-1);
+	}
+}
+
 static struct lone_value *lone_primitive_print(struct lone_lisp *lone, struct lone_value *environment, struct lone_value *arguments)
 {
 	while (!lone_is_nil(arguments)) {
