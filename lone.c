@@ -18,12 +18,12 @@ static void __attribute__((noreturn)) linux_exit(int code)
 	__builtin_unreachable();
 }
 
-static ssize_t linux_read(int fd, const void *buffer, size_t count)
+static ssize_t __attribute__((fd_arg_read(1))) __attribute__((tainted_args)) linux_read(int fd, const void *buffer, size_t count)
 {
 	return system_call_3(__NR_read, fd, (long) buffer, (long) count);
 }
 
-static ssize_t linux_write(int fd, const void *buffer, size_t count)
+static ssize_t __attribute__((fd_arg_write(1))) __attribute__((tainted_args)) linux_write(int fd, const void *buffer, size_t count)
 {
 	return system_call_3(__NR_write, fd, (long) buffer, (long) count);
 }
@@ -208,7 +208,7 @@ static void lone_memory_coalesce(struct lone_memory *block)
 	}
 }
 
-static void *lone_allocate(struct lone_lisp *lone, size_t requested_size)
+static void * __attribute__((alloc_size(2))) lone_allocate(struct lone_lisp *lone, size_t requested_size)
 {
 	size_t needed_size = requested_size + sizeof(struct lone_memory);
 	struct lone_memory *block;
@@ -235,7 +235,7 @@ static void lone_deallocate(struct lone_lisp *lone, void * pointer)
 	lone_memory_coalesce(block->prev);
 }
 
-static void *lone_reallocate(struct lone_lisp *lone, void *pointer, size_t size)
+static void * __attribute__((alloc_size(3))) lone_reallocate(struct lone_lisp *lone, void *pointer, size_t size)
 {
 	struct lone_memory *old = ((struct lone_memory *) pointer) - 1,
 	                   *new = ((struct lone_memory *) lone_allocate(lone, size)) - 1;
@@ -530,7 +530,7 @@ static inline int lone_bytes_equals_c_string(struct lone_bytes bytes, char *c_st
 	return lone_bytes_equals(bytes, c_string_bytes);
 }
 
-static unsigned long fnv_1a(unsigned char *bytes, size_t count)
+static unsigned long  __attribute__((pure)) fnv_1a(unsigned char *bytes, size_t count)
 {
 	unsigned long hash = FNV_OFFSET_BASIS;
 
