@@ -1,3 +1,16 @@
+define print-lone-memory
+  set var $memory = $arg0
+  printf "[ "
+  if $memory->free
+    printf "."
+  else
+    printf "!"
+  end
+  printf " "
+  output $memory->size
+  printf " ]"
+end
+
 define lone-memory-walk
   set var $memory = $arg0->memory
   set var $total = 0
@@ -7,8 +20,8 @@ define lone-memory-walk
     if $memory->free
       set var $free += $memory->size
     end
-    output *$memory
-    printf "\n"
+    print-lone-memory $memory
+    printf " "
     set var $memory = $memory->next
   end
   set var $used = $total - $free
@@ -143,23 +156,23 @@ end
 
 define print-lone-bytes
   printf "b["
-  print-lone-memory $arg0
+  print-lone-buffer $arg0
   printf "]"
 end
 
 define print-lone-text
   printf "t["
-  print-lone-memory $arg0
+  print-lone-buffer $arg0
   printf "]"
 end
 
 define print-lone-symbol
   printf "s["
-  print-lone-memory $arg0
+  print-lone-buffer $arg0
   printf "]"
 end
 
-define print-lone-memory
+define print-lone-buffer
   set var $pointer = $arg0->bytes.pointer
   set var $count = $arg0->bytes.count
   output *$pointer@$count
