@@ -1,18 +1,17 @@
 define lone-memory-walk
   set var $memory = $arg0->memory
+  set var $total = 0
   set var $free = 0
-  set var $used = 0
   while $memory
+    set var $total += sizeof(struct lone_memory) + $memory->size
     if $memory->free
       set var $free += $memory->size
-    else
-      set var $used += $memory->size
     end
     output *$memory
     printf "\n"
     set var $memory = $memory->next
   end
-  set var $total = $free + $used
+  set var $used = $total - $free
   output $free
   printf " free, "
   output $used
