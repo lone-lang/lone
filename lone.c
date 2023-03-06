@@ -1371,6 +1371,62 @@ static inline long lone_value_to_linux_system_call_argument(struct lone_value *v
 	}
 }
 
+static struct lone_value *lone_primitive_linux_system_call(struct lone_lisp *lone, struct lone_value *environment, struct lone_value *arguments)
+{
+	struct lone_value *argument;
+	long result, number, _1, _2, _3, _4, _5, _6;
+
+	if (lone_is_nil(arguments)) { /* need at least the system call number */ linux_exit(-1); }
+	argument = lone_list_first(arguments);
+	if (argument->type != LONE_INTEGER) { /* system call number is not a number */ linux_exit(-1); }
+	number = argument->integer;
+	arguments = lone_list_rest(arguments);
+
+	if (!lone_is_nil(arguments)) {
+		argument = lone_list_first(arguments);
+		_1 = lone_value_to_linux_system_call_argument(argument);
+		arguments = lone_list_rest(arguments);
+
+		if (!lone_is_nil(arguments)) {
+			argument = lone_list_first(arguments);
+			_2 = lone_value_to_linux_system_call_argument(argument);
+			arguments = lone_list_rest(arguments);
+
+			if (!lone_is_nil(arguments)) {
+				argument = lone_list_first(arguments);
+				_3 = lone_value_to_linux_system_call_argument(argument);
+				arguments = lone_list_rest(arguments);
+
+				if (!lone_is_nil(arguments)) {
+					argument = lone_list_first(arguments);
+					_4 = lone_value_to_linux_system_call_argument(argument);
+					arguments = lone_list_rest(arguments);
+
+					if (!lone_is_nil(arguments)) {
+						argument = lone_list_first(arguments);
+						_5 = lone_value_to_linux_system_call_argument(argument);
+						arguments = lone_list_rest(arguments);
+
+						if (!lone_is_nil(arguments)) {
+							argument = lone_list_first(arguments);
+							_6 = lone_value_to_linux_system_call_argument(argument);
+							arguments = lone_list_rest(arguments);
+
+							if (!lone_is_nil(arguments)) {
+								/* too many arguments given */
+								linux_exit(-1);
+
+							} else { result = system_call_6(number, _1, _2, _3, _4, _5, _6); }
+						} else { result = system_call_5(number, _1, _2, _3, _4, _5); }
+					} else { result = system_call_4(number, _1, _2, _3, _4); }
+				} else { result = system_call_3(number, _1, _2, _3); }
+			} else { result = system_call_2(number, _1, _2); }
+		} else { result = system_call_1(number, _1); }
+	} else { result = system_call_0(number); }
+
+	return lone_integer_create(lone, result);
+}
+
 static struct lone_value *lone_primitive_print(struct lone_lisp *lone, struct lone_value *environment, struct lone_value *arguments)
 {
 	while (!lone_is_nil(arguments)) {
