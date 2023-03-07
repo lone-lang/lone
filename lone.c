@@ -485,6 +485,15 @@ static struct lone_value *lone_symbol_create_from_c_string(struct lone_lisp *lon
 	return lone_symbol_create(lone, (unsigned char*) c_string, lone_c_string_length(c_string));
 }
 
+static struct lone_value *lone_module_create(struct lone_lisp *lone, struct lone_value *name)
+{
+	struct lone_value *value = lone_value_create(lone);
+	value->type = LONE_MODULE;
+	value->module.name = name;
+	value->module.environment = lone_table_create(lone, 64, 0);
+	return value;
+}
+
 /* ╭────────────────────────────────────────────────────────────────────────╮
    │                                                                        │
    │    Functions for operating on lone's built-in types.                   │
