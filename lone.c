@@ -1713,23 +1713,64 @@ static struct lone_value *lone_arguments_to_list(struct lone_lisp *lone, int cou
 	return arguments;
 }
 
-static void lone_set_environment(struct lone_lisp *lone, struct lone_value *arguments, struct lone_value *environment, struct lone_value *auxiliary_values)
+/* ╭─────────────────────────┨ LONE LISP MODULES ┠──────────────────────────╮
+   │                                                                        │
+   │    Built-in modules containing essential functionality.                │
+   │                                                                        │
+   ╰────────────────────────────────────────────────────────────────────────╯ */
+static void lone_builtin_module_linux_initialize(struct lone_lisp *lone, struct lone_value *arguments, struct lone_value *environment, struct lone_value *auxiliary_values)
 {
-	struct lone_value *table = lone_table_create(lone, 16, 0);
+	struct lone_value *name = lone_intern_c_string(lone, "linux"),
+	                  *module = lone_module_create(lone, name);
 
-	lone_table_set(lone, table, lone_intern_c_string(lone, "system-call"), lone_primitive_create(lone, lone_primitive_linux_system_call));
-	lone_table_set(lone, table, lone_intern_c_string(lone, "print"), lone_primitive_create(lone, lone_primitive_print));
+	lone_table_set(lone, module->module.environment,
+	                     lone_intern_c_string(lone, "system-call"),
+	                     lone_primitive_create(lone, lone_primitive_linux_system_call));
 
-	lone_table_set(lone, table, lone_intern_c_string(lone, "+"), lone_primitive_create(lone, lone_primitive_add));
-	lone_table_set(lone, table, lone_intern_c_string(lone, "-"), lone_primitive_create(lone, lone_primitive_subtract));
-	lone_table_set(lone, table, lone_intern_c_string(lone, "*"), lone_primitive_create(lone, lone_primitive_multiply));
-	lone_table_set(lone, table, lone_intern_c_string(lone, "/"), lone_primitive_create(lone, lone_primitive_divide));
+	lone_table_set(lone, module->module.environment,
+	                     lone_intern_c_string(lone, "arguments"),
+	                     arguments);
+	lone_table_set(lone, module->module.environment,
+	                     lone_intern_c_string(lone, "environment"),
+	                     environment);
+	lone_table_set(lone, module->module.environment,
+	                     lone_intern_c_string(lone, "auxiliary-values"),
+	                     auxiliary_values);
 
-	lone_table_set(lone, table, lone_intern_c_string(lone, "arguments"), arguments);
-	lone_table_set(lone, table, lone_intern_c_string(lone, "environment"), environment);
-	lone_table_set(lone, table, lone_intern_c_string(lone, "auxiliary-values"), auxiliary_values);
+	lone_table_set(lone, lone->modules, name, module);
+}
 
-	lone->environment = table;
+static void lone_builtin_module_math_initialize(struct lone_lisp *lone)
+{
+	struct lone_value *name = lone_intern_c_string(lone, "math"),
+	                  *module = lone_module_create(lone, name);
+
+	lone_table_set(lone, module->module.environment,
+	                     lone_intern_c_string(lone, "+"),
+	                     lone_primitive_create(lone, lone_primitive_add));
+	lone_table_set(lone, module->module.environment,
+	                     lone_intern_c_string(lone, "-"),
+	                     lone_primitive_create(lone, lone_primitive_subtract));
+	lone_table_set(lone, module->module.environment,
+	                     lone_intern_c_string(lone, "*"),
+	                     lone_primitive_create(lone, lone_primitive_multiply));
+	lone_table_set(lone, module->module.environment,
+	                     lone_intern_c_string(lone, "/"),
+	                     lone_primitive_create(lone, lone_primitive_divide));
+
+	lone_table_set(lone, lone->modules, name, module);
+}
+
+static void lone_builtin_module_lone_initialize(struct lone_lisp *lone)
+{
+	struct lone_value *name = lone_intern_c_string(lone, "lone"),
+	                  *module = lone_module_create(lone, name);
+
+	lone_table_set(lone, module->module.environment,
+	                     lone_intern_c_string(lone, "print"),
+	                     lone_primitive_create(lone, lone_primitive_print));
+
+	lone_table_set(lone, lone->modules, name, module);
 }
 
 /* ╭───────────────────────┨ LONE LISP ENTRY POINT ┠────────────────────────╮
