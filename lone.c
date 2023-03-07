@@ -114,6 +114,7 @@ struct lone_module {
 struct lone_value {
 	enum lone_type type;
 	union {
+		struct lone_module module;
 		struct lone_function function;
 		lone_primitive primitive;
 		struct lone_list list;
