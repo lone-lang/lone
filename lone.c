@@ -1214,6 +1214,8 @@ static struct lone_value *lone_evaluate_form(struct lone_lisp *lone, struct lone
 			return lone_evaluate_special_form_if(lone, environment, rest);
 		} else if (lone_bytes_equals_c_string(first->bytes, "lambda")) {
 			return lone_evaluate_special_form_lambda(lone, environment, rest);
+		} else if (lone_bytes_equals_c_string(first->bytes, "import")) {
+			return lone_evaluate_special_form_import(lone, environment, rest);
 		}
 	}
 
