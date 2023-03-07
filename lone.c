@@ -1061,6 +1061,44 @@ static struct lone_value *lone_read(struct lone_lisp *lone, struct lone_reader *
    ╰────────────────────────────────────────────────────────────────────────╯ */
 static struct lone_value *lone_evaluate(struct lone_lisp *, struct lone_value *, struct lone_value *);
 
+static struct lone_value *lone_evaluate_special_form_import(struct lone_lisp *lone, struct lone_value *environment, struct lone_value *list)
+{
+	struct lone_value *name, *module, *value;
+
+	if (lone_is_nil(list)) { /* empty import form: (import) */ linux_exit(-1); }
+	name = lone_list_first(list);
+	if (name->type != LONE_SYMBOL) { /* module name not a symbol: (import 10) */ linux_exit(-1); }
+	module = lone_table_get(lone, lone->modules, name);
+	if (lone_is_nil(module)) { /* module not found: (import non-existent) */ linux_exit(-1); }
+	list = lone_list_rest(list);
+
+	if (lone_is_nil(list)) {
+		/* full import, bind all symbols: (import module) */
+		struct lone_table_entry *entries = module->module.environment->table.entries;
+		size_t i, capacity = module->module.environment->table.capacity;
+		for (i = 0; i < capacity; ++i) {
+			if (entries[i].key) {
+				lone_table_set(lone, environment, entries[i].key, entries[i].value);
+			}
+		}
+	} else {
+		/* limited import, bind only specified symbols: (import module x f) */
+		do {
+			name = lone_list_first(list);
+			if (name->type != LONE_SYMBOL) { /* name not a symbol: (import 10) */ linux_exit(-1); }
+
+			value = lone_table_get(lone, module->module.environment, name);
+			if (lone_is_nil(value)) { /* name not set in module */ linux_exit(-1); }
+
+			lone_table_set(lone, environment, name, value);
+
+			list = lone_list_rest(list);
+		} while (!lone_is_nil(list));
+	}
+
+	return module;
+}
+
 static struct lone_value *lone_evaluate_special_form_lambda(struct lone_lisp *lone, struct lone_value *environment, struct lone_value *list)
 {
 	struct lone_value *arguments;
