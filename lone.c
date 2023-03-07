@@ -1238,6 +1238,8 @@ static struct lone_value *lone_evaluate(struct lone_lisp *lone, struct lone_valu
 	switch (value->type) {
 	case LONE_LIST:
 		return lone_evaluate_form(lone, environment, value);
+	case LONE_SYMBOL:
+		return lone_table_get(lone, environment, value);
 	case LONE_MODULE:
 	case LONE_FUNCTION:
 	case LONE_PRIMITIVE:
@@ -1247,8 +1249,6 @@ static struct lone_value *lone_evaluate(struct lone_lisp *lone, struct lone_valu
 	case LONE_BYTES:
 	case LONE_TEXT:
 		return value;
-	case LONE_SYMBOL:
-		return lone_table_get(lone, environment, value);
 	}
 }
 
