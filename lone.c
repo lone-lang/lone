@@ -64,6 +64,7 @@ static ssize_t __attribute__((fd_arg_write(1))) __attribute__((tainted_args)) li
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
 enum lone_type {
+	LONE_MODULE,
 	LONE_FUNCTION,
 	LONE_PRIMITIVE,
 	LONE_LIST,
@@ -1181,6 +1182,7 @@ static struct lone_value *lone_evaluate(struct lone_lisp *lone, struct lone_valu
 	switch (value->type) {
 	case LONE_LIST:
 		return lone_evaluate_form(lone, environment, value);
+	case LONE_MODULE:
 	case LONE_FUNCTION:
 	case LONE_PRIMITIVE:
 	case LONE_TABLE:
@@ -1373,7 +1375,7 @@ static inline long lone_value_to_linux_system_call_argument(struct lone_value *v
 	case LONE_POINTER: return (long) value->pointer;
 	case LONE_BYTES: case LONE_TEXT: case LONE_SYMBOL: return (long) value->bytes.pointer;
 	case LONE_PRIMITIVE: return (long) value->primitive;
-	case LONE_FUNCTION: case LONE_LIST: case LONE_TABLE: linux_exit(-1);
+	case LONE_FUNCTION: case LONE_LIST: case LONE_TABLE: case LONE_MODULE: linux_exit(-1);
 	}
 }
 
