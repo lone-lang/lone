@@ -1132,7 +1132,7 @@ static struct lone_value *lone_evaluate_special_form_set(struct lone_lisp *lone,
 
 	// (set variable value)
 	value = lone_evaluate(lone, environment, lone_list_first(list));
-	lone_table_set(lone, lone->environment, variable, value);
+	lone_table_set(lone, environment, variable, value);
 
 	return value;
 }
