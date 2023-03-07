@@ -1802,6 +1802,9 @@ long lone(int argc, char **argv, char **envp, struct auxiliary *auxv)
 	struct lone_value *environment = lone_environment_to_table(&lone, envp);
 	struct lone_value *auxiliary_values = lone_auxiliary_vector_to_table(&lone, auxv);
 
+	lone_builtin_module_linux_initialize(&lone, arguments, environment, auxiliary_values);
+	lone_builtin_module_lone_initialize(&lone);
+	lone_builtin_module_math_initialize(&lone);
 
 	lone_reader_initialize(&lone, &reader, LONE_BUFFER_SIZE, 0);
 
