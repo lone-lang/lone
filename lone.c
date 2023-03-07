@@ -137,7 +137,7 @@ struct lone_memory;
 struct lone_lisp {
 	struct lone_memory *memory;
 	struct lone_value_container *values;
-	struct lone_value *environment;
+	struct lone_value *null_module;
 	struct lone_value *modules;
 	struct lone_value *symbol_table;
 };
@@ -300,7 +300,7 @@ static void lone_mark_value(struct lone_value *value)
 
 static void lone_mark_all_reachable_values(struct lone_lisp *lone)
 {
-	lone_mark_value(lone->environment);
+	lone_mark_value(lone->null_module);
 	lone_mark_value(lone->modules);
 	lone_mark_value(lone->symbol_table);
 }
@@ -349,7 +349,7 @@ static void lone_lisp_initialize(struct lone_lisp *lone, unsigned char *memory, 
 	lone->memory->free = 1;
 	lone->memory->size = size - sizeof(struct lone_memory);
 	lone->values = 0;
-	lone->environment = 0;
+	lone->null_module = 0;
 	lone->modules = 0;
 	lone->symbol_table = 0;
 }
@@ -1754,13 +1754,13 @@ long lone(int argc, char **argv, char **envp, struct auxiliary *auxv)
 
 	lone_lisp_initialize(&lone, memory, sizeof(memory));
 	lone.modules = lone_table_create(&lone, 32, 0);
+	lone.null_module = lone_module_create(&lone, 0);
 	lone.symbol_table = lone_table_create(&lone, 256, 0);
 
 	struct lone_value *arguments = lone_arguments_to_list(&lone, argc, argv);
 	struct lone_value *environment = lone_environment_to_table(&lone, envp);
 	struct lone_value *auxiliary_values = lone_auxiliary_vector_to_table(&lone, auxv);
 
-	lone_set_environment(&lone, arguments, environment, auxiliary_values);
 
 	lone_reader_initialize(&lone, &reader, LONE_BUFFER_SIZE, 0);
 
@@ -1774,7 +1774,7 @@ long lone(int argc, char **argv, char **envp, struct auxiliary *auxv)
 			}
 		}
 
-		value = lone_evaluate(&lone, lone.environment, value);
+		value = lone_evaluate(&lone, lone.null_module->module.environment, value);
 
 		lone_garbage_collector(&lone);
 	}
