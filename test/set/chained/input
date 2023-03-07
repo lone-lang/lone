@@ -1,2 +1,4 @@
+(import lone print)
+
 (set y (set x 10))
 (print y)

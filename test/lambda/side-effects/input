@@ -1,1 +1,3 @@
+(import lone print)
+
 ((lambda (x) (print x)) 10)

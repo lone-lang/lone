@@ -1,1 +1,3 @@
+(import lone print)
+
 (print 0)

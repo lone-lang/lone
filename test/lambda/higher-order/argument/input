@@ -1,3 +1,5 @@
+(import lone print)
+
 (set applicator (lambda (f x) (lambda () (f x))))
 (set returner (lambda (x) x))
 (set return-10 (applicator returner 10))
