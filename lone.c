@@ -12,6 +12,8 @@
 typedef __kernel_size_t size_t;
 typedef __kernel_ssize_t ssize_t;
 
+#include LONE_ARCH_SOURCE
+
 static void __attribute__((noreturn)) linux_exit(int code)
 {
 	system_call_1(__NR_exit, code);
