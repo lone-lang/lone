@@ -1061,6 +1061,11 @@ static struct lone_value *lone_read(struct lone_lisp *lone, struct lone_reader *
    ╰────────────────────────────────────────────────────────────────────────╯ */
 static struct lone_value *lone_evaluate(struct lone_lisp *, struct lone_value *, struct lone_value *);
 
+static struct lone_value *lone_evaluate_module(struct lone_lisp *lone, struct lone_value *module, struct lone_value *value)
+{
+	return lone_evaluate(lone, module->module.environment, value);
+}
+
 static struct lone_value *lone_evaluate_special_form_import(struct lone_lisp *lone, struct lone_value *environment, struct lone_value *list)
 {
 	struct lone_value *name, *module, *value;
@@ -1818,7 +1823,7 @@ long lone(int argc, char **argv, char **envp, struct auxiliary *auxv)
 			}
 		}
 
-		value = lone_evaluate(&lone, lone.null_module->module.environment, value);
+		value = lone_evaluate_module(&lone, lone.null_module, value);
 
 		lone_garbage_collector(&lone);
 	}
