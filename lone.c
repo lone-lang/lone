@@ -138,6 +138,7 @@ struct lone_lisp {
 	struct lone_memory *memory;
 	struct lone_value_container *values;
 	struct lone_value *environment;
+	struct lone_value *modules;
 	struct lone_value *symbol_table;
 };
 
@@ -300,6 +301,7 @@ static void lone_mark_value(struct lone_value *value)
 static void lone_mark_all_reachable_values(struct lone_lisp *lone)
 {
 	lone_mark_value(lone->environment);
+	lone_mark_value(lone->modules);
 	lone_mark_value(lone->symbol_table);
 }
 
@@ -348,6 +350,7 @@ static void lone_lisp_initialize(struct lone_lisp *lone, unsigned char *memory, 
 	lone->memory->size = size - sizeof(struct lone_memory);
 	lone->values = 0;
 	lone->environment = 0;
+	lone->modules = 0;
 	lone->symbol_table = 0;
 }
 
@@ -1710,6 +1713,7 @@ long lone(int argc, char **argv, char **envp, struct auxiliary *auxv)
 	struct lone_reader reader;
 
 	lone_lisp_initialize(&lone, memory, sizeof(memory));
+	lone.modules = lone_table_create(&lone, 32, 0);
 	lone.symbol_table = lone_table_create(&lone, 256, 0);
 
 	struct lone_value *arguments = lone_arguments_to_list(&lone, argc, argv);
