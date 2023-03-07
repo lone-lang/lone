@@ -272,6 +272,10 @@ static void lone_mark_value(struct lone_value *value)
 	container->header.marked = 1;
 
 	switch (container->value.type) {
+	case LONE_MODULE:
+		lone_mark_value(container->value.module.name);
+		lone_mark_value(container->value.module.environment);
+		break;
 	case LONE_FUNCTION:
 		lone_mark_value(container->value.function.arguments);
 		lone_mark_value(container->value.function.code);
