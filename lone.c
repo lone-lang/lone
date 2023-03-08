@@ -107,7 +107,15 @@ struct lone_function {
 };
 
 struct lone_lisp;
-typedef struct lone_value *(*lone_primitive)(struct lone_lisp *lone, struct lone_value *environment, struct lone_value *arguments);
+typedef struct lone_value *(*lone_primitive)(struct lone_lisp *lone,
+                                             struct lone_value *closure,
+                                             struct lone_value *environment,
+                                             struct lone_value *arguments);
+
+struct lone_primitive {
+	lone_primitive function;
+	struct lone_value *closure;
+};
 
 struct lone_module {
 	struct lone_value *name;
@@ -119,7 +127,7 @@ struct lone_value {
 	union {
 		struct lone_module module;
 		struct lone_function function;
-		lone_primitive primitive;
+		struct lone_primitive primitive;
 		struct lone_list list;
 		struct lone_table table;
 		struct lone_bytes bytes;   /* also used by texts and symbols */
@@ -285,6 +293,9 @@ static void lone_mark_value(struct lone_value *value)
 		lone_mark_value(container->value.function.code);
 		lone_mark_value(container->value.function.environment);
 		break;
+	case LONE_PRIMITIVE:
+		lone_mark_value(container->value.primitive.closure);
+		break;
 	case LONE_LIST:
 		lone_mark_value(container->value.list.first);
 		lone_mark_value(container->value.list.rest);
@@ -403,11 +414,12 @@ static struct lone_value *lone_function_create(struct lone_lisp *lone, struct lo
 	return value;
 }
 
-static struct lone_value *lone_primitive_create(struct lone_lisp *lone, lone_primitive primitive)
+static struct lone_value *lone_primitive_create(struct lone_lisp *lone, lone_primitive function, struct lone_value *closure)
 {
 	struct lone_value *value = lone_value_create(lone);
 	value->type = LONE_PRIMITIVE;
-	value->primitive = primitive;
+	value->primitive.function = function;
+	value->primitive.closure = closure;
 	return value;
 }
 
@@ -1235,7 +1247,7 @@ static struct lone_value *lone_evaluate_form(struct lone_lisp *lone, struct lone
 	case LONE_FUNCTION:
 		return lone_apply(lone, environment, first, rest);
 	case LONE_PRIMITIVE:
-		return first->primitive(lone, environment, rest);
+		return first->primitive.function(lone, first->primitive.closure, environment, rest);
 	default:
 		/* first element must be a function */ linux_exit(-1);
 	}
@@ -1459,12 +1471,12 @@ static inline long lone_value_to_linux_system_call_argument(struct lone_value *v
 	case LONE_INTEGER: return value->integer;
 	case LONE_POINTER: return (long) value->pointer;
 	case LONE_BYTES: case LONE_TEXT: case LONE_SYMBOL: return (long) value->bytes.pointer;
-	case LONE_PRIMITIVE: return (long) value->primitive;
+	case LONE_PRIMITIVE: return (long) value->primitive.function;
 	case LONE_FUNCTION: case LONE_LIST: case LONE_TABLE: case LONE_MODULE: linux_exit(-1);
 	}
 }
 
-static struct lone_value *lone_primitive_linux_system_call(struct lone_lisp *lone, struct lone_value *environment, struct lone_value *arguments)
+static struct lone_value *lone_primitive_linux_system_call(struct lone_lisp *lone, struct lone_value *linux_system_call_table, struct lone_value *environment, struct lone_value *arguments)
 {
 	struct lone_value *argument;
 	long result, number, args[6];
@@ -1492,7 +1504,7 @@ static struct lone_value *lone_primitive_linux_system_call(struct lone_lisp *lon
 	return lone_integer_create(lone, result);
 }
 
-static struct lone_value *lone_primitive_print(struct lone_lisp *lone, struct lone_value *environment, struct lone_value *arguments)
+static struct lone_value *lone_primitive_print(struct lone_lisp *lone, struct lone_value *closure, struct lone_value *environment, struct lone_value *arguments)
 {
 	while (!lone_is_nil(arguments)) {
 		lone_print(lone, lone_evaluate(lone, environment, lone_list_first(arguments)), 1);
@@ -1503,7 +1515,7 @@ static struct lone_value *lone_primitive_print(struct lone_lisp *lone, struct lo
 	return lone_list_create_nil(lone);
 }
 
-static struct lone_value *lone_primitive_integer_operation(struct lone_lisp *lone, struct lone_value *environment, struct lone_value *arguments, char operation)
+static struct lone_value *lone_primitive_integer_operation(struct lone_lisp *lone, struct lone_value *arguments, char operation)
 {
 	struct lone_value *argument;
 	long accumulator;
@@ -1534,22 +1546,22 @@ return_accumulator:
 	return lone_integer_create(lone, accumulator);
 }
 
-static struct lone_value *lone_primitive_add(struct lone_lisp *lone, struct lone_value *environment, struct lone_value *arguments)
+static struct lone_value *lone_primitive_add(struct lone_lisp *lone, struct lone_value *closure, struct lone_value *environment, struct lone_value *arguments)
 {
-	return lone_primitive_integer_operation(lone, environment, arguments, '+');
+	return lone_primitive_integer_operation(lone, arguments, '+');
 }
 
-static struct lone_value *lone_primitive_subtract(struct lone_lisp *lone, struct lone_value *environment, struct lone_value *arguments)
+static struct lone_value *lone_primitive_subtract(struct lone_lisp *lone, struct lone_value *closure, struct lone_value *environment, struct lone_value *arguments)
 {
-	return lone_primitive_integer_operation(lone, environment, arguments, '-');
+	return lone_primitive_integer_operation(lone, arguments, '-');
 }
 
-static struct lone_value *lone_primitive_multiply(struct lone_lisp *lone, struct lone_value *environment, struct lone_value *arguments)
+static struct lone_value *lone_primitive_multiply(struct lone_lisp *lone, struct lone_value *closure, struct lone_value *environment, struct lone_value *arguments)
 {
-	return lone_primitive_integer_operation(lone, environment, arguments, '*');
+	return lone_primitive_integer_operation(lone, arguments, '*');
 }
 
-static struct lone_value *lone_primitive_divide(struct lone_lisp *lone, struct lone_value *environment, struct lone_value *arguments)
+static struct lone_value *lone_primitive_divide(struct lone_lisp *lone, struct lone_value *closure, struct lone_value *environment, struct lone_value *arguments)
 {
 	struct lone_value *dividend, *divisor;
 
@@ -1563,7 +1575,7 @@ static struct lone_value *lone_primitive_divide(struct lone_lisp *lone, struct l
 		return lone_integer_create(lone, 1 / dividend->integer);
 	} else {
 		/* (/ x a b c ...) = x / (a * b * c * ...) */
-		divisor = lone_primitive_integer_operation(lone, environment, arguments, '*');
+		divisor = lone_primitive_integer_operation(lone, arguments, '*');
 		return lone_integer_create(lone, dividend->integer / divisor->integer);
 	}
 }
@@ -1777,7 +1789,7 @@ static void lone_builtin_module_linux_initialize(struct lone_lisp *lone, struct 
 
 	lone_table_set(lone, module->module.environment,
 	                     lone_intern_c_string(lone, "system-call"),
-	                     lone_primitive_create(lone, lone_primitive_linux_system_call));
+	                     lone_primitive_create(lone, lone_primitive_linux_system_call, module));
 
 	lone_table_set(lone, module->module.environment,
 	                     lone_intern_c_string(lone, "arguments"),
@@ -1799,16 +1811,16 @@ static void lone_builtin_module_math_initialize(struct lone_lisp *lone)
 
 	lone_table_set(lone, module->module.environment,
 	                     lone_intern_c_string(lone, "+"),
-	                     lone_primitive_create(lone, lone_primitive_add));
+	                     lone_primitive_create(lone, lone_primitive_add, module));
 	lone_table_set(lone, module->module.environment,
 	                     lone_intern_c_string(lone, "-"),
-	                     lone_primitive_create(lone, lone_primitive_subtract));
+	                     lone_primitive_create(lone, lone_primitive_subtract, module));
 	lone_table_set(lone, module->module.environment,
 	                     lone_intern_c_string(lone, "*"),
-	                     lone_primitive_create(lone, lone_primitive_multiply));
+	                     lone_primitive_create(lone, lone_primitive_multiply, module));
 	lone_table_set(lone, module->module.environment,
 	                     lone_intern_c_string(lone, "/"),
-	                     lone_primitive_create(lone, lone_primitive_divide));
+	                     lone_primitive_create(lone, lone_primitive_divide, module));
 
 	lone_table_set(lone, lone->modules, name, module);
 }
@@ -1820,7 +1832,7 @@ static void lone_builtin_module_lone_initialize(struct lone_lisp *lone)
 
 	lone_table_set(lone, module->module.environment,
 	                     lone_intern_c_string(lone, "print"),
-	                     lone_primitive_create(lone, lone_primitive_print));
+	                     lone_primitive_create(lone, lone_primitive_print, module));
 
 	lone_table_set(lone, lone->modules, name, module);
 }
