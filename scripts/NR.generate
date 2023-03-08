@@ -1,0 +1,5 @@
+#!/usr/bin/bash
+
+while read -r NR; do
+  printf 'lone_table_set(lone, table, lone_intern_c_string(lone, "%s"), lone_integer_create(lone, %s));\n' "${NR#__NR_}" "${NR}"
+done
