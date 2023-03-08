@@ -73,7 +73,7 @@ the successful status code `0` is expected.
     ├── README.md                 # This README file
     ├── test.bash                 # The test script
     ├── test.new                  # The new test case creation script
-    ├── .gdbinit                  # GDB visualization functions lone's data structures
+    ├── .gdbinit                  # GDB visualization functions for lone's data structures
     └── .github/                  # GitHub-specific data
         └── workflows/            # GitHub Actions workflows
             ├── codeql.yml        # Automated code quality checker
