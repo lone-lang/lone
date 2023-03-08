@@ -5,7 +5,7 @@ ARCH.c := arch/$(ARCH).c
 CFLAGS := -Wall -Wextra -Wpedantic -Os
 override essential_flags := -ffreestanding -nostartfiles -nostdlib -static -D LONE_ARCH=$(ARCH) -D LONE_ARCH_SOURCE='"$(ARCH.c)"'
 
-lone : lone.c $(ARCH.c)
+lone : lone.c NR.c $(ARCH.c)
 	$(CC) $(essential_flags) $(CFLAGS) -o $@ $<
 
 phony += clean
