@@ -150,7 +150,6 @@ struct lone_lisp {
 	struct lone_value *null_module;
 	struct lone_value *modules;
 	struct lone_value *symbol_table;
-	struct lone_value *system_call_table;
 };
 
 /* ╭────────────────────┨ LONE LISP MEMORY ALLOCATION ┠─────────────────────╮
@@ -317,7 +316,6 @@ static void lone_mark_all_reachable_values(struct lone_lisp *lone)
 	lone_mark_value(lone->null_module);
 	lone_mark_value(lone->modules);
 	lone_mark_value(lone->symbol_table);
-	lone_mark_value(lone->system_call_table);
 }
 
 static void lone_deallocate_all_unmarked_values(struct lone_lisp *lone)
@@ -367,7 +365,6 @@ static void lone_lisp_initialize(struct lone_lisp *lone, unsigned char *memory, 
 	lone->null_module = 0;
 	lone->modules = 0;
 	lone->symbol_table = 0;
-	lone->system_call_table = 0;
 }
 
 static struct lone_value *lone_value_create(struct lone_lisp *lone)
@@ -1446,7 +1443,7 @@ static void lone_print(struct lone_lisp *lone, struct lone_value *value, int fd)
    │    Lone lisp functions implemented in C.                               │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
-static inline long lone_value_to_linux_system_call_number(struct lone_lisp *lone, struct lone_value *value)
+static inline long lone_value_to_linux_system_call_number(struct lone_lisp *lone, struct lone_value *linux_system_call_table, struct lone_value *value)
 {
 	switch (value->type) {
 	case LONE_INTEGER:
@@ -1454,7 +1451,7 @@ static inline long lone_value_to_linux_system_call_number(struct lone_lisp *lone
 	case LONE_BYTES:
 	case LONE_TEXT:
 	case LONE_SYMBOL:
-		return lone_table_get(lone, lone->system_call_table, value)->integer;
+		return lone_table_get(lone, linux_system_call_table, value)->integer;
 	case LONE_MODULE:
 	case LONE_FUNCTION:
 	case LONE_PRIMITIVE:
@@ -1484,7 +1481,7 @@ static struct lone_value *lone_primitive_linux_system_call(struct lone_lisp *lon
 
 	if (lone_is_nil(arguments)) { /* need at least the system call number */ linux_exit(-1); }
 	argument = lone_list_first(arguments);
-	number = lone_value_to_linux_system_call_number(lone, argument);
+	number = lone_value_to_linux_system_call_number(lone, linux_system_call_table, argument);
 	arguments = lone_list_rest(arguments);
 
 	for (i = 0; i < 6; ++i) {
@@ -1753,7 +1750,7 @@ static struct lone_value *lone_arguments_to_list(struct lone_lisp *lone, int cou
 	return arguments;
 }
 
-static void lone_fill_linux_system_call_table(struct lone_lisp *lone)
+static void lone_fill_linux_system_call_table(struct lone_lisp *lone, struct lone_value *linux_system_call_table)
 {
 	size_t i;
 
@@ -1768,8 +1765,7 @@ static void lone_fill_linux_system_call_table(struct lone_lisp *lone)
 	};
 
 	for (i = 0; i < (sizeof(linux_system_calls)/sizeof(linux_system_calls[0])); ++i) {
-		lone_table_set(lone,
-		               lone->system_call_table,
+		lone_table_set(lone, linux_system_call_table,
 		               lone_intern_c_string(lone, linux_system_calls[i].symbol),
 		               lone_integer_create(lone, linux_system_calls[i].number));
 	}
@@ -1783,13 +1779,14 @@ static void lone_fill_linux_system_call_table(struct lone_lisp *lone)
 static void lone_builtin_module_linux_initialize(struct lone_lisp *lone, struct lone_value *arguments, struct lone_value *environment, struct lone_value *auxiliary_values)
 {
 	struct lone_value *name = lone_intern_c_string(lone, "linux"),
-	                  *module = lone_module_create(lone, name);
+	                  *module = lone_module_create(lone, name),
+	                  *linux_system_call_table = lone_table_create(lone, 1024, 0);
 
-	lone_fill_linux_system_call_table(lone);
+	lone_fill_linux_system_call_table(lone, linux_system_call_table);
 
 	lone_table_set(lone, module->module.environment,
 	                     lone_intern_c_string(lone, "system-call"),
-	                     lone_primitive_create(lone, lone_primitive_linux_system_call, module));
+	                     lone_primitive_create(lone, lone_primitive_linux_system_call, linux_system_call_table));
 
 	lone_table_set(lone, module->module.environment,
 	                     lone_intern_c_string(lone, "arguments"),
@@ -1861,7 +1858,6 @@ long lone(int argc, char **argv, char **envp, struct auxiliary *auxv)
 	lone.modules = lone_table_create(&lone, 32, 0);
 	lone.null_module = lone_module_create(&lone, 0);
 	lone.symbol_table = lone_table_create(&lone, 256, 0);
-	lone.system_call_table = lone_table_create(&lone, 1024, 0);
 
 	struct lone_value *arguments = lone_arguments_to_list(&lone, argc, argv);
 	struct lone_value *environment = lone_environment_to_table(&lone, envp);
