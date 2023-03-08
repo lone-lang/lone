@@ -1217,6 +1217,32 @@ static struct lone_value *lone_evaluate_special_form_set(struct lone_lisp *lone,
 	return value;
 }
 
+static struct lone_value *lone_evaluate_form_table(struct lone_lisp *lone, struct lone_value *environment, struct lone_value *table, struct lone_value *arguments)
+{
+	struct lone_value *key, *value;
+	if (lone_is_nil(arguments)) { /* need at least the key: (table) */ linux_exit(-1); }
+	key = lone_list_first(arguments);
+	arguments = lone_list_rest(arguments);
+	if (lone_is_nil(arguments)) {
+		/* table get: (table key) */
+		return lone_table_get(lone, table, lone_evaluate(lone, environment, key));
+	} else {
+		/* at least one argument */
+		value = lone_list_first(arguments);
+		arguments = lone_list_rest(arguments);
+		if (lone_is_nil(arguments)) {
+			/* table set: (table key value) */
+			lone_table_set(lone, table,
+			               lone_evaluate(lone, environment, key),
+			               lone_evaluate(lone, environment, value));
+			return value;
+		} else {
+			/* too many arguments given: (table key value extra) */
+			linux_exit(-1);
+		}
+	}
+}
+
 static struct lone_value *lone_apply(struct lone_lisp *, struct lone_value *, struct lone_value *, struct lone_value *);
 
 static struct lone_value *lone_evaluate_form(struct lone_lisp *lone, struct lone_value *environment, struct lone_value *list)
@@ -1245,6 +1271,8 @@ static struct lone_value *lone_evaluate_form(struct lone_lisp *lone, struct lone
 		return lone_apply(lone, environment, first, rest);
 	case LONE_PRIMITIVE:
 		return first->primitive.function(lone, first->primitive.closure, environment, rest);
+	case LONE_TABLE:
+		return lone_evaluate_form_table(lone, environment, first, rest);
 	default:
 		/* first element must be a function */ linux_exit(-1);
 	}
