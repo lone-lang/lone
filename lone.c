@@ -1741,6 +1741,14 @@ static struct lone_value *lone_arguments_to_list(struct lone_lisp *lone, int cou
 	return arguments;
 }
 
+static void lone_fill_linux_system_call_table(struct lone_lisp *lone)
+{
+	struct lone_value *table = lone->system_call_table;
+
+	/* huge generated code to add all system calls found on the platform */
+	#include LONE_NR_SOURCE
+}
+
 /* ╭─────────────────────────┨ LONE LISP MODULES ┠──────────────────────────╮
    │                                                                        │
    │    Built-in modules containing essential functionality.                │
@@ -1750,6 +1758,8 @@ static void lone_builtin_module_linux_initialize(struct lone_lisp *lone, struct 
 {
 	struct lone_value *name = lone_intern_c_string(lone, "linux"),
 	                  *module = lone_module_create(lone, name);
+
+	lone_fill_linux_system_call_table(lone);
 
 	lone_table_set(lone, module->module.environment,
 	                     lone_intern_c_string(lone, "system-call"),
