@@ -15,7 +15,7 @@ clean:
 
 phony += test
 test: lone
-	./test.bash
+	scripts/test.bash
 
 NR.list: scripts/NR.filter
 	$(CC) -E -dM -include linux/unistd.h - < /dev/null | scripts/NR.filter > $@
