@@ -59,6 +59,8 @@ the successful status code `0` is expected.
     │   ├── aarch64.c             # System calls and process start for aarch64
     │   └── x86_64.c              # System calls and process start for x86_64
     ├── scripts/                  # Small support programs for development
+    │   ├── test.bash             # The automated testing script
+    │   └── test.new              # The new test case creation script
     ├── test/                     # The lone test suite
     │   └── arbitrary/tree/       # Arbitrary tree, determines test name, leaves contain test files
     │       ├── arguments         # Arguments passed, one per line
@@ -72,8 +74,6 @@ the successful status code `0` is expected.
     ├── lone                      # The lone executable produced by make
     ├── lone.c                    # The lone C source code
     ├── README.md                 # This README file
-    ├── test.bash                 # The test script
-    ├── test.new                  # The new test case creation script
     ├── .gdbinit                  # GDB visualization functions for lone's data structures
     └── .github/                  # GitHub-specific data
         └── workflows/            # GitHub Actions workflows
