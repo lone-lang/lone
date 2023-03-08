@@ -142,6 +142,7 @@ struct lone_lisp {
 	struct lone_value *null_module;
 	struct lone_value *modules;
 	struct lone_value *symbol_table;
+	struct lone_value *system_call_table;
 };
 
 /* ╭────────────────────┨ LONE LISP MEMORY ALLOCATION ┠─────────────────────╮
@@ -305,6 +306,7 @@ static void lone_mark_all_reachable_values(struct lone_lisp *lone)
 	lone_mark_value(lone->null_module);
 	lone_mark_value(lone->modules);
 	lone_mark_value(lone->symbol_table);
+	lone_mark_value(lone->system_call_table);
 }
 
 static void lone_deallocate_all_unmarked_values(struct lone_lisp *lone)
@@ -354,6 +356,7 @@ static void lone_lisp_initialize(struct lone_lisp *lone, unsigned char *memory, 
 	lone->null_module = 0;
 	lone->modules = 0;
 	lone->symbol_table = 0;
+	lone->system_call_table = 0;
 }
 
 static struct lone_value *lone_value_create(struct lone_lisp *lone)
@@ -1804,6 +1807,7 @@ long lone(int argc, char **argv, char **envp, struct auxiliary *auxv)
 	lone.modules = lone_table_create(&lone, 32, 0);
 	lone.null_module = lone_module_create(&lone, 0);
 	lone.symbol_table = lone_table_create(&lone, 256, 0);
+	lone.system_call_table = lone_table_create(&lone, 1024, 0);
 
 	struct lone_value *arguments = lone_arguments_to_list(&lone, argc, argv);
 	struct lone_value *environment = lone_environment_to_table(&lone, envp);
