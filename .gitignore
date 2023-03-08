@@ -1,2 +1,6 @@
 # lone binary
 lone
+
+# generated files and code
+NR.list
+NR.c
