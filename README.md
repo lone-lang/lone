@@ -25,7 +25,7 @@ Any of the following commands can be used to run it:
 
     make test
     make clean test
-    ./test.bash
+    scripts/test.bash
 
 New tests are added by creating directories inside `test/`,
 forming an arbitrary directory tree which determines the test name.
