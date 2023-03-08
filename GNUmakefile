@@ -10,7 +10,7 @@ lone : lone.c $(ARCH.c)
 
 phony += clean
 clean:
-	rm -f lone
+	rm -f lone NR.list
 
 phony += test
 test: lone
