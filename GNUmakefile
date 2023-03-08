@@ -16,4 +16,7 @@ phony += test
 test: lone
 	./test.bash
 
+NR.list: scripts/NR.filter
+	$(CC) -E -dM -include linux/unistd.h - < /dev/null | scripts/NR.filter > $@
+
 .PHONY: $(phony)
