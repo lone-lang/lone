@@ -19,4 +19,7 @@ test: lone
 NR.list: scripts/NR.filter
 	$(CC) -E -dM -include linux/unistd.h - < /dev/null | scripts/NR.filter > $@
 
+NR.c: NR.list scripts/NR.generate
+	scripts/NR.generate < $< > $@
+
 .PHONY: $(phony)
