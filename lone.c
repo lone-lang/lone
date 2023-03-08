@@ -1743,10 +1743,24 @@ static struct lone_value *lone_arguments_to_list(struct lone_lisp *lone, int cou
 
 static void lone_fill_linux_system_call_table(struct lone_lisp *lone)
 {
-	struct lone_value *table = lone->system_call_table;
+	size_t i;
 
-	/* huge generated code to add all system calls found on the platform */
-	#include LONE_NR_SOURCE
+	static struct linux_system_call {
+		char *symbol;
+		int number;
+	} linux_system_calls[] = {
+
+		/* huge generated array initializer with all the system calls found on the host platform */
+		#include LONE_NR_SOURCE
+
+	};
+
+	for (i = 0; i < (sizeof(linux_system_calls)/sizeof(linux_system_calls[0])); ++i) {
+		lone_table_set(lone,
+		               lone->system_call_table,
+		               lone_intern_c_string(lone, linux_system_calls[i].symbol),
+		               lone_integer_create(lone, linux_system_calls[i].number));
+	}
 }
 
 /* ╭─────────────────────────┨ LONE LISP MODULES ┠──────────────────────────╮
