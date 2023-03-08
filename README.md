@@ -59,6 +59,8 @@ the successful status code `0` is expected.
     │   ├── aarch64.c             # System calls and process start for aarch64
     │   └── x86_64.c              # System calls and process start for x86_64
     ├── scripts/                  # Small support programs for development
+    │   ├── NR.filter             # Extracts system call definitions from compiler output
+    │   ├── NR.generate           # Generates C structure initializers for system call names and numbers
     │   ├── test.bash             # The automated testing script
     │   └── test.new              # The new test case creation script
     ├── test/                     # The lone test suite
