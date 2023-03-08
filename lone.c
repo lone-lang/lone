@@ -1434,6 +1434,25 @@ static void lone_print(struct lone_lisp *lone, struct lone_value *value, int fd)
    │    Lone lisp functions implemented in C.                               │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
+static inline long lone_value_to_linux_system_call_number(struct lone_lisp *lone, struct lone_value *value)
+{
+	switch (value->type) {
+	case LONE_INTEGER:
+		return value->integer;
+	case LONE_BYTES:
+	case LONE_TEXT:
+	case LONE_SYMBOL:
+		return lone_table_get(lone, lone->system_call_table, value)->integer;
+	case LONE_MODULE:
+	case LONE_FUNCTION:
+	case LONE_PRIMITIVE:
+	case LONE_LIST:
+	case LONE_TABLE:
+	case LONE_POINTER:
+		linux_exit(-1);
+	}
+}
+
 static inline long lone_value_to_linux_system_call_argument(struct lone_value *value)
 {
 	switch (value->type) {
@@ -1453,8 +1472,7 @@ static struct lone_value *lone_primitive_linux_system_call(struct lone_lisp *lon
 
 	if (lone_is_nil(arguments)) { /* need at least the system call number */ linux_exit(-1); }
 	argument = lone_list_first(arguments);
-	if (argument->type != LONE_INTEGER) { /* system call number is not a number */ linux_exit(-1); }
-	number = argument->integer;
+	number = lone_value_to_linux_system_call_number(lone, argument);
 	arguments = lone_list_rest(arguments);
 
 	for (i = 0; i < 6; ++i) {
