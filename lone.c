@@ -1795,7 +1795,7 @@ static void lone_builtin_module_lone_initialize(struct lone_lisp *lone)
 long lone(int argc, char **argv, char **envp, struct auxiliary *auxv)
 {
 	#define LONE_BUFFER_SIZE 4096
-	#define LONE_MEMORY_SIZE 65536
+	#define LONE_MEMORY_SIZE (1024 * 1024)
 	static unsigned char memory[LONE_MEMORY_SIZE];
 	struct lone_lisp lone;
 	struct lone_reader reader;
