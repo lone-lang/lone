@@ -58,6 +58,7 @@ the successful status code `0` is expected.
     ├── arch/                     # Architecture-specific code, one file each
     │   ├── aarch64.c             # System calls and process start for aarch64
     │   └── x86_64.c              # System calls and process start for x86_64
+    ├── scripts/                  # Small support programs for development
     ├── test/                     # The lone test suite
     │   └── arbitrary/tree/       # Arbitrary tree, determines test name, leaves contain test files
     │       ├── arguments         # Arguments passed, one per line
