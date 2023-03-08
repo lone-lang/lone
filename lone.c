@@ -1789,6 +1789,10 @@ static void lone_builtin_module_linux_initialize(struct lone_lisp *lone, struct 
 	                     lone_primitive_create(lone, lone_primitive_linux_system_call, linux_system_call_table));
 
 	lone_table_set(lone, module->module.environment,
+	                     lone_intern_c_string(lone, "system-call-table"),
+	                     linux_system_call_table);
+
+	lone_table_set(lone, module->module.environment,
 	                     lone_intern_c_string(lone, "arguments"),
 	                     arguments);
 	lone_table_set(lone, module->module.environment,
