@@ -1,0 +1,3 @@
+#!/usr/bin/bash
+
+grep __NR_ | sed 's/#define //g' | cut -d ' ' -f 1
