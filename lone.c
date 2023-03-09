@@ -1313,6 +1313,18 @@ static struct lone_value *lone_evaluate(struct lone_lisp *lone, struct lone_valu
 	}
 }
 
+static struct lone_value *lone_evaluate_all(struct lone_lisp *lone, struct lone_value *environment, struct lone_value *list)
+{
+	struct lone_value *evaluated = lone_list_create_nil(lone), *head;
+
+	for (head = evaluated; !lone_is_nil(list); list = lone_list_rest(list)) {
+		lone_list_set(head, lone_evaluate(lone, environment, lone_list_first(list)));
+		head = lone_list_append(head, lone_list_create_nil(lone));
+	}
+
+	return evaluated;
+}
+
 static struct lone_value *lone_apply(struct lone_lisp *lone, struct lone_value *environment, struct lone_value *function, struct lone_value *arguments)
 {
 	struct lone_value *new_environment = lone_table_create(lone, 16, function->function.environment),
