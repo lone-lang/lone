@@ -1319,6 +1319,11 @@ static struct lone_value *lone_evaluate_form(struct lone_lisp *lone, struct lone
 				.evaluate_arguments = 0, .evaluate_result = 0, .variable_arguments = 0,
 			};
 			return lone_evaluate_special_form_lambda(lone, environment, rest, flags);
+		} else if (lone_bytes_equals_c_string(first->bytes, "lambda*")) {
+			struct lone_function_flags flags = {
+				.evaluate_arguments = 1, .evaluate_result = 0, .variable_arguments = 1,
+			};
+			return lone_evaluate_special_form_lambda(lone, environment, rest, flags);
 		} else if (lone_bytes_equals_c_string(first->bytes, "import")) {
 			return lone_evaluate_special_form_import(lone, environment, rest);
 		}
