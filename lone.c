@@ -110,9 +110,10 @@ struct lone_function_flags {
 };
 
 struct lone_function {
-	struct lone_value *arguments;      /* the bindings */
-	struct lone_value *code;           /* the lambda */
-	struct lone_value *environment;    /* the closure */
+	struct lone_value *arguments;        /* the bindings */
+	struct lone_value *code;             /* the lambda */
+	struct lone_value *environment;      /* the closure */
+	struct lone_function_flags flags;    /* how to evaluate & apply */
 };
 
 struct lone_lisp;
@@ -124,6 +125,7 @@ typedef struct lone_value *(*lone_primitive)(struct lone_lisp *lone,
 struct lone_primitive {
 	lone_primitive function;
 	struct lone_value *closure;
+	struct lone_function_flags flags;    /* primitives always accept variable arguments */
 };
 
 struct lone_module {
