@@ -1500,6 +1500,8 @@ static void lone_print_table(struct lone_lisp *lone, struct lone_value *table, i
 	size_t n = table->table.capacity, i;
 	struct lone_table_entry *entries = table->table.entries;
 
+	if (table->table.count == 0) { linux_write(fd, "{}", 2); return; }
+
 	linux_write(fd, "{ ", 2);
 
 	for (i = 0; i < n; ++i) {
