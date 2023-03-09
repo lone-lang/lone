@@ -1169,7 +1169,7 @@ static struct lone_value *lone_evaluate_special_form_import(struct lone_lisp *lo
 	return module;
 }
 
-static struct lone_value *lone_evaluate_special_form_lambda(struct lone_lisp *lone, struct lone_value *environment, struct lone_value *list)
+static struct lone_value *lone_evaluate_special_form_lambda(struct lone_lisp *lone, struct lone_value *environment, struct lone_value *list, struct lone_function_flags flags)
 {
 	struct lone_value *arguments;
 
@@ -1179,7 +1179,7 @@ static struct lone_value *lone_evaluate_special_form_lambda(struct lone_lisp *lo
 	list = lone_list_rest(list);
 	if (lone_is_nil(list)) { /* no code: (lambda (x)) */ linux_exit(-1); }
 
-	return lone_function_create(lone, arguments, list, environment, (struct lone_function_flags) { 1, 0, 0 });
+	return lone_function_create(lone, arguments, list, environment, flags);
 }
 
 static struct lone_value *lone_evaluate_special_form_if(struct lone_lisp *lone, struct lone_value *environment, struct lone_value *list)
@@ -1310,7 +1310,10 @@ static struct lone_value *lone_evaluate_form(struct lone_lisp *lone, struct lone
 		} else if (lone_bytes_equals_c_string(first->bytes, "if")) {
 			return lone_evaluate_special_form_if(lone, environment, rest);
 		} else if (lone_bytes_equals_c_string(first->bytes, "lambda")) {
-			return lone_evaluate_special_form_lambda(lone, environment, rest);
+			struct lone_function_flags flags = {
+				.evaluate_arguments = 1, .evaluate_result = 0, .variable_arguments = 0,
+			};
+			return lone_evaluate_special_form_lambda(lone, environment, rest, flags);
 		} else if (lone_bytes_equals_c_string(first->bytes, "import")) {
 			return lone_evaluate_special_form_import(lone, environment, rest);
 		}
