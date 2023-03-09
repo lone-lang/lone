@@ -1365,6 +1365,15 @@ static struct lone_value *lone_apply(struct lone_lisp *lone, struct lone_value *
 	return value;
 }
 
+static struct lone_value *lone_apply_primitive(struct lone_lisp *lone, struct lone_value *environment, struct lone_value *primitive, struct lone_value *arguments)
+{
+	struct lone_value *result;
+	if (primitive->primitive.flags.evaluate_arguments) { arguments = lone_evaluate_all(lone, environment, arguments); }
+	result = primitive->primitive.function(lone, primitive->primitive.closure, environment, arguments);
+	if (primitive->primitive.flags.evaluate_result) { result = lone_evaluate(lone, environment, result); }
+	return result;
+}
+
 /* ╭─────────────────────────┨ LONE LISP PRINTER ┠──────────────────────────╮
    │                                                                        │
    │    Transforms lone lisp objects into text in order to write it out.    │
