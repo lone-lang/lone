@@ -1258,6 +1258,7 @@ static struct lone_value *lone_evaluate_form_table(struct lone_lisp *lone, struc
 }
 
 static struct lone_value *lone_apply(struct lone_lisp *, struct lone_value *, struct lone_value *, struct lone_value *);
+static struct lone_value *lone_apply_primitive(struct lone_lisp *, struct lone_value *, struct lone_value *, struct lone_value *);
 
 static struct lone_value *lone_evaluate_form(struct lone_lisp *lone, struct lone_value *environment, struct lone_value *list)
 {
@@ -1284,7 +1285,7 @@ static struct lone_value *lone_evaluate_form(struct lone_lisp *lone, struct lone
 	case LONE_FUNCTION:
 		return lone_apply(lone, environment, first, rest);
 	case LONE_PRIMITIVE:
-		return first->primitive.function(lone, first->primitive.closure, environment, rest);
+		return lone_apply_primitive(lone, environment, first, rest);
 	case LONE_TABLE:
 		return lone_evaluate_form_table(lone, environment, first, rest);
 	default:
@@ -1579,7 +1580,7 @@ static struct lone_value *lone_primitive_linux_system_call(struct lone_lisp *lon
 static struct lone_value *lone_primitive_print(struct lone_lisp *lone, struct lone_value *closure, struct lone_value *environment, struct lone_value *arguments)
 {
 	while (!lone_is_nil(arguments)) {
-		lone_print(lone, lone_evaluate(lone, environment, lone_list_first(arguments)), 1);
+		lone_print(lone, lone_list_first(arguments), 1);
 		linux_write(1, "\n", 1);
 		arguments = lone_list_rest(arguments);
 	}
