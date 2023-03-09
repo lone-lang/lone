@@ -1331,24 +1331,36 @@ static struct lone_value *lone_apply(struct lone_lisp *lone, struct lone_value *
 	                  *names = function->function.arguments, *code = function->function.code,
 	                  *value;
 
-	while (1) {
-		if (lone_is_nil(names) != lone_is_nil(arguments)) {
-			/* argument number mismatch: ((lambda (x) x) 10 20), ((lambda (x y) y) 10) */
+	if (function->function.flags.evaluate_arguments) { arguments = lone_evaluate_all(lone, environment, arguments); }
+
+	if (function->function.flags.variable_arguments) {
+		if (lone_is_nil(names) || !lone_is_nil(lone_list_rest(names))) {
+			/* must have exactly one argument: the list of arguments */
 			linux_exit(-1);
-		} else if (lone_is_nil(names) && lone_is_nil(arguments)) {
-			break;
 		}
 
-		value = lone_evaluate(lone, environment, lone_list_first(arguments));
-		lone_table_set(lone, new_environment, lone_list_first(names), value);
+		lone_table_set(lone, new_environment, lone_list_first(names), arguments);
+	} else {
+		while (1) {
+			if (lone_is_nil(names) != lone_is_nil(arguments)) {
+				/* argument number mismatch: ((lambda (x) x) 10 20), ((lambda (x y) y) 10) */
+				linux_exit(-1);
+			} else if (lone_is_nil(names) && lone_is_nil(arguments)) {
+				break;
+			}
 
-		names = lone_list_rest(names);
-		arguments = lone_list_rest(arguments);
+			lone_table_set(lone, new_environment, lone_list_first(names), lone_list_first(arguments));
+
+			names = lone_list_rest(names);
+			arguments = lone_list_rest(arguments);
+		}
 	}
 
 	do {
 		value = lone_evaluate(lone, new_environment, lone_list_first(code));
 	} while (!lone_is_nil(code = lone_list_rest(code)));
+
+	if (function->function.flags.evaluate_result) { value = lone_evaluate(lone, environment, value); }
 
 	return value;
 }
