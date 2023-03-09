@@ -100,6 +100,15 @@ struct lone_table {
 	struct lone_value *prototype;
 };
 
+/* https://dl.acm.org/doi/10.1145/947941.947948
+ * https://user.ceng.metu.edu.tr/~ucoluk/research/lisp/lispman/node24.html
+ */
+struct lone_function_flags {
+	unsigned char evaluate_arguments: 1;
+	unsigned char evaluate_result: 1;
+	unsigned char variable_arguments: 1;
+};
+
 struct lone_function {
 	struct lone_value *arguments;      /* the bindings */
 	struct lone_value *code;           /* the lambda */
