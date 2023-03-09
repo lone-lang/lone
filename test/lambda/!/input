@@ -1,0 +1,8 @@
+(import lone print)
+
+(set inspect (lambda! (x y z w) (print x y z w)))
+(inspect () unset (unset)
+  (a
+    (s
+      (d
+        (f)))))
