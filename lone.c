@@ -852,7 +852,7 @@ static int lone_reader_match_byte(unsigned char byte, unsigned char target)
    │                                                                        │
    │    Analyzes a number and adds it to the tokens list if valid.          │
    │                                                                        │
-   │    ([+-]?[0-9]+)[) \n\t]                                               │
+   │    ([+-]?[0-9]+)[)} \n\t]                                              │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
 static struct lone_value *lone_reader_consume_number(struct lone_lisp *lone, struct lone_reader *reader)
@@ -880,7 +880,7 @@ static struct lone_value *lone_reader_consume_number(struct lone_lisp *lone, str
 		++end;
 	}
 
-	if (current && *current != ')' && !lone_reader_match_byte(*current, ' ')) { return 0; }
+	if (current && !lone_reader_match_byte(*current, ')') && !lone_reader_match_byte(*current, ' ')) { return 0; }
 
 	return lone_integer_parse(lone, start, end);
 }
@@ -889,7 +889,7 @@ static struct lone_value *lone_reader_consume_number(struct lone_lisp *lone, str
    │                                                                        │
    │    Analyzes a symbol and adds it to the tokens list if valid.          │
    │                                                                        │
-   │    (.*)[) \n\t]                                                        │
+   │    (.*)[)} \n\t]                                                       │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
 static struct lone_value *lone_reader_consume_symbol(struct lone_lisp *lone, struct lone_reader *reader)
@@ -898,7 +898,7 @@ static struct lone_value *lone_reader_consume_symbol(struct lone_lisp *lone, str
 	if (!start) { return 0; }
 	size_t end = 0;
 
-	while ((current = lone_reader_peek(lone, reader)) && *current != ')' && !lone_reader_match_byte(*current, ' ')) {
+	while ((current = lone_reader_peek(lone, reader)) && !lone_reader_match_byte(*current, ')') && !lone_reader_match_byte(*current, ' ')) {
 		lone_reader_consume(reader);
 		++end;
 	}
@@ -910,7 +910,7 @@ static struct lone_value *lone_reader_consume_symbol(struct lone_lisp *lone, str
    │                                                                        │
    │    Analyzes a string and adds it to the tokens list if valid.          │
    │                                                                        │
-   │    (".*")[) \n\t]                                                      │
+   │    (".*")[)} \n\t]                                                     │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
 static struct lone_value *lone_reader_consume_text(struct lone_lisp *lone, struct lone_reader *reader)
@@ -932,7 +932,7 @@ static struct lone_value *lone_reader_consume_text(struct lone_lisp *lone, struc
 	++current;
 	lone_reader_consume(reader);
 
-	if (*current != ')' && !lone_reader_match_byte(*current, ' ')) { return 0; }
+	if (!lone_reader_match_byte(*current, ')') && !lone_reader_match_byte(*current, ' ')) { return 0; }
 
 	return lone_text_create(lone, start, end);
 }
