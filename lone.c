@@ -1510,10 +1510,9 @@ static void lone_print_table(struct lone_lisp *lone, struct lone_value *table, i
 
 
 		if (key) {
-			lone_print(lone, entries[i].key, fd);
+			lone_print(lone, key, fd);
 			linux_write(fd, " ", 1);
-			if (value) { lone_print(lone, entries[i].value, fd); }
-			else { linux_write(fd, "nil", 3); }
+			lone_print(lone, value, fd);
 			linux_write(fd, " ", 1);
 		}
 	}
