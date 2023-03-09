@@ -939,21 +939,22 @@ static struct lone_value *lone_reader_consume_text(struct lone_lisp *lone, struc
 
 /* ╭────────────────────────────────────────────────────────────────────────╮
    │                                                                        │
-   │    Analyzes opening and closing parentheses                            │
+   │    Analyzes opening and closing brackets                               │
    │    and adds them to the tokens list if valid.                          │
    │                                                                        │
-   │    ([()])                                                              │
+   │    ([(){}])                                                            │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
-static struct lone_value *lone_reader_consume_parenthesis(struct lone_lisp *lone, struct lone_reader *reader)
+static struct lone_value *lone_reader_consume_bracket(struct lone_lisp *lone, struct lone_reader *reader)
 {
-	unsigned char *parenthesis = lone_reader_peek(lone, reader);
-	if (!parenthesis) { return 0; }
+	unsigned char *bracket = lone_reader_peek(lone, reader);
+	if (!bracket) { return 0; }
 
-	switch (*parenthesis) {
+	switch (*bracket) {
 	case '(': case ')':
+	case '{': case '}':
 		lone_reader_consume(reader);
-		return lone_intern(lone, parenthesis, 1);
+		return lone_intern(lone, bracket, 1);
 	default:
 		return 0;
 	}
@@ -1007,9 +1008,9 @@ static struct lone_value *lone_lex(struct lone_lisp *lone, struct lone_reader *r
 			case '"':
 				token = lone_reader_consume_text(lone, reader);
 				break;
-			case '(':
-			case ')':
-				token = lone_reader_consume_parenthesis(lone, reader);
+			case '(': case ')':
+			case '{': case '}':
+				token = lone_reader_consume_bracket(lone, reader);
 				break;
 			default:
 				token = lone_reader_consume_symbol(lone, reader);
