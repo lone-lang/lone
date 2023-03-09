@@ -412,22 +412,25 @@ static struct lone_value *lone_list_create_nil(struct lone_lisp *lone)
 	return lone_list_create(lone, 0, 0);
 }
 
-static struct lone_value *lone_function_create(struct lone_lisp *lone, struct lone_value *arguments, struct lone_value *code, struct lone_value *environment)
+static struct lone_value *lone_function_create(struct lone_lisp *lone, struct lone_value *arguments, struct lone_value *code, struct lone_value *environment, struct lone_function_flags flags)
 {
 	struct lone_value *value = lone_value_create(lone);
 	value->type = LONE_FUNCTION;
 	value->function.arguments = arguments;
 	value->function.code = code;
 	value->function.environment = environment;
+	value->function.flags = flags;
 	return value;
 }
 
-static struct lone_value *lone_primitive_create(struct lone_lisp *lone, lone_primitive function, struct lone_value *closure)
+static struct lone_value *lone_primitive_create(struct lone_lisp *lone, lone_primitive function, struct lone_value *closure, struct lone_function_flags flags)
 {
 	struct lone_value *value = lone_value_create(lone);
 	value->type = LONE_PRIMITIVE;
 	value->primitive.function = function;
 	value->primitive.closure = closure;
+	value->primitive.flags = flags;
+	value->primitive.flags.variable_arguments = 1;
 	return value;
 }
 
@@ -1139,7 +1142,7 @@ static struct lone_value *lone_evaluate_special_form_lambda(struct lone_lisp *lo
 	list = lone_list_rest(list);
 	if (lone_is_nil(list)) { /* no code: (lambda (x)) */ linux_exit(-1); }
 
-	return lone_function_create(lone, arguments, list, environment);
+	return lone_function_create(lone, arguments, list, environment, (struct lone_function_flags) { 1, 0, 0 });
 }
 
 static struct lone_value *lone_evaluate_special_form_if(struct lone_lisp *lone, struct lone_value *environment, struct lone_value *list)
@@ -1825,7 +1828,10 @@ static void lone_builtin_module_linux_initialize(struct lone_lisp *lone, struct 
 
 	lone_table_set(lone, module->module.environment,
 	                     lone_intern_c_string(lone, "system-call"),
-	                     lone_primitive_create(lone, lone_primitive_linux_system_call, linux_system_call_table));
+	                     lone_primitive_create(lone,
+	                                           lone_primitive_linux_system_call,
+	                                           linux_system_call_table,
+	                                           (struct lone_function_flags) { 1, 0, 1 }));
 
 	lone_table_set(lone, module->module.environment,
 	                     lone_intern_c_string(lone, "system-call-table"),
@@ -1851,16 +1857,31 @@ static void lone_builtin_module_math_initialize(struct lone_lisp *lone)
 
 	lone_table_set(lone, module->module.environment,
 	                     lone_intern_c_string(lone, "+"),
-	                     lone_primitive_create(lone, lone_primitive_add, module));
+	                     lone_primitive_create(lone,
+	                                           lone_primitive_add,
+	                                           module,
+	                                           (struct lone_function_flags) { 1, 0, 1 }));
+
 	lone_table_set(lone, module->module.environment,
 	                     lone_intern_c_string(lone, "-"),
-	                     lone_primitive_create(lone, lone_primitive_subtract, module));
+	                     lone_primitive_create(lone,
+	                                           lone_primitive_subtract,
+	                                           module,
+	                                           (struct lone_function_flags) { 1, 0, 1 }));
+
 	lone_table_set(lone, module->module.environment,
 	                     lone_intern_c_string(lone, "*"),
-	                     lone_primitive_create(lone, lone_primitive_multiply, module));
+	                     lone_primitive_create(lone,
+	                                           lone_primitive_multiply,
+	                                           module,
+	                                           (struct lone_function_flags) { 1, 0, 1 }));
+
 	lone_table_set(lone, module->module.environment,
 	                     lone_intern_c_string(lone, "/"),
-	                     lone_primitive_create(lone, lone_primitive_divide, module));
+	                     lone_primitive_create(lone,
+	                                           lone_primitive_divide,
+	                                           module,
+	                                           (struct lone_function_flags) { 1, 0, 1 }));
 
 	lone_table_set(lone, lone->modules, name, module);
 }
@@ -1872,7 +1893,7 @@ static void lone_builtin_module_lone_initialize(struct lone_lisp *lone)
 
 	lone_table_set(lone, module->module.environment,
 	                     lone_intern_c_string(lone, "print"),
-	                     lone_primitive_create(lone, lone_primitive_print, module));
+	                     lone_primitive_create(lone, lone_primitive_print, module, (struct lone_function_flags) { 1, 0, 1 }));
 
 	lone_table_set(lone, lone->modules, name, module);
 }
