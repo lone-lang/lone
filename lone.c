@@ -1033,6 +1033,38 @@ lex_failed:
 
 static struct lone_value *lone_parse(struct lone_lisp *, struct lone_reader *, struct lone_value *);
 
+static struct lone_value *lone_parse_table(struct lone_lisp *lone, struct lone_reader *reader)
+{
+	struct lone_value *table = lone_table_create(lone, 32, 0), *key, *value;
+
+	while (1) {
+		key = lone_lex(lone, reader);
+
+		if (!key) { /* end of input */ reader->error = 1; return 0; }
+		if (key->type == LONE_SYMBOL && *key->bytes.pointer == '}') {
+			/* complete table: {}, { x y } */
+			break;
+		}
+
+		key = lone_parse(lone, reader, key);
+
+		value = lone_lex(lone, reader);
+
+		if (!value) { /* end of input */ reader->error = 1; return 0; }
+		if (value->type == LONE_SYMBOL && *value->bytes.pointer == '}') {
+			/* incomplete table: { x }, { x y z } */
+			reader->error = 1;
+			return 0;
+		}
+
+		value = lone_parse(lone, reader, value);
+
+		lone_table_set(lone, table, key, value);
+	}
+
+	return table;
+}
+
 static struct lone_value *lone_parse_list(struct lone_lisp *lone, struct lone_reader *reader)
 {
 	struct lone_value *list = lone_list_create_nil(lone), *first = list, *next;
@@ -1063,7 +1095,9 @@ static struct lone_value *lone_parse(struct lone_lisp *lone, struct lone_reader 
 		switch (*token->bytes.pointer) {
 		case '(':
 			return lone_parse_list(lone, reader);
-		case ')':
+		case '{':
+			return lone_parse_table(lone, reader);
+		case ')': case '}':
 			goto parse_failed;
 		default:
 			return token;
