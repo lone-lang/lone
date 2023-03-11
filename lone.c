@@ -163,6 +163,7 @@ struct lone_lisp {
 	struct {
 		struct lone_value *loaded;
 		struct lone_value *null;
+		struct lone_value *import;
 	} modules;
 };
 
@@ -383,7 +384,10 @@ static void lone_garbage_collector(struct lone_lisp *lone)
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
 static struct lone_value *lone_module_create(struct lone_lisp *, struct lone_value *);
+static struct lone_value *lone_primitive_create(struct lone_lisp *, char *, lone_primitive, struct lone_value *, struct lone_function_flags);
+static struct lone_value *lone_primitive_import(struct lone_lisp *, struct lone_value *, struct lone_value *, struct lone_value *);
 static struct lone_value *lone_table_create(struct lone_lisp *, size_t, struct lone_value *);
+static void lone_table_set(struct lone_lisp *, struct lone_value *, struct lone_value *, struct lone_value *);
 
 static void lone_lisp_initialize(struct lone_lisp *lone, unsigned char *memory, size_t size)
 {
@@ -394,6 +398,8 @@ static void lone_lisp_initialize(struct lone_lisp *lone, unsigned char *memory, 
 	lone->values = 0;
 	lone->symbol_table = lone_table_create(lone, 256, 0);
 	lone->modules.loaded = lone_table_create(lone, 32, 0);
+	struct lone_function_flags import_flags = { .evaluate_arguments = 0, .evaluate_result = 0, .variable_arguments = 0 };
+	lone->modules.import = lone_primitive_create(lone, "import", lone_primitive_import, 0, import_flags);
 	lone->modules.null = lone_module_create(lone, 0);
 }
 
@@ -544,6 +550,7 @@ static struct lone_value *lone_module_create(struct lone_lisp *lone, struct lone
 	value->type = LONE_MODULE;
 	value->module.name = name;
 	value->module.environment = lone_table_create(lone, 64, 0);
+	lone_table_set(lone, value->module.environment, lone_intern_c_string(lone, "import"), lone->modules.import);
 	return value;
 }
 
@@ -1160,44 +1167,6 @@ static struct lone_value *lone_evaluate_module(struct lone_lisp *lone, struct lo
 	return lone_evaluate(lone, module->module.environment, value);
 }
 
-static struct lone_value *lone_evaluate_special_form_import(struct lone_lisp *lone, struct lone_value *environment, struct lone_value *list)
-{
-	struct lone_value *name, *module, *value;
-
-	if (lone_is_nil(list)) { /* empty import form: (import) */ linux_exit(-1); }
-	name = lone_list_first(list);
-	if (name->type != LONE_SYMBOL) { /* module name not a symbol: (import 10) */ linux_exit(-1); }
-	module = lone_table_get(lone, lone->modules.loaded, name);
-	if (lone_is_nil(module)) { /* module not found: (import non-existent) */ linux_exit(-1); }
-	list = lone_list_rest(list);
-
-	if (lone_is_nil(list)) {
-		/* full import, bind all symbols: (import module) */
-		struct lone_table_entry *entries = module->module.environment->table.entries;
-		size_t i, capacity = module->module.environment->table.capacity;
-		for (i = 0; i < capacity; ++i) {
-			if (entries[i].key) {
-				lone_table_set(lone, environment, entries[i].key, entries[i].value);
-			}
-		}
-	} else {
-		/* limited import, bind only specified symbols: (import module x f) */
-		do {
-			name = lone_list_first(list);
-			if (name->type != LONE_SYMBOL) { /* name not a symbol: (import 10) */ linux_exit(-1); }
-
-			value = lone_table_get(lone, module->module.environment, name);
-			if (lone_is_nil(value)) { /* name not set in module */ linux_exit(-1); }
-
-			lone_table_set(lone, environment, name, value);
-
-			list = lone_list_rest(list);
-		} while (!lone_is_nil(list));
-	}
-
-	return module;
-}
-
 static struct lone_value *lone_evaluate_form_table(struct lone_lisp *lone, struct lone_value *environment, struct lone_value *table, struct lone_value *arguments)
 {
 	struct lone_value *key, *value;
@@ -1231,14 +1200,7 @@ static struct lone_value *lone_evaluate_form(struct lone_lisp *lone, struct lone
 {
 	struct lone_value *first = lone_list_first(list), *rest = lone_list_rest(list);
 
-	// check for special forms
-	if (first->type == LONE_SYMBOL) {
-		if (lone_bytes_equals_c_string(first->bytes, "import")) {
-			return lone_evaluate_special_form_import(lone, environment, rest);
-		}
-	}
-
-	/* must be an application if not a special form */
+	/* apply arguments to a lone value */
 	first = lone_evaluate(lone, environment, first);
 	switch (first->type) {
 	case LONE_FUNCTION:
@@ -1719,6 +1681,44 @@ static struct lone_value *lone_primitive_print(struct lone_lisp *lone, struct lo
 	}
 
 	return lone_list_create_nil(lone);
+}
+
+static struct lone_value *lone_primitive_import(struct lone_lisp *lone, struct lone_value *closure, struct lone_value *environment, struct lone_value *arguments)
+{
+	struct lone_value *name, *module, *value;
+
+	if (lone_is_nil(arguments)) { /* nothing to import: (import) */ linux_exit(-1); }
+	name = lone_list_first(arguments);
+	if (name->type != LONE_SYMBOL) { /* module name not a symbol: (import 10) */ linux_exit(-1); }
+	module = lone_table_get(lone, lone->modules.loaded, name);
+	if (lone_is_nil(module)) { /* module not found: (import non-existent) */ linux_exit(-1); }
+	arguments = lone_list_rest(arguments);
+
+	if (lone_is_nil(arguments)) {
+		/* full import, bind all symbols: (import module) */
+		struct lone_table_entry *entries = module->module.environment->table.entries;
+		size_t i, capacity = module->module.environment->table.capacity;
+		for (i = 0; i < capacity; ++i) {
+			if (entries[i].key) {
+				lone_table_set(lone, environment, entries[i].key, entries[i].value);
+			}
+		}
+	} else {
+		/* limited import, bind only specified symbols: (import module x f) */
+		do {
+			name = lone_list_first(arguments);
+			if (name->type != LONE_SYMBOL) { /* name not a symbol: (import 10) */ linux_exit(-1); }
+
+			value = lone_table_get(lone, module->module.environment, name);
+			if (lone_is_nil(value)) { /* name not set in module */ linux_exit(-1); }
+
+			lone_table_set(lone, environment, name, value);
+
+			arguments = lone_list_rest(arguments);
+		} while (!lone_is_nil(arguments));
+	}
+
+	return module;
 }
 
 static struct lone_value *lone_primitive_integer_operation(struct lone_lisp *lone, struct lone_value *arguments, char operation)
