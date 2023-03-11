@@ -1,4 +1,4 @@
-(import lone print)
+(import lone set print)
 
 (set star (lambda* (arguments) (print arguments)))
 

@@ -1,4 +1,4 @@
-(import lone print)
+(import lone set print)
 
 (set applicator (lambda (f x) (lambda () (f x))))
 (set returner (lambda (x) x))

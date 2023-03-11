@@ -1,4 +1,4 @@
-(import lone print)
+(import lone set print)
 
 (set returner
      (lambda (x)

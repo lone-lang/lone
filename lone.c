@@ -1264,33 +1264,6 @@ static struct lone_value *lone_evaluate_special_form_let(struct lone_lisp *lone,
 	return value;
 }
 
-static struct lone_value *lone_evaluate_special_form_set(struct lone_lisp *lone, struct lone_value *environment, struct lone_value *list)
-{
-	struct lone_value *variable, *value;
-
-	if (lone_is_nil(list)) {
-		// empty set form: (set)
-		linux_exit(-1);
-	}
-
-	variable = lone_list_first(list);
-	if (variable->type != LONE_SYMBOL) {
-		// variable names must be symbols
-		linux_exit(-1);
-	}
-
-	list = lone_list_rest(list);
-	if (lone_is_nil(list)) {
-		// value not specified: (set variable)
-		linux_exit(-1);
-	}
-
-	// (set variable value)
-	value = lone_evaluate(lone, environment, lone_list_first(list));
-	lone_table_set(lone, environment, variable, value);
-
-	return value;
-}
 
 static struct lone_value *lone_evaluate_form_table(struct lone_lisp *lone, struct lone_value *environment, struct lone_value *table, struct lone_value *arguments)
 {
@@ -1327,9 +1300,7 @@ static struct lone_value *lone_evaluate_form(struct lone_lisp *lone, struct lone
 
 	// check for special forms
 	if (first->type == LONE_SYMBOL) {
-		if (lone_bytes_equals_c_string(first->bytes, "set")) {
-			return lone_evaluate_special_form_set(lone, environment, rest);
-		} else if (lone_bytes_equals_c_string(first->bytes, "let")) {
+		if (lone_bytes_equals_c_string(first->bytes, "let")) {
 			return lone_evaluate_special_form_let(lone, environment, rest);
 		} else if (lone_bytes_equals_c_string(first->bytes, "if")) {
 			return lone_evaluate_special_form_if(lone, environment, rest);
@@ -1693,6 +1664,33 @@ static struct lone_value *lone_primitive_linux_system_call(struct lone_lisp *lon
 	return lone_integer_create(lone, result);
 }
 
+static struct lone_value *lone_primitive_set(struct lone_lisp *lone, struct lone_value *closure, struct lone_value *environment, struct lone_value *arguments)
+{
+	struct lone_value *variable, *value;
+
+	if (lone_is_nil(arguments)) {
+		/* no variable to set: (set) */
+		linux_exit(-1);
+	}
+
+	variable = lone_list_first(arguments);
+	if (variable->type != LONE_SYMBOL) {
+		/* variable names must be symbols: (set 10) */
+		linux_exit(-1);
+	}
+
+	arguments = lone_list_rest(arguments);
+	if (lone_is_nil(arguments)) {
+		/* value not specified: (set variable) */
+		linux_exit(-1);
+	}
+
+	/* (set variable value) */
+	value = lone_evaluate(lone, environment, lone_list_first(arguments));
+	lone_table_set(lone, environment, variable, value);
+
+	return value;
+}
 static struct lone_value *lone_primitive_print(struct lone_lisp *lone, struct lone_value *closure, struct lone_value *environment, struct lone_value *arguments)
 {
 	while (!lone_is_nil(arguments)) {
@@ -2045,6 +2043,14 @@ static void lone_builtin_module_lone_initialize(struct lone_lisp *lone)
 {
 	struct lone_value *name = lone_intern_c_string(lone, "lone"),
 	                  *module = lone_module_create(lone, name);
+
+	lone_table_set(lone, module->module.environment,
+	                     lone_intern_c_string(lone, "set"),
+	                     lone_primitive_create(lone,
+	                                           "set",
+	                                           lone_primitive_set,
+	                                           module,
+	                                           (struct lone_function_flags) { 0, 0, 0 }));
 
 	lone_table_set(lone, module->module.environment,
 	                     lone_intern_c_string(lone, "print"),
