@@ -1563,6 +1563,15 @@ static void lone_print_table(struct lone_lisp *lone, struct lone_value *table, i
 	linux_write(fd, "}", 1);
 }
 
+static void lone_print_hash_notation(struct lone_lisp *lone, char *descriptor, struct lone_value *value, int fd)
+{
+	linux_write(fd, "#<", 2);
+	linux_write(fd, descriptor, lone_c_string_length(descriptor));
+	linux_write(fd, " ", 1);
+	lone_print(lone, value, fd);
+	linux_write(fd, ">", 1);
+}
+
 static void lone_print(struct lone_lisp *lone, struct lone_value *value, int fd)
 {
 	if (value == 0) { return; }
@@ -1570,9 +1579,7 @@ static void lone_print(struct lone_lisp *lone, struct lone_value *value, int fd)
 
 	switch (value->type) {
 	case LONE_MODULE:
-		linux_write(fd, "#<module ", 9);
-		lone_print(lone, value->module.name, fd);
-		linux_write(fd, ">", 1);
+		lone_print_hash_notation(lone, "module", value->module.name, fd);
 		break;
 	case LONE_LIST:
 		linux_write(fd, "(", 1);
