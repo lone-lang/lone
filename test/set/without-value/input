@@ -1,0 +1,4 @@
+(import lone set print)
+
+(set should-be-nil)
+(print should-be-nil)
