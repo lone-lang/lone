@@ -1193,19 +1193,6 @@ static struct lone_value *lone_evaluate_special_form_import(struct lone_lisp *lo
 	return module;
 }
 
-static struct lone_value *lone_evaluate_special_form_lambda(struct lone_lisp *lone, struct lone_value *environment, struct lone_value *list, struct lone_function_flags flags)
-{
-	struct lone_value *arguments;
-
-	arguments = lone_list_first(list);
-	if (arguments->type != LONE_LIST) { /* parameters not a list: (lambda 10) */ linux_exit(-1); }
-
-	list = lone_list_rest(list);
-	if (lone_is_nil(list)) { /* no code: (lambda (x)) */ linux_exit(-1); }
-
-	return lone_function_create(lone, arguments, list, environment, flags);
-}
-
 static struct lone_value *lone_evaluate_form_table(struct lone_lisp *lone, struct lone_value *environment, struct lone_value *table, struct lone_value *arguments)
 {
 	struct lone_value *key, *value;
@@ -1241,22 +1228,7 @@ static struct lone_value *lone_evaluate_form(struct lone_lisp *lone, struct lone
 
 	// check for special forms
 	if (first->type == LONE_SYMBOL) {
-		if (lone_bytes_equals_c_string(first->bytes, "lambda")) {
-			struct lone_function_flags flags = {
-				.evaluate_arguments = 1, .evaluate_result = 0, .variable_arguments = 0,
-			};
-			return lone_evaluate_special_form_lambda(lone, environment, rest, flags);
-		} else if (lone_bytes_equals_c_string(first->bytes, "lambda!")) {
-			struct lone_function_flags flags = {
-				.evaluate_arguments = 0, .evaluate_result = 0, .variable_arguments = 0,
-			};
-			return lone_evaluate_special_form_lambda(lone, environment, rest, flags);
-		} else if (lone_bytes_equals_c_string(first->bytes, "lambda*")) {
-			struct lone_function_flags flags = {
-				.evaluate_arguments = 1, .evaluate_result = 0, .variable_arguments = 1,
-			};
-			return lone_evaluate_special_form_lambda(lone, environment, rest, flags);
-		} else if (lone_bytes_equals_c_string(first->bytes, "import")) {
+		if (lone_bytes_equals_c_string(first->bytes, "import")) {
 			return lone_evaluate_special_form_import(lone, environment, rest);
 		}
 	}
@@ -1686,6 +1658,53 @@ static struct lone_value *lone_primitive_set(struct lone_lisp *lone, struct lone
 
 	return value;
 }
+
+static struct lone_value *lone_primitive_lambda_with_flags(struct lone_lisp *lone, struct lone_value *closure, struct lone_value *environment, struct lone_value *arguments, struct lone_function_flags flags)
+{
+	struct lone_value *bindings, *code;
+
+	bindings = lone_list_first(arguments);
+	if (bindings->type != LONE_LIST) { /* parameters not a list: (lambda 10) */ linux_exit(-1); }
+
+	code = lone_list_rest(arguments);
+	if (lone_is_nil(arguments)) { /* no code: (lambda (x)) */ linux_exit(-1); }
+
+	return lone_function_create(lone, bindings, code, environment, flags);
+}
+
+static struct lone_value *lone_primitive_lambda(struct lone_lisp *lone, struct lone_value *closure, struct lone_value *environment, struct lone_value *arguments)
+{
+	struct lone_function_flags flags = {
+		.evaluate_arguments = 1,
+		.evaluate_result = 0,
+		.variable_arguments = 0,
+	};
+
+	return lone_primitive_lambda_with_flags(lone, closure, environment, arguments, flags);
+}
+
+static struct lone_value *lone_primitive_lambda_bang(struct lone_lisp *lone, struct lone_value *closure, struct lone_value *environment, struct lone_value *arguments)
+{
+	struct lone_function_flags flags = {
+		.evaluate_arguments = 0,
+		.evaluate_result = 0,
+		.variable_arguments = 0,
+	};
+
+	return lone_primitive_lambda_with_flags(lone, closure, environment, arguments, flags);
+}
+
+static struct lone_value *lone_primitive_lambda_star(struct lone_lisp *lone, struct lone_value *closure, struct lone_value *environment, struct lone_value *arguments)
+{
+	struct lone_function_flags flags = {
+		.evaluate_arguments = 1,
+		.evaluate_result = 0,
+		.variable_arguments = 1,
+	};
+
+	return lone_primitive_lambda_with_flags(lone, closure, environment, arguments, flags);
+}
+
 static struct lone_value *lone_primitive_print(struct lone_lisp *lone, struct lone_value *closure, struct lone_value *environment, struct lone_value *arguments)
 {
 	while (!lone_is_nil(arguments)) {
@@ -2060,6 +2079,30 @@ static void lone_builtin_module_lone_initialize(struct lone_lisp *lone)
 	                     lone_primitive_create(lone,
 	                                           "set",
 	                                           lone_primitive_set,
+	                                           module,
+	                                           (struct lone_function_flags) { 0, 0, 0 }));
+
+	lone_table_set(lone, module->module.environment,
+	                     lone_intern_c_string(lone, "lambda"),
+	                     lone_primitive_create(lone,
+	                                           "lambda",
+	                                           lone_primitive_lambda,
+	                                           module,
+	                                           (struct lone_function_flags) { 0, 0, 0 }));
+
+	lone_table_set(lone, module->module.environment,
+	                     lone_intern_c_string(lone, "lambda!"),
+	                     lone_primitive_create(lone,
+	                                           "lambda_bang",
+	                                           lone_primitive_lambda_bang,
+	                                           module,
+	                                           (struct lone_function_flags) { 0, 0, 0 }));
+
+	lone_table_set(lone, module->module.environment,
+	                     lone_intern_c_string(lone, "lambda*"),
+	                     lone_primitive_create(lone,
+	                                           "lambda_star",
+	                                           lone_primitive_lambda_star,
 	                                           module,
 	                                           (struct lone_function_flags) { 0, 0, 0 }));
 

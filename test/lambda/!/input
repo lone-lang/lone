@@ -1,4 +1,4 @@
-(import lone set print)
+(import lone lambda! set print)
 
 (set inspect (lambda! (x y z w) (print x y z w)))
 (inspect () unset (unset)

@@ -1,4 +1,4 @@
-(import lone print)
+(import lone lambda print)
 
 (print
   ((lambda () 10)))
