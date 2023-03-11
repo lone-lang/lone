@@ -1223,6 +1223,7 @@ static struct lone_value *lone_evaluate_form(struct lone_lisp *lone, struct lone
 static struct lone_value *lone_evaluate(struct lone_lisp *lone, struct lone_value *environment, struct lone_value *value)
 {
 	if (value == 0) { return 0; }
+	if (lone_is_nil(value)) { return value; }
 
 	switch (value->type) {
 	case LONE_LIST:
