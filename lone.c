@@ -317,7 +317,12 @@ static void lone_mark_value(struct lone_value *value)
 			lone_mark_value(container->value.table.entries[i].value);
 		}
 		break;
-	default:
+	case LONE_SYMBOL:
+	case LONE_TEXT:
+	case LONE_BYTES:
+	case LONE_POINTER:
+	case LONE_INTEGER:
+		/* these types do not contain any other values to mark */
 		break;
 	}
 }
@@ -347,6 +352,14 @@ static void lone_deallocate_all_unmarked_values(struct lone_lisp *lone)
 				break;
 			case LONE_TABLE:
 				lone_deallocate(lone, value->value.table.entries);
+				break;
+			case LONE_MODULE:
+			case LONE_FUNCTION:
+			case LONE_PRIMITIVE:
+			case LONE_LIST:
+			case LONE_INTEGER:
+			case LONE_POINTER:
+				/* these types do not own any additional memory */
 				break;
 			}
 
@@ -1105,7 +1118,14 @@ static struct lone_value *lone_parse(struct lone_lisp *lone, struct lone_reader 
 	case LONE_INTEGER:
 	case LONE_TEXT:
 		return token;
-	default:
+	case LONE_MODULE:
+	case LONE_FUNCTION:
+	case LONE_PRIMITIVE:
+	case LONE_LIST:
+	case LONE_TABLE:
+	case LONE_BYTES:
+	case LONE_POINTER:
+		/* unexpected value type from lexer */
 		goto parse_failed;
 	}
 
@@ -1338,7 +1358,13 @@ static struct lone_value *lone_evaluate_form(struct lone_lisp *lone, struct lone
 		return lone_apply_primitive(lone, environment, first, rest);
 	case LONE_TABLE:
 		return lone_evaluate_form_table(lone, environment, first, rest);
-	default:
+	case LONE_MODULE:
+	case LONE_LIST:
+	case LONE_SYMBOL:
+	case LONE_TEXT:
+	case LONE_BYTES:
+	case LONE_INTEGER:
+	case LONE_POINTER:
 		/* first element not an applicable type */ linux_exit(-1);
 	}
 }
