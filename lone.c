@@ -1563,6 +1563,23 @@ static void lone_print_table(struct lone_lisp *lone, struct lone_value *table, i
 	linux_write(fd, "}", 1);
 }
 
+static void lone_print_function(struct lone_lisp *lone, struct lone_value *function, int fd)
+{
+	struct lone_value *arguments = function->function.arguments,
+	                  *code = function->function.code;
+
+	linux_write(fd, "(𝛌 ", 6);
+	lone_print(lone, arguments, fd);
+
+	while (!lone_is_nil(code)) {
+		linux_write(fd, "\n  ", 3);
+		lone_print(lone, lone_list_first(code), fd);
+		code = lone_list_rest(code);
+	}
+
+	linux_write(fd, ")", 1);
+}
+
 static void lone_print_hash_notation(struct lone_lisp *lone, char *descriptor, struct lone_value *value, int fd)
 {
 	linux_write(fd, "#<", 2);
@@ -1583,6 +1600,9 @@ static void lone_print(struct lone_lisp *lone, struct lone_value *value, int fd)
 		break;
 	case LONE_PRIMITIVE:
 		lone_print_hash_notation(lone, "primitive", value->primitive.name, fd);
+		break;
+	case LONE_FUNCTION:
+		lone_print_function(lone, value, fd);
 		break;
 	case LONE_LIST:
 		linux_write(fd, "(", 1);
