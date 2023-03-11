@@ -1329,7 +1329,7 @@ static struct lone_value *lone_evaluate_form(struct lone_lisp *lone, struct lone
 		}
 	}
 
-	/* must be a function application if not a special form */
+	/* must be an application if not a special form */
 	first = lone_evaluate(lone, environment, first);
 	switch (first->type) {
 	case LONE_FUNCTION:
@@ -1339,7 +1339,7 @@ static struct lone_value *lone_evaluate_form(struct lone_lisp *lone, struct lone
 	case LONE_TABLE:
 		return lone_evaluate_form_table(lone, environment, first, rest);
 	default:
-		/* first element must be a function */ linux_exit(-1);
+		/* first element not an applicable type */ linux_exit(-1);
 	}
 }
 
