@@ -439,7 +439,7 @@ static struct lone_value *lone_function_create(struct lone_lisp *lone, struct lo
 	return value;
 }
 
-static struct lone_value *lone_primitive_create(struct lone_lisp *lone, const char *name, lone_primitive function, struct lone_value *closure, struct lone_function_flags flags)
+static struct lone_value *lone_primitive_create(struct lone_lisp *lone, char *name, lone_primitive function, struct lone_value *closure, struct lone_function_flags flags)
 {
 	struct lone_value *value = lone_value_create(lone);
 	value->type = LONE_PRIMITIVE;
