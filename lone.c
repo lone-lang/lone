@@ -159,9 +159,11 @@ struct lone_memory;
 struct lone_lisp {
 	struct lone_memory *memory;
 	struct lone_value_container *values;
-	struct lone_value *null_module;
-	struct lone_value *modules;
 	struct lone_value *symbol_table;
+	struct {
+		struct lone_value *loaded;
+		struct lone_value *null;
+	} modules;
 };
 
 /* ╭────────────────────┨ LONE LISP MEMORY ALLOCATION ┠─────────────────────╮
@@ -330,9 +332,9 @@ static void lone_mark_value(struct lone_value *value)
 
 static void lone_mark_all_reachable_values(struct lone_lisp *lone)
 {
-	lone_mark_value(lone->null_module);
-	lone_mark_value(lone->modules);
 	lone_mark_value(lone->symbol_table);
+	lone_mark_value(lone->modules.loaded);
+	lone_mark_value(lone->modules.null);
 }
 
 static void lone_deallocate_all_unmarked_values(struct lone_lisp *lone)
@@ -387,9 +389,9 @@ static void lone_lisp_initialize(struct lone_lisp *lone, unsigned char *memory, 
 	lone->memory->free = 1;
 	lone->memory->size = size - sizeof(struct lone_memory);
 	lone->values = 0;
-	lone->null_module = 0;
-	lone->modules = 0;
 	lone->symbol_table = 0;
+	lone->modules.null = 0;
+	lone->modules.loaded = 0;
 }
 
 static struct lone_value *lone_value_create(struct lone_lisp *lone)
@@ -1162,7 +1164,7 @@ static struct lone_value *lone_evaluate_special_form_import(struct lone_lisp *lo
 	if (lone_is_nil(list)) { /* empty import form: (import) */ linux_exit(-1); }
 	name = lone_list_first(list);
 	if (name->type != LONE_SYMBOL) { /* module name not a symbol: (import 10) */ linux_exit(-1); }
-	module = lone_table_get(lone, lone->modules, name);
+	module = lone_table_get(lone, lone->modules.loaded, name);
 	if (lone_is_nil(module)) { /* module not found: (import non-existent) */ linux_exit(-1); }
 	list = lone_list_rest(list);
 
@@ -2010,7 +2012,7 @@ static void lone_builtin_module_linux_initialize(struct lone_lisp *lone, struct 
 	                     lone_intern_c_string(lone, "auxiliary-values"),
 	                     auxiliary_values);
 
-	lone_table_set(lone, lone->modules, name, module);
+	lone_table_set(lone, lone->modules.loaded, name, module);
 }
 
 static void lone_builtin_module_math_initialize(struct lone_lisp *lone)
@@ -2050,7 +2052,7 @@ static void lone_builtin_module_math_initialize(struct lone_lisp *lone)
 	                                           module,
 	                                           (struct lone_function_flags) { 1, 0, 1 }));
 
-	lone_table_set(lone, lone->modules, name, module);
+	lone_table_set(lone, lone->modules.loaded, name, module);
 }
 
 static void lone_builtin_module_lone_initialize(struct lone_lisp *lone)
@@ -2114,7 +2116,7 @@ static void lone_builtin_module_lone_initialize(struct lone_lisp *lone)
 	                                           module,
 	                                           (struct lone_function_flags) { 1, 0, 1 }));
 
-	lone_table_set(lone, lone->modules, name, module);
+	lone_table_set(lone, lone->modules.loaded, name, module);
 }
 
 /* ╭───────────────────────┨ LONE LISP ENTRY POINT ┠────────────────────────╮
@@ -2138,9 +2140,9 @@ long lone(int argc, char **argv, char **envp, struct auxiliary *auxv)
 	struct lone_reader reader;
 
 	lone_lisp_initialize(&lone, memory, sizeof(memory));
-	lone.modules = lone_table_create(&lone, 32, 0);
-	lone.null_module = lone_module_create(&lone, 0);
 	lone.symbol_table = lone_table_create(&lone, 256, 0);
+	lone.modules.loaded = lone_table_create(&lone, 32, 0);
+	lone.modules.null = lone_module_create(&lone, 0);
 
 	struct lone_value *arguments = lone_arguments_to_list(&lone, argc, argv);
 	struct lone_value *environment = lone_environment_to_table(&lone, envp);
@@ -2162,7 +2164,7 @@ long lone(int argc, char **argv, char **envp, struct auxiliary *auxv)
 			}
 		}
 
-		value = lone_evaluate_module(&lone, lone.null_module, value);
+		value = lone_evaluate_module(&lone, lone.modules.null, value);
 
 		lone_garbage_collector(&lone);
 	}
