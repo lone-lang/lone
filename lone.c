@@ -1617,11 +1617,16 @@ static struct lone_value *lone_primitive_set(struct lone_lisp *lone, struct lone
 	arguments = lone_list_rest(arguments);
 	if (lone_is_nil(arguments)) {
 		/* value not specified: (set variable) */
-		linux_exit(-1);
+		value = lone_list_create_nil(lone);
+	} else {
+		/* (set variable value) */
+		value = lone_list_first(arguments);
+		arguments = lone_list_rest(arguments);
 	}
 
-	/* (set variable value) */
-	value = lone_evaluate(lone, environment, lone_list_first(arguments));
+	if (!lone_is_nil(arguments)) { /* too many arguments */ linux_exit(-1); }
+
+	value = lone_evaluate(lone, environment, value);
 	lone_table_set(lone, environment, variable, value);
 
 	return value;
