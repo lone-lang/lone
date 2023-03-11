@@ -1206,33 +1206,6 @@ static struct lone_value *lone_evaluate_special_form_lambda(struct lone_lisp *lo
 	return lone_function_create(lone, arguments, list, environment, flags);
 }
 
-static struct lone_value *lone_evaluate_special_form_if(struct lone_lisp *lone, struct lone_value *environment, struct lone_value *list)
-{
-	struct lone_value *value, *consequent, *alternative = 0;
-
-	if (lone_is_nil(list)) { /* empty if form: (if) */ linux_exit(-1); }
-	value = lone_list_first(list);
-	list = lone_list_rest(list);
-
-	if (lone_is_nil(list)) { /* consequent not specified: (if test) */ linux_exit(-1); }
-	consequent = lone_list_first(list);
-	list = lone_list_rest(list);
-
-	if (!lone_is_nil(list)) {
-		alternative = lone_list_first(list);
-		list = lone_list_rest(list);
-		if (!lone_is_nil(list)) { /* too many values (if test consequent alternative extra) */ linux_exit(-1); }
-	}
-
-	if (!lone_is_nil(lone_evaluate(lone, environment, value))) {
-		return lone_evaluate(lone, environment, consequent);
-	} else if (alternative) {
-		return lone_evaluate(lone, environment, alternative);
-	}
-
-	return lone_list_create_nil(lone);
-}
-
 static struct lone_value *lone_evaluate_form_table(struct lone_lisp *lone, struct lone_value *environment, struct lone_value *table, struct lone_value *arguments)
 {
 	struct lone_value *key, *value;
@@ -1268,9 +1241,7 @@ static struct lone_value *lone_evaluate_form(struct lone_lisp *lone, struct lone
 
 	// check for special forms
 	if (first->type == LONE_SYMBOL) {
-		if (lone_bytes_equals_c_string(first->bytes, "if")) {
-			return lone_evaluate_special_form_if(lone, environment, rest);
-		} else if (lone_bytes_equals_c_string(first->bytes, "lambda")) {
+		if (lone_bytes_equals_c_string(first->bytes, "lambda")) {
 			struct lone_function_flags flags = {
 				.evaluate_arguments = 1, .evaluate_result = 0, .variable_arguments = 0,
 			};
@@ -1628,6 +1599,33 @@ static struct lone_value *lone_primitive_linux_system_call(struct lone_lisp *lon
 	result = system_call_6(number, args[0], args[1], args[2], args[3], args[4], args[5]);
 
 	return lone_integer_create(lone, result);
+}
+
+static struct lone_value *lone_primitive_if(struct lone_lisp *lone, struct lone_value *closure, struct lone_value *environment, struct lone_value *arguments)
+{
+	struct lone_value *value, *consequent, *alternative = 0;
+
+	if (lone_is_nil(arguments)) { /* test not specified: (if) */ linux_exit(-1); }
+	value = lone_list_first(arguments);
+	arguments = lone_list_rest(arguments);
+
+	if (lone_is_nil(arguments)) { /* consequent not specified: (if test) */ linux_exit(-1); }
+	consequent = lone_list_first(arguments);
+	arguments = lone_list_rest(arguments);
+
+	if (!lone_is_nil(arguments)) {
+		alternative = lone_list_first(arguments);
+		arguments = lone_list_rest(arguments);
+		if (!lone_is_nil(arguments)) { /* too many values (if test consequent alternative extra) */ linux_exit(-1); }
+	}
+
+	if (!lone_is_nil(lone_evaluate(lone, environment, value))) {
+		return lone_evaluate(lone, environment, consequent);
+	} else if (alternative) {
+		return lone_evaluate(lone, environment, alternative);
+	}
+
+	return lone_list_create_nil(lone);
 }
 
 static struct lone_value *lone_primitive_let(struct lone_lisp *lone, struct lone_value *closure, struct lone_value *environment, struct lone_value *arguments)
@@ -2040,6 +2038,14 @@ static void lone_builtin_module_lone_initialize(struct lone_lisp *lone)
 {
 	struct lone_value *name = lone_intern_c_string(lone, "lone"),
 	                  *module = lone_module_create(lone, name);
+
+	lone_table_set(lone, module->module.environment,
+	                     lone_intern_c_string(lone, "if"),
+	                     lone_primitive_create(lone,
+	                                           "if",
+	                                           lone_primitive_if,
+	                                           module,
+	                                           (struct lone_function_flags) { 0, 0, 0 }));
 
 	lone_table_set(lone, module->module.environment,
 	                     lone_intern_c_string(lone, "let"),

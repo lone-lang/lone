@@ -1,4 +1,4 @@
-(import lone set print)
+(import lone if set print)
 
 (if non-existent-returns-nil (set result-if-true "true") (set result-if-false "false"))
 (print result-if-true result-if-false)
