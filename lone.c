@@ -1565,6 +1565,11 @@ static void lone_print(struct lone_lisp *lone, struct lone_value *value, int fd)
 	if (lone_is_nil(value)) { linux_write(fd, "nil", 3); return; }
 
 	switch (value->type) {
+	case LONE_MODULE:
+		linux_write(fd, "#<module ", 9);
+		lone_print(lone, value->module.name, fd);
+		linux_write(fd, ">", 1);
+		break;
 	case LONE_LIST:
 		linux_write(fd, "(", 1);
 		lone_print_list(lone, value, fd);
