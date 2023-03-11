@@ -1581,6 +1581,9 @@ static void lone_print(struct lone_lisp *lone, struct lone_value *value, int fd)
 	case LONE_MODULE:
 		lone_print_hash_notation(lone, "module", value->module.name, fd);
 		break;
+	case LONE_PRIMITIVE:
+		lone_print_hash_notation(lone, "primitive", value->primitive.name, fd);
+		break;
 	case LONE_LIST:
 		linux_write(fd, "(", 1);
 		lone_print_list(lone, value, fd);
