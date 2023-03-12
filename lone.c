@@ -1996,7 +1996,7 @@ static void lone_builtin_module_linux_initialize(struct lone_lisp *lone, int arg
 	struct lone_value *name = lone_intern_c_string(lone, "linux"),
 	                  *module = lone_module_create(lone, name),
 	                  *linux_system_call_table = lone_table_create(lone, 1024, 0),
-	                  *arguments, *environment, *auxiliary_values;
+	                  *count, *arguments, *environment, *auxiliary_values;
 
 	lone_table_set(lone, module->module.environment,
 	                     lone_intern_c_string(lone, "system-call"),
@@ -2012,10 +2012,14 @@ static void lone_builtin_module_linux_initialize(struct lone_lisp *lone, int arg
 
 	lone_fill_linux_system_call_table(lone, linux_system_call_table);
 
+	count = lone_integer_create(lone, argc);
 	arguments = lone_arguments_to_list(lone, argc, argv);
 	environment = lone_environment_to_table(lone, envp);
 	auxiliary_values = lone_auxiliary_vector_to_table(lone, auxv);
 
+	lone_table_set(lone, module->module.environment,
+	                     lone_intern_c_string(lone, "argument-count"),
+	                     count);
 	lone_table_set(lone, module->module.environment,
 	                     lone_intern_c_string(lone, "arguments"),
 	                     arguments);
