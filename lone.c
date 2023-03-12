@@ -1738,6 +1738,11 @@ static struct lone_value *lone_primitive_import(struct lone_lisp *lone, struct l
 	return module;
 }
 
+/* ╭────────────────────────────────────────────────────────────────────────╮
+   │                                                                        │
+   │    Built-in mathematical and numeric operations.                       │
+   │                                                                        │
+   ╰────────────────────────────────────────────────────────────────────────╯ */
 static struct lone_value *lone_primitive_integer_operation(struct lone_lisp *lone, struct lone_value *arguments, char operation)
 {
 	struct lone_value *argument;
