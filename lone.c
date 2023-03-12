@@ -1991,13 +1991,12 @@ static void lone_fill_linux_system_call_table(struct lone_lisp *lone, struct lon
    │    Built-in modules containing essential functionality.                │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
-static void lone_builtin_module_linux_initialize(struct lone_lisp *lone, struct lone_value *arguments, struct lone_value *environment, struct lone_value *auxiliary_values)
+static void lone_builtin_module_linux_initialize(struct lone_lisp *lone, int argc, char **argv, char **envp, struct auxiliary *auxv)
 {
 	struct lone_value *name = lone_intern_c_string(lone, "linux"),
 	                  *module = lone_module_create(lone, name),
-	                  *linux_system_call_table = lone_table_create(lone, 1024, 0);
-
-	lone_fill_linux_system_call_table(lone, linux_system_call_table);
+	                  *linux_system_call_table = lone_table_create(lone, 1024, 0),
+	                  *arguments, *environment, *auxiliary_values;
 
 	lone_table_set(lone, module->module.environment,
 	                     lone_intern_c_string(lone, "system-call"),
@@ -2010,6 +2009,12 @@ static void lone_builtin_module_linux_initialize(struct lone_lisp *lone, struct 
 	lone_table_set(lone, module->module.environment,
 	                     lone_intern_c_string(lone, "system-call-table"),
 	                     linux_system_call_table);
+
+	lone_fill_linux_system_call_table(lone, linux_system_call_table);
+
+	arguments = lone_arguments_to_list(lone, argc, argv);
+	environment = lone_environment_to_table(lone, envp);
+	auxiliary_values = lone_auxiliary_vector_to_table(lone, auxv);
 
 	lone_table_set(lone, module->module.environment,
 	                     lone_intern_c_string(lone, "arguments"),
@@ -2150,11 +2155,7 @@ long lone(int argc, char **argv, char **envp, struct auxiliary *auxv)
 
 	lone_lisp_initialize(&lone, memory, sizeof(memory));
 
-	struct lone_value *arguments = lone_arguments_to_list(&lone, argc, argv);
-	struct lone_value *environment = lone_environment_to_table(&lone, envp);
-	struct lone_value *auxiliary_values = lone_auxiliary_vector_to_table(&lone, auxv);
-
-	lone_builtin_module_linux_initialize(&lone, arguments, environment, auxiliary_values);
+	lone_builtin_module_linux_initialize(&lone, argc, argv, envp, auxv);
 	lone_builtin_module_lone_initialize(&lone);
 	lone_builtin_module_math_initialize(&lone);
 
