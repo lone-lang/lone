@@ -1488,64 +1488,6 @@ static void lone_print(struct lone_lisp *lone, struct lone_value *value, int fd)
    │    Lone lisp functions implemented in C.                               │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
-static inline long lone_value_to_linux_system_call_number(struct lone_lisp *lone, struct lone_value *linux_system_call_table, struct lone_value *value)
-{
-	switch (value->type) {
-	case LONE_INTEGER:
-		return value->integer;
-	case LONE_BYTES:
-	case LONE_TEXT:
-	case LONE_SYMBOL:
-		return lone_table_get(lone, linux_system_call_table, value)->integer;
-	case LONE_MODULE:
-	case LONE_FUNCTION:
-	case LONE_PRIMITIVE:
-	case LONE_LIST:
-	case LONE_TABLE:
-	case LONE_POINTER:
-		linux_exit(-1);
-	}
-}
-
-static inline long lone_value_to_linux_system_call_argument(struct lone_value *value)
-{
-	switch (value->type) {
-	case LONE_INTEGER: return value->integer;
-	case LONE_POINTER: return (long) value->pointer;
-	case LONE_BYTES: case LONE_TEXT: case LONE_SYMBOL: return (long) value->bytes.pointer;
-	case LONE_PRIMITIVE: return (long) value->primitive.function;
-	case LONE_FUNCTION: case LONE_LIST: case LONE_TABLE: case LONE_MODULE: linux_exit(-1);
-	}
-}
-
-static struct lone_value *lone_primitive_linux_system_call(struct lone_lisp *lone, struct lone_value *linux_system_call_table, struct lone_value *environment, struct lone_value *arguments)
-{
-	struct lone_value *argument;
-	long result, number, args[6];
-	unsigned char i;
-
-	if (lone_is_nil(arguments)) { /* need at least the system call number */ linux_exit(-1); }
-	argument = lone_list_first(arguments);
-	number = lone_value_to_linux_system_call_number(lone, linux_system_call_table, argument);
-	arguments = lone_list_rest(arguments);
-
-	for (i = 0; i < 6; ++i) {
-		if (lone_is_nil(arguments)) {
-			args[i] = 0;
-		} else {
-			argument = lone_list_first(arguments);
-			args[i] = lone_value_to_linux_system_call_argument(argument);
-			arguments = lone_list_rest(arguments);
-		}
-	}
-
-	if (!lone_is_nil(arguments)) { /* too many arguments given */ linux_exit(-1); }
-
-	result = system_call_6(number, args[0], args[1], args[2], args[3], args[4], args[5]);
-
-	return lone_integer_create(lone, result);
-}
-
 static struct lone_value *lone_primitive_if(struct lone_lisp *lone, struct lone_value *closure, struct lone_value *environment, struct lone_value *arguments)
 {
 	struct lone_value *value, *consequent, *alternative = 0;
@@ -1806,6 +1748,69 @@ static struct lone_value *lone_primitive_divide(struct lone_lisp *lone, struct l
 		divisor = lone_primitive_integer_operation(lone, arguments, '*');
 		return lone_integer_create(lone, dividend->integer / divisor->integer);
 	}
+}
+
+/* ╭────────────────────────────────────────────────────────────────────────╮
+   │                                                                        │
+   │    Linux primitive functions for issuing system calls.                 │
+   │                                                                        │
+   ╰────────────────────────────────────────────────────────────────────────╯ */
+static inline long lone_value_to_linux_system_call_number(struct lone_lisp *lone, struct lone_value *linux_system_call_table, struct lone_value *value)
+{
+	switch (value->type) {
+	case LONE_INTEGER:
+		return value->integer;
+	case LONE_BYTES:
+	case LONE_TEXT:
+	case LONE_SYMBOL:
+		return lone_table_get(lone, linux_system_call_table, value)->integer;
+	case LONE_MODULE:
+	case LONE_FUNCTION:
+	case LONE_PRIMITIVE:
+	case LONE_LIST:
+	case LONE_TABLE:
+	case LONE_POINTER:
+		linux_exit(-1);
+	}
+}
+
+static inline long lone_value_to_linux_system_call_argument(struct lone_value *value)
+{
+	switch (value->type) {
+	case LONE_INTEGER: return value->integer;
+	case LONE_POINTER: return (long) value->pointer;
+	case LONE_BYTES: case LONE_TEXT: case LONE_SYMBOL: return (long) value->bytes.pointer;
+	case LONE_PRIMITIVE: return (long) value->primitive.function;
+	case LONE_FUNCTION: case LONE_LIST: case LONE_TABLE: case LONE_MODULE: linux_exit(-1);
+	}
+}
+
+static struct lone_value *lone_primitive_linux_system_call(struct lone_lisp *lone, struct lone_value *linux_system_call_table, struct lone_value *environment, struct lone_value *arguments)
+{
+	struct lone_value *argument;
+	long result, number, args[6];
+	unsigned char i;
+
+	if (lone_is_nil(arguments)) { /* need at least the system call number */ linux_exit(-1); }
+	argument = lone_list_first(arguments);
+	number = lone_value_to_linux_system_call_number(lone, linux_system_call_table, argument);
+	arguments = lone_list_rest(arguments);
+
+	for (i = 0; i < 6; ++i) {
+		if (lone_is_nil(arguments)) {
+			args[i] = 0;
+		} else {
+			argument = lone_list_first(arguments);
+			args[i] = lone_value_to_linux_system_call_argument(argument);
+			arguments = lone_list_rest(arguments);
+		}
+	}
+
+	if (!lone_is_nil(arguments)) { /* too many arguments given */ linux_exit(-1); }
+
+	result = system_call_6(number, args[0], args[1], args[2], args[3], args[4], args[5]);
+
+	return lone_integer_create(lone, result);
 }
 
 /* ╭─────────────────────────┨ LONE LINUX PROCESS ┠─────────────────────────╮
