@@ -1642,44 +1642,6 @@ static struct lone_value *lone_primitive_print(struct lone_lisp *lone, struct lo
 	return lone_list_create_nil(lone);
 }
 
-static struct lone_value *lone_primitive_import(struct lone_lisp *lone, struct lone_value *closure, struct lone_value *environment, struct lone_value *arguments)
-{
-	struct lone_value *name, *module, *value;
-
-	if (lone_is_nil(arguments)) { /* nothing to import: (import) */ linux_exit(-1); }
-	name = lone_list_first(arguments);
-	if (name->type != LONE_SYMBOL) { /* module name not a symbol: (import 10) */ linux_exit(-1); }
-	module = lone_table_get(lone, lone->modules.loaded, name);
-	if (lone_is_nil(module)) { /* module not found: (import non-existent) */ linux_exit(-1); }
-	arguments = lone_list_rest(arguments);
-
-	if (lone_is_nil(arguments)) {
-		/* full import, bind all symbols: (import module) */
-		struct lone_table_entry *entries = module->module.environment->table.entries;
-		size_t i, capacity = module->module.environment->table.capacity;
-		for (i = 0; i < capacity; ++i) {
-			if (entries[i].key) {
-				lone_table_set(lone, environment, entries[i].key, entries[i].value);
-			}
-		}
-	} else {
-		/* limited import, bind only specified symbols: (import module x f) */
-		do {
-			name = lone_list_first(arguments);
-			if (name->type != LONE_SYMBOL) { /* name not a symbol: (import 10) */ linux_exit(-1); }
-
-			value = lone_table_get(lone, module->module.environment, name);
-			if (lone_is_nil(value)) { /* name not set in module */ linux_exit(-1); }
-
-			lone_table_set(lone, environment, name, value);
-
-			arguments = lone_list_rest(arguments);
-		} while (!lone_is_nil(arguments));
-	}
-
-	return module;
-}
-
 /* ╭────────────────────────────────────────────────────────────────────────╮
    │                                                                        │
    │    Built-in mathematical and numeric operations.                       │
@@ -1748,6 +1710,49 @@ static struct lone_value *lone_primitive_divide(struct lone_lisp *lone, struct l
 		divisor = lone_primitive_integer_operation(lone, arguments, '*');
 		return lone_integer_create(lone, dividend->integer / divisor->integer);
 	}
+}
+
+/* ╭────────────────────────────────────────────────────────────────────────╮
+   │                                                                        │
+   │    Module importing and loading operations.                            │
+   │                                                                        │
+   ╰────────────────────────────────────────────────────────────────────────╯ */
+static struct lone_value *lone_primitive_import(struct lone_lisp *lone, struct lone_value *closure, struct lone_value *environment, struct lone_value *arguments)
+{
+	struct lone_value *name, *module, *value;
+
+	if (lone_is_nil(arguments)) { /* nothing to import: (import) */ linux_exit(-1); }
+	name = lone_list_first(arguments);
+	if (name->type != LONE_SYMBOL) { /* module name not a symbol: (import 10) */ linux_exit(-1); }
+	module = lone_table_get(lone, lone->modules.loaded, name);
+	if (lone_is_nil(module)) { /* module not found: (import non-existent) */ linux_exit(-1); }
+	arguments = lone_list_rest(arguments);
+
+	if (lone_is_nil(arguments)) {
+		/* full import, bind all symbols: (import module) */
+		struct lone_table_entry *entries = module->module.environment->table.entries;
+		size_t i, capacity = module->module.environment->table.capacity;
+		for (i = 0; i < capacity; ++i) {
+			if (entries[i].key) {
+				lone_table_set(lone, environment, entries[i].key, entries[i].value);
+			}
+		}
+	} else {
+		/* limited import, bind only specified symbols: (import module x f) */
+		do {
+			name = lone_list_first(arguments);
+			if (name->type != LONE_SYMBOL) { /* name not a symbol: (import 10) */ linux_exit(-1); }
+
+			value = lone_table_get(lone, module->module.environment, name);
+			if (lone_is_nil(value)) { /* name not set in module */ linux_exit(-1); }
+
+			lone_table_set(lone, environment, name, value);
+
+			arguments = lone_list_rest(arguments);
+		} while (!lone_is_nil(arguments));
+	}
+
+	return module;
 }
 
 /* ╭────────────────────────────────────────────────────────────────────────╮
