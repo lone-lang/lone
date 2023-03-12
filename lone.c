@@ -56,13 +56,16 @@ static ssize_t __attribute__((fd_arg_write(1))) __attribute__((tainted_args)) li
    │    Lone implements dynamic data types as a tagged union.               │
    │    Supported types are:                                                │
    │                                                                        │
-   │        ◦ List       the linked list and tree type                      │
-   │        ◦ Table      the hash table, prototype and object type          │
-   │        ◦ Symbol     the keyword and interned string type               │
-   │        ◦ Text       the UTF-8 encoded text type                        │
-   │        ◦ Bytes      the binary data and low level string type          │
-   │        ◦ Integer    the signed integer type                            │
-   │        ◦ Pointer    the memory addressing and dereferencing type       │
+   │        ◦ Module       the isolated programming environment type        │
+   │        ◦ Function     the reusable executable expressions type         │
+   │        ◦ Primitive    the built-in C subroutine type                   │
+   │        ◦ List         the linked list and tree type                    │
+   │        ◦ Table        the hash table, prototype and object type        │
+   │        ◦ Symbol       the keyword and interned string type             │
+   │        ◦ Text         the UTF-8 encoded text type                      │
+   │        ◦ Bytes        the binary data and low level string type        │
+   │        ◦ Integer      the signed integer type                          │
+   │        ◦ Pointer      the memory addressing and dereferencing type     │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
 enum lone_type {
