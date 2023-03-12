@@ -1632,6 +1632,12 @@ static struct lone_value *lone_primitive_set(struct lone_lisp *lone, struct lone
 	return value;
 }
 
+static struct lone_value *lone_primitive_quote(struct lone_lisp *lone, struct lone_value *closure, struct lone_value *environment, struct lone_value *arguments)
+{
+	if (!lone_is_nil(lone_list_rest(arguments))) { /* too many arguments: (quote x y) */ linux_exit(-1); }
+	return lone_list_first(arguments);
+}
+
 static struct lone_value *lone_primitive_lambda_with_flags(struct lone_lisp *lone, struct lone_value *closure, struct lone_value *environment, struct lone_value *arguments, struct lone_function_flags flags)
 {
 	struct lone_value *bindings, *code;
@@ -2099,6 +2105,14 @@ static void lone_builtin_module_lone_initialize(struct lone_lisp *lone)
 	                     lone_primitive_create(lone,
 	                                           "set",
 	                                           lone_primitive_set,
+	                                           module,
+	                                           (struct lone_function_flags) { 0, 0, 0 }));
+
+	lone_table_set(lone, module->module.environment,
+	                     lone_intern_c_string(lone, "quote"),
+	                     lone_primitive_create(lone,
+	                                           "quote",
+	                                           lone_primitive_quote,
 	                                           module,
 	                                           (struct lone_function_flags) { 0, 0, 0 }));
 
