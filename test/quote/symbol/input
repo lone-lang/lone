@@ -1,0 +1,3 @@
+(import lone quote print)
+
+(print (quote test))
