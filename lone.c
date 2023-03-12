@@ -20,12 +20,12 @@ static void __attribute__((noreturn)) linux_exit(int code)
 	__builtin_unreachable();
 }
 
-static ssize_t __attribute__((fd_arg_read(1))) __attribute__((tainted_args)) linux_read(int fd, const void *buffer, size_t count)
+static ssize_t __attribute__((fd_arg_read(1), tainted_args)) linux_read(int fd, const void *buffer, size_t count)
 {
 	return system_call_3(__NR_read, fd, (long) buffer, (long) count);
 }
 
-static ssize_t __attribute__((fd_arg_write(1))) __attribute__((tainted_args)) linux_write(int fd, const void *buffer, size_t count)
+static ssize_t __attribute__((fd_arg_write(1), tainted_args)) linux_write(int fd, const void *buffer, size_t count)
 {
 	return system_call_3(__NR_write, fd, (long) buffer, (long) count);
 }
@@ -245,7 +245,7 @@ static void lone_memory_coalesce(struct lone_memory *block)
 	}
 }
 
-static void * __attribute__((malloc)) __attribute__((alloc_size(2))) lone_allocate(struct lone_lisp *lone, size_t requested_size)
+static void * __attribute__((malloc, alloc_size(2))) lone_allocate(struct lone_lisp *lone, size_t requested_size)
 {
 	size_t needed_size = requested_size + sizeof(struct lone_memory);
 	struct lone_memory *block;
