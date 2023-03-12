@@ -1,0 +1,4 @@
+(import lone print)
+(import linux argument-count)
+
+(print argument-count)
