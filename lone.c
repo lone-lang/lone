@@ -621,7 +621,24 @@ static inline size_t lone_table_compute_hash_for(struct lone_value *key, size_t 
 
 static size_t lone_table_entry_find_index_for(struct lone_value *key, struct lone_table_entry *entries, size_t capacity)
 {
-	size_t i = lone_table_compute_hash_for(key, capacity);
+	size_t i;
+
+	switch (key->type) {
+	case LONE_MODULE:
+	case LONE_FUNCTION:
+	case LONE_PRIMITIVE:
+	case LONE_LIST:
+	case LONE_TABLE:
+	case LONE_INTEGER:
+	case LONE_POINTER:
+		linux_exit(-1);
+	case LONE_SYMBOL:
+	case LONE_TEXT:
+	case LONE_BYTES:
+		break;
+	}
+
+	i = lone_table_compute_hash_for(key, capacity);
 
 	while (entries[i].key && !lone_bytes_equals(entries[i].key->bytes, key->bytes)) {
 		i = (i + 1) % capacity;
