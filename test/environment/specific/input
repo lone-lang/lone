@@ -1,5 +1,4 @@
-(import linux environment)
-(import lone print)
+(import (lone print) (linux environment))
 
 (print (environment "A"))
 (print (environment "B"))

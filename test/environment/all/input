@@ -1,4 +1,3 @@
-(import lone print)
-(import linux environment)
+(import (lone print) (linux environment))
 
 (print environment)

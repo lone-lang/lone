@@ -1,4 +1,4 @@
-(import lone lambda set print)
+(import (lone lambda set print))
 
 (set f (lambda (x) x))
 (print (f 10))

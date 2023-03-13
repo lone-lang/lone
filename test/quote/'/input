@@ -1,4 +1,4 @@
-(import lone quote print)
+(import (lone quote print))
 
 (print 'x)
 (print ''x)

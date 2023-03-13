@@ -1,4 +1,3 @@
-(import lone print)
-(import math -)
+(import (lone print) (math -))
 
 (print (- 1))
