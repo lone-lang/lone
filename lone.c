@@ -1790,7 +1790,7 @@ static struct lone_value *lone_primitive_import(struct lone_lisp *lone, struct l
 		}
 	}
 
-	return module;
+	return lone_list_create_nil(lone);
 }
 
 /* ╭────────────────────────────────────────────────────────────────────────╮
