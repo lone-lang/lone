@@ -973,13 +973,14 @@ static struct lone_value *lone_reader_consume_text(struct lone_lisp *lone, struc
 
 /* ╭────────────────────────────────────────────────────────────────────────╮
    │                                                                        │
-   │    Analyzes opening and closing brackets                               │
-   │    and adds them to the tokens list if valid.                          │
+   │    Analyzes a single character token,                                  │
+   │    characters that the parser deals with specially.                    │
+   │    These include single quotes and opening and closing brackets.       │
    │                                                                        │
-   │    ([(){}])                                                            │
+   │    (['(){}])                                                           │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
-static struct lone_value *lone_reader_consume_bracket(struct lone_lisp *lone, struct lone_reader *reader)
+static struct lone_value *lone_reader_consume_character(struct lone_lisp *lone, struct lone_reader *reader)
 {
 	unsigned char *bracket = lone_reader_peek(lone, reader);
 	if (!bracket) { return 0; }
@@ -987,6 +988,7 @@ static struct lone_value *lone_reader_consume_bracket(struct lone_lisp *lone, st
 	switch (*bracket) {
 	case '(': case ')':
 	case '{': case '}':
+	case '\'':
 		lone_reader_consume(reader);
 		return lone_intern(lone, bracket, 1);
 	default:
@@ -1044,7 +1046,8 @@ static struct lone_value *lone_lex(struct lone_lisp *lone, struct lone_reader *r
 				break;
 			case '(': case ')':
 			case '{': case '}':
-				token = lone_reader_consume_bracket(lone, reader);
+			case '\'':
+				token = lone_reader_consume_character(lone, reader);
 				break;
 			default:
 				token = lone_reader_consume_symbol(lone, reader);
@@ -1118,6 +1121,15 @@ static struct lone_value *lone_parse_list(struct lone_lisp *lone, struct lone_re
 	return first;
 }
 
+static struct lone_value *lone_parse_quote(struct lone_lisp *lone, struct lone_reader *reader)
+{
+	struct lone_value *quote = lone_intern_c_string(lone, "quote"),
+	                  *value = lone_parse(lone, reader, lone_lex(lone, reader)),
+	                  *form = lone_list_create(lone, value, lone_list_create_nil(lone));
+
+	return lone_list_create(lone, quote, form);
+}
+
 static struct lone_value *lone_parse(struct lone_lisp *lone, struct lone_reader *reader, struct lone_value *token)
 {
 	if (!token) { return 0; }
@@ -1133,6 +1145,8 @@ static struct lone_value *lone_parse(struct lone_lisp *lone, struct lone_reader 
 			return lone_parse_table(lone, reader);
 		case ')': case '}':
 			goto parse_failed;
+		case '\'':
+			return lone_parse_quote(lone, reader);
 		default:
 			return token;
 		}
