@@ -616,12 +616,7 @@ static unsigned long  __attribute__((pure)) fnv_1a(unsigned char *bytes, size_t 
 
 static inline size_t lone_table_compute_hash_for(struct lone_value *key, size_t capacity)
 {
-	return fnv_1a(key->bytes.pointer, key->bytes.count) % capacity;
-}
-
-static size_t lone_table_entry_find_index_for(struct lone_value *key, struct lone_table_entry *entries, size_t capacity)
-{
-	size_t i;
+	unsigned long result;
 
 	switch (key->type) {
 	case LONE_MODULE:
@@ -629,16 +624,24 @@ static size_t lone_table_entry_find_index_for(struct lone_value *key, struct lon
 	case LONE_PRIMITIVE:
 	case LONE_LIST:
 	case LONE_TABLE:
-	case LONE_INTEGER:
 	case LONE_POINTER:
 		linux_exit(-1);
 	case LONE_SYMBOL:
 	case LONE_TEXT:
 	case LONE_BYTES:
+		result = fnv_1a(key->bytes.pointer, key->bytes.count);
+		break;
+	case LONE_INTEGER:
+		result = fnv_1a((unsigned char *) &key->integer, sizeof(key->integer));
 		break;
 	}
 
-	i = lone_table_compute_hash_for(key, capacity);
+	return result % capacity;
+}
+
+static size_t lone_table_entry_find_index_for(struct lone_value *key, struct lone_table_entry *entries, size_t capacity)
+{
+	size_t i = lone_table_compute_hash_for(key, capacity);
 
 	while (entries[i].key && !lone_bytes_equals(entries[i].key->bytes, key->bytes)) {
 		i = (i + 1) % capacity;
