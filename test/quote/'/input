@@ -1,0 +1,6 @@
+(import lone quote print)
+
+(print 'x)
+(print ''x)
+(print '''x)
+(print ''''x)

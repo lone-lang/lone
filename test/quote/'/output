@@ -1,0 +1,4 @@
+x
+(quote x)
+(quote (quote x))
+(quote (quote (quote x)))
