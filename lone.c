@@ -1153,6 +1153,27 @@ lex_failed:
 
 static struct lone_value *lone_parse(struct lone_lisp *, struct lone_reader *, struct lone_value *);
 
+static struct lone_value *lone_parse_vector(struct lone_lisp *lone, struct lone_reader *reader)
+{
+	struct lone_value *vector = lone_vector_create(lone, 32), *value;
+	size_t i = 0;
+
+	while (1) {
+		value = lone_lex(lone, reader);
+
+		if (!value) { /* end of input */ reader->error = 1; return 0; }
+		if (value->type == LONE_SYMBOL && *value->bytes.pointer == ']') {
+			/* complete vector: [], [ x ], [ x y ] */
+			break;
+		}
+
+		value = lone_parse(lone, reader, value);
+
+		lone_vector_set(lone, vector, lone_integer_create(lone, i++), value);
+	}
+
+	return vector;
+}
 static struct lone_value *lone_parse_table(struct lone_lisp *lone, struct lone_reader *reader)
 {
 	struct lone_value *table = lone_table_create(lone, 32, 0), *key, *value;
@@ -1224,9 +1245,11 @@ static struct lone_value *lone_parse(struct lone_lisp *lone, struct lone_reader 
 		switch (*token->bytes.pointer) {
 		case '(':
 			return lone_parse_list(lone, reader);
+		case '[':
+			return lone_parse_vector(lone, reader);
 		case '{':
 			return lone_parse_table(lone, reader);
-		case ')': case '}':
+		case ')': case ']': case '}':
 			goto parse_failed;
 		case '\'':
 			return lone_parse_quote(lone, reader);
