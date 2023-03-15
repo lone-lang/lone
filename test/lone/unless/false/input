@@ -1,0 +1,6 @@
+(import (lone unless print))
+
+(print
+  (unless ()
+    (print "unless false executes")
+    "false"))
