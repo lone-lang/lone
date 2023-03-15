@@ -372,6 +372,9 @@ static void lone_deallocate_all_unmarked_values(struct lone_lisp *lone)
 			case LONE_SYMBOL:
 				lone_deallocate(lone, value->value.bytes.pointer);
 				break;
+			case LONE_VECTOR:
+				lone_deallocate(lone, value->value.vector.values);
+				break;
 			case LONE_TABLE:
 				lone_deallocate(lone, value->value.table.entries);
 				break;
