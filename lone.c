@@ -1899,6 +1899,7 @@ static inline long lone_value_to_linux_system_call_number(struct lone_lisp *lone
 	case LONE_FUNCTION:
 	case LONE_PRIMITIVE:
 	case LONE_LIST:
+	case LONE_VECTOR:
 	case LONE_TABLE:
 	case LONE_POINTER:
 		linux_exit(-1);
@@ -1912,7 +1913,7 @@ static inline long lone_value_to_linux_system_call_argument(struct lone_value *v
 	case LONE_POINTER: return (long) value->pointer;
 	case LONE_BYTES: case LONE_TEXT: case LONE_SYMBOL: return (long) value->bytes.pointer;
 	case LONE_PRIMITIVE: return (long) value->primitive.function;
-	case LONE_FUNCTION: case LONE_LIST: case LONE_TABLE: case LONE_MODULE: linux_exit(-1);
+	case LONE_FUNCTION: case LONE_LIST: case LONE_VECTOR: case LONE_TABLE: case LONE_MODULE: linux_exit(-1);
 	}
 }
 
