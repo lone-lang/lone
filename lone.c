@@ -666,7 +666,7 @@ static struct lone_value *lone_vector_get(struct lone_lisp *lone, struct lone_va
 	if (index->type != LONE_INTEGER) { /* only integer indexes supported */ linux_exit(-1); }
 	i = index->integer;
 	value = i < vector->vector.capacity? vector->vector.values[i] : 0;
-	return value? value : lone_list_create_nil(lone);
+	return value? value : lone_nil(lone);
 }
 
 static void lone_vector_set(struct lone_lisp *lone, struct lone_value *vector, struct lone_value *index, struct lone_value *value)
@@ -790,7 +790,7 @@ static struct lone_value *lone_table_get(struct lone_lisp *lone, struct lone_val
 	} else if (prototype && !lone_is_nil(prototype)) {
 		return lone_table_get(lone, prototype, key);
 	} else {
-		return lone_list_create_nil(lone);
+		return lone_nil(lone);
 	}
 }
 
@@ -1246,7 +1246,7 @@ static struct lone_value *lone_parse_quote(struct lone_lisp *lone, struct lone_r
 {
 	struct lone_value *quote = lone_intern_c_string(lone, "quote"),
 	                  *value = lone_parse(lone, reader, lone_lex(lone, reader)),
-	                  *form = lone_list_create(lone, value, lone_list_create_nil(lone));
+	                  *form = lone_list_create(lone, value, lone_nil(lone));
 
 	return lone_list_create(lone, quote, form);
 }
@@ -1419,7 +1419,7 @@ static struct lone_value *lone_apply(struct lone_lisp *lone, struct lone_value *
 {
 	struct lone_value *new_environment = lone_table_create(lone, 16, function->function.environment),
 	                  *names = function->function.arguments, *code = function->function.code,
-	                  *value = lone_list_create_nil(lone);
+	                  *value = lone_nil(lone);
 
 	if (function->function.flags.evaluate_arguments) { arguments = lone_evaluate_all(lone, environment, arguments); }
 
@@ -1691,7 +1691,7 @@ static struct lone_value *lone_primitive_if(struct lone_lisp *lone, struct lone_
 		return lone_evaluate(lone, environment, alternative);
 	}
 
-	return lone_list_create_nil(lone);
+	return lone_nil(lone);
 }
 
 static struct lone_value *lone_primitive_let(struct lone_lisp *lone, struct lone_value *closure, struct lone_value *environment, struct lone_value *arguments)
@@ -1716,7 +1716,7 @@ static struct lone_value *lone_primitive_let(struct lone_lisp *lone, struct lone
 		bindings = lone_list_rest(rest);
 	}
 
-	value = lone_list_create_nil(lone);
+	value = lone_nil(lone);
 
 	while (!lone_is_nil(arguments = lone_list_rest(arguments))) {
 		value = lone_evaluate(lone, new_environment, lone_list_first(arguments));
@@ -1743,7 +1743,7 @@ static struct lone_value *lone_primitive_set(struct lone_lisp *lone, struct lone
 	arguments = lone_list_rest(arguments);
 	if (lone_is_nil(arguments)) {
 		/* value not specified: (set variable) */
-		value = lone_list_create_nil(lone);
+		value = lone_nil(lone);
 	} else {
 		/* (set variable value) */
 		value = lone_list_first(arguments);
@@ -1817,7 +1817,7 @@ static struct lone_value *lone_primitive_print(struct lone_lisp *lone, struct lo
 		arguments = lone_list_rest(arguments);
 	}
 
-	return lone_list_create_nil(lone);
+	return lone_nil(lone);
 }
 
 /* ╭────────────────────────────────────────────────────────────────────────╮
@@ -1937,7 +1937,7 @@ static struct lone_value *lone_primitive_import(struct lone_lisp *lone, struct l
 		}
 	}
 
-	return lone_list_create_nil(lone);
+	return lone_nil(lone);
 }
 
 /* ╭────────────────────────────────────────────────────────────────────────╮
