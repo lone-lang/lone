@@ -1877,7 +1877,7 @@ static struct lone_value *lone_primitive_divide(struct lone_lisp *lone, struct l
 
 	if (lone_is_nil(arguments)) { /* at least the dividend is required, (/) is invalid */ linux_exit(-1); }
 	dividend = lone_list_first(arguments);
-	if (dividend->type != LONE_INTEGER) { /* can't divide non-numbers: (/ "not a number) */ linux_exit(-1); }
+	if (dividend->type != LONE_INTEGER) { /* can't divide non-numbers: (/ "not a number") */ linux_exit(-1); }
 	arguments = lone_list_rest(arguments);
 
 	if (lone_is_nil(arguments)) {
