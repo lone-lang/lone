@@ -1293,27 +1293,43 @@ static struct lone_value *lone_evaluate_module(struct lone_lisp *lone, struct lo
 	return lone_evaluate(lone, module->module.environment, value);
 }
 
-static struct lone_value *lone_evaluate_form_table(struct lone_lisp *lone, struct lone_value *environment, struct lone_value *table, struct lone_value *arguments)
+static struct lone_value *lone_evaluate_form_index(struct lone_lisp *lone, struct lone_value *environment, struct lone_value *collection, struct lone_value *arguments)
 {
+	struct lone_value *(*get)(struct lone_lisp *, struct lone_value *, struct lone_value *);
+	void (*set)(struct lone_lisp *, struct lone_value *, struct lone_value *, struct lone_value *);
 	struct lone_value *key, *value;
-	if (lone_is_nil(arguments)) { /* need at least the key: (table) */ linux_exit(-1); }
+
+	switch (collection->type) {
+	case LONE_VECTOR:
+		get = lone_vector_get;
+		set = lone_vector_set;
+		break;
+	case LONE_TABLE:
+		get = lone_table_get;
+		set = lone_table_set;
+		break;
+	default:
+		linux_exit(-1);
+	}
+
+	if (lone_is_nil(arguments)) { /* need at least the key: (collection) */ linux_exit(-1); }
 	key = lone_list_first(arguments);
 	arguments = lone_list_rest(arguments);
 	if (lone_is_nil(arguments)) {
-		/* table get: (table key) */
-		return lone_table_get(lone, table, lone_evaluate(lone, environment, key));
+		/* table get: (collection key) */
+		return get(lone, collection, lone_evaluate(lone, environment, key));
 	} else {
 		/* at least one argument */
 		value = lone_list_first(arguments);
 		arguments = lone_list_rest(arguments);
 		if (lone_is_nil(arguments)) {
-			/* table set: (table key value) */
-			lone_table_set(lone, table,
-			               lone_evaluate(lone, environment, key),
-			               lone_evaluate(lone, environment, value));
+			/* table set: (collection key value) */
+			set(lone, collection,
+			          lone_evaluate(lone, environment, key),
+			          lone_evaluate(lone, environment, value));
 			return value;
 		} else {
-			/* too many arguments given: (table key value extra) */
+			/* too many arguments given: (collection key value extra) */
 			linux_exit(-1);
 		}
 	}
@@ -1333,8 +1349,9 @@ static struct lone_value *lone_evaluate_form(struct lone_lisp *lone, struct lone
 		return lone_apply(lone, environment, first, rest);
 	case LONE_PRIMITIVE:
 		return lone_apply_primitive(lone, environment, first, rest);
+	case LONE_VECTOR:
 	case LONE_TABLE:
-		return lone_evaluate_form_table(lone, environment, first, rest);
+		return lone_evaluate_form_index(lone, environment, first, rest);
 	case LONE_MODULE:
 	case LONE_LIST:
 	case LONE_SYMBOL:
