@@ -326,6 +326,11 @@ static void lone_mark_value(struct lone_value *value)
 		lone_mark_value(container->value.list.first);
 		lone_mark_value(container->value.list.rest);
 		break;
+	case LONE_VECTOR:
+		for (size_t i = 0; i < container->value.vector.count; ++i) {
+			lone_mark_value(container->value.vector.values[i]);
+		}
+		break;
 	case LONE_TABLE:
 		lone_mark_value(container->value.table.prototype);
 		for (size_t i = 0; i < container->value.table.capacity; ++i) {
