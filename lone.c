@@ -650,6 +650,7 @@ static inline size_t lone_table_compute_hash_for(struct lone_value *key, size_t 
 	case LONE_FUNCTION:
 	case LONE_PRIMITIVE:
 	case LONE_LIST:
+	case LONE_VECTOR:
 	case LONE_TABLE:
 	case LONE_POINTER:
 		linux_exit(-1);
