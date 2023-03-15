@@ -1240,6 +1240,7 @@ static struct lone_value *lone_parse(struct lone_lisp *lone, struct lone_reader 
 	case LONE_FUNCTION:
 	case LONE_PRIMITIVE:
 	case LONE_LIST:
+	case LONE_VECTOR:
 	case LONE_TABLE:
 	case LONE_BYTES:
 	case LONE_POINTER:
