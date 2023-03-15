@@ -956,8 +956,8 @@ static int lone_reader_match_byte(unsigned char byte, unsigned char target)
 		default:
 			return 0;
 		}
-	} else if (target == ')' || target == '}') {
-		return byte == ')' || byte == '}';
+	} else if (target == ')' || target == ']' || target == '}') {
+		return byte == ')' || byte == ']' || byte == '}';
 	} else if (target >= '0' && target <= '9') {
 		return byte >= '0' && byte <= '9';
 	} else {
@@ -969,7 +969,7 @@ static int lone_reader_match_byte(unsigned char byte, unsigned char target)
    │                                                                        │
    │    Analyzes a number and adds it to the tokens list if valid.          │
    │                                                                        │
-   │    ([+-]?[0-9]+)[)} \n\t]                                              │
+   │    ([+-]?[0-9]+)[)]} \n\t]                                             │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
 static struct lone_value *lone_reader_consume_number(struct lone_lisp *lone, struct lone_reader *reader)
@@ -1006,7 +1006,7 @@ static struct lone_value *lone_reader_consume_number(struct lone_lisp *lone, str
    │                                                                        │
    │    Analyzes a symbol and adds it to the tokens list if valid.          │
    │                                                                        │
-   │    (.*)[)} \n\t]                                                       │
+   │    (.*)[)]} \n\t]                                                      │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
 static struct lone_value *lone_reader_consume_symbol(struct lone_lisp *lone, struct lone_reader *reader)
@@ -1027,7 +1027,7 @@ static struct lone_value *lone_reader_consume_symbol(struct lone_lisp *lone, str
    │                                                                        │
    │    Analyzes a string and adds it to the tokens list if valid.          │
    │                                                                        │
-   │    (".*")[)} \n\t]                                                     │
+   │    (".*")[)]} \n\t]                                                    │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
 static struct lone_value *lone_reader_consume_text(struct lone_lisp *lone, struct lone_reader *reader)
