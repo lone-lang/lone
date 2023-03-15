@@ -644,6 +644,16 @@ static void lone_vector_resize(struct lone_lisp *lone, struct lone_value *vector
 	vector->vector.capacity = new_capacity;
 }
 
+static struct lone_value *lone_vector_get(struct lone_lisp *lone, struct lone_value *vector, struct lone_value *index)
+{
+	struct lone_value *value;
+	size_t i;
+	if (index->type != LONE_INTEGER) { /* only integer indexes supported */ linux_exit(-1); }
+	i = index->integer;
+	value = i < vector->vector.capacity? vector->vector.values[i] : 0;
+	return value? value : lone_list_create_nil(lone);
+}
+
 static unsigned long  __attribute__((pure)) fnv_1a(unsigned char *bytes, size_t count)
 {
 	unsigned long hash = FNV_OFFSET_BASIS;
