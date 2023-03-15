@@ -629,6 +629,21 @@ static inline int lone_bytes_equals_c_string(struct lone_bytes bytes, char *c_st
 	return lone_bytes_equals(bytes, c_string_bytes);
 }
 
+static void lone_vector_resize(struct lone_lisp *lone, struct lone_value *vector, size_t new_capacity)
+{
+	struct lone_value **new = lone_allocate(lone, new_capacity * sizeof(struct lone_value *));
+	size_t i;
+
+	for (i = 0; i < new_capacity; ++i) {
+		new[i] = i < vector->vector.count? vector->vector.values[i] : 0;
+	}
+
+	lone_deallocate(lone, vector->vector.values);
+
+	vector->vector.values = new;
+	vector->vector.capacity = new_capacity;
+}
+
 static unsigned long  __attribute__((pure)) fnv_1a(unsigned char *bytes, size_t count)
 {
 	unsigned long hash = FNV_OFFSET_BASIS;
