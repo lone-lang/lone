@@ -1,0 +1,5 @@
+(import (lone begin print))
+
+(print
+  (begin
+    (print 1)))
