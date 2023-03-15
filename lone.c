@@ -1667,6 +1667,18 @@ static void lone_print(struct lone_lisp *lone, struct lone_value *value, int fd)
    │    Lone lisp functions implemented in C.                               │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
+static struct lone_value *lone_primitive_begin(struct lone_lisp *lone, struct lone_value *closure, struct lone_value *environment, struct lone_value *arguments)
+{
+	struct lone_value *value;
+
+	for (value = lone_nil(lone); !lone_is_nil(arguments); arguments = lone_list_rest(arguments)) {
+		value = lone_list_first(arguments);
+		value = lone_evaluate(lone, environment, value);
+	}
+
+	return value;
+}
+
 static struct lone_value *lone_primitive_if(struct lone_lisp *lone, struct lone_value *closure, struct lone_value *environment, struct lone_value *arguments)
 {
 	struct lone_value *value, *consequent, *alternative = 0;
@@ -2289,6 +2301,14 @@ static void lone_builtin_module_lone_initialize(struct lone_lisp *lone)
 {
 	struct lone_value *name = lone_intern_c_string(lone, "lone"),
 	                  *module = lone_module_create(lone, name);
+
+	lone_table_set(lone, module->module.environment,
+	                     lone_intern_c_string(lone, "begin"),
+	                     lone_primitive_create(lone,
+	                                           "begin",
+	                                           lone_primitive_begin,
+	                                           module,
+	                                           (struct lone_function_flags) { 0, 0, 1 }));
 
 	lone_table_set(lone, module->module.environment,
 	                     lone_intern_c_string(lone, "if"),
