@@ -1060,7 +1060,7 @@ static struct lone_value *lone_reader_consume_text(struct lone_lisp *lone, struc
    │    characters that the parser deals with specially.                    │
    │    These include single quotes and opening and closing brackets.       │
    │                                                                        │
-   │    (['(){}])                                                           │
+   │    (['()[]{}])                                                         │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
 static struct lone_value *lone_reader_consume_character(struct lone_lisp *lone, struct lone_reader *reader)
@@ -1070,6 +1070,7 @@ static struct lone_value *lone_reader_consume_character(struct lone_lisp *lone, 
 
 	switch (*bracket) {
 	case '(': case ')':
+	case '[': case ']':
 	case '{': case '}':
 	case '\'':
 		lone_reader_consume(reader);
@@ -1128,6 +1129,7 @@ static struct lone_value *lone_lex(struct lone_lisp *lone, struct lone_reader *r
 				token = lone_reader_consume_text(lone, reader);
 				break;
 			case '(': case ')':
+			case '[': case ']':
 			case '{': case '}':
 			case '\'':
 				token = lone_reader_consume_character(lone, reader);
