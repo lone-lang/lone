@@ -407,6 +407,7 @@ static void lone_garbage_collector(struct lone_lisp *lone)
    │    Initializers and creation functions for lone's types.               │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
+static struct lone_value *lone_list_create_nil(struct lone_lisp *);
 static struct lone_value *lone_module_create(struct lone_lisp *, struct lone_value *);
 static struct lone_value *lone_primitive_create(struct lone_lisp *, char *, lone_primitive, struct lone_value *, struct lone_function_flags);
 static struct lone_value *lone_primitive_import(struct lone_lisp *, struct lone_value *, struct lone_value *, struct lone_value *);
@@ -423,6 +424,7 @@ static void lone_lisp_initialize(struct lone_lisp *lone, unsigned char *memory, 
 
 	/* basic initialization done, can now use value creation functions */
 
+	lone->constants.nil = lone_list_create_nil(lone);
 	lone->symbol_table = lone_table_create(lone, 256, 0);
 	lone->modules.loaded = lone_table_create(lone, 32, 0);
 	struct lone_function_flags import_flags = { .evaluate_arguments = 0, .evaluate_result = 0, .variable_arguments = 1 };
