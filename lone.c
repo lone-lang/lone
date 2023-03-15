@@ -173,6 +173,9 @@ struct lone_lisp {
 	struct lone_value_container *values;
 	struct lone_value *symbol_table;
 	struct {
+		struct lone_value *nil;
+	} constants;
+	struct {
 		struct lone_value *loaded;
 		struct lone_value *null;
 		struct lone_value *import;
