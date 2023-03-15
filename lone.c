@@ -1490,6 +1490,23 @@ static void lone_print_list(struct lone_lisp *lone, struct lone_value *list, int
 	}
 }
 
+static void lone_print_vector(struct lone_lisp *lone, struct lone_value *vector, int fd)
+{
+	size_t n = vector->vector.count, i;
+	struct lone_value **values = vector->vector.values;
+
+	if (vector->vector.count == 0) { linux_write(fd, "[]", 2); return; }
+
+	linux_write(fd, "[ ", 2);
+
+	for (i = 0; i < n; ++i) {
+		lone_print(lone, values[i], fd);
+		linux_write(fd, " ", 1);
+	}
+
+	linux_write(fd, "]", 1);
+}
+
 static void lone_print_table(struct lone_lisp *lone, struct lone_value *table, int fd)
 {
 	size_t n = table->table.capacity, i;
@@ -1560,6 +1577,9 @@ static void lone_print(struct lone_lisp *lone, struct lone_value *value, int fd)
 		linux_write(fd, "(", 1);
 		lone_print_list(lone, value, fd);
 		linux_write(fd, ")", 1);
+		break;
+	case LONE_VECTOR:
+		lone_print_vector(lone, value, fd);
 		break;
 	case LONE_TABLE:
 		lone_print_table(lone, value, fd);
