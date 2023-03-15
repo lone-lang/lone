@@ -642,6 +642,7 @@ static void lone_vector_resize(struct lone_lisp *lone, struct lone_value *vector
 
 	vector->vector.values = new;
 	vector->vector.capacity = new_capacity;
+	if (vector->vector.count > new_capacity) { vector->vector.count = new_capacity; }
 }
 
 static struct lone_value *lone_vector_get(struct lone_lisp *lone, struct lone_value *vector, struct lone_value *index)
