@@ -1336,6 +1336,7 @@ static struct lone_value *lone_evaluate(struct lone_lisp *lone, struct lone_valu
 	case LONE_MODULE:
 	case LONE_FUNCTION:
 	case LONE_PRIMITIVE:
+	case LONE_VECTOR:
 	case LONE_TABLE:
 	case LONE_INTEGER:
 	case LONE_POINTER:
