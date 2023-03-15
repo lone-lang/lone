@@ -91,6 +91,12 @@ struct lone_list {
 	struct lone_value *rest;
 };
 
+struct lone_vector {
+	struct lone_value **values;
+	size_t count;
+	size_t capacity;
+};
+
 struct lone_table_entry {
 	struct lone_value *key;
 	struct lone_value *value;
