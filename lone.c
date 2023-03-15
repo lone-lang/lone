@@ -467,6 +467,11 @@ static struct lone_value *lone_list_create_nil(struct lone_lisp *lone)
 	return lone_list_create(lone, 0, 0);
 }
 
+static struct lone_value *lone_nil(struct lone_lisp *lone)
+{
+	return lone->constants.nil;
+}
+
 static struct lone_value *lone_intern_c_string(struct lone_lisp *, char *);
 
 static struct lone_value *lone_function_create(struct lone_lisp *lone, struct lone_value *arguments, struct lone_value *code, struct lone_value *environment, struct lone_function_flags flags)
