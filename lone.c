@@ -1679,6 +1679,21 @@ static struct lone_value *lone_primitive_begin(struct lone_lisp *lone, struct lo
 	return value;
 }
 
+static struct lone_value *lone_primitive_when(struct lone_lisp *lone, struct lone_value *closure, struct lone_value *environment, struct lone_value *arguments)
+{
+	struct lone_value *test;
+
+	if (lone_is_nil(arguments)) { /* test not specified: (when) */ linux_exit(-1); }
+	test = lone_list_first(arguments);
+	arguments = lone_list_rest(arguments);
+
+	if (!lone_is_nil(lone_evaluate(lone, environment, test))) {
+		return lone_primitive_begin(lone, closure, environment, arguments);
+	}
+
+	return lone_nil(lone);
+}
+
 static struct lone_value *lone_primitive_if(struct lone_lisp *lone, struct lone_value *closure, struct lone_value *environment, struct lone_value *arguments)
 {
 	struct lone_value *value, *consequent, *alternative = 0;
@@ -2307,6 +2322,14 @@ static void lone_builtin_module_lone_initialize(struct lone_lisp *lone)
 	                     lone_primitive_create(lone,
 	                                           "begin",
 	                                           lone_primitive_begin,
+	                                           module,
+	                                           (struct lone_function_flags) { 0, 0, 1 }));
+
+	lone_table_set(lone, module->module.environment,
+	                     lone_intern_c_string(lone, "when"),
+	                     lone_primitive_create(lone,
+	                                           "when",
+	                                           lone_primitive_when,
 	                                           module,
 	                                           (struct lone_function_flags) { 0, 0, 1 }));
 
