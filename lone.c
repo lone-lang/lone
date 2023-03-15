@@ -1405,7 +1405,7 @@ static struct lone_value *lone_apply(struct lone_lisp *lone, struct lone_value *
 {
 	struct lone_value *new_environment = lone_table_create(lone, 16, function->function.environment),
 	                  *names = function->function.arguments, *code = function->function.code,
-	                  *value;
+	                  *value = lone_list_create_nil(lone);
 
 	if (function->function.flags.evaluate_arguments) { arguments = lone_evaluate_all(lone, environment, arguments); }
 
@@ -1432,9 +1432,12 @@ static struct lone_value *lone_apply(struct lone_lisp *lone, struct lone_value *
 		}
 	}
 
-	do {
-		value = lone_evaluate(lone, new_environment, lone_list_first(code));
-	} while (!lone_is_nil(code = lone_list_rest(code)));
+	while (1) {
+		if (lone_is_nil(code)) { break; }
+		value = lone_list_first(code);
+		value = lone_evaluate(lone, new_environment, value);
+		code = lone_list_rest(code);
+	}
 
 	if (function->function.flags.evaluate_result) { value = lone_evaluate(lone, environment, value); }
 
@@ -1755,7 +1758,6 @@ static struct lone_value *lone_primitive_lambda_with_flags(struct lone_lisp *lon
 	if (bindings->type != LONE_LIST) { /* parameters not a list: (lambda 10) */ linux_exit(-1); }
 
 	code = lone_list_rest(arguments);
-	if (lone_is_nil(arguments)) { /* no code: (lambda (x)) */ linux_exit(-1); }
 
 	return lone_function_create(lone, bindings, code, environment, flags);
 }
