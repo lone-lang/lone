@@ -150,6 +150,7 @@ struct lone_value {
 		struct lone_function function;
 		struct lone_primitive primitive;
 		struct lone_list list;
+		struct lone_vector vector;
 		struct lone_table table;
 		struct lone_bytes bytes;   /* also used by texts and symbols */
 		long integer;
