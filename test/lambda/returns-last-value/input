@@ -1,0 +1,3 @@
+(import (lone lambda print))
+
+(print ((lambda () "first" "middle" "last")))
