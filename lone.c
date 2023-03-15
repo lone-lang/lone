@@ -417,6 +417,9 @@ static void lone_lisp_initialize(struct lone_lisp *lone, unsigned char *memory, 
 	lone->memory->free = 1;
 	lone->memory->size = size - sizeof(struct lone_memory);
 	lone->values = 0;
+
+	/* basic initialization done, can now use value creation functions */
+
 	lone->symbol_table = lone_table_create(lone, 256, 0);
 	lone->modules.loaded = lone_table_create(lone, 32, 0);
 	struct lone_function_flags import_flags = { .evaluate_arguments = 0, .evaluate_result = 0, .variable_arguments = 1 };
