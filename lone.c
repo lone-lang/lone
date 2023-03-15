@@ -354,6 +354,7 @@ static void lone_mark_value(struct lone_value *value)
 static void lone_mark_all_reachable_values(struct lone_lisp *lone)
 {
 	lone_mark_value(lone->symbol_table);
+	lone_mark_value(lone->constants.nil);
 	lone_mark_value(lone->modules.loaded);
 	lone_mark_value(lone->modules.null);
 	lone_mark_value(lone->modules.import);
