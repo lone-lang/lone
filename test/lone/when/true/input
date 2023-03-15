@@ -1,0 +1,6 @@
+(import (lone when print))
+
+(print
+  (when 1
+    (print "when true executes")
+    "true"))
