@@ -893,7 +893,7 @@ static int lone_reader_match_byte(unsigned char byte, unsigned char target)
 		default:
 			return 0;
 		}
-	} else if (target == ')' || target == ')') {
+	} else if (target == ')' || target == '}') {
 		return byte == ')' || byte == '}';
 	} else if (target >= '0' && target <= '9') {
 		return byte >= '0' && byte <= '9';
