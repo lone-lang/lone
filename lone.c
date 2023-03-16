@@ -2002,6 +2002,35 @@ static struct lone_value *lone_primitive_is_negative(struct lone_lisp *lone, str
 
 /* ╭────────────────────────────────────────────────────────────────────────╮
    │                                                                        │
+   │    Text operations.                                                    │
+   │                                                                        │
+   ╰────────────────────────────────────────────────────────────────────────╯ */
+static struct lone_value *lone_primitive_concatenate(struct lone_lisp *lone, struct lone_value *closure, struct lone_value *environment, struct lone_value *arguments)
+{
+	struct lone_value *head, *argument, *new;
+	unsigned char *temporary;
+	size_t total = 0, position = 0;
+
+	for (head = arguments; !lone_is_nil(head); head = lone_list_rest(head)) {
+		argument = lone_list_first(head);
+		if (argument->type != LONE_TEXT) { /* can only concatenate texts */ linux_exit(-1); }
+		total += argument->bytes.count;
+	}
+
+	temporary = lone_allocate(lone, total);
+
+	for (head = arguments; !lone_is_nil(head); head = lone_list_rest(head)) {
+		argument = lone_list_first(head);
+		lone_memory_move(argument->bytes.pointer, temporary + position, argument->bytes.count);
+		position += argument->bytes.count;
+	}
+
+	new = lone_text_transfer(lone, temporary, total);
+	return new;
+}
+
+/* ╭────────────────────────────────────────────────────────────────────────╮
+   │                                                                        │
    │    Module importing and loading operations.                            │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
@@ -2421,6 +2450,22 @@ static void lone_builtin_module_math_initialize(struct lone_lisp *lone)
 	                     lone_primitive_create(lone,
 	                                           "is_negative",
 	                                           lone_primitive_is_negative,
+	                                           module,
+	                                           (struct lone_function_flags) { 1, 0, 1 }));
+
+	lone_table_set(lone, lone->modules.loaded, name, module);
+}
+
+static void lone_builtin_module_text_initialize(struct lone_lisp *lone)
+{
+	struct lone_value *name = lone_intern_c_string(lone, "text"),
+	                  *module = lone_module_create(lone, name);
+
+	lone_table_set(lone, module->module.environment,
+	                     lone_intern_c_string(lone, "concatenate"),
+	                     lone_primitive_create(lone,
+	                                           "concatenate",
+	                                           lone_primitive_concatenate,
 	                                           module,
 	                                           (struct lone_function_flags) { 1, 0, 1 }));
 
