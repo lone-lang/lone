@@ -2593,6 +2593,7 @@ long lone(int argc, char **argv, char **envp, struct auxiliary *auxv)
 	lone_builtin_module_linux_initialize(&lone, argc, argv, envp, auxv);
 	lone_builtin_module_lone_initialize(&lone);
 	lone_builtin_module_math_initialize(&lone);
+	lone_builtin_module_text_initialize(&lone);
 
 	lone_reader_initialize(&lone, &reader, LONE_BUFFER_SIZE, 0);
 
