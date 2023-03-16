@@ -5,6 +5,8 @@
    │                       The standalone Linux Lisp                        │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
+#include <stdarg.h>
+
 #include <linux/types.h>
 #include <linux/unistd.h>
 #include <linux/auxvec.h>
@@ -628,6 +630,25 @@ static struct lone_value *lone_list_set_first(struct lone_value *list, struct lo
 static struct lone_value *lone_list_set_rest(struct lone_value *list, struct lone_value *rest)
 {
 	return list->list.rest = rest;
+}
+
+static struct lone_value *lone_list_build(struct lone_lisp *lone, size_t count, ...)
+{
+	struct lone_value *list = lone_list_create_nil(lone), *head = list, *argument;
+	va_list arguments;
+	size_t i;
+
+	va_start(arguments, count);
+
+	for (i = 0; i < count; ++i) {
+		argument = va_arg(arguments, struct lone_value *);
+		lone_list_set_first(head, argument);
+		head = lone_list_set_rest(head, lone_list_create_nil(lone));
+	}
+
+	va_end(arguments);
+
+	return list;
 }
 
 static int lone_bytes_equals(struct lone_bytes x, struct lone_bytes y)
