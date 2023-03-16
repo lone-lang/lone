@@ -8,9 +8,9 @@ It has zero dependencies, not even the C standard library.
 
 Currently in the early stages of development.
 
-    (import linux system-call)
+    (import (lone) (linux system-call))
 
-    (system-call "write" 1 "Hello, world!" 13)
+    (system-call 'write 1 "Hello, world!" 13)
 
 ## Building
 
