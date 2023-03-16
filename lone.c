@@ -444,15 +444,20 @@ static struct lone_value *lone_value_create(struct lone_lisp *lone)
 	return &container->value;
 }
 
-static struct lone_value *lone_bytes_create(struct lone_lisp *lone, unsigned char *pointer, size_t count)
+static struct lone_value *lone_bytes_transfer(struct lone_lisp *lone, unsigned char *pointer, size_t count)
 {
 	struct lone_value *value = lone_value_create(lone);
-	unsigned char *copy = lone_allocate(lone, count);
-	lone_memory_move(pointer, copy, count);
 	value->type = LONE_BYTES;
 	value->bytes.count = count;
-	value->bytes.pointer = copy;
+	value->bytes.pointer = pointer;
 	return value;
+}
+
+static struct lone_value *lone_bytes_create(struct lone_lisp *lone, unsigned char *pointer, size_t count)
+{
+	unsigned char *copy = lone_allocate(lone, count);
+	lone_memory_move(pointer, copy, count);
+	return lone_bytes_transfer(lone, copy, count);
 }
 
 static struct lone_value *lone_list_create(struct lone_lisp *lone, struct lone_value *first, struct lone_value *rest)
