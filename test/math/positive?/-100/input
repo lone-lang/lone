@@ -1,0 +1,5 @@
+(import (lone if print) (math positive?))
+
+(if (positive? -100)
+  (print "positive")
+  (print "not positive"))
