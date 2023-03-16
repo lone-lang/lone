@@ -1,0 +1,5 @@
+(import (lone if print) (math zero?))
+
+(if (zero? 1)
+  (print "zero")
+  (print "not zero"))
