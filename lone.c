@@ -1932,6 +1932,20 @@ static struct lone_value *lone_primitive_divide(struct lone_lisp *lone, struct l
 	}
 }
 
+static struct lone_value *lone_primitive_sign(struct lone_lisp *lone, struct lone_value *closure, struct lone_value *environment, struct lone_value *arguments)
+{
+	struct lone_value *value;
+	if (lone_is_nil(arguments)) { /* no arguments: (sign) */ linux_exit(-1); }
+	value = lone_list_first(arguments);
+	if (!lone_is_nil(lone_list_rest(arguments))) { /* too many arguments: (sign 1 2 3) */ linux_exit(-1); }
+
+	if (value->type == LONE_INTEGER) {
+		return lone_integer_create(lone, value->integer > 0? 1 : value->integer < 0? -1 : 0);
+	} else {
+		linux_exit(-1);
+	}
+}
+
 /* ╭────────────────────────────────────────────────────────────────────────╮
    │                                                                        │
    │    Module importing and loading operations.                            │
@@ -2321,6 +2335,14 @@ static void lone_builtin_module_math_initialize(struct lone_lisp *lone)
 	                     lone_primitive_create(lone,
 	                                           "divide",
 	                                           lone_primitive_divide,
+	                                           module,
+	                                           (struct lone_function_flags) { 1, 0, 1 }));
+
+	lone_table_set(lone, module->module.environment,
+	                     lone_intern_c_string(lone, "sign"),
+	                     lone_primitive_create(lone,
+	                                           "sign",
+	                                           lone_primitive_sign,
 	                                           module,
 	                                           (struct lone_function_flags) { 1, 0, 1 }));
 
