@@ -620,12 +620,12 @@ static int lone_is_nil(struct lone_value *value)
 	return value->type == LONE_LIST && value->list.first == 0 && value->list.rest == 0;
 }
 
-static struct lone_value *lone_list_set(struct lone_value *list, struct lone_value *value)
+static struct lone_value *lone_list_set_first(struct lone_value *list, struct lone_value *value)
 {
 	return list->list.first = value;
 }
 
-static struct lone_value *lone_list_append(struct lone_value *list, struct lone_value *rest)
+static struct lone_value *lone_list_set_rest(struct lone_value *list, struct lone_value *rest)
 {
 	return list->list.rest = rest;
 }
@@ -1235,8 +1235,8 @@ static struct lone_value *lone_parse_list(struct lone_lisp *lone, struct lone_re
 			break;
 		}
 
-		lone_list_set(list, lone_parse(lone, reader, next));
-		list = lone_list_append(list, lone_list_create_nil(lone));
+		lone_list_set_first(list, lone_parse(lone, reader, next));
+		list = lone_list_set_rest(list, lone_list_create_nil(lone));
 	}
 
 	return first;
@@ -1408,8 +1408,8 @@ static struct lone_value *lone_evaluate_all(struct lone_lisp *lone, struct lone_
 	struct lone_value *evaluated = lone_list_create_nil(lone), *head;
 
 	for (head = evaluated; !lone_is_nil(list); list = lone_list_rest(list)) {
-		lone_list_set(head, lone_evaluate(lone, environment, lone_list_first(list)));
-		head = lone_list_append(head, lone_list_create_nil(lone));
+		lone_list_set_first(head, lone_evaluate(lone, environment, lone_list_first(list)));
+		head = lone_list_set_rest(head, lone_list_create_nil(lone));
 	}
 
 	return evaluated;
@@ -2247,8 +2247,8 @@ static struct lone_value *lone_arguments_to_list(struct lone_lisp *lone, int cou
 	int i;
 
 	for (i = 0, head = arguments; i < count; ++i) {
-		lone_list_set(head, lone_text_create_from_c_string(lone, c_strings[i]));
-		head = lone_list_append(head, lone_list_create_nil(lone));
+		lone_list_set_first(head, lone_text_create_from_c_string(lone, c_strings[i]));
+		head = lone_list_set_rest(head, lone_list_create_nil(lone));
 	}
 
 	return arguments;
