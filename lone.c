@@ -565,6 +565,13 @@ static struct lone_value *lone_pointer_create(struct lone_lisp *lone, void *poin
 	return value;
 }
 
+static struct lone_value *lone_text_transfer(struct lone_lisp *lone, unsigned char *text, size_t length)
+{
+	struct lone_value *value = lone_bytes_transfer(lone, text, length);
+	value->type = LONE_TEXT;
+	return value;
+}
+
 static struct lone_value *lone_text_create(struct lone_lisp *lone, unsigned char *text, size_t length)
 {
 	struct lone_value *value = lone_bytes_create(lone, text, length);
