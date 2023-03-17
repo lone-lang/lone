@@ -5,6 +5,7 @@
    │                       The standalone Linux Lisp                        │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
+#include <stdbool.h>
 #include <stdarg.h>
 
 #include <linux/types.h>
@@ -160,6 +161,8 @@ struct lone_value {
 		void *pointer;
 	};
 };
+
+typedef bool (*lone_predicate)(struct lone_value *);
 
 /* ╭───────────────────────┨ LONE LISP INTERPRETER ┠────────────────────────╮
    │                                                                        │
