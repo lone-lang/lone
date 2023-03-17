@@ -2390,6 +2390,26 @@ static void lone_fill_linux_system_call_table(struct lone_lisp *lone, struct lon
    │    Built-in modules containing essential functionality.                │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
+static struct lone_value *lone_module_load(struct lone_lisp *lone, int file_descriptor)
+{
+	struct lone_reader reader;
+	struct lone_value *value;
+
+	#define LONE_BUFFER_SIZE 4096
+	lone_reader_initialize(lone, &reader, LONE_BUFFER_SIZE, file_descriptor);
+
+	while (1) {
+		value = lone_read(lone, &reader);
+		if (!value) { if (reader.error) { linux_exit(-1); } else { break; } }
+
+		value = lone_evaluate_module(lone, lone->modules.null, value);
+	}
+
+	lone_garbage_collector(lone);
+
+	return value;
+}
+
 static void lone_builtin_module_linux_initialize(struct lone_lisp *lone, int argc, char **argv, char **envp, struct auxiliary *auxv)
 {
 	struct lone_value *name = lone_intern_c_string(lone, "linux"),
@@ -2630,11 +2650,9 @@ static void lone_builtin_module_lone_initialize(struct lone_lisp *lone)
    ╰────────────────────────────────────────────────────────────────────────╯ */
 long lone(int argc, char **argv, char **envp, struct auxiliary *auxv)
 {
-	#define LONE_BUFFER_SIZE 4096
 	#define LONE_MEMORY_SIZE (1024 * 1024)
 	static unsigned char memory[LONE_MEMORY_SIZE];
 	struct lone_lisp lone;
-	struct lone_reader reader;
 
 	lone_lisp_initialize(&lone, memory, sizeof(memory));
 
@@ -2643,22 +2661,8 @@ long lone(int argc, char **argv, char **envp, struct auxiliary *auxv)
 	lone_builtin_module_math_initialize(&lone);
 	lone_builtin_module_text_initialize(&lone);
 
-	lone_reader_initialize(&lone, &reader, LONE_BUFFER_SIZE, 0);
 
-	while (1) {
-		struct lone_value *value = lone_read(&lone, &reader);
-		if (!value) {
-			if (reader.error) {
-				return -1;
-			} else {
-				break;
-			}
-		}
-
-		value = lone_evaluate_module(&lone, lone.modules.null, value);
-
-		lone_garbage_collector(&lone);
-	}
+	lone_module_load(&lone, 0);
 
 	return 0;
 }
