@@ -456,6 +456,11 @@ static struct lone_value *lone_bytes_transfer(struct lone_lisp *lone, unsigned c
 	return value;
 }
 
+static struct lone_value *lone_bytes_transfer_bytes(struct lone_lisp *lone, struct lone_bytes bytes)
+{
+	return lone_bytes_transfer(lone, bytes.pointer, bytes.count);
+}
+
 static struct lone_value *lone_bytes_create(struct lone_lisp *lone, unsigned char *pointer, size_t count)
 {
 	unsigned char *copy = lone_allocate(lone, count);
@@ -573,6 +578,11 @@ static struct lone_value *lone_text_transfer(struct lone_lisp *lone, unsigned ch
 	struct lone_value *value = lone_bytes_transfer(lone, text, length);
 	value->type = LONE_TEXT;
 	return value;
+}
+
+static struct lone_value *lone_text_transfer_bytes(struct lone_lisp *lone, struct lone_bytes bytes)
+{
+	return lone_text_transfer(lone, bytes.pointer, bytes.count);
 }
 
 static struct lone_value *lone_text_create(struct lone_lisp *lone, unsigned char *text, size_t length)
