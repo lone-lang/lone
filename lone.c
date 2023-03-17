@@ -632,6 +632,11 @@ static bool lone_is_bytes(struct lone_value *value)
 	return value->type == LONE_BYTES;
 }
 
+static bool lone_is_text(struct lone_value *value)
+{
+	return value->type == LONE_TEXT;
+}
+
 static inline struct lone_value *lone_list_first(struct lone_value *value)
 {
 	return value->list.first;
