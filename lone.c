@@ -709,6 +709,35 @@ static inline int lone_bytes_equals_c_string(struct lone_bytes bytes, char *c_st
 	return lone_bytes_equals(bytes, c_string_bytes);
 }
 
+static struct lone_bytes lone_concatenate(struct lone_lisp *lone, struct lone_value *arguments, lone_predicate is_valid)
+{
+	struct lone_value *head, *argument;
+	unsigned char *concatenated;
+	size_t total = 0, position = 0;
+
+	if (!is_valid) { is_valid = lone_has_bytes; }
+	if (is_valid != lone_has_bytes && is_valid != lone_is_bytes &&
+	    is_valid != lone_is_text   && is_valid != lone_is_symbol) {
+		/* invalid predicate function */ linux_exit(-1);
+	}
+
+	for (head = arguments; !lone_is_nil(head); head = lone_list_rest(head)) {
+		argument = lone_list_first(head);
+		if (!is_valid(argument)) { linux_exit(-1); }
+		total += argument->bytes.count;
+	}
+
+	concatenated = lone_allocate(lone, total);
+
+	for (head = arguments; !lone_is_nil(head); head = lone_list_rest(head)) {
+		argument = lone_list_first(head);
+		lone_memory_move(argument->bytes.pointer, concatenated + position, argument->bytes.count);
+		position += argument->bytes.count;
+	}
+
+	return (struct lone_bytes) { .count = total, .pointer = concatenated };
+}
+
 static void lone_vector_resize(struct lone_lisp *lone, struct lone_value *vector, size_t new_capacity)
 {
 	struct lone_value **new = lone_allocate(lone, new_capacity * sizeof(struct lone_value *));
@@ -2040,26 +2069,7 @@ static struct lone_value *lone_primitive_is_negative(struct lone_lisp *lone, str
    ╰────────────────────────────────────────────────────────────────────────╯ */
 static struct lone_value *lone_primitive_concatenate(struct lone_lisp *lone, struct lone_value *closure, struct lone_value *environment, struct lone_value *arguments)
 {
-	struct lone_value *head, *argument, *new;
-	unsigned char *temporary;
-	size_t total = 0, position = 0;
-
-	for (head = arguments; !lone_is_nil(head); head = lone_list_rest(head)) {
-		argument = lone_list_first(head);
-		if (argument->type != LONE_TEXT) { /* can only concatenate texts */ linux_exit(-1); }
-		total += argument->bytes.count;
-	}
-
-	temporary = lone_allocate(lone, total);
-
-	for (head = arguments; !lone_is_nil(head); head = lone_list_rest(head)) {
-		argument = lone_list_first(head);
-		lone_memory_move(argument->bytes.pointer, temporary + position, argument->bytes.count);
-		position += argument->bytes.count;
-	}
-
-	new = lone_text_transfer(lone, temporary, total);
-	return new;
+	return lone_text_transfer_bytes(lone, lone_concatenate(lone, arguments, lone_is_text));
 }
 
 /* ╭────────────────────────────────────────────────────────────────────────╮
