@@ -463,8 +463,9 @@ static struct lone_value *lone_bytes_transfer_bytes(struct lone_lisp *lone, stru
 
 static struct lone_value *lone_bytes_create(struct lone_lisp *lone, unsigned char *pointer, size_t count)
 {
-	unsigned char *copy = lone_allocate(lone, count);
+	unsigned char *copy = lone_allocate(lone, count + 1);
 	lone_memory_move(pointer, copy, count);
+	copy[count] = '\0';
 	return lone_bytes_transfer(lone, copy, count);
 }
 
@@ -727,13 +728,15 @@ static struct lone_bytes lone_concatenate(struct lone_lisp *lone, struct lone_va
 		total += argument->bytes.count;
 	}
 
-	concatenated = lone_allocate(lone, total);
+	concatenated = lone_allocate(lone, total + 1);
 
 	for (head = arguments; !lone_is_nil(head); head = lone_list_rest(head)) {
 		argument = lone_list_first(head);
 		lone_memory_move(argument->bytes.pointer, concatenated + position, argument->bytes.count);
 		position += argument->bytes.count;
 	}
+
+	concatenated[total] = '\0';
 
 	return (struct lone_bytes) { .count = total, .pointer = concatenated };
 }
