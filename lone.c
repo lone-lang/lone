@@ -1420,7 +1420,9 @@ static struct lone_value *lone_evaluate_form_index(struct lone_lisp *lone, struc
 		get = lone_table_get;
 		set = lone_table_set;
 		break;
-	default:
+	case LONE_MODULE: case LONE_FUNCTION: case LONE_PRIMITIVE:
+	case LONE_BYTES: case LONE_SYMBOL: case LONE_TEXT:
+	case LONE_LIST: case LONE_INTEGER: case LONE_POINTER:
 		linux_exit(-1);
 	}
 
