@@ -625,6 +625,11 @@ static struct lone_value *lone_table_create(struct lone_lisp *lone, size_t capac
 	return value;
 }
 
+/* ╭────────────────────────────────────────────────────────────────────────╮
+   │                                                                        │
+   │    Lone integers are currently signed fixed-length integers.           │
+   │                                                                        │
+   ╰────────────────────────────────────────────────────────────────────────╯ */
 static struct lone_value *lone_integer_create(struct lone_lisp *lone, long integer)
 {
 	struct lone_value *value = lone_value_create(lone);
