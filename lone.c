@@ -655,6 +655,11 @@ static struct lone_value *lone_integer_parse(struct lone_lisp *lone, unsigned ch
 	return lone_integer_create(lone, integer);
 }
 
+/* ╭────────────────────────────────────────────────────────────────────────╮
+   │                                                                        │
+   │    Lone pointers do not own the data they point to.                    │
+   │                                                                        │
+   ╰────────────────────────────────────────────────────────────────────────╯ */
 static struct lone_value *lone_pointer_create(struct lone_lisp *lone, void *pointer)
 {
 	struct lone_value *value = lone_value_create(lone);
