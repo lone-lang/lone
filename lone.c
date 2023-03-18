@@ -572,6 +572,17 @@ static struct lone_value *lone_primitive_create(struct lone_lisp *lone, char *na
 	return value;
 }
 
+/* ╭────────────────────────────────────────────────────────────────────────╮
+   │                                                                        │
+   │    Lone vectors are simple dynamic arrays of lone values.              │
+   │    They grow automatically as elements are added.                      │
+   │    Any index may be used regardless of current length:                 │
+   │    all the elements remain unset as the array grows.                   │
+   │    Unset elements are null pointers which are currently                │
+   │    converted to nil automatically but might one day serve              │
+   │    as an undefined value like in other languages.                      │
+   │                                                                        │
+   ╰────────────────────────────────────────────────────────────────────────╯ */
 static struct lone_value *lone_vector_create(struct lone_lisp *lone, size_t capacity)
 {
 	struct lone_value *value = lone_value_create(lone);
