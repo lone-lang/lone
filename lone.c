@@ -706,6 +706,14 @@ static struct lone_value *lone_text_create_from_c_string(struct lone_lisp *lone,
 	return lone_text_create(lone, (unsigned char *) c_string, lone_c_string_length(c_string));
 }
 
+/* ╭────────────────────────────────────────────────────────────────────────╮
+   │                                                                        │
+   │    Lone symbols are like lone texts but are interned in a table.       │
+   │    Symbol table interning deduplicates them in memory,                 │
+   │    enabling fast identity-based comparisons via pointer equality.      │
+   │    However, this means they won't be garbage collected.                │
+   │                                                                        │
+   ╰────────────────────────────────────────────────────────────────────────╯ */
 static struct lone_value *lone_symbol_create(struct lone_lisp *lone, unsigned char *text, size_t length)
 {
 	struct lone_value *value = lone_bytes_create(lone, text, length);
