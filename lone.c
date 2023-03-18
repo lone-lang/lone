@@ -54,6 +54,14 @@ static ssize_t __attribute__((fd_arg_write(1), tainted_args)) linux_write(int fd
 	#error "Unsupported architecture"
 #endif
 
+#ifndef LONE_BUFFER_SIZE
+	#define LONE_BUFFER_SIZE 4096
+#endif
+
+#ifndef LONE_MEMORY_SIZE
+	#define LONE_MEMORY_SIZE (1024 * 1024)
+#endif
+
 /* ╭──────────────────────────┨ LONE LISP TYPES ┠───────────────────────────╮
    │                                                                        │
    │    Lone implements dynamic data types as a tagged union.               │
@@ -2395,7 +2403,6 @@ static struct lone_value *lone_module_load(struct lone_lisp *lone, int file_desc
 	struct lone_reader reader;
 	struct lone_value *value;
 
-	#define LONE_BUFFER_SIZE 4096
 	lone_reader_initialize(lone, &reader, LONE_BUFFER_SIZE, file_descriptor);
 
 	while (1) {
@@ -2650,7 +2657,6 @@ static void lone_builtin_module_lone_initialize(struct lone_lisp *lone)
    ╰────────────────────────────────────────────────────────────────────────╯ */
 long lone(int argc, char **argv, char **envp, struct auxiliary *auxv)
 {
-	#define LONE_MEMORY_SIZE (1024 * 1024)
 	static unsigned char memory[LONE_MEMORY_SIZE];
 	struct lone_lisp lone;
 
