@@ -450,6 +450,22 @@ static struct lone_value *lone_value_create(struct lone_lisp *lone)
 	return &container->value;
 }
 
+/* ╭────────────────────────────────────────────────────────────────────────╮
+   │                                                                        │
+   │    Lone bytes values are initialized with a pointer to a memory        │
+   │    block of known size. It can take ownership of the block             │
+   │    through the transfer functions or it can make a copy of it          │
+   │    via the create functions. Ownership means the block is              │
+   │    deallocated when the value is garbage collected,                    │
+   │    so it is advisable to copy data not owned by lone                   │
+   │    such as C string literals.                                          │
+   │                                                                        │
+   │    Copies will automatically include a hidden trailing null            │
+   │    byte to ease compatibility with code expecting C strings.           │
+   │    Transferred buffers should also contain that null byte              │
+   │    but the lone bytes type currently has no way to enforce this.       │
+   │                                                                        │
+   ╰────────────────────────────────────────────────────────────────────────╯ */
 static struct lone_value *lone_bytes_transfer(struct lone_lisp *lone, unsigned char *pointer, size_t count)
 {
 	struct lone_value *value = lone_value_create(lone);
