@@ -743,6 +743,11 @@ static struct lone_value *lone_intern_c_string(struct lone_lisp *lone, char *c_s
 	return lone_intern(lone, (unsigned char *) c_string, lone_c_string_length(c_string));
 }
 
+/* ╭────────────────────────────────────────────────────────────────────────╮
+   │                                                                        │
+   │    Lone modules are named isolated environments for evaluation.        │
+   │                                                                        │
+   ╰────────────────────────────────────────────────────────────────────────╯ */
 static struct lone_value *lone_module_create(struct lone_lisp *lone, struct lone_value *name)
 {
 	struct lone_value *value = lone_value_create(lone);
