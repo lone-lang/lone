@@ -721,12 +721,27 @@ static struct lone_value *lone_symbol_create(struct lone_lisp *lone, unsigned ch
 	return value;
 }
 
-static struct lone_value *lone_symbol_create_from_c_string(struct lone_lisp *lone, char *c_string)
+static bool lone_is_nil(struct lone_value *);
+static struct lone_value *lone_table_get(struct lone_lisp *, struct lone_value *, struct lone_value *);
+static void lone_table_set(struct lone_lisp *, struct lone_value *, struct lone_value *, struct lone_value *);
+
+static struct lone_value *lone_intern(struct lone_lisp *lone, unsigned char *bytes, size_t count)
 {
-	return lone_symbol_create(lone, (unsigned char*) c_string, lone_c_string_length(c_string));
+	struct lone_value *key = lone_bytes_create(lone, bytes, count),
+	                  *value = lone_table_get(lone, lone->symbol_table, key);
+
+	if (lone_is_nil(value)) {
+		value = lone_symbol_create(lone, bytes, count);
+		lone_table_set(lone, lone->symbol_table, key, value);
+	}
+
+	return value;
 }
 
-static void lone_table_set(struct lone_lisp *, struct lone_value *, struct lone_value *, struct lone_value *);
+static struct lone_value *lone_intern_c_string(struct lone_lisp *lone, char *c_string)
+{
+	return lone_intern(lone, (unsigned char *) c_string, lone_c_string_length(c_string));
+}
 
 static struct lone_value *lone_module_create(struct lone_lisp *lone, struct lone_value *name)
 {
@@ -1045,24 +1060,6 @@ static void lone_table_delete(struct lone_lisp *lone, struct lone_value *table, 
 	entries[i].key = 0;
 	entries[i].value = 0;
 	--table->table.count;
-}
-
-static struct lone_value *lone_intern(struct lone_lisp *lone, unsigned char *bytes, size_t count)
-{
-	struct lone_value *key = lone_bytes_create(lone, bytes, count),
-	                  *value = lone_table_get(lone, lone->symbol_table, key);
-
-	if (lone_is_nil(value)) {
-		value = lone_symbol_create(lone, bytes, count);
-		lone_table_set(lone, lone->symbol_table, key, value);
-	}
-
-	return value;
-}
-
-static struct lone_value *lone_intern_c_string(struct lone_lisp *lone, char *c_string)
-{
-	return lone_intern(lone, (unsigned char *) c_string, lone_c_string_length(c_string));
 }
 
 /* ╭─────────────────────────┨ LONE LISP READER ┠───────────────────────────╮
