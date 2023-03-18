@@ -71,6 +71,7 @@ static ssize_t __attribute__((fd_arg_write(1), tainted_args)) linux_write(int fd
    │        ◦ Function     the reusable executable expressions type         │
    │        ◦ Primitive    the built-in C subroutine type                   │
    │        ◦ List         the linked list and tree type                    │
+   │        ◦ Vector       the contiguous array of values type              │
    │        ◦ Table        the hash table, prototype and object type        │
    │        ◦ Symbol       the keyword and interned string type             │
    │        ◦ Text         the UTF-8 encoded text type                      │
