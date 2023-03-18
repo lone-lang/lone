@@ -441,31 +441,6 @@ static void lone_garbage_collector(struct lone_lisp *lone)
    │    Initializers and creation functions for lone's types.               │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
-static struct lone_value *lone_list_create_nil(struct lone_lisp *);
-static struct lone_value *lone_module_create(struct lone_lisp *, struct lone_value *);
-static struct lone_value *lone_primitive_create(struct lone_lisp *, char *, lone_primitive, struct lone_value *, struct lone_function_flags);
-static struct lone_value *lone_primitive_import(struct lone_lisp *, struct lone_value *, struct lone_value *, struct lone_value *);
-static struct lone_value *lone_table_create(struct lone_lisp *, size_t, struct lone_value *);
-static void lone_table_set(struct lone_lisp *, struct lone_value *, struct lone_value *, struct lone_value *);
-
-static void lone_lisp_initialize(struct lone_lisp *lone, unsigned char *memory, size_t size)
-{
-	lone->memory = (struct lone_memory *) memory;
-	lone->memory->prev = lone->memory->next = 0;
-	lone->memory->free = 1;
-	lone->memory->size = size - sizeof(struct lone_memory);
-	lone->values = 0;
-
-	/* basic initialization done, can now use value creation functions */
-
-	lone->constants.nil = lone_list_create_nil(lone);
-	lone->symbol_table = lone_table_create(lone, 256, 0);
-	lone->modules.loaded = lone_table_create(lone, 32, 0);
-	struct lone_function_flags import_flags = { .evaluate_arguments = 0, .evaluate_result = 0, .variable_arguments = 1 };
-	lone->modules.import = lone_primitive_create(lone, "import", lone_primitive_import, 0, import_flags);
-	lone->modules.null = lone_module_create(lone, 0);
-}
-
 static struct lone_value *lone_value_create(struct lone_lisp *lone)
 {
 	struct lone_value_container *container = lone_allocate(lone, sizeof(struct lone_value_container));
@@ -646,6 +621,8 @@ static struct lone_value *lone_symbol_create_from_c_string(struct lone_lisp *lon
 	return lone_symbol_create(lone, (unsigned char*) c_string, lone_c_string_length(c_string));
 }
 
+static void lone_table_set(struct lone_lisp *, struct lone_value *, struct lone_value *, struct lone_value *);
+
 static struct lone_value *lone_module_create(struct lone_lisp *lone, struct lone_value *name)
 {
 	struct lone_value *value = lone_value_create(lone);
@@ -654,6 +631,26 @@ static struct lone_value *lone_module_create(struct lone_lisp *lone, struct lone
 	value->module.environment = lone_table_create(lone, 64, 0);
 	lone_table_set(lone, value->module.environment, lone_intern_c_string(lone, "import"), lone->modules.import);
 	return value;
+}
+
+static struct lone_value *lone_primitive_import(struct lone_lisp *, struct lone_value *, struct lone_value *, struct lone_value *);
+
+static void lone_lisp_initialize(struct lone_lisp *lone, unsigned char *memory, size_t size)
+{
+	lone->memory = (struct lone_memory *) memory;
+	lone->memory->prev = lone->memory->next = 0;
+	lone->memory->free = 1;
+	lone->memory->size = size - sizeof(struct lone_memory);
+	lone->values = 0;
+
+	/* basic initialization done, can now use value creation functions */
+
+	lone->constants.nil = lone_list_create_nil(lone);
+	lone->symbol_table = lone_table_create(lone, 256, 0);
+	lone->modules.loaded = lone_table_create(lone, 32, 0);
+	struct lone_function_flags import_flags = { .evaluate_arguments = 0, .evaluate_result = 0, .variable_arguments = 1 };
+	lone->modules.import = lone_primitive_create(lone, "import", lone_primitive_import, 0, import_flags);
+	lone->modules.null = lone_module_create(lone, 0);
 }
 
 /* ╭────────────────────────────────────────────────────────────────────────╮
