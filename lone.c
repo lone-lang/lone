@@ -181,7 +181,6 @@ typedef bool (*lone_predicate)(struct lone_value *);
    │    symbols, all the loaded modules and the top level null module.      │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
-struct lone_memory;
 struct lone_lisp {
 	struct lone_memory *memory;
 	struct lone_value_container *values;
