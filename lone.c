@@ -178,7 +178,8 @@ typedef bool (*lone_predicate)(struct lone_value *);
    │    The lone lisp interpreter is composed of all internal state         │
    │    necessary to process useful programs. It includes memory,           │
    │    references to all allocated objects, a table of interned            │
-   │    symbols, all the loaded modules and the top level null module.      │
+   │    symbols, references to constant values such as nil and              │
+   │    a table of loaded modules and the top level null module.            │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
 struct lone_lisp {
