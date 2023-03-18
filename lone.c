@@ -668,6 +668,12 @@ static struct lone_value *lone_pointer_create(struct lone_lisp *lone, void *poin
 	return value;
 }
 
+/* ╭────────────────────────────────────────────────────────────────────────╮
+   │                                                                        │
+   │    Lone texts are lone's strings and represent UTF-8 encoded text.     │
+   │    Transfer and creation functions work like lone bytes.               │
+   │                                                                        │
+   ╰────────────────────────────────────────────────────────────────────────╯ */
 static struct lone_value *lone_text_transfer(struct lone_lisp *lone, unsigned char *text, size_t length)
 {
 	struct lone_value *value = lone_bytes_transfer(lone, text, length);
