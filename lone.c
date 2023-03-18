@@ -760,6 +760,14 @@ static struct lone_value *lone_module_create(struct lone_lisp *lone, struct lone
 
 static struct lone_value *lone_primitive_import(struct lone_lisp *, struct lone_value *, struct lone_value *, struct lone_value *);
 
+/* ╭────────────────────────────────────────────────────────────────────────╮
+   │                                                                        │
+   │    The lone lisp structure represents the lone lisp interpreter.       │
+   │    A pointer to this structure is passed to nearly every function.     │
+   │    It must be initialized before everything else since the memory      │
+   │    allocation system is not functional without it.                     │
+   │                                                                        │
+   ╰────────────────────────────────────────────────────────────────────────╯ */
 static void lone_lisp_initialize(struct lone_lisp *lone, unsigned char *memory, size_t size)
 {
 	lone->memory = (struct lone_memory *) memory;
