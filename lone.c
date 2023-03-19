@@ -2230,46 +2230,63 @@ static struct lone_value *lone_primitive_concatenate(struct lone_lisp *lone, str
    │    Module importing and loading operations.                            │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
+static void lone_primitive_import_all(struct lone_lisp *lone, struct lone_value *environment, struct lone_value *module)
+{
+	/* full import, bind all symbols: (import (module)) */
+	struct lone_table_entry *entries = module->module.environment->table.entries;
+	size_t i, capacity = module->module.environment->table.capacity;
+
+	for (i = 0; i < capacity; ++i) {
+		if (entries[i].key) {
+			lone_table_set(lone, environment, entries[i].key, entries[i].value);
+		}
+	}
+}
+
+static void lone_primitive_import_only(struct lone_lisp *lone, struct lone_value *environment, struct lone_value *module, struct lone_value *symbols)
+{
+	struct lone_value *symbol, *value;
+
+	/* limited import, bind only specified symbols: (import (module x f)) */
+	do {
+		symbol = lone_list_first(symbols);
+		if (symbol->type != LONE_SYMBOL) { /* name not a symbol: (import (module 10)) */ linux_exit(-1); }
+
+		value = lone_table_get(lone, module->module.environment, symbol);
+		if (lone_is_nil(value)) { /* name not set in module */ linux_exit(-1); }
+
+		lone_table_set(lone, environment, symbol, value);
+
+	} while (!lone_is_nil(symbols = lone_list_rest(symbols)));
+}
+
+static void lone_primitive_import_argument(struct lone_lisp *lone, struct lone_value *environment, struct lone_value *argument)
+{
+	struct lone_value *name, *module;
+
+	if (argument->type != LONE_LIST) { /* not an import list: (import module) */ linux_exit(-1); }
+	if (lone_is_nil(argument)) { /* nothing to import: (import ()) */ linux_exit(-1); }
+
+	name = lone_list_first(argument);
+	if (name->type != LONE_SYMBOL) { /* module name not a symbol: (import (10)) */ linux_exit(-1); }
+
+	module = lone_table_get(lone, lone->modules.loaded, name);
+	if (lone_is_nil(module)) { /* module not found: (import (non-existent)) */ linux_exit(-1); }
+
+	argument = lone_list_rest(argument);
+	if (lone_is_nil(argument)) {
+		lone_primitive_import_all(lone, environment, module);
+	} else {
+		lone_primitive_import_only(lone, environment, module, argument);
+	}
+}
+
 static struct lone_value *lone_primitive_import(struct lone_lisp *lone, struct lone_value *closure, struct lone_value *environment, struct lone_value *arguments)
 {
-	struct lone_value *argument, *name, *module, *value;
-
 	if (lone_is_nil(arguments)) { /* nothing to import: (import) */ linux_exit(-1); }
 
 	for (/* argument */; !lone_is_nil(arguments); arguments = lone_list_rest(arguments)) {
-		argument = lone_list_first(arguments);
-		if (argument->type != LONE_LIST) { /* not an import list: (import module) */ linux_exit(-1); }
-
-		if (lone_is_nil(argument)) { /* nothing to import: (import ()) */ linux_exit(-1); }
-		name = lone_list_first(argument);
-		if (name->type != LONE_SYMBOL) { /* module name not a symbol: (import (10)) */ linux_exit(-1); }
-		module = lone_table_get(lone, lone->modules.loaded, name);
-		if (lone_is_nil(module)) { /* module not found: (import (non-existent)) */ linux_exit(-1); }
-		argument = lone_list_rest(argument);
-
-		if (lone_is_nil(argument)) {
-			/* full import, bind all symbols: (import (module)) */
-			struct lone_table_entry *entries = module->module.environment->table.entries;
-			size_t i, capacity = module->module.environment->table.capacity;
-			for (i = 0; i < capacity; ++i) {
-				if (entries[i].key) {
-					lone_table_set(lone, environment, entries[i].key, entries[i].value);
-				}
-			}
-		} else {
-			/* limited import, bind only specified symbols: (import (module x f)) */
-			do {
-				name = lone_list_first(argument);
-				if (name->type != LONE_SYMBOL) { /* name not a symbol: (import (module 10)) */ linux_exit(-1); }
-
-				value = lone_table_get(lone, module->module.environment, name);
-				if (lone_is_nil(value)) { /* name not set in module */ linux_exit(-1); }
-
-				lone_table_set(lone, environment, name, value);
-
-				argument = lone_list_rest(argument);
-			} while (!lone_is_nil(argument));
-		}
+		lone_primitive_import_argument(lone, environment, lone_list_first(arguments));
 	}
 
 	return lone_nil(lone);
