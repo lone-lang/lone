@@ -1,0 +1,4 @@
+(import (lone print quote set))
+
+(set t { symbol "symbol" "symbol" "text"})
+(print (t 'symbol) (t "symbol"))
