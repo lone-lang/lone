@@ -1055,7 +1055,6 @@ static inline size_t lone_table_compute_hash_for(struct lone_value *key, size_t 
 	case LONE_LIST:
 	case LONE_VECTOR:
 	case LONE_TABLE:
-	case LONE_POINTER:
 		linux_exit(-1);
 	case LONE_SYMBOL:
 	case LONE_TEXT:
@@ -1064,6 +1063,9 @@ static inline size_t lone_table_compute_hash_for(struct lone_value *key, size_t 
 		break;
 	case LONE_INTEGER:
 		result = fnv_1a((unsigned char *) &key->integer, sizeof(key->integer));
+		break;
+	case LONE_POINTER:
+		result = fnv_1a((unsigned char *) &key->pointer, sizeof(key->pointer));
 		break;
 	}
 
