@@ -1080,7 +1080,7 @@ static inline size_t lone_table_hash(struct lone_value *key)
 		break;
 	}
 
-	hash = fnv_1a(bytes);
+	hash ^= fnv_1a(bytes);
 
 	return hash;
 }
