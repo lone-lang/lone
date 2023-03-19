@@ -2162,6 +2162,11 @@ static struct lone_value *lone_primitive_is_identical(struct lone_lisp *lone, st
 	return lone_apply_equality_function(lone, arguments, lone_is_identical);
 }
 
+static struct lone_value *lone_primitive_is_equivalent(struct lone_lisp *lone, struct lone_value *closure, struct lone_value *environment, struct lone_value *arguments)
+{
+	return lone_apply_equality_function(lone, arguments, lone_is_equivalent);
+}
+
 static struct lone_value *lone_primitive_print(struct lone_lisp *lone, struct lone_value *closure, struct lone_value *environment, struct lone_value *arguments)
 {
 	while (!lone_is_nil(arguments)) {
@@ -2904,6 +2909,14 @@ static void lone_builtin_module_lone_initialize(struct lone_lisp *lone)
 	                     lone_primitive_create(lone,
 	                                           "is_identical",
 	                                           lone_primitive_is_identical,
+	                                           module,
+	                                           (struct lone_function_flags) { 1, 0, 1 }));
+
+	lone_table_set(lone, module->module.environment,
+	                     lone_intern_c_string(lone, "equivalent?"),
+	                     lone_primitive_create(lone,
+	                                           "is_equivalent",
+	                                           lone_primitive_is_equivalent,
 	                                           module,
 	                                           (struct lone_function_flags) { 1, 0, 1 }));
 
