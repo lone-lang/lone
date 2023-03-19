@@ -1050,6 +1050,8 @@ static inline size_t lone_table_compute_hash_for(struct lone_value *key, size_t 
 {
 	struct lone_bytes bytes;
 
+	if (!key) { /* a null key is probably a bug */ linux_exit(-1); }
+
 	switch (key->type) {
 	case LONE_MODULE:
 	case LONE_FUNCTION:
