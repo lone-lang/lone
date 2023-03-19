@@ -2113,6 +2113,27 @@ static struct lone_value *lone_primitive_lambda_star(struct lone_lisp *lone, str
 	return lone_primitive_lambda_with_flags(lone, closure, environment, arguments, flags);
 }
 
+static struct lone_value *lone_apply_equality_function(struct lone_lisp *lone, struct lone_value *arguments, lone_comparator equal)
+{
+	struct lone_value *argument, *next;
+
+	while (1) {
+		if (lone_is_nil(arguments)) { break; }
+		argument = lone_list_first(arguments);
+		arguments = lone_list_rest(arguments);
+		next = lone_list_first(arguments);
+
+		if (next && !equal(argument, next)) { return lone_nil(lone); }
+	}
+
+	return lone_true(lone);
+}
+
+static struct lone_value *lone_primitive_is_identical(struct lone_lisp *lone, struct lone_value *closure, struct lone_value *environment, struct lone_value *arguments)
+{
+	return lone_apply_equality_function(lone, arguments, lone_is_identical);
+}
+
 static struct lone_value *lone_primitive_print(struct lone_lisp *lone, struct lone_value *closure, struct lone_value *environment, struct lone_value *arguments)
 {
 	while (!lone_is_nil(arguments)) {
@@ -2847,6 +2868,14 @@ static void lone_builtin_module_lone_initialize(struct lone_lisp *lone)
 	                     lone_primitive_create(lone,
 	                                           "print",
 	                                           lone_primitive_print,
+	                                           module,
+	                                           (struct lone_function_flags) { 1, 0, 1 }));
+
+	lone_table_set(lone, module->module.environment,
+	                     lone_intern_c_string(lone, "identical?"),
+	                     lone_primitive_create(lone,
+	                                           "is_identical",
+	                                           lone_primitive_is_identical,
 	                                           module,
 	                                           (struct lone_function_flags) { 1, 0, 1 }));
 
