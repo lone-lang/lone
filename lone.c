@@ -2577,6 +2577,23 @@ static void lone_fill_linux_system_call_table(struct lone_lisp *lone, struct lon
    │    Built-in modules containing essential functionality.                │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
+static struct lone_value *lone_module_for_name(struct lone_lisp *lone, struct lone_value *name)
+{
+	struct lone_value *module;
+
+	if (name) {
+		module = lone_table_get(lone, lone->modules.loaded, name);
+		if (lone_is_nil(module)) {
+			module = lone_module_create(lone, name);
+			lone_table_set(lone, lone->modules.loaded, name, module);
+		}
+	} else {
+		module = lone->modules.null;
+	}
+
+	return module;
+}
+
 static struct lone_value *lone_module_load(struct lone_lisp *lone, int file_descriptor)
 {
 	struct lone_reader reader;
