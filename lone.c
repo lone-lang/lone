@@ -835,6 +835,29 @@ static bool lone_has_same_type(struct lone_value *x, struct lone_value *y)
 	return x->type == y->type;
 }
 
+static bool lone_bytes_equals(struct lone_bytes x, struct lone_bytes y);
+
+static bool lone_is_equivalent(struct lone_value *x, struct lone_value *y)
+{
+	if (lone_is_identical(x, y)) { return true; }
+	if (!lone_has_same_type(x, y)) { return false; }
+
+	switch (x->type) {
+	case LONE_SYMBOL:
+	case LONE_TEXT:
+	case LONE_BYTES:
+		return lone_bytes_equals(x->bytes, y->bytes);
+	case LONE_INTEGER:
+		return x->integer == y->integer;
+	case LONE_POINTER:
+		return x->pointer == y->pointer;
+
+	case LONE_MODULE: case LONE_FUNCTION: case LONE_PRIMITIVE:
+	case LONE_LIST: case LONE_VECTOR: case LONE_TABLE:
+		return lone_is_identical(x, y);
+	}
+}
+
 static inline struct lone_value *lone_list_first(struct lone_value *value)
 {
 	return value->list.first;
