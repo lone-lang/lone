@@ -1063,10 +1063,11 @@ static inline size_t lone_table_hash(struct lone_value *key)
 	case LONE_MODULE:
 	case LONE_FUNCTION:
 	case LONE_PRIMITIVE:
-	case LONE_LIST:
 	case LONE_VECTOR:
 	case LONE_TABLE:
 		linux_exit(-1);
+	case LONE_LIST:
+		return hash ^ lone_table_hash(key->list.first) ^ lone_table_hash(key->list.rest);
 	case LONE_SYMBOL:
 	case LONE_TEXT:
 	case LONE_BYTES:
