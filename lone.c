@@ -2264,20 +2264,42 @@ static void lone_primitive_import_argument(struct lone_lisp *lone, struct lone_v
 {
 	struct lone_value *name, *module;
 
-	if (argument->type != LONE_LIST) { /* not an import list: (import module) */ linux_exit(-1); }
 	if (lone_is_nil(argument)) { /* nothing to import: (import ()) */ linux_exit(-1); }
 
-	name = lone_list_first(argument);
-	if (name->type != LONE_SYMBOL) { /* module name not a symbol: (import (10)) */ linux_exit(-1); }
+	switch (argument->type) {
+	case LONE_SYMBOL:
+		name = argument;
+		argument = 0;
+		break;
+	case LONE_LIST:
+		name = lone_list_first(argument);
+		argument = lone_list_rest(argument);
+		break;
+	case LONE_MODULE:
+	case LONE_FUNCTION: case LONE_PRIMITIVE:
+	case LONE_TEXT: case LONE_BYTES:
+	case LONE_VECTOR: case LONE_TABLE:
+	case LONE_INTEGER: case LONE_POINTER:
+		/* not a supported import argument type */ linux_exit(-1);
+	}
+
+	if (name->type != LONE_SYMBOL) { /* module name not a symbol: (import 10), (import (10)) */ linux_exit(-1); }
 
 	module = lone_table_get(lone, lone->modules.loaded, name);
-	if (lone_is_nil(module)) { /* module not found: (import (non-existent)) */ linux_exit(-1); }
+	if (lone_is_nil(module)) { /* module not found: (import non-existent), (import (non-existent)) */ linux_exit(-1); }
 
-	argument = lone_list_rest(argument);
-	if (lone_is_nil(argument)) {
-		lone_primitive_import_all(lone, environment, module);
+	if (argument) {
+		/* (import (module)), (import (module symbol)) */
+		if (lone_is_nil(argument)) {
+			/* (import (module)) */
+			lone_primitive_import_all(lone, environment, module);
+		} else {
+			/* (import (module symbol)) */
+			lone_primitive_import_only(lone, environment, module, argument);
+		}
 	} else {
-		lone_primitive_import_only(lone, environment, module, argument);
+		/* (import module) */
+		lone_primitive_import_all(lone, environment, module);
 	}
 }
 
