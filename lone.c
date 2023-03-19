@@ -172,6 +172,7 @@ struct lone_value {
 };
 
 typedef bool (*lone_predicate)(struct lone_value *);
+typedef bool (*lone_comparator)(struct lone_value *, struct lone_value *);
 
 /* ╭───────────────────────┨ LONE LISP INTERPRETER ┠────────────────────────╮
    │                                                                        │
