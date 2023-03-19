@@ -830,6 +830,11 @@ static bool lone_is_identical(struct lone_value *x, struct lone_value *y)
 	return x == y;
 }
 
+static bool lone_has_same_type(struct lone_value *x, struct lone_value *y)
+{
+	return x->type == y->type;
+}
+
 static inline struct lone_value *lone_list_first(struct lone_value *value)
 {
 	return value->list.first;
