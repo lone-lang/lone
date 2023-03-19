@@ -1057,6 +1057,8 @@ static inline size_t lone_table_hash(struct lone_value *key)
 	bytes.count = sizeof(key->type);
 	hash = fnv_1a(bytes);
 
+	if (lone_is_nil(key)) { return hash; }
+
 	switch (key->type) {
 	case LONE_MODULE:
 	case LONE_FUNCTION:
