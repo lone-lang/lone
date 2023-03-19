@@ -858,6 +858,53 @@ static bool lone_is_equivalent(struct lone_value *x, struct lone_value *y)
 	}
 }
 
+static bool lone_is_equal(struct lone_value *, struct lone_value *);
+
+static bool lone_list_is_equal(struct lone_value *x, struct lone_value *y)
+{
+	return lone_is_equal(x->list.first, y->list.first) && lone_is_equal(x->list.rest, y->list.rest);
+}
+
+static bool lone_vector_is_equal(struct lone_value *x, struct lone_value *y)
+{
+	size_t i;
+
+	if (x->vector.count != y->vector.count) return false;
+
+	for (i = 0; i < x->vector.count; ++i) {
+		if (!lone_is_equal(x->vector.values[i], y->vector.values[i])) {
+			return false;
+		}
+	}
+
+	return true;
+}
+
+static bool lone_table_is_equal(struct lone_value *x, struct lone_value *y)
+{
+	return lone_is_identical(x, y);
+}
+
+static bool lone_is_equal(struct lone_value *x, struct lone_value *y)
+{
+	if (lone_is_identical(x, y)) { return true; }
+	if (!lone_has_same_type(x, y)) { return false; }
+
+	switch (x->type) {
+	case LONE_LIST:
+		return lone_list_is_equal(x, y);
+	case LONE_VECTOR:
+		return lone_vector_is_equal(x, y);
+	case LONE_TABLE:
+		return lone_table_is_equal(x, y);
+
+	case LONE_MODULE: case LONE_FUNCTION: case LONE_PRIMITIVE:
+	case LONE_SYMBOL: case LONE_TEXT: case LONE_BYTES:
+	case LONE_INTEGER: case LONE_POINTER:
+		return lone_is_equivalent(x, y);
+	}
+}
+
 static inline struct lone_value *lone_list_first(struct lone_value *value)
 {
 	return value->list.first;
