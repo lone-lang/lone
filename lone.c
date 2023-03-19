@@ -1053,6 +1053,10 @@ static inline size_t lone_table_hash(struct lone_value *key)
 
 	if (!key) { /* a null key is probably a bug */ linux_exit(-1); }
 
+	bytes.pointer = (unsigned char *) &key->type;
+	bytes.count = sizeof(key->type);
+	hash = fnv_1a(bytes);
+
 	switch (key->type) {
 	case LONE_MODULE:
 	case LONE_FUNCTION:
