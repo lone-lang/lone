@@ -2594,10 +2594,10 @@ static struct lone_value *lone_module_for_name(struct lone_lisp *lone, struct lo
 	return module;
 }
 
-static struct lone_value *lone_module_load(struct lone_lisp *lone, int file_descriptor)
+static struct lone_value *lone_module_load_from_file_descriptor(struct lone_lisp *lone, struct lone_value *name, int file_descriptor)
 {
+	struct lone_value *module = lone_module_for_name(lone, name), *value;
 	struct lone_reader reader;
-	struct lone_value *value;
 
 	lone_reader_initialize(lone, &reader, LONE_BUFFER_SIZE, file_descriptor);
 
@@ -2605,12 +2605,12 @@ static struct lone_value *lone_module_load(struct lone_lisp *lone, int file_desc
 		value = lone_read(lone, &reader);
 		if (!value) { if (reader.error) { linux_exit(-1); } else { break; } }
 
-		value = lone_evaluate_module(lone, lone->modules.null, value);
+		value = lone_evaluate_module(lone, module, value);
 	}
 
 	lone_garbage_collector(lone);
 
-	return value;
+	return module;
 }
 
 static void lone_builtin_module_linux_initialize(struct lone_lisp *lone, int argc, char **argv, char **envp, struct auxiliary *auxv)
@@ -2864,7 +2864,7 @@ long lone(int argc, char **argv, char **envp, struct auxiliary *auxv)
 	lone_builtin_module_text_initialize(&lone);
 
 
-	lone_module_load(&lone, 0);
+	lone_module_load_from_file_descriptor(&lone, 0, 0);
 
 	return 0;
 }
