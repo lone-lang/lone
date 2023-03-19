@@ -2839,6 +2839,15 @@ static void lone_builtin_module_lone_initialize(struct lone_lisp *lone)
 	lone_table_set(lone, lone->modules.loaded, name, module);
 }
 
+static void lone_modules_initialize(struct lone_lisp *lone, int argc, char **argv, char **envp, struct auxiliary *auxv)
+{
+	lone_builtin_module_linux_initialize(lone, argc, argv, envp, auxv);
+	lone_builtin_module_lone_initialize(lone);
+	lone_builtin_module_math_initialize(lone);
+	lone_builtin_module_text_initialize(lone);
+
+}
+
 /* ╭───────────────────────┨ LONE LISP ENTRY POINT ┠────────────────────────╮
    │                                                                        │
    │    Linux places argument, environment and auxiliary value arrays       │
@@ -2857,12 +2866,7 @@ long lone(int argc, char **argv, char **envp, struct auxiliary *auxv)
 	struct lone_lisp lone;
 
 	lone_lisp_initialize(&lone, memory, sizeof(memory));
-
-	lone_builtin_module_linux_initialize(&lone, argc, argv, envp, auxv);
-	lone_builtin_module_lone_initialize(&lone);
-	lone_builtin_module_math_initialize(&lone);
-	lone_builtin_module_text_initialize(&lone);
-
+	lone_modules_initialize(&lone, argc, argv, envp, auxv);
 
 	lone_module_load_from_file_descriptor(&lone, 0, 0);
 
