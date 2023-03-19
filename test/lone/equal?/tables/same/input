@@ -1,0 +1,3 @@
+(import (lone quote print equal?))
+
+(print (equal? { a "b" c "d" } { a "b" c "d" }))

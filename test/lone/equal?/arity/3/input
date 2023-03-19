@@ -1,0 +1,6 @@
+(import (lone quote print equal?))
+
+(print (equal? '(x) '(x) '(x)))
+(print (equal? '(y) '(x) '(x)))
+(print (equal? '(x) '(y) '(x)))
+(print (equal? '(x) '(x) '(y)))
