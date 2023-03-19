@@ -1432,7 +1432,7 @@ static struct lone_value *lone_parse_vector(struct lone_lisp *lone, struct lone_
 
 		value = lone_parse(lone, reader, value);
 
-		lone_vector_set(lone, vector, lone_integer_create(lone, i++), value);
+		lone_vector_set_value_at(lone, vector, i++, value);
 	}
 
 	return vector;
