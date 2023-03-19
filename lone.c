@@ -855,11 +855,11 @@ static struct lone_value *lone_list_build(struct lone_lisp *lone, size_t count, 
 	return list;
 }
 
-static int lone_bytes_equals(struct lone_bytes x, struct lone_bytes y)
+static bool lone_bytes_equals(struct lone_bytes x, struct lone_bytes y)
 {
-	if (x.count != y.count) return 0;
-	for (size_t i = 0; i < x.count; ++i) if (x.pointer[i] != y.pointer[i]) return 0;
-	return 1;
+	if (x.count != y.count) return false;
+	for (size_t i = 0; i < x.count; ++i) if (x.pointer[i] != y.pointer[i]) return false;
+	return true;
 }
 
 static inline int lone_bytes_equals_c_string(struct lone_bytes bytes, char *c_string)
