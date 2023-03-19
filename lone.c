@@ -938,6 +938,11 @@ static void lone_vector_set(struct lone_lisp *lone, struct lone_value *vector, s
 	lone_vector_set_value_at(lone, vector, index->integer, value);
 }
 
+static void lone_vector_push(struct lone_lisp *lone, struct lone_value *vector, struct lone_value *value)
+{
+	lone_vector_set_value_at(lone, vector, vector->vector.count, value);
+}
+
 static unsigned long  __attribute__((pure)) fnv_1a(unsigned char *bytes, size_t count)
 {
 	unsigned long hash = FNV_OFFSET_BASIS;
