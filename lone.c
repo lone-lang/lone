@@ -189,6 +189,7 @@ struct lone_lisp {
 	struct lone_value *symbol_table;
 	struct {
 		struct lone_value *nil;
+		struct lone_value *truth;
 	} constants;
 	struct {
 		struct lone_value *loaded;
@@ -389,6 +390,7 @@ static void lone_mark_all_reachable_values(struct lone_lisp *lone)
 {
 	lone_mark_value(lone->symbol_table);
 	lone_mark_value(lone->constants.nil);
+	lone_mark_value(lone->constants.truth);
 	lone_mark_value(lone->modules.loaded);
 	lone_mark_value(lone->modules.null);
 	lone_mark_value(lone->modules.import);
@@ -522,6 +524,11 @@ static struct lone_value *lone_list_create_nil(struct lone_lisp *lone)
 static struct lone_value *lone_nil(struct lone_lisp *lone)
 {
 	return lone->constants.nil;
+}
+
+static struct lone_value *lone_true(struct lone_lisp *lone)
+{
+	return lone->constants.truth;
 }
 
 /* ╭────────────────────────────────────────────────────────────────────────╮
@@ -779,8 +786,9 @@ static void lone_lisp_initialize(struct lone_lisp *lone, unsigned char *memory, 
 
 	/* basic initialization done, can now use value creation functions */
 
-	lone->constants.nil = lone_list_create_nil(lone);
 	lone->symbol_table = lone_table_create(lone, 256, 0);
+	lone->constants.nil = lone_list_create_nil(lone);
+	lone->constants.truth = lone_intern_c_string(lone, "true");
 	lone->modules.loaded = lone_table_create(lone, 32, 0);
 	struct lone_function_flags import_flags = { .evaluate_arguments = 0, .evaluate_result = 0, .variable_arguments = 1 };
 	lone->modules.import = lone_primitive_create(lone, "import", lone_primitive_import, 0, import_flags);
