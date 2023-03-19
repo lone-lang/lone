@@ -1,0 +1,3 @@
+(import (lone print equivalent?))
+
+(print (equivalent? [1 2 3] [4 5 6]))

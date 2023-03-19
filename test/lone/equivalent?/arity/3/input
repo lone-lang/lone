@@ -1,0 +1,6 @@
+(import (lone quote print equivalent?))
+
+(print (equivalent? "x" "x" "x"))
+(print (equivalent? "y" "x" "x"))
+(print (equivalent? "x" "y" "x"))
+(print (equivalent? "x" "x" "y"))

@@ -1,0 +1,3 @@
+(import (lone print equivalent?))
+
+(print (equivalent? { a "b" c "d" } { a "b" c "d" }))
