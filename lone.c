@@ -1046,6 +1046,11 @@ static unsigned long  __attribute__((pure)) fnv_1a(struct lone_bytes data)
 	return hash;
 }
 
+static unsigned long  __attribute__((pure)) lone_table_compute_hash(struct lone_bytes bytes, size_t capacity)
+{
+	return fnv_1a(bytes) % capacity;
+}
+
 static inline size_t lone_table_compute_hash_for(struct lone_value *key, size_t capacity)
 {
 	struct lone_bytes bytes;
@@ -1075,7 +1080,7 @@ static inline size_t lone_table_compute_hash_for(struct lone_value *key, size_t 
 		break;
 	}
 
-	return fnv_1a(bytes) % capacity;
+	return lone_table_compute_hash(bytes, capacity);
 }
 
 static size_t lone_table_entry_find_index_for(struct lone_value *key, struct lone_table_entry *entries, size_t capacity)
