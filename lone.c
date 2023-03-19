@@ -1032,9 +1032,11 @@ static void lone_vector_push(struct lone_lisp *lone, struct lone_value *vector, 
 	lone_vector_set_value_at(lone, vector, vector->vector.count, value);
 }
 
-static unsigned long  __attribute__((pure)) fnv_1a(unsigned char *bytes, size_t count)
+static unsigned long  __attribute__((pure)) fnv_1a(struct lone_bytes data)
 {
 	unsigned long hash = FNV_OFFSET_BASIS;
+	unsigned char *bytes = data.pointer;
+	size_t count = data.count;
 
 	while (count--) {
 		hash ^= *bytes++;
@@ -1046,7 +1048,7 @@ static unsigned long  __attribute__((pure)) fnv_1a(unsigned char *bytes, size_t 
 
 static inline size_t lone_table_compute_hash_for(struct lone_value *key, size_t capacity)
 {
-	unsigned long result;
+	struct lone_bytes bytes;
 
 	switch (key->type) {
 	case LONE_MODULE:
@@ -1059,17 +1061,19 @@ static inline size_t lone_table_compute_hash_for(struct lone_value *key, size_t 
 	case LONE_SYMBOL:
 	case LONE_TEXT:
 	case LONE_BYTES:
-		result = fnv_1a(key->bytes.pointer, key->bytes.count);
+		bytes = key->bytes;
 		break;
 	case LONE_INTEGER:
-		result = fnv_1a((unsigned char *) &key->integer, sizeof(key->integer));
+		bytes.pointer = (unsigned char *) &key->integer;
+		bytes.count = sizeof(key->integer);
 		break;
 	case LONE_POINTER:
-		result = fnv_1a((unsigned char *) &key->pointer, sizeof(key->pointer));
+		bytes.pointer = (unsigned char *) &key->pointer;
+		bytes.count = sizeof(key->pointer);
 		break;
 	}
 
-	return result % capacity;
+	return fnv_1a(bytes) % capacity;
 }
 
 static size_t lone_table_entry_find_index_for(struct lone_value *key, struct lone_table_entry *entries, size_t capacity)
