@@ -1,0 +1,3 @@
+(import (lone quote print identical?))
+
+(print (identical? '(1 2 3) '(1 2 3)))

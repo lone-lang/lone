@@ -1,0 +1,3 @@
+(import (lone identical? print))
+
+(print (identical? "x" "y"))

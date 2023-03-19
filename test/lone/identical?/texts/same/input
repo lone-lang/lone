@@ -1,0 +1,3 @@
+(import (lone quote identical? print))
+
+(print (identical? "x" "x"))

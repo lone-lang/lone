@@ -1,0 +1,6 @@
+(import (lone quote print identical?))
+
+(print (identical? 'x 'x 'x))
+(print (identical? 'y 'x 'x))
+(print (identical? 'x 'y 'x))
+(print (identical? 'x 'x 'y))
