@@ -825,6 +825,11 @@ static bool lone_is_symbol(struct lone_value *value)
 	return value->type == LONE_SYMBOL;
 }
 
+static bool lone_is_identical(struct lone_value *x, struct lone_value *y)
+{
+	return x == y;
+}
+
 static inline struct lone_value *lone_list_first(struct lone_value *value)
 {
 	return value->list.first;
