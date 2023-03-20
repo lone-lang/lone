@@ -2399,6 +2399,16 @@ static struct lone_value *lone_primitive_concatenate(struct lone_lisp *lone, str
 
 /* ╭────────────────────────────────────────────────────────────────────────╮
    │                                                                        │
+   │    List operations.                                                    │
+   │                                                                        │
+   ╰────────────────────────────────────────────────────────────────────────╯ */
+static struct lone_value *lone_primitive_flatten(struct lone_lisp *lone, struct lone_value *closure, struct lone_value *environment, struct lone_value *arguments)
+{
+	return lone_list_flatten(lone, arguments);
+}
+
+/* ╭────────────────────────────────────────────────────────────────────────╮
+   │                                                                        │
    │    Module importing and loading operations.                            │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
@@ -2915,6 +2925,22 @@ static void lone_builtin_module_text_initialize(struct lone_lisp *lone)
 	lone_table_set(lone, lone->modules.loaded, name, module);
 }
 
+static void lone_builtin_module_list_initialize(struct lone_lisp *lone)
+{
+	struct lone_value *name = lone_intern_c_string(lone, "list"),
+	                  *module = lone_module_create(lone, name);
+
+	lone_table_set(lone, module->module.environment,
+	                     lone_intern_c_string(lone, "flatten"),
+	                     lone_primitive_create(lone,
+	                                           "flatten",
+	                                           lone_primitive_flatten,
+	                                           module,
+	                                           (struct lone_function_flags) { 1, 0, 1 }));
+
+	lone_table_set(lone, lone->modules.loaded, name, module);
+}
+
 static void lone_builtin_module_lone_initialize(struct lone_lisp *lone)
 {
 	struct lone_value *name = lone_intern_c_string(lone, "lone"),
@@ -3041,6 +3067,7 @@ static void lone_modules_initialize(struct lone_lisp *lone, int argc, char **arg
 	lone_builtin_module_lone_initialize(lone);
 	lone_builtin_module_math_initialize(lone);
 	lone_builtin_module_text_initialize(lone);
+	lone_builtin_module_list_initialize(lone);
 
 }
 
