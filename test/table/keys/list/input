@@ -1,0 +1,8 @@
+(import (lone print set quote))
+
+(set table {})
+(table '(a b c) 10)
+(table '(x y z) 20)
+(table '() 30)
+
+(print (table '(a b c)) (table '(x y z)) (table '()))
