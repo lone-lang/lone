@@ -800,9 +800,14 @@ static void lone_lisp_initialize(struct lone_lisp *lone, unsigned char *memory, 
    │    Functions for operating on lone's built-in types.                   │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
+static bool lone_is_list(struct lone_value *value)
+{
+	return value->type == LONE_LIST;
+}
+
 static bool lone_is_nil(struct lone_value *value)
 {
-	return value->type == LONE_LIST && value->list.first == 0 && value->list.rest == 0;
+	return lone_is_list(value) && value->list.first == 0 && value->list.rest == 0;
 }
 
 static bool lone_has_bytes(struct lone_value *value)
