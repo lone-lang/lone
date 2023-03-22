@@ -195,6 +195,7 @@ struct lone_lisp {
 		struct lone_value *loaded;
 		struct lone_value *null;
 		struct lone_value *import;
+		struct lone_value *path;
 	} modules;
 };
 
@@ -394,6 +395,7 @@ static void lone_mark_all_reachable_values(struct lone_lisp *lone)
 	lone_mark_value(lone->modules.loaded);
 	lone_mark_value(lone->modules.null);
 	lone_mark_value(lone->modules.import);
+	lone_mark_value(lone->modules.path);
 }
 
 static void lone_deallocate_all_unmarked_values(struct lone_lisp *lone)
@@ -792,6 +794,7 @@ static void lone_lisp_initialize(struct lone_lisp *lone, unsigned char *memory, 
 	lone->modules.loaded = lone_table_create(lone, 32, 0);
 	struct lone_function_flags import_flags = { .evaluate_arguments = 0, .evaluate_result = 0, .variable_arguments = 1 };
 	lone->modules.import = lone_primitive_create(lone, "import", lone_primitive_import, 0, import_flags);
+	lone->modules.path = lone_vector_create(lone, 8);
 	lone->modules.null = lone_module_create(lone, 0);
 }
 
