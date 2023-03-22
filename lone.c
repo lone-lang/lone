@@ -2819,6 +2819,47 @@ static struct lone_value *lone_module_name_to_key(struct lone_lisp *lone, struct
 	}
 }
 
+static int lone_module_search(struct lone_lisp *lone, struct lone_value *symbols)
+{
+	struct lone_value *slash = lone_intern_c_string(lone, "/"), *ln = lone_intern_c_string(lone, ".ln");
+	struct lone_value *arguments, *package, *search_path;
+	unsigned char *path;
+	size_t i;
+	long result;
+
+	symbols = lone_module_name_to_key(lone, symbols);
+	package = lone_list_first(symbols);
+
+	for (i = 0; i < lone->modules.path->vector.count; ++i) {
+		search_path = lone->modules.path->vector.values[i];
+		arguments = lone_list_build(lone, 3, search_path, package, symbols);
+		arguments = lone_list_flatten(lone, arguments);
+		arguments = lone_text_transfer_bytes(lone, lone_join(lone, slash, arguments, lone_has_bytes));
+		arguments = lone_list_build(lone, 2, arguments, ln);
+		path = lone_concatenate(lone, arguments, lone_has_bytes).pointer;
+
+		result = linux_openat(AT_FDCWD, path, O_RDONLY | O_CLOEXEC);
+
+		lone_deallocate(lone, path);
+
+		switch (result) {
+		case -ENOENT:
+		case -EACCES: case -EPERM:
+		case -ENOTDIR: case -EISDIR:
+		case -EINVAL: case -ENAMETOOLONG:
+		case -EMFILE: case -ENFILE:
+		case -ELOOP:
+			continue;
+		case -ENOMEM: case -EFAULT:
+			linux_exit(-1);
+		}
+
+		return (int) result;
+	}
+
+	linux_exit(-1); /* module not found */
+}
+
 static struct lone_value *lone_module_for_name(struct lone_lisp *lone, struct lone_value *name)
 {
 	struct lone_value *module;
