@@ -9,8 +9,8 @@
 #include <stdarg.h>
 
 #include <linux/types.h>
-#include <linux/unistd.h>
 #include <linux/auxvec.h>
+#include <linux/unistd.h>
 
 typedef __kernel_size_t size_t;
 typedef __kernel_ssize_t ssize_t;
