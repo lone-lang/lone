@@ -30,6 +30,11 @@ static long __attribute__((tainted_args)) linux_openat(int dirfd, unsigned char 
 	return system_call_4(__NR_openat, dirfd, (long) path, flags, 0);
 }
 
+static long __attribute__((tainted_args)) linux_close(int fd)
+{
+	return system_call_1(__NR_close, fd);
+}
+
 static ssize_t __attribute__((fd_arg_read(1), tainted_args)) linux_read(int fd, const void *buffer, size_t count)
 {
 	return system_call_3(__NR_read, fd, (long) buffer, (long) count);
