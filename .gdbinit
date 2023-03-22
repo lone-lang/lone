@@ -71,6 +71,10 @@ define print-lone-value
                   else
                     if $type == LONE_PRIMITIVE
                       print-lone-primitive $arg0
+                    else
+                      if $type == LONE_MODULE
+                        print-lone-module $arg0
+                      end
                     end
                   end
                 end
@@ -83,6 +87,13 @@ define print-lone-value
   else
     printf "NULL"
   end
+end
+
+define print-lone-module
+  set var $module = $arg0->module
+  printf "m["
+  print-lone-value $module.name
+  printf "]"
 end
 
 define print-lone-function
