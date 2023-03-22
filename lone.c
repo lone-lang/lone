@@ -2824,7 +2824,9 @@ static struct lone_value *lone_module_for_name(struct lone_lisp *lone, struct lo
 	struct lone_value *module;
 
 	if (name) {
+		name = lone_module_name_to_key(lone, name);
 		module = lone_table_get(lone, lone->modules.loaded, name);
+
 		if (lone_is_nil(module)) {
 			module = lone_module_create(lone, name);
 			lone_table_set(lone, lone->modules.loaded, name, module);
