@@ -25,6 +25,11 @@ static void __attribute__((noreturn)) linux_exit(int code)
 	__builtin_unreachable();
 }
 
+static long __attribute__((tainted_args)) linux_openat(int dirfd, unsigned char *path, int flags)
+{
+	return system_call_4(__NR_openat, dirfd, (long) path, flags, 0);
+}
+
 static ssize_t __attribute__((fd_arg_read(1), tainted_args)) linux_read(int fd, const void *buffer, size_t count)
 {
 	return system_call_3(__NR_read, fd, (long) buffer, (long) count);
