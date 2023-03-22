@@ -2795,6 +2795,30 @@ static void lone_fill_linux_system_call_table(struct lone_lisp *lone, struct lon
    │    Built-in modules containing essential functionality.                │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
+static struct lone_value *lone_module_name_to_key(struct lone_lisp *lone, struct lone_value *name)
+{
+	struct lone_value *head;
+
+	switch (name->type) {
+	case LONE_SYMBOL:
+		return lone_list_create(lone, name, lone_nil(lone));
+	case LONE_LIST:
+		for (head = name; !lone_is_nil(head); head = lone_list_rest(head)) {
+			if (!lone_is_symbol(lone_list_first(head))) {
+				linux_exit(-1);
+			}
+		}
+		return name;
+	case LONE_MODULE:
+		return lone_module_name_to_key(lone, name->module.name);
+	case LONE_TEXT: case LONE_BYTES:
+	case LONE_FUNCTION: case LONE_PRIMITIVE:
+	case LONE_VECTOR: case LONE_TABLE:
+	case LONE_INTEGER: case LONE_POINTER:
+		linux_exit(-1);
+	}
+}
+
 static struct lone_value *lone_module_for_name(struct lone_lisp *lone, struct lone_value *name)
 {
 	struct lone_value *module;
