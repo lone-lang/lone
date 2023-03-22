@@ -371,6 +371,7 @@ static void lone_mark_value(struct lone_value *value)
 		lone_mark_value(container->value.function.environment);
 		break;
 	case LONE_PRIMITIVE:
+		lone_mark_value(container->value.primitive.name);
 		lone_mark_value(container->value.primitive.closure);
 		break;
 	case LONE_LIST:
