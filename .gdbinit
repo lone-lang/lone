@@ -38,6 +38,10 @@ end
 macro define offset_of(type, member) ((size_t) (&(((type *) 0)->member)))
 macro define container_of(type, member, pointer) ((type *) (((unsigned char *) pointer) - offset_of(type, member)))
 
+define lone-value-header
+  output container_of(struct lone_value_container, value, $arg0)->header
+end
+
 define plv
   print-lone-value $arg0
   printf "\n"
