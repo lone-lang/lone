@@ -36,6 +36,7 @@ define lone-memory-walk
 end
 
 macro define offset_of(type, member) ((size_t) (&(((type *) 0)->member)))
+macro define container_of(type, member, pointer) ((type *) (((unsigned char *) pointer) - offset_of(type, member)))
 
 define plv
   print-lone-value $arg0
