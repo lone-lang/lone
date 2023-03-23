@@ -1,3 +1,5 @@
+set libthread-db-search-path /dev/null
+
 define print-lone-memory
   set var $memory = $arg0
   printf "[ "
