@@ -120,7 +120,7 @@ end
 
 define print-lone-primitive
   printf "p["
-  p $arg0->primitive
+  output $arg0->primitive.function
   printf "]"
 end
 
