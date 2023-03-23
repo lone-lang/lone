@@ -76,6 +76,10 @@ define print-lone-value
                     else
                       if $type == LONE_MODULE
                         print-lone-module $arg0
+                      else
+                        if $type == LONE_VECTOR
+                          print-lone-vector $arg0
+                        end
                       end
                     end
                   end
@@ -135,6 +139,27 @@ define print-lone-list-recursive
     printf ". "
     print-lone-value $rest
   end
+end
+
+define print-lone-vector
+  set var $vector = $arg0->vector
+  if $vector.count == 0
+    printf "[]"
+  else
+    print-lone-vector-values $vector
+  end
+end
+
+define print-lone-vector-values
+  set var $vector = $arg0
+  set var $i = 0
+  printf "[ "
+  while $i < $vector.count
+    print-lone-value $vector.values[$i]
+    printf " "
+    set var $i = $i + 1
+  end
+  printf "]"
 end
 
 define print-lone-table
