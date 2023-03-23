@@ -35,6 +35,8 @@ define lone-memory-walk
   printf " total\n"
 end
 
+macro define offset_of(type, member) ((size_t) (&(((type *) 0)->member)))
+
 define plv
   print-lone-value $arg0
   printf "\n"
