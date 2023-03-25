@@ -421,7 +421,7 @@ static void lone_mark_value(struct lone_value *value)
 {
 	struct lone_value_container *container = lone_value_to_container(value);
 
-	if (!container || container->header.marked) { return; }
+	if (!container || !container->header.live || container->header.marked) { return; }
 
 	container->header.marked = true;
 
