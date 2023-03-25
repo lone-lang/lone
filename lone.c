@@ -482,6 +482,12 @@ static bool lone_points_within_range(void *pointer, void *start, void *end)
 	return start <= pointer && pointer < end;
 }
 
+static bool lone_points_to_general_memory(struct lone_lisp *lone, void *pointer)
+{
+	struct lone_memory *general = lone->memory.general;
+	return lone_points_within_range(pointer, general->pointer, general->pointer + general->size);
+}
+
 static void lone_mark_all_reachable_values(struct lone_lisp *lone)
 {
 	lone_mark_known_roots(lone);             /* precise */
