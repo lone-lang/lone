@@ -255,6 +255,7 @@ struct lone_memory {
 
 struct lone_value_header {
 	struct lone_value_container *next;
+	bool live: 1;
 	bool marked: 1;
 };
 
