@@ -197,10 +197,10 @@ typedef bool (*lone_comparator)(struct lone_value *, struct lone_value *);
    ╰────────────────────────────────────────────────────────────────────────╯ */
 struct lone_lisp {
 	struct {
+		void *stack;
 		struct lone_memory *general;
 		struct lone_heap *heaps;
 	} memory;
-	struct lone_value_container *values;
 	struct lone_value *symbol_table;
 	struct {
 		struct lone_value *nil;
@@ -254,7 +254,7 @@ struct lone_memory {
 };
 
 struct lone_value_header {
-	struct lone_value_container *next;
+	bool live: 1;
 	bool marked: 1;
 };
 
@@ -353,6 +353,63 @@ static void * __attribute__((alloc_size(3))) lone_reallocate(struct lone_lisp *l
 	return new->pointer;
 }
 
+static struct lone_heap *lone_allocate_heap(struct lone_lisp *lone, size_t count)
+{
+	size_t i, size = sizeof(struct lone_heap) + (sizeof(struct lone_value_container) * count);
+	struct lone_heap *heap = lone_allocate(lone, size);
+	heap->next = 0;
+	heap->count = count;
+	for (i = 0; i < count; ++i) {
+		heap->values[i].header.live = false;
+		heap->values[i].header.marked = false;
+	}
+	return heap;
+}
+
+static struct lone_value_container *lone_allocate_from_heap(struct lone_lisp *lone)
+{
+	struct lone_value_container *element;
+	struct lone_heap *heap, *prev;
+	size_t i;
+
+	for (prev = lone->memory.heaps, heap = prev; heap; prev = heap, heap = heap->next) {
+		for (i = 0; i < heap->count; ++i) {
+			element = &heap->values[i];
+
+			if (!element->header.live) {
+				goto resurrect;
+			}
+		}
+	}
+
+	heap = lone_allocate_heap(lone, lone->memory.heaps[0].count);
+	prev->next = heap;
+	element = &heap->values[0];
+
+resurrect:
+	element->header.live = true;
+	return element;
+}
+
+static void lone_deallocate_dead_heaps(struct lone_lisp *lone)
+{
+	struct lone_heap *heap, *prev;
+	size_t i;
+
+	for (prev = lone->memory.heaps, heap = prev->next; heap; prev = heap, heap = heap->next) {
+		for (i = 0; i < heap->count; ++i) {
+			if (heap->values[i].header.live) { /* at least one live object */ goto next_heap; }
+		}
+
+		/* no live objects */
+		prev->next = heap->next;
+		lone_deallocate(lone, heap);
+		heap = prev->next;
+next_heap:
+		continue;
+	}
+}
+
 static inline struct lone_value_container *lone_value_to_container(struct lone_value* value)
 {
 	if (!value) { return 0; }
@@ -363,7 +420,7 @@ static void lone_mark_value(struct lone_value *value)
 {
 	struct lone_value_container *container = lone_value_to_container(value);
 
-	if (!container || container->header.marked) { return; }
+	if (!container || !container->header.live || container->header.marked) { return; }
 
 	container->header.marked = true;
 
@@ -407,7 +464,7 @@ static void lone_mark_value(struct lone_value *value)
 	}
 }
 
-static void lone_mark_all_reachable_values(struct lone_lisp *lone)
+static void lone_mark_known_roots(struct lone_lisp *lone)
 {
 	lone_mark_value(lone->symbol_table);
 	lone_mark_value(lone->constants.nil);
@@ -418,39 +475,94 @@ static void lone_mark_all_reachable_values(struct lone_lisp *lone)
 	lone_mark_value(lone->modules.path);
 }
 
-static void lone_deallocate_all_unmarked_values(struct lone_lisp *lone)
+static bool lone_points_within_range(void *pointer, void *start, void *end)
 {
-	struct lone_value_container **values = &lone->values, *value;
-	while ((value = *values)) {
-		if (value->header.marked) {
-			value->header.marked = false;
-			values = &value->header.next;
-		} else {
-			*values = value->header.next;
+	return start <= pointer && pointer < end;
+}
 
-			switch (value->value.type) {
-			case LONE_BYTES:
-			case LONE_TEXT:
-			case LONE_SYMBOL:
-				lone_deallocate(lone, value->value.bytes.pointer);
-				break;
-			case LONE_VECTOR:
-				lone_deallocate(lone, value->value.vector.values);
-				break;
-			case LONE_TABLE:
-				lone_deallocate(lone, value->value.table.entries);
-				break;
-			case LONE_MODULE:
-			case LONE_FUNCTION:
-			case LONE_PRIMITIVE:
-			case LONE_LIST:
-			case LONE_INTEGER:
-			case LONE_POINTER:
-				/* these types do not own any additional memory */
-				break;
+static bool lone_points_to_general_memory(struct lone_lisp *lone, void *pointer)
+{
+	struct lone_memory *general = lone->memory.general;
+	return lone_points_within_range(pointer, general->pointer, general->pointer + general->size);
+}
+
+static bool lone_points_to_heap(struct lone_lisp *lone, void *pointer)
+{
+	struct lone_heap *heap;
+
+	if (!lone_points_to_general_memory(lone, pointer)) { return false; }
+
+	for (heap = lone->memory.heaps; heap; heap = heap->next) {
+		if (lone_points_within_range(pointer, heap->values, heap->values + heap->count)) { return true; }
+	}
+
+	return false;
+}
+
+static void lone_find_and_mark_stack_roots(struct lone_lisp *lone)
+{
+	void *bottom = lone->memory.stack, *top = __builtin_frame_address(0), *tmp;
+	void **pointer;
+
+	if (top < bottom) {
+		tmp = bottom;
+		bottom = top;
+		top = tmp;
+	}
+
+	pointer = bottom;
+
+	while (pointer++ < top) {
+		if (lone_points_to_heap(lone, *pointer)) {
+			lone_mark_value(*pointer);
+		}
+	}
+}
+
+static void lone_mark_all_reachable_values(struct lone_lisp *lone)
+{
+	lone_mark_known_roots(lone);             /* precise */
+	lone_find_and_mark_stack_roots(lone);    /* conservative */
+}
+
+static void lone_kill_all_unmarked_values(struct lone_lisp *lone)
+{
+	struct lone_value_container *value;
+	struct lone_heap *heap;
+	size_t i;
+
+	for (heap = lone->memory.heaps; heap; heap = heap->next) {
+		for (i = 0; i < heap->count; ++i) {
+			value = &heap->values[i];
+
+			if (!value->header.live) { continue; }
+
+			if (!value->header.marked) {
+				switch (value->value.type) {
+				case LONE_BYTES:
+				case LONE_TEXT:
+				case LONE_SYMBOL:
+					lone_deallocate(lone, value->value.bytes.pointer);
+					break;
+				case LONE_VECTOR:
+					lone_deallocate(lone, value->value.vector.values);
+					break;
+				case LONE_TABLE:
+					lone_deallocate(lone, value->value.table.entries);
+					break;
+				case LONE_MODULE:
+				case LONE_FUNCTION:
+				case LONE_PRIMITIVE:
+				case LONE_LIST:
+				case LONE_INTEGER:
+				case LONE_POINTER:
+					/* these types do not own any additional memory */
+					break;
+				}
+
+				value->header.live = false;
+				value->header.marked = false;
 			}
-
-			lone_deallocate(lone, value);
 		}
 	}
 }
@@ -458,7 +570,8 @@ static void lone_deallocate_all_unmarked_values(struct lone_lisp *lone)
 static void lone_garbage_collector(struct lone_lisp *lone)
 {
 	lone_mark_all_reachable_values(lone);
-	lone_deallocate_all_unmarked_values(lone);
+	lone_kill_all_unmarked_values(lone);
+	lone_deallocate_dead_heaps(lone);
 }
 
 /* ╭────────────────────────────────────────────────────────────────────────╮
@@ -468,10 +581,7 @@ static void lone_garbage_collector(struct lone_lisp *lone)
    ╰────────────────────────────────────────────────────────────────────────╯ */
 static struct lone_value *lone_value_create(struct lone_lisp *lone)
 {
-	struct lone_value_container *container = lone_allocate(lone, sizeof(struct lone_value_container));
-	container->header.next = lone->values? lone->values : 0;
-	lone->values = container;
-	container->header.marked = false;
+	struct lone_value_container *container = lone_allocate_from_heap(lone);
 	return &container->value;
 }
 
@@ -798,16 +908,16 @@ static struct lone_value *lone_primitive_import(struct lone_lisp *, struct lone_
    │    allocation system is not functional without it.                     │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
-static void lone_lisp_initialize(struct lone_lisp *lone, unsigned char *memory, size_t size, size_t heap_size)
+static void lone_lisp_initialize(struct lone_lisp *lone, unsigned char *memory, size_t size, size_t heap_size, void *stack)
 {
+	lone->memory.stack = stack;
+
 	lone->memory.general = (struct lone_memory *) memory;
 	lone->memory.general->prev = lone->memory.general->next = 0;
 	lone->memory.general->free = 1;
 	lone->memory.general->size = size - sizeof(struct lone_memory);
 
-	lone->memory.heaps = 0;
-	lone->values = 0;
-
+	lone->memory.heaps = lone_allocate_heap(lone, heap_size);
 
 	/* basic initialization done, can now use value creation functions */
 
@@ -3205,10 +3315,11 @@ static void lone_modules_initialize(struct lone_lisp *lone, int argc, char **arg
    ╰────────────────────────────────────────────────────────────────────────╯ */
 long lone(int argc, char **argv, char **envp, struct auxiliary *auxv)
 {
+	void *stack = __builtin_frame_address(0);
 	static unsigned char memory[LONE_MEMORY_SIZE];
 	struct lone_lisp lone;
 
-	lone_lisp_initialize(&lone, memory, sizeof(memory), 1024);
+	lone_lisp_initialize(&lone, memory, sizeof(memory), 1024, stack);
 	lone_modules_initialize(&lone, argc, argv, envp, auxv);
 
 	lone_module_load_from_file_descriptor(&lone, 0, 0);
