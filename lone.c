@@ -819,9 +819,8 @@ static void lone_lisp_initialize(struct lone_lisp *lone, unsigned char *memory, 
 	lone->memory.general->free = 1;
 	lone->memory.general->size = size - sizeof(struct lone_memory);
 
-	lone->memory.heaps = 0;
+	lone->memory.heaps = lone_allocate_heap(lone, heap_size);
 	lone->values = 0;
-
 
 	/* basic initialization done, can now use value creation functions */
 
