@@ -367,6 +367,31 @@ static struct lone_heap *lone_allocate_heap(struct lone_lisp *lone, size_t count
 	return heap;
 }
 
+static struct lone_value_container *lone_allocate_from_heap(struct lone_lisp *lone)
+{
+	struct lone_value_container *element;
+	struct lone_heap *heap, *prev;
+	size_t i;
+
+	for (prev = lone->memory.heaps, heap = prev; heap; prev = heap, heap = heap->next) {
+		for (i = 0; i < heap->count; ++i) {
+			element = &heap->values[i];
+
+			if (!element->header.live) {
+				goto resurrect;
+			}
+		}
+	}
+
+	heap = lone_allocate_heap(lone, lone->memory.heaps[0].count);
+	prev->next = heap;
+	element = &heap->values[0];
+
+resurrect:
+	element->header.live = true;
+	return element;
+}
+
 static inline struct lone_value_container *lone_value_to_container(struct lone_value* value)
 {
 	if (!value) { return 0; }
