@@ -354,6 +354,19 @@ static void * __attribute__((alloc_size(3))) lone_reallocate(struct lone_lisp *l
 	return new->pointer;
 }
 
+static struct lone_heap *lone_allocate_heap(struct lone_lisp *lone, size_t count)
+{
+	size_t i, size = sizeof(struct lone_heap) + (sizeof(struct lone_value_container) * count);
+	struct lone_heap *heap = lone_allocate(lone, size);
+	heap->next = 0;
+	heap->count = count;
+	for (i = 0; i < count; ++i) {
+		heap->values[i].header.live = false;
+		heap->values[i].header.marked = false;
+	}
+	return heap;
+}
+
 static inline struct lone_value_container *lone_value_to_container(struct lone_value* value)
 {
 	if (!value) { return 0; }
