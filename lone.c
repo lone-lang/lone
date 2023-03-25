@@ -748,11 +748,11 @@ static void lone_table_set(struct lone_lisp *, struct lone_value *, struct lone_
 
 static struct lone_value *lone_intern(struct lone_lisp *lone, unsigned char *bytes, size_t count)
 {
-	struct lone_value *key = lone_bytes_create(lone, bytes, count),
+	struct lone_value *key = lone_symbol_create(lone, bytes, count),
 	                  *value = lone_table_get(lone, lone->symbol_table, key);
 
 	if (lone_is_nil(value)) {
-		value = lone_symbol_create(lone, bytes, count);
+		value = key;
 		lone_table_set(lone, lone->symbol_table, key, value);
 	}
 
