@@ -201,7 +201,6 @@ struct lone_lisp {
 		struct lone_memory *general;
 		struct lone_heap *heaps;
 	} memory;
-	struct lone_value_container *values;
 	struct lone_value *symbol_table;
 	struct {
 		struct lone_value *nil;
@@ -255,7 +254,6 @@ struct lone_memory {
 };
 
 struct lone_value_header {
-	struct lone_value_container *next;
 	bool live: 1;
 	bool marked: 1;
 };
@@ -920,7 +918,6 @@ static void lone_lisp_initialize(struct lone_lisp *lone, unsigned char *memory, 
 	lone->memory.general->size = size - sizeof(struct lone_memory);
 
 	lone->memory.heaps = lone_allocate_heap(lone, heap_size);
-	lone->values = 0;
 
 	/* basic initialization done, can now use value creation functions */
 
