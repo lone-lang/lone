@@ -488,6 +488,19 @@ static bool lone_points_to_general_memory(struct lone_lisp *lone, void *pointer)
 	return lone_points_within_range(pointer, general->pointer, general->pointer + general->size);
 }
 
+static bool lone_points_to_heap(struct lone_lisp *lone, void *pointer)
+{
+	struct lone_heap *heap;
+
+	if (!lone_points_to_general_memory(lone, pointer)) { return false; }
+
+	for (heap = lone->memory.heaps; heap; heap = heap->next) {
+		if (lone_points_within_range(pointer, heap->values, heap->values + heap->count)) { return true; }
+	}
+
+	return false;
+}
+
 static void lone_mark_all_reachable_values(struct lone_lisp *lone)
 {
 	lone_mark_known_roots(lone);             /* precise */
