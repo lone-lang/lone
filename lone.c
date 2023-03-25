@@ -392,6 +392,25 @@ resurrect:
 	return element;
 }
 
+static void lone_deallocate_dead_heaps(struct lone_lisp *lone)
+{
+	struct lone_heap *heap, *prev;
+	size_t i;
+
+	for (prev = lone->memory.heaps, heap = prev->next; heap; prev = heap, heap = heap->next) {
+		for (i = 0; i < heap->count; ++i) {
+			if (heap->values[i].header.live) { /* at least one live object */ goto next_heap; }
+		}
+
+		/* no live objects */
+		prev->next = heap->next;
+		lone_deallocate(lone, heap);
+		heap = prev->next;
+next_heap:
+		continue;
+	}
+}
+
 static inline struct lone_value_container *lone_value_to_container(struct lone_value* value)
 {
 	if (!value) { return 0; }
