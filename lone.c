@@ -583,10 +583,7 @@ static void lone_garbage_collector(struct lone_lisp *lone)
    ╰────────────────────────────────────────────────────────────────────────╯ */
 static struct lone_value *lone_value_create(struct lone_lisp *lone)
 {
-	struct lone_value_container *container = lone_allocate(lone, sizeof(struct lone_value_container));
-	container->header.next = lone->values? lone->values : 0;
-	lone->values = container;
-	container->header.marked = false;
+	struct lone_value_container *container = lone_allocate_from_heap(lone);
 	return &container->value;
 }
 
