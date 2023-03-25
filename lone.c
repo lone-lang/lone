@@ -252,7 +252,7 @@ struct lone_memory {
 
 struct lone_value_header {
 	struct lone_value_container *next;
-	unsigned char marked;
+	bool marked: 1;
 };
 
 struct lone_value_container {
@@ -354,9 +354,9 @@ static void lone_mark_value(struct lone_value *value)
 {
 	struct lone_value_container *container = lone_value_to_container(value);
 
-	if (!container || container->header.marked == 1) { return; }
+	if (!container || container->header.marked) { return; }
 
-	container->header.marked = 1;
+	container->header.marked = true;
 
 	switch (container->value.type) {
 	case LONE_MODULE:
@@ -414,7 +414,7 @@ static void lone_deallocate_all_unmarked_values(struct lone_lisp *lone)
 	struct lone_value_container **values = &lone->values, *value;
 	while ((value = *values)) {
 		if (value->header.marked) {
-			value->header.marked = 0;
+			value->header.marked = false;
 			values = &value->header.next;
 		} else {
 			*values = value->header.next;
@@ -462,7 +462,7 @@ static struct lone_value *lone_value_create(struct lone_lisp *lone)
 	struct lone_value_container *container = lone_allocate(lone, sizeof(struct lone_value_container));
 	container->header.next = lone->values? lone->values : 0;
 	lone->values = container;
-	container->header.marked = 0;
+	container->header.marked = false;
 	return &container->value;
 }
 
