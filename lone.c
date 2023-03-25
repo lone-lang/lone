@@ -466,7 +466,7 @@ static void lone_mark_value(struct lone_value *value)
 	}
 }
 
-static void lone_mark_all_reachable_values(struct lone_lisp *lone)
+static void lone_mark_known_roots(struct lone_lisp *lone)
 {
 	lone_mark_value(lone->symbol_table);
 	lone_mark_value(lone->constants.nil);
@@ -475,6 +475,11 @@ static void lone_mark_all_reachable_values(struct lone_lisp *lone)
 	lone_mark_value(lone->modules.null);
 	lone_mark_value(lone->modules.import);
 	lone_mark_value(lone->modules.path);
+}
+
+static void lone_mark_all_reachable_values(struct lone_lisp *lone)
+{
+	lone_mark_known_roots(lone);             /* precise */
 }
 
 static void lone_deallocate_all_unmarked_values(struct lone_lisp *lone)
