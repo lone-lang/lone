@@ -260,6 +260,12 @@ struct lone_value_container {
 	struct lone_value value;
 };
 
+struct lone_heap {
+	struct lone_heap *next;
+	size_t count;
+	struct lone_value_container values[];
+};
+
 static void lone_memory_move(void *from, void *to, size_t count)
 {
 	unsigned char *source = from, *destination = to;
