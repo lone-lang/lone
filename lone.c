@@ -347,9 +347,7 @@ static void * __attribute__((alloc_size(3))) lone_reallocate(struct lone_lisp *l
 static inline struct lone_value_container *lone_value_to_container(struct lone_value* value)
 {
 	if (!value) { return 0; }
-	unsigned char *bytes = (unsigned char *) value;
-	bytes -= __builtin_offsetof(struct lone_value_container, value);
-	return (struct lone_value_container *) bytes;
+	return (struct lone_value_container *) (((unsigned char *) value) - __builtin_offsetof(struct lone_value_container, value));
 }
 
 static void lone_mark_value(struct lone_value *value)
