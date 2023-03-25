@@ -197,6 +197,7 @@ typedef bool (*lone_comparator)(struct lone_value *, struct lone_value *);
    ╰────────────────────────────────────────────────────────────────────────╯ */
 struct lone_lisp {
 	struct {
+		void *stack;
 		struct lone_memory *general;
 		struct lone_heap *heaps;
 	} memory;
@@ -856,8 +857,10 @@ static struct lone_value *lone_primitive_import(struct lone_lisp *, struct lone_
    │    allocation system is not functional without it.                     │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
-static void lone_lisp_initialize(struct lone_lisp *lone, unsigned char *memory, size_t size, size_t heap_size)
+static void lone_lisp_initialize(struct lone_lisp *lone, unsigned char *memory, size_t size, size_t heap_size, void *stack)
 {
+	lone->memory.stack = stack;
+
 	lone->memory.general = (struct lone_memory *) memory;
 	lone->memory.general->prev = lone->memory.general->next = 0;
 	lone->memory.general->free = 1;
@@ -3262,10 +3265,11 @@ static void lone_modules_initialize(struct lone_lisp *lone, int argc, char **arg
    ╰────────────────────────────────────────────────────────────────────────╯ */
 long lone(int argc, char **argv, char **envp, struct auxiliary *auxv)
 {
+	void *stack = __builtin_frame_address(0);
 	static unsigned char memory[LONE_MEMORY_SIZE];
 	struct lone_lisp lone;
 
-	lone_lisp_initialize(&lone, memory, sizeof(memory), 1024);
+	lone_lisp_initialize(&lone, memory, sizeof(memory), 1024, stack);
 	lone_modules_initialize(&lone, argc, argv, envp, auxv);
 
 	lone_module_load_from_file_descriptor(&lone, 0, 0);
