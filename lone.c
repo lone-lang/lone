@@ -573,6 +573,7 @@ static void lone_garbage_collector(struct lone_lisp *lone)
 {
 	lone_mark_all_reachable_values(lone);
 	lone_kill_all_unmarked_values(lone);
+	lone_deallocate_dead_heaps(lone);
 }
 
 /* ╭────────────────────────────────────────────────────────────────────────╮
