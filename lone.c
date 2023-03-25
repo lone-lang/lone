@@ -527,39 +527,44 @@ static void lone_mark_all_reachable_values(struct lone_lisp *lone)
 	lone_find_and_mark_stack_roots(lone);    /* conservative */
 }
 
-static void lone_deallocate_all_unmarked_values(struct lone_lisp *lone)
+static void lone_kill_all_unmarked_values(struct lone_lisp *lone)
 {
-	struct lone_value_container **values = &lone->values, *value;
-	while ((value = *values)) {
-		if (value->header.marked) {
-			value->header.marked = false;
-			values = &value->header.next;
-		} else {
-			*values = value->header.next;
+	struct lone_value_container *value;
+	struct lone_heap *heap;
+	size_t i;
 
-			switch (value->value.type) {
-			case LONE_BYTES:
-			case LONE_TEXT:
-			case LONE_SYMBOL:
-				lone_deallocate(lone, value->value.bytes.pointer);
-				break;
-			case LONE_VECTOR:
-				lone_deallocate(lone, value->value.vector.values);
-				break;
-			case LONE_TABLE:
-				lone_deallocate(lone, value->value.table.entries);
-				break;
-			case LONE_MODULE:
-			case LONE_FUNCTION:
-			case LONE_PRIMITIVE:
-			case LONE_LIST:
-			case LONE_INTEGER:
-			case LONE_POINTER:
-				/* these types do not own any additional memory */
-				break;
+	for (heap = lone->memory.heaps; heap; heap = heap->next) {
+		for (i = 0; i < heap->count; ++i) {
+			value = &heap->values[i];
+
+			if (!value->header.live) { continue; }
+
+			if (!value->header.marked) {
+				switch (value->value.type) {
+				case LONE_BYTES:
+				case LONE_TEXT:
+				case LONE_SYMBOL:
+					lone_deallocate(lone, value->value.bytes.pointer);
+					break;
+				case LONE_VECTOR:
+					lone_deallocate(lone, value->value.vector.values);
+					break;
+				case LONE_TABLE:
+					lone_deallocate(lone, value->value.table.entries);
+					break;
+				case LONE_MODULE:
+				case LONE_FUNCTION:
+				case LONE_PRIMITIVE:
+				case LONE_LIST:
+				case LONE_INTEGER:
+				case LONE_POINTER:
+					/* these types do not own any additional memory */
+					break;
+				}
+
+				value->header.live = false;
+				value->header.marked = false;
 			}
-
-			lone_deallocate(lone, value);
 		}
 	}
 }
@@ -567,7 +572,7 @@ static void lone_deallocate_all_unmarked_values(struct lone_lisp *lone)
 static void lone_garbage_collector(struct lone_lisp *lone)
 {
 	lone_mark_all_reachable_values(lone);
-	lone_deallocate_all_unmarked_values(lone);
+	lone_kill_all_unmarked_values(lone);
 }
 
 /* ╭────────────────────────────────────────────────────────────────────────╮
