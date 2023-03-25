@@ -477,6 +477,11 @@ static void lone_mark_known_roots(struct lone_lisp *lone)
 	lone_mark_value(lone->modules.path);
 }
 
+static bool lone_points_within_range(void *pointer, void *start, void *end)
+{
+	return start <= pointer && pointer < end;
+}
+
 static void lone_mark_all_reachable_values(struct lone_lisp *lone)
 {
 	lone_mark_known_roots(lone);             /* precise */
