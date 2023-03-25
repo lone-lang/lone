@@ -196,7 +196,10 @@ typedef bool (*lone_comparator)(struct lone_value *, struct lone_value *);
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
 struct lone_lisp {
-	struct lone_memory *memory;
+	struct {
+		struct lone_memory *general;
+		struct lone_heap *heaps;
+	} memory;
 	struct lone_value_container *values;
 	struct lone_value *symbol_table;
 	struct {
@@ -315,7 +318,7 @@ static void * __attribute__((malloc, alloc_size(2))) lone_allocate(struct lone_l
 	size_t needed_size = requested_size + sizeof(struct lone_memory);
 	struct lone_memory *block;
 
-	for (block = lone->memory; block; block = block->next) {
+	for (block = lone->memory.general; block; block = block->next) {
 		if (block->free && block->size >= needed_size)
 			break;
 	}
