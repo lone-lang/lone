@@ -501,6 +501,26 @@ static bool lone_points_to_heap(struct lone_lisp *lone, void *pointer)
 	return false;
 }
 
+static void lone_find_and_mark_stack_roots(struct lone_lisp *lone)
+{
+	void *bottom = lone->memory.stack, *top = __builtin_frame_address(0), *tmp;
+	void **pointer;
+
+	if (top < bottom) {
+		tmp = bottom;
+		bottom = top;
+		top = tmp;
+	}
+
+	pointer = bottom;
+
+	while (pointer++ < top) {
+		if (lone_points_to_heap(lone, *pointer)) {
+			lone_mark_value(*pointer);
+		}
+	}
+}
+
 static void lone_mark_all_reachable_values(struct lone_lisp *lone)
 {
 	lone_mark_known_roots(lone);             /* precise */
