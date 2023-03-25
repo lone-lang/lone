@@ -798,13 +798,16 @@ static struct lone_value *lone_primitive_import(struct lone_lisp *, struct lone_
    │    allocation system is not functional without it.                     │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
-static void lone_lisp_initialize(struct lone_lisp *lone, unsigned char *memory, size_t size)
+static void lone_lisp_initialize(struct lone_lisp *lone, unsigned char *memory, size_t size, size_t heap_size)
 {
-	lone->memory = (struct lone_memory *) memory;
-	lone->memory->prev = lone->memory->next = 0;
-	lone->memory->free = 1;
-	lone->memory->size = size - sizeof(struct lone_memory);
+	lone->memory.general = (struct lone_memory *) memory;
+	lone->memory.general->prev = lone->memory.general->next = 0;
+	lone->memory.general->free = 1;
+	lone->memory.general->size = size - sizeof(struct lone_memory);
+
+	lone->memory.heaps = 0;
 	lone->values = 0;
+
 
 	/* basic initialization done, can now use value creation functions */
 
@@ -3205,7 +3208,7 @@ long lone(int argc, char **argv, char **envp, struct auxiliary *auxv)
 	static unsigned char memory[LONE_MEMORY_SIZE];
 	struct lone_lisp lone;
 
-	lone_lisp_initialize(&lone, memory, sizeof(memory));
+	lone_lisp_initialize(&lone, memory, sizeof(memory), 1024);
 	lone_modules_initialize(&lone, argc, argv, envp, auxv);
 
 	lone_module_load_from_file_descriptor(&lone, 0, 0);
