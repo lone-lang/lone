@@ -331,7 +331,7 @@ static size_t __attribute__((const)) lone_align(size_t size, size_t alignment)
 	return lone_next_power_of_2_multiple(size, alignment);
 }
 
-static void * __attribute__((malloc, alloc_size(2))) lone_allocate_aligned(struct lone_lisp *lone, size_t requested_size, size_t alignment)
+static void * __attribute__((malloc, alloc_size(2), alloc_align(3))) lone_allocate_aligned(struct lone_lisp *lone, size_t requested_size, size_t alignment)
 {
 	size_t needed_size = requested_size + sizeof(struct lone_memory);
 	struct lone_memory *block;
