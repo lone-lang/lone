@@ -331,12 +331,12 @@ static size_t __attribute__((const)) lone_align(size_t size, size_t alignment)
 	return lone_next_power_of_2_multiple(size, alignment);
 }
 
-static void * __attribute__((malloc, alloc_size(2))) lone_allocate(struct lone_lisp *lone, size_t requested_size)
+static void * __attribute__((malloc, alloc_size(2))) lone_allocate_aligned(struct lone_lisp *lone, size_t requested_size, size_t alignment)
 {
 	size_t needed_size = requested_size + sizeof(struct lone_memory);
 	struct lone_memory *block;
 
-	needed_size = lone_align(needed_size, 16);
+	needed_size = lone_align(needed_size, alignment);
 
 	for (block = lone->memory.general; block; block = block->next) {
 		if (block->free && block->size >= needed_size)
@@ -349,6 +349,11 @@ static void * __attribute__((malloc, alloc_size(2))) lone_allocate(struct lone_l
 	lone_memory_split(block, needed_size);
 
 	return block->pointer;
+}
+
+static void * __attribute__((malloc, alloc_size(2))) lone_allocate(struct lone_lisp *lone, size_t requested_size)
+{
+	return lone_allocate_aligned(lone, requested_size, 16);
 }
 
 static void lone_deallocate(struct lone_lisp *lone, void * pointer)
