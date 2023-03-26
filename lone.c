@@ -336,6 +336,8 @@ static void * __attribute__((malloc, alloc_size(2))) lone_allocate(struct lone_l
 	size_t needed_size = requested_size + sizeof(struct lone_memory);
 	struct lone_memory *block;
 
+	needed_size = lone_align(needed_size, 16);
+
 	for (block = lone->memory.general; block; block = block->next) {
 		if (block->free && block->size >= needed_size)
 			break;
