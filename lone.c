@@ -320,6 +320,12 @@ static size_t __attribute__((const)) lone_next_power_of_2(size_t n)
 	return next;
 }
 
+static size_t __attribute__((const)) lone_next_power_of_2_multiple(size_t n, size_t m)
+{
+	m = lone_next_power_of_2(m);
+	return (n + m - 1) & (~(m - 1));
+}
+
 static void * __attribute__((malloc, alloc_size(2))) lone_allocate(struct lone_lisp *lone, size_t requested_size)
 {
 	size_t needed_size = requested_size + sizeof(struct lone_memory);
