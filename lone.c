@@ -393,10 +393,10 @@ resurrect:
 
 static void lone_deallocate_dead_heaps(struct lone_lisp *lone)
 {
-	struct lone_heap *heap, *prev;
+	struct lone_heap *prev = lone->memory.heaps, *heap = prev->next;
 	size_t i;
 
-	for (prev = lone->memory.heaps, heap = prev->next; heap; prev = heap, heap = heap->next) {
+	while (heap) {
 		for (i = 0; i < heap->count; ++i) {
 			if (heap->values[i].header.live) { /* at least one live object */ goto next_heap; }
 		}
@@ -405,8 +405,10 @@ static void lone_deallocate_dead_heaps(struct lone_lisp *lone)
 		prev->next = heap->next;
 		lone_deallocate(lone, heap);
 		heap = prev->next;
-next_heap:
 		continue;
+next_heap:
+		prev = heap;
+		heap = heap->next;
 	}
 }
 
