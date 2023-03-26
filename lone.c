@@ -138,9 +138,9 @@ struct lone_table {
  * https://user.ceng.metu.edu.tr/~ucoluk/research/lisp/lispman/node24.html
  */
 struct lone_function_flags {
-	unsigned char evaluate_arguments: 1;
-	unsigned char evaluate_result: 1;
-	unsigned char variable_arguments: 1;
+	bool evaluate_arguments: 1;
+	bool evaluate_result: 1;
+	bool variable_arguments: 1;
 };
 
 struct lone_function {
