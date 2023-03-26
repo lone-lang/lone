@@ -351,7 +351,7 @@ static void * __attribute__((malloc, alloc_size(2), alloc_align(3))) lone_alloca
 	return block->pointer;
 }
 
-static void * __attribute__((malloc, alloc_size(2))) lone_allocate(struct lone_lisp *lone, size_t requested_size)
+static void * __attribute__((malloc, alloc_size(2), assume_aligned(16))) lone_allocate(struct lone_lisp *lone, size_t requested_size)
 {
 	return lone_allocate_aligned(lone, requested_size, 16);
 }
