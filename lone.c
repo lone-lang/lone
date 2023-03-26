@@ -521,6 +521,9 @@ static void lone_find_and_mark_stack_roots(struct lone_lisp *lone)
 
 static void lone_mark_all_reachable_values(struct lone_lisp *lone)
 {
+	lone_registers registers;                /* stack space for registers */
+	lone_save_registers(registers);          /* spill registers on stack */
+
 	lone_mark_known_roots(lone);             /* precise */
 	lone_find_and_mark_stack_roots(lone);    /* conservative */
 }
