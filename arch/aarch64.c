@@ -9,6 +9,9 @@
  * stack-alignment: 16 bytes
  * system-call:     x0 = "svc 0" [x8] x0 x1 x2 x3 x4 x5
  *
+ * https://github.com/ARM-software/abi-aa
+ * https://github.com/ARM-software/abi-aa/blob/main/aapcs64/aapcs64.rst
+ *
  **/
 
 static long
