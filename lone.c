@@ -74,6 +74,10 @@ static ssize_t __attribute__((fd_arg_write(1), tainted_args)) linux_write(int fd
 	#define LONE_MEMORY_SIZE (1024 * 1024)
 #endif
 
+#ifndef LONE_ALIGNMENT
+	#define LONE_ALIGNMENT 16
+#endif
+
 /* ╭──────────────────────────┨ LONE LISP TYPES ┠───────────────────────────╮
    │                                                                        │
    │    Lone implements dynamic data types as a tagged union.               │
