@@ -946,7 +946,7 @@ static void lone_lisp_initialize(struct lone_lisp *lone, unsigned char *memory, 
 {
 	lone->memory.stack = stack;
 
-	lone->memory.general = (struct lone_memory *) memory;
+	lone->memory.general = (struct lone_memory *) __builtin_assume_aligned(memory, LONE_ALIGNMENT);
 	lone->memory.general->prev = lone->memory.general->next = 0;
 	lone->memory.general->free = 1;
 	lone->memory.general->size = size - sizeof(struct lone_memory);
