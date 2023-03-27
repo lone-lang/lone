@@ -3350,7 +3350,7 @@ static void lone_modules_initialize(struct lone_lisp *lone, int argc, char **arg
 long lone(int argc, char **argv, char **envp, struct auxiliary *auxv)
 {
 	void *stack = __builtin_frame_address(0);
-	static unsigned char __attribute__((aligned)) memory[LONE_MEMORY_SIZE];
+	static unsigned char __attribute__((aligned(LONE_ALIGNMENT))) memory[LONE_MEMORY_SIZE];
 	struct lone_lisp lone;
 
 	lone_lisp_initialize(&lone, memory, sizeof(memory), 1024, stack);
