@@ -293,7 +293,7 @@ static void lone_memory_split(struct lone_memory *block, size_t used)
 
 	/* split block if there's enough space to allocate at least 1 byte */
 	if (excess >= sizeof(struct lone_memory) + 1) {
-		struct lone_memory *new = (struct lone_memory *) (block->pointer + used);
+		struct lone_memory *new = (struct lone_memory *) __builtin_assume_aligned(block->pointer + used, LONE_ALIGNMENT);
 		new->next = block->next;
 		new->prev = block;
 		new->free = 1;
