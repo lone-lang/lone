@@ -443,8 +443,11 @@ next_heap:
 
 static inline struct lone_value_container *lone_value_to_container(struct lone_value* value)
 {
+	unsigned char *bytes;
 	if (!value) { return 0; }
-	return (struct lone_value_container *) (((unsigned char *) value) - __builtin_offsetof(struct lone_value_container, value));
+	bytes = (unsigned char *) __builtin_assume_aligned(value, __alignof__(struct lone_value));
+	bytes -= __builtin_offsetof(struct lone_value_container, value);
+	return (struct lone_value_container *) __builtin_assume_aligned(bytes, __alignof__(struct lone_value_container));
 }
 
 static void lone_mark_value(struct lone_value *value)
