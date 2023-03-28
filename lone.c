@@ -2586,6 +2586,11 @@ static struct lone_value *lone_primitive_is_negative(struct lone_lisp *lone, str
    │    Text operations.                                                    │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
+static struct lone_value *lone_primitive_join(struct lone_lisp *lone, struct lone_value *closure, struct lone_value *environment, struct lone_value *arguments)
+{
+	return lone_text_transfer_bytes(lone, lone_join(lone, lone_list_first(arguments), lone_list_rest(arguments), lone_is_text));
+}
+
 static struct lone_value *lone_primitive_concatenate(struct lone_lisp *lone, struct lone_value *closure, struct lone_value *environment, struct lone_value *arguments)
 {
 	return lone_text_transfer_bytes(lone, lone_concatenate(lone, arguments, lone_is_text));
@@ -3179,6 +3184,14 @@ static void lone_builtin_module_text_initialize(struct lone_lisp *lone)
 {
 	struct lone_value *name = lone_intern_c_string(lone, "text"),
 	                  *module = lone_module_create(lone, name);
+
+	lone_table_set(lone, module->module.environment,
+	                     lone_intern_c_string(lone, "join"),
+	                     lone_primitive_create(lone,
+	                                           "join",
+	                                           lone_primitive_join,
+	                                           module,
+	                                           (struct lone_function_flags) { 1, 0, 1 }));
 
 	lone_table_set(lone, module->module.environment,
 	                     lone_intern_c_string(lone, "concatenate"),
