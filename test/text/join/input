@@ -1,0 +1,9 @@
+(import (lone print) (text join))
+
+(print (join))
+(print (join ", "))
+(print (join ", " "a"))
+(print (join ", " "a" "b"))
+(print (join ", " "a" "b" "c"))
+(print (join ", " "a" "b" "c" "d"))
+(print (join ", " "a" "b" "c" "d" "e"))
