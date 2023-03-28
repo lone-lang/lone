@@ -1175,7 +1175,7 @@ static struct lone_bytes lone_join(struct lone_lisp *lone, struct lone_value *se
 		if (!is_valid(separator)) { linux_exit(-1); }
 	}
 
-	for (head = arguments; !lone_is_nil(head); head = lone_list_rest(head)) {
+	for (head = arguments; head && !lone_is_nil(head); head = lone_list_rest(head)) {
 		argument = lone_list_first(head);
 		if (!is_valid(argument)) { linux_exit(-1); }
 
@@ -1187,7 +1187,7 @@ static struct lone_bytes lone_join(struct lone_lisp *lone, struct lone_value *se
 
 	joined = lone_allocate(lone, total + 1);
 
-	for (head = arguments; !lone_is_nil(head); head = lone_list_rest(head)) {
+	for (head = arguments; head && !lone_is_nil(head); head = lone_list_rest(head)) {
 		argument = lone_list_first(head);
 
 		lone_memory_move(argument->bytes.pointer, joined + position, argument->bytes.count);
