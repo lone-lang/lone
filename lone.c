@@ -978,6 +978,21 @@ static bool lone_has_same_type(struct lone_value *x, struct lone_value *y)
 	return x->type == y->type;
 }
 
+static bool lone_is_function(struct lone_value *value)
+{
+	return value->type == LONE_FUNCTION;
+}
+
+static bool lone_is_primitive(struct lone_value *value)
+{
+	return value->type == LONE_PRIMITIVE;
+}
+
+static bool lone_is_applicable(struct lone_value *value)
+{
+	return lone_is_function(value) || lone_is_primitive(value);
+}
+
 static bool lone_is_list(struct lone_value *value)
 {
 	return value->type == LONE_LIST;
