@@ -970,9 +970,14 @@ static void lone_lisp_initialize(struct lone_lisp *lone, unsigned char *memory, 
 
 /* ╭────────────────────────────────────────────────────────────────────────╮
    │                                                                        │
-   │    Functions for operating on lone's built-in types.                   │
+   │    Type predicate functions.                                           │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
+static bool lone_has_same_type(struct lone_value *x, struct lone_value *y)
+{
+	return x->type == y->type;
+}
+
 static bool lone_is_list(struct lone_value *value)
 {
 	return value->type == LONE_LIST;
@@ -1003,14 +1008,14 @@ static bool lone_is_symbol(struct lone_value *value)
 	return value->type == LONE_SYMBOL;
 }
 
+/* ╭────────────────────────────────────────────────────────────────────────╮
+   │                                                                        │
+   │    Comparison and equality functions.                                  │
+   │                                                                        │
+   ╰────────────────────────────────────────────────────────────────────────╯ */
 static bool lone_is_identical(struct lone_value *x, struct lone_value *y)
 {
 	return x == y;
-}
-
-static bool lone_has_same_type(struct lone_value *x, struct lone_value *y)
-{
-	return x->type == y->type;
 }
 
 static bool lone_bytes_equals(struct lone_bytes x, struct lone_bytes y);
@@ -1083,6 +1088,11 @@ static bool lone_is_equal(struct lone_value *x, struct lone_value *y)
 	}
 }
 
+/* ╭────────────────────────────────────────────────────────────────────────╮
+   │                                                                        │
+   │    List manipulation functions.                                        │
+   │                                                                        │
+   ╰────────────────────────────────────────────────────────────────────────╯ */
 static inline struct lone_value *lone_list_first(struct lone_value *value)
 {
 	return value->list.first;
