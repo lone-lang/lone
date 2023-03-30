@@ -1,0 +1,8 @@
+(import (lone print quote set lambda) (list map) (math +))
+
+(set ++ (lambda (x) (+ 1 x)))
+
+(print (map ++ '()))
+(print (map ++ '(1)))
+(print (map ++ '(1 2)))
+(print (map ++ '(1 2 3)))
