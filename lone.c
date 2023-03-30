@@ -2682,6 +2682,29 @@ static struct lone_value *lone_primitive_list_map(struct lone_lisp *lone, struct
 	return results;
 }
 
+static struct lone_value *lone_primitive_list_reduce(struct lone_lisp *lone, struct lone_value *closure, struct lone_value *environment, struct lone_value *arguments)
+{
+	struct lone_value *function, *list, *result;
+
+	if (lone_is_nil(arguments)) { /* arguments not given */ linux_exit(-1); }
+	function = lone_list_first(arguments);
+	if (!lone_is_applicable(function)) { /* not given an applicable value */ linux_exit(-1); }
+	arguments = lone_list_rest(arguments);
+	result = lone_list_first(arguments);
+	arguments = lone_list_rest(arguments);
+	list = lone_list_first(arguments);
+	if (!lone_is_list(list)) { /* can only map functions to lists */ linux_exit(-1); }
+	arguments = lone_list_rest(arguments);
+	if (!lone_is_nil(arguments)) { /* too many arguments given */ linux_exit(-1); }
+
+	for (/* list */; !lone_is_nil(list); list = lone_list_rest(list)) {
+		arguments = lone_list_build(lone, 2, result, lone_list_first(list));
+		result = lone_apply(lone, environment, function, arguments);
+	}
+
+	return result;
+}
+
 static struct lone_value *lone_primitive_flatten(struct lone_lisp *lone, struct lone_value *closure, struct lone_value *environment, struct lone_value *arguments)
 {
 	return lone_list_flatten(lone, arguments);
@@ -3324,6 +3347,14 @@ static void lone_builtin_module_list_initialize(struct lone_lisp *lone)
 	                     lone_primitive_create(lone,
 	                                           "map",
 	                                           lone_primitive_list_map,
+	                                           module,
+	                                           (struct lone_function_flags) { 1, 0, 1 }));
+
+	lone_table_set(lone, module->module.environment,
+	                     lone_intern_c_string(lone, "reduce"),
+	                     lone_primitive_create(lone,
+	                                           "reduce",
+	                                           lone_primitive_list_reduce,
 	                                           module,
 	                                           (struct lone_function_flags) { 1, 0, 1 }));
 
