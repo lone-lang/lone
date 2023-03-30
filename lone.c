@@ -2612,6 +2612,17 @@ static struct lone_value *lone_primitive_first(struct lone_lisp *lone, struct lo
 	return lone_list_first(argument);
 }
 
+static struct lone_value *lone_primitive_rest(struct lone_lisp *lone, struct lone_value *closure, struct lone_value *environment, struct lone_value *arguments)
+{
+	struct lone_value *argument;
+	if (lone_is_nil(arguments)) { linux_exit(-1); }
+	argument = lone_list_first(arguments);
+	arguments = lone_list_rest(arguments);
+	if (lone_is_nil(argument)) { linux_exit(-1); }
+	if (!lone_is_nil(arguments)) { linux_exit(-1); }
+	return lone_list_rest(argument);
+}
+
 static struct lone_value *lone_primitive_flatten(struct lone_lisp *lone, struct lone_value *closure, struct lone_value *environment, struct lone_value *arguments)
 {
 	return lone_list_flatten(lone, arguments);
@@ -3238,6 +3249,14 @@ static void lone_builtin_module_list_initialize(struct lone_lisp *lone)
 	                     lone_primitive_create(lone,
 	                                           "first",
 	                                           lone_primitive_first,
+	                                           module,
+	                                           (struct lone_function_flags) { 1, 0, 1 }));
+
+	lone_table_set(lone, module->module.environment,
+	                     lone_intern_c_string(lone, "rest"),
+	                     lone_primitive_create(lone,
+	                                           "rest",
+	                                           lone_primitive_rest,
 	                                           module,
 	                                           (struct lone_function_flags) { 1, 0, 1 }));
 
