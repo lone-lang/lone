@@ -2987,6 +2987,23 @@ static struct lone_value *lone_module_name_to_key(struct lone_lisp *lone, struct
 	}
 }
 
+static struct lone_value *lone_module_for_name(struct lone_lisp *lone, struct lone_value *name, bool *not_found)
+{
+	struct lone_value *module;
+
+	name = lone_module_name_to_key(lone, name);
+	module = lone_table_get(lone, lone->modules.loaded, name);
+	*not_found = false;
+
+	if (lone_is_nil(module)) {
+		module = lone_module_create(lone, name);
+		lone_table_set(lone, lone->modules.loaded, name, module);
+		*not_found = true;
+	}
+
+	return module;
+}
+
 static int lone_module_search(struct lone_lisp *lone, struct lone_value *symbols)
 {
 	struct lone_value *slash = lone_intern_c_string(lone, "/"), *ln = lone_intern_c_string(lone, ".ln");
@@ -3028,28 +3045,9 @@ static int lone_module_search(struct lone_lisp *lone, struct lone_value *symbols
 	linux_exit(-1); /* module not found */
 }
 
-static struct lone_value *lone_module_for_name(struct lone_lisp *lone, struct lone_value *name)
+static void lone_module_load_from_file_descriptor(struct lone_lisp *lone, struct lone_value *module, int file_descriptor)
 {
-	struct lone_value *module;
-
-	if (name) {
-		name = lone_module_name_to_key(lone, name);
-		module = lone_table_get(lone, lone->modules.loaded, name);
-
-		if (lone_is_nil(module)) {
-			module = lone_module_create(lone, name);
-			lone_table_set(lone, lone->modules.loaded, name, module);
-		}
-	} else {
-		module = lone->modules.null;
-	}
-
-	return module;
-}
-
-static struct lone_value *lone_module_load_from_file_descriptor(struct lone_lisp *lone, struct lone_value *name, int file_descriptor)
-{
-	struct lone_value *module = lone_module_for_name(lone, name), *value;
+	struct lone_value *value;
 	struct lone_reader reader;
 
 	lone_reader_initialize(lone, &reader, LONE_BUFFER_SIZE, file_descriptor);
@@ -3062,6 +3060,21 @@ static struct lone_value *lone_module_load_from_file_descriptor(struct lone_lisp
 	}
 
 	lone_garbage_collector(lone);
+}
+
+static struct lone_value *lone_module_load(struct lone_lisp *lone, struct lone_value *name)
+{
+	struct lone_value *module;
+	bool not_found;
+	int file_descriptor;
+
+	module = lone_module_for_name(lone, name, &not_found);
+
+	if (not_found) {
+		file_descriptor = lone_module_search(lone, name);
+		lone_module_load_from_file_descriptor(lone, module, file_descriptor);
+		linux_close(file_descriptor);
+	}
 
 	return module;
 }
