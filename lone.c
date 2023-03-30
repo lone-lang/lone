@@ -2659,6 +2659,29 @@ static struct lone_value *lone_primitive_rest(struct lone_lisp *lone, struct lon
 	return lone_list_rest(argument);
 }
 
+static struct lone_value *lone_primitive_list_map(struct lone_lisp *lone, struct lone_value *closure, struct lone_value *environment, struct lone_value *arguments)
+{
+	struct lone_value *function, *list, *results, *head;
+
+	if (lone_is_nil(arguments)) { /* arguments not given */ linux_exit(-1); }
+	function = lone_list_first(arguments);
+	if (!lone_is_applicable(function)) { /* not given an applicable value */ linux_exit(-1); }
+	arguments = lone_list_rest(arguments);
+	list = lone_list_first(arguments);
+	if (!lone_is_list(list)) { /* can only map functions to lists */ linux_exit(-1); }
+	arguments = lone_list_rest(arguments);
+	if (!lone_is_nil(arguments)) { /* too many arguments given */ linux_exit(-1); }
+
+	results = lone_list_create_nil(lone);
+
+	for (head = results; !lone_is_nil(list); list = lone_list_rest(list), head = lone_list_set_rest(head, lone_list_create_nil(lone))) {
+		arguments = lone_list_create(lone, lone_list_first(list), lone_nil(lone));
+		lone_list_set_first(head, lone_apply(lone, environment, function, arguments));
+	}
+
+	return results;
+}
+
 static struct lone_value *lone_primitive_flatten(struct lone_lisp *lone, struct lone_value *closure, struct lone_value *environment, struct lone_value *arguments)
 {
 	return lone_list_flatten(lone, arguments);
@@ -3293,6 +3316,14 @@ static void lone_builtin_module_list_initialize(struct lone_lisp *lone)
 	                     lone_primitive_create(lone,
 	                                           "rest",
 	                                           lone_primitive_rest,
+	                                           module,
+	                                           (struct lone_function_flags) { 1, 0, 1 }));
+
+	lone_table_set(lone, module->module.environment,
+	                     lone_intern_c_string(lone, "map"),
+	                     lone_primitive_create(lone,
+	                                           "map",
+	                                           lone_primitive_list_map,
 	                                           module,
 	                                           (struct lone_function_flags) { 1, 0, 1 }));
 
