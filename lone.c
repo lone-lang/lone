@@ -2641,6 +2641,8 @@ static void lone_primitive_import_only(struct lone_lisp *lone, struct lone_value
 	} while (!lone_is_nil(symbols = lone_list_rest(symbols)));
 }
 
+static struct lone_value *lone_module_load(struct lone_lisp *lone, struct lone_value *name);
+
 static void lone_primitive_import_argument(struct lone_lisp *lone, struct lone_value *environment, struct lone_value *argument)
 {
 	struct lone_value *name, *module;
@@ -2664,9 +2666,7 @@ static void lone_primitive_import_argument(struct lone_lisp *lone, struct lone_v
 		/* not a supported import argument type */ linux_exit(-1);
 	}
 
-	if (name->type != LONE_SYMBOL) { /* module name not a symbol: (import 10), (import (10)) */ linux_exit(-1); }
-
-	module = lone_table_get(lone, lone->modules.loaded, name);
+	module = lone_module_load(lone, name);
 	if (lone_is_nil(module)) { /* module not found: (import non-existent), (import (non-existent)) */ linux_exit(-1); }
 
 	if (argument) {
