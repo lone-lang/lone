@@ -3081,7 +3081,7 @@ static struct lone_value *lone_module_load(struct lone_lisp *lone, struct lone_v
 
 static void lone_builtin_module_linux_initialize(struct lone_lisp *lone, int argc, char **argv, char **envp, struct auxiliary *auxv)
 {
-	struct lone_value *name = lone_intern_c_string(lone, "linux"),
+	struct lone_value *name = lone_module_name_to_key(lone, lone_intern_c_string(lone, "linux")),
 	                  *module = lone_module_create(lone, name),
 	                  *linux_system_call_table = lone_table_create(lone, 1024, 0),
 	                  *count, *arguments, *environment, *auxiliary_values;
@@ -3123,7 +3123,7 @@ static void lone_builtin_module_linux_initialize(struct lone_lisp *lone, int arg
 
 static void lone_builtin_module_math_initialize(struct lone_lisp *lone)
 {
-	struct lone_value *name = lone_intern_c_string(lone, "math"),
+	struct lone_value *name = lone_module_name_to_key(lone, lone_intern_c_string(lone, "math")),
 	                  *module = lone_module_create(lone, name);
 
 	lone_table_set(lone, module->module.environment,
@@ -3195,7 +3195,7 @@ static void lone_builtin_module_math_initialize(struct lone_lisp *lone)
 
 static void lone_builtin_module_text_initialize(struct lone_lisp *lone)
 {
-	struct lone_value *name = lone_intern_c_string(lone, "text"),
+	struct lone_value *name = lone_module_name_to_key(lone, lone_intern_c_string(lone, "text")),
 	                  *module = lone_module_create(lone, name);
 
 	lone_table_set(lone, module->module.environment,
@@ -3219,7 +3219,7 @@ static void lone_builtin_module_text_initialize(struct lone_lisp *lone)
 
 static void lone_builtin_module_list_initialize(struct lone_lisp *lone)
 {
-	struct lone_value *name = lone_intern_c_string(lone, "list"),
+	struct lone_value *name = lone_module_name_to_key(lone, lone_intern_c_string(lone, "list")),
 	                  *module = lone_module_create(lone, name);
 
 	lone_table_set(lone, module->module.environment,
@@ -3235,7 +3235,7 @@ static void lone_builtin_module_list_initialize(struct lone_lisp *lone)
 
 static void lone_builtin_module_lone_initialize(struct lone_lisp *lone)
 {
-	struct lone_value *name = lone_intern_c_string(lone, "lone"),
+	struct lone_value *name = lone_module_name_to_key(lone, lone_intern_c_string(lone, "lone")),
 	                  *module = lone_module_create(lone, name);
 
 	lone_table_set(lone, module->module.environment,
