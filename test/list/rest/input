@@ -1,0 +1,5 @@
+(import (lone print quote) (list rest))
+
+(print (rest '("x")))
+(print (rest '("x" "y")))
+(print (rest '("x" "y" "z")))
