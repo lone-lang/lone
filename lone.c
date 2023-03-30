@@ -3372,7 +3372,7 @@ long lone(int argc, char **argv, char **envp, struct auxiliary *auxv)
 	lone_lisp_initialize(&lone, memory, sizeof(memory), 1024, stack);
 	lone_modules_initialize(&lone, argc, argv, envp, auxv);
 
-	lone_module_load_from_file_descriptor(&lone, 0, 0);
+	lone_module_load_from_file_descriptor(&lone, lone_module_null(&lone), 0);
 
 	return 0;
 }
