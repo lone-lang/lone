@@ -1,0 +1,11 @@
+(import (lone print set quote) (list reduce) (math +))
+
+(print (reduce + 0 '()))
+(print (reduce + 0 '(1)))
+(print (reduce + 0 '(1 2)))
+(print (reduce + 0 '(1 2 3)))
+
+(print (reduce + 10 '()))
+(print (reduce + 15 '(1)))
+(print (reduce + 20 '(1 2)))
+(print (reduce + 36 '(1 2 3)))

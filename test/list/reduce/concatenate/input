@@ -1,0 +1,6 @@
+(import (lone print set quote) (list reduce) (text concatenate))
+
+(print (reduce concatenate "" '()))
+(print (reduce concatenate "" '("a")))
+(print (reduce concatenate "" '("a" "b")))
+(print (reduce concatenate "" '("a" "b" "c")))
