@@ -1961,6 +1961,7 @@ static struct lone_value *lone_evaluate_form_index(struct lone_lisp *lone, struc
 }
 
 static struct lone_value *lone_apply(struct lone_lisp *, struct lone_value *, struct lone_value *, struct lone_value *);
+static struct lone_value *lone_apply_function(struct lone_lisp *, struct lone_value *, struct lone_value *, struct lone_value *);
 static struct lone_value *lone_apply_primitive(struct lone_lisp *, struct lone_value *, struct lone_value *, struct lone_value *);
 
 static struct lone_value *lone_evaluate_form(struct lone_lisp *lone, struct lone_value *environment, struct lone_value *list)
@@ -1971,9 +1972,8 @@ static struct lone_value *lone_evaluate_form(struct lone_lisp *lone, struct lone
 	first = lone_evaluate(lone, environment, first);
 	switch (first->type) {
 	case LONE_FUNCTION:
-		return lone_apply(lone, environment, first, rest);
 	case LONE_PRIMITIVE:
-		return lone_apply_primitive(lone, environment, first, rest);
+		return lone_apply(lone, environment, first, rest);
 	case LONE_VECTOR:
 	case LONE_TABLE:
 		return lone_evaluate_form_index(lone, environment, first, rest);
@@ -2023,7 +2023,18 @@ static struct lone_value *lone_evaluate_all(struct lone_lisp *lone, struct lone_
 	return evaluated;
 }
 
-static struct lone_value *lone_apply(struct lone_lisp *lone, struct lone_value *environment, struct lone_value *function, struct lone_value *arguments)
+static struct lone_value *lone_apply(struct lone_lisp *lone, struct lone_value *environment, struct lone_value *applicable, struct lone_value *arguments)
+{
+	if (!lone_is_applicable(applicable)) { /* given function is not an applicable type */ linux_exit(-1); }
+
+	if (lone_is_function(applicable)) {
+		return lone_apply_function(lone, environment, applicable, arguments);
+	} else {
+		return lone_apply_primitive(lone, environment, applicable, arguments);
+	}
+}
+
+static struct lone_value *lone_apply_function(struct lone_lisp *lone, struct lone_value *environment, struct lone_value *function, struct lone_value *arguments)
 {
 	struct lone_value *new_environment = lone_table_create(lone, 16, function->function.environment),
 	                  *names = function->function.arguments, *code = function->function.code,
