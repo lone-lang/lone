@@ -1043,6 +1043,11 @@ static bool lone_is_integer(struct lone_value *value)
 	return value->type == LONE_INTEGER;
 }
 
+static bool lone_is_pointer(struct lone_value *value)
+{
+	return value->type == LONE_POINTER;
+}
+
 /* ╭────────────────────────────────────────────────────────────────────────╮
    │                                                                        │
    │    Comparison and equality functions.                                  │
