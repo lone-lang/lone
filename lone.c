@@ -978,6 +978,11 @@ static bool lone_has_same_type(struct lone_value *x, struct lone_value *y)
 	return x->type == y->type;
 }
 
+static bool lone_is_module(struct lone_value *value)
+{
+	return value->type == LONE_MODULE;
+}
+
 static bool lone_is_function(struct lone_value *value)
 {
 	return value->type == LONE_FUNCTION;
