@@ -1003,6 +1003,11 @@ static bool lone_is_list(struct lone_value *value)
 	return value->type == LONE_LIST;
 }
 
+static bool lone_is_vector(struct lone_value *value)
+{
+	return value->type == LONE_VECTOR;
+}
+
 static bool lone_is_nil(struct lone_value *value)
 {
 	return lone_is_list(value) && value->list.first == 0 && value->list.rest == 0;
