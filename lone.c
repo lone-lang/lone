@@ -1038,6 +1038,11 @@ static bool lone_is_symbol(struct lone_value *value)
 	return value->type == LONE_SYMBOL;
 }
 
+static bool lone_is_integer(struct lone_value *value)
+{
+	return value->type == LONE_INTEGER;
+}
+
 /* ╭────────────────────────────────────────────────────────────────────────╮
    │                                                                        │
    │    Comparison and equality functions.                                  │
