@@ -1305,19 +1305,24 @@ static void lone_vector_push(struct lone_lisp *lone, struct lone_value *vector, 
 	lone_vector_set_value_at(lone, vector, vector->vector.count, value);
 }
 
-static struct lone_value *lone_vector_build(struct lone_lisp *lone, size_t count, ...)
+static void lone_vector_push_va_list(struct lone_lisp *lone, struct lone_value *vector, size_t count, va_list arguments)
 {
-	struct lone_value *vector = lone_vector_create(lone, count), *argument;
-	va_list arguments;
+	struct lone_value *argument;
 	size_t i;
-
-	va_start(arguments, count);
 
 	for (i = 0; i < count; ++i) {
 		argument = va_arg(arguments, struct lone_value *);
 		lone_vector_push(lone, vector, argument);
 	}
+}
 
+static struct lone_value *lone_vector_build(struct lone_lisp *lone, size_t count, ...)
+{
+	struct lone_value *vector = lone_vector_create(lone, count);
+	va_list arguments;
+
+	va_start(arguments, count);
+	lone_vector_push_va_list(lone, vector, count, arguments);
 	va_end(arguments);
 
 	return vector;
