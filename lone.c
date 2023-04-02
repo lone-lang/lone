@@ -3554,7 +3554,14 @@ static void lone_modules_initialize(struct lone_lisp *lone, int argc, char **arg
 	lone_builtin_module_text_initialize(lone);
 	lone_builtin_module_list_initialize(lone);
 
-	lone_vector_push(lone, lone->modules.path, lone_text_create_from_c_string(lone, "."));
+	lone_vector_push_all(lone, lone->modules.path, 4,
+
+		lone_text_create_from_c_string(lone, "."),
+		lone_text_create_from_c_string(lone, "~/.lone/modules"),
+		lone_text_create_from_c_string(lone, "~/.local/lib/lone/modules"),
+		lone_text_create_from_c_string(lone, "/usr/lib/lone/modules")
+
+	);
 }
 
 /* ╭───────────────────────┨ LONE LISP ENTRY POINT ┠────────────────────────╮
