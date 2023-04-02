@@ -2,15 +2,19 @@ set libthread-db-search-path /dev/null
 
 define print-lone-memory
   set var $memory = $arg0
-  printf "[ "
+  output $memory
+  printf "\n"
+  output $memory->size
+  printf "\n[ "
   if $memory->free
     printf "."
   else
     printf "!"
   end
   printf " "
-  output $memory->size
-  printf " ]"
+  output *$memory->pointer@$memory->size
+  printf " ]\n"
+  printf "\n"
 end
 
 define lone-memory-walk
