@@ -1334,6 +1334,11 @@ static struct lone_value *lone_vector_build(struct lone_lisp *lone, size_t count
 	return vector;
 }
 
+/* ╭────────────────────────────────────────────────────────────────────────╮
+   │                                                                        │
+   │    Hash table functions.                                               │
+   │                                                                        │
+   ╰────────────────────────────────────────────────────────────────────────╯ */
 static unsigned long  __attribute__((pure)) fnv_1a(struct lone_bytes data)
 {
 	unsigned long hash = FNV_OFFSET_BASIS;
