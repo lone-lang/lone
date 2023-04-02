@@ -3227,6 +3227,7 @@ static void lone_module_load_from_file_descriptor(struct lone_lisp *lone, struct
 		value = lone_evaluate_module(lone, module, value);
 	}
 
+	lone_reader_finalize(lone, &reader);
 	lone_garbage_collector(lone);
 }
 
