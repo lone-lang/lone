@@ -14,7 +14,7 @@ define print-lone-memory
 end
 
 define lone-memory-walk
-  set var $memory = $arg0->memory
+  set var $memory = $arg0->memory.general
   set var $total = 0
   set var $free = 0
   while $memory
