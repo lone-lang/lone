@@ -176,6 +176,7 @@ struct lone_value {
 	struct {
 		bool live: 1;
 		bool marked: 1;
+		bool should_deallocate_bytes: 1;
 	};
 
 	enum lone_type type;
@@ -564,7 +565,9 @@ static void lone_kill_all_unmarked_values(struct lone_lisp *lone)
 				case LONE_BYTES:
 				case LONE_TEXT:
 				case LONE_SYMBOL:
-					lone_deallocate(lone, value->bytes.pointer);
+					if (value->should_deallocate_bytes) {
+						lone_deallocate(lone, value->bytes.pointer);
+					}
 					break;
 				case LONE_VECTOR:
 					lone_deallocate(lone, value->vector.values);
@@ -622,18 +625,19 @@ static struct lone_value *lone_value_create(struct lone_lisp *lone)
    │    but the lone bytes type currently has no way to enforce this.       │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
-static struct lone_value *lone_bytes_transfer(struct lone_lisp *lone, unsigned char *pointer, size_t count)
+static struct lone_value *lone_bytes_transfer(struct lone_lisp *lone, unsigned char *pointer, size_t count, bool should_deallocate)
 {
 	struct lone_value *value = lone_value_create(lone);
 	value->type = LONE_BYTES;
 	value->bytes.count = count;
 	value->bytes.pointer = pointer;
+	value->should_deallocate_bytes = should_deallocate;
 	return value;
 }
 
-static struct lone_value *lone_bytes_transfer_bytes(struct lone_lisp *lone, struct lone_bytes bytes)
+static struct lone_value *lone_bytes_transfer_bytes(struct lone_lisp *lone, struct lone_bytes bytes, bool should_deallocate)
 {
-	return lone_bytes_transfer(lone, bytes.pointer, bytes.count);
+	return lone_bytes_transfer(lone, bytes.pointer, bytes.count, should_deallocate);
 }
 
 static struct lone_value *lone_bytes_create(struct lone_lisp *lone, unsigned char *pointer, size_t count)
@@ -641,7 +645,7 @@ static struct lone_value *lone_bytes_create(struct lone_lisp *lone, unsigned cha
 	unsigned char *copy = lone_allocate(lone, count + 1);
 	lone_memory_move(pointer, copy, count);
 	copy[count] = '\0';
-	return lone_bytes_transfer(lone, copy, count);
+	return lone_bytes_transfer(lone, copy, count, true);
 }
 
 /* ╭────────────────────────────────────────────────────────────────────────╮
@@ -835,16 +839,16 @@ static struct lone_value *lone_pointer_create(struct lone_lisp *lone, void *poin
    │    Transfer and creation functions work like lone bytes.               │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
-static struct lone_value *lone_text_transfer(struct lone_lisp *lone, unsigned char *text, size_t length)
+static struct lone_value *lone_text_transfer(struct lone_lisp *lone, unsigned char *text, size_t length, bool should_deallocate)
 {
-	struct lone_value *value = lone_bytes_transfer(lone, text, length);
+	struct lone_value *value = lone_bytes_transfer(lone, text, length, should_deallocate);
 	value->type = LONE_TEXT;
 	return value;
 }
 
-static struct lone_value *lone_text_transfer_bytes(struct lone_lisp *lone, struct lone_bytes bytes)
+static struct lone_value *lone_text_transfer_bytes(struct lone_lisp *lone, struct lone_bytes bytes, bool should_deallocate)
 {
-	return lone_text_transfer(lone, bytes.pointer, bytes.count);
+	return lone_text_transfer(lone, bytes.pointer, bytes.count, should_deallocate);
 }
 
 static struct lone_value *lone_text_create(struct lone_lisp *lone, unsigned char *text, size_t length)
@@ -864,7 +868,7 @@ static size_t lone_c_string_length(char *c_string)
 
 static struct lone_value *lone_text_create_from_c_string(struct lone_lisp *lone, char *c_string)
 {
-	return lone_text_create(lone, (unsigned char *) c_string, lone_c_string_length(c_string));
+	return lone_text_transfer(lone, (unsigned char *) c_string, lone_c_string_length(c_string), false);
 }
 
 /* ╭────────────────────────────────────────────────────────────────────────╮
@@ -875,6 +879,13 @@ static struct lone_value *lone_text_create_from_c_string(struct lone_lisp *lone,
    │    However, this means they won't be garbage collected.                │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
+static struct lone_value *lone_symbol_transfer(struct lone_lisp *lone, unsigned char *text, size_t length, bool should_deallocate)
+{
+	struct lone_value *value = lone_bytes_transfer(lone, text, length, should_deallocate);
+	value->type = LONE_SYMBOL;
+	return value;
+}
+
 static struct lone_value *lone_symbol_create(struct lone_lisp *lone, unsigned char *text, size_t length)
 {
 	struct lone_value *value = lone_bytes_create(lone, text, length);
@@ -886,10 +897,12 @@ static bool lone_is_nil(struct lone_value *);
 static struct lone_value *lone_table_get(struct lone_lisp *, struct lone_value *, struct lone_value *);
 static void lone_table_set(struct lone_lisp *, struct lone_value *, struct lone_value *, struct lone_value *);
 
-static struct lone_value *lone_intern(struct lone_lisp *lone, unsigned char *bytes, size_t count)
+static struct lone_value *lone_intern(struct lone_lisp *lone, unsigned char *bytes, size_t count, bool should_deallocate)
 {
-	struct lone_value *key = lone_symbol_create(lone, bytes, count),
-	                  *value = lone_table_get(lone, lone->symbol_table, key);
+	struct lone_value *key, *value;
+
+	key = should_deallocate? lone_symbol_create(lone, bytes, count) : lone_symbol_transfer(lone, bytes, count, should_deallocate);
+	value = lone_table_get(lone, lone->symbol_table, key);
 
 	if (lone_is_nil(value)) {
 		value = key;
@@ -901,7 +914,7 @@ static struct lone_value *lone_intern(struct lone_lisp *lone, unsigned char *byt
 
 static struct lone_value *lone_intern_c_string(struct lone_lisp *lone, char *c_string)
 {
-	return lone_intern(lone, (unsigned char *) c_string, lone_c_string_length(c_string));
+	return lone_intern(lone, (unsigned char *) c_string, lone_c_string_length(c_string), false);
 }
 
 /* ╭────────────────────────────────────────────────────────────────────────╮
@@ -1682,7 +1695,7 @@ static struct lone_value *lone_reader_consume_symbol(struct lone_lisp *lone, str
 		++end;
 	}
 
-	return lone_intern(lone, start, end);
+	return lone_intern(lone, start, end, true);
 }
 
 /* ╭────────────────────────────────────────────────────────────────────────╮
@@ -1736,7 +1749,7 @@ static struct lone_value *lone_reader_consume_character(struct lone_lisp *lone, 
 	case '{': case '}':
 	case '\'':
 		lone_reader_consume(reader);
-		return lone_intern(lone, bracket, 1);
+		return lone_intern(lone, bracket, 1, true);
 	default:
 		return 0;
 	}
@@ -2665,12 +2678,12 @@ static struct lone_value *lone_primitive_is_negative(struct lone_lisp *lone, str
    ╰────────────────────────────────────────────────────────────────────────╯ */
 static struct lone_value *lone_primitive_join(struct lone_lisp *lone, struct lone_value *closure, struct lone_value *environment, struct lone_value *arguments)
 {
-	return lone_text_transfer_bytes(lone, lone_join(lone, lone_list_first(arguments), lone_list_rest(arguments), lone_is_text));
+	return lone_text_transfer_bytes(lone, lone_join(lone, lone_list_first(arguments), lone_list_rest(arguments), lone_is_text), true);
 }
 
 static struct lone_value *lone_primitive_concatenate(struct lone_lisp *lone, struct lone_value *closure, struct lone_value *environment, struct lone_value *arguments)
 {
-	return lone_text_transfer_bytes(lone, lone_concatenate(lone, arguments, lone_is_text));
+	return lone_text_transfer_bytes(lone, lone_concatenate(lone, arguments, lone_is_text), true);
 }
 
 /* ╭────────────────────────────────────────────────────────────────────────╮
@@ -3164,7 +3177,7 @@ static int lone_module_search(struct lone_lisp *lone, struct lone_value *symbols
 		search_path = lone->modules.path->vector.values[i];
 		arguments = lone_list_build(lone, 3, search_path, package, symbols);
 		arguments = lone_list_flatten(lone, arguments);
-		arguments = lone_text_transfer_bytes(lone, lone_join(lone, slash, arguments, lone_has_bytes));
+		arguments = lone_text_transfer_bytes(lone, lone_join(lone, slash, arguments, lone_has_bytes), true);
 		arguments = lone_list_build(lone, 2, arguments, ln);
 		path = lone_concatenate(lone, arguments, lone_has_bytes).pointer;
 
