@@ -1353,7 +1353,7 @@ static unsigned long  __attribute__((pure)) fnv_1a(struct lone_bytes data)
 	return hash;
 }
 
-static inline size_t lone_table_hash(struct lone_value *key)
+static size_t lone_table_hash(struct lone_value *key)
 {
 	struct lone_bytes bytes;
 	unsigned long hash;
