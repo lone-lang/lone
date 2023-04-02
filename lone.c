@@ -1546,6 +1546,11 @@ static void lone_reader_initialize(struct lone_lisp *lone, struct lone_reader *r
 	reader->error = 0;
 }
 
+static void lone_reader_finalize(struct lone_lisp *lone, struct lone_reader *reader)
+{
+	lone_deallocate(lone, reader->buffer.bytes.pointer);
+}
+
 static size_t lone_reader_fill_buffer(struct lone_lisp *lone, struct lone_reader *reader)
 {
 	unsigned char *buffer = reader->buffer.bytes.pointer;
