@@ -173,7 +173,13 @@ struct lone_module {
 };
 
 struct lone_value {
+	struct {
+		bool live: 1;
+		bool marked: 1;
+	};
+
 	enum lone_type type;
+
 	union {
 		struct lone_module module;
 		struct lone_function function;
@@ -257,20 +263,10 @@ struct lone_memory {
 	unsigned char pointer[];
 };
 
-struct lone_value_header {
-	bool live: 1;
-	bool marked: 1;
-};
-
-struct lone_value_container {
-	struct lone_value_header header;
-	struct lone_value value;
-};
-
 struct lone_heap {
 	struct lone_heap *next;
 	size_t count;
-	struct lone_value_container values[];
+	struct lone_value values[];
 };
 
 static void lone_memory_move(void *from, void *to, size_t count)
@@ -384,20 +380,20 @@ static void * __attribute__((alloc_size(3))) lone_reallocate(struct lone_lisp *l
 
 static struct lone_heap *lone_allocate_heap(struct lone_lisp *lone, size_t count)
 {
-	size_t i, size = sizeof(struct lone_heap) + (sizeof(struct lone_value_container) * count);
+	size_t i, size = sizeof(struct lone_heap) + (sizeof(struct lone_value) * count);
 	struct lone_heap *heap = lone_allocate(lone, size);
 	heap->next = 0;
 	heap->count = count;
 	for (i = 0; i < count; ++i) {
-		heap->values[i].header.live = false;
-		heap->values[i].header.marked = false;
+		heap->values[i].live = false;
+		heap->values[i].marked = false;
 	}
 	return heap;
 }
 
-static struct lone_value_container *lone_allocate_from_heap(struct lone_lisp *lone)
+static struct lone_value *lone_allocate_from_heap(struct lone_lisp *lone)
 {
-	struct lone_value_container *element;
+	struct lone_value *element;
 	struct lone_heap *heap, *prev;
 	size_t i;
 
@@ -405,7 +401,7 @@ static struct lone_value_container *lone_allocate_from_heap(struct lone_lisp *lo
 		for (i = 0; i < heap->count; ++i) {
 			element = &heap->values[i];
 
-			if (!element->header.live) {
+			if (!element->live) {
 				goto resurrect;
 			}
 		}
@@ -416,7 +412,7 @@ static struct lone_value_container *lone_allocate_from_heap(struct lone_lisp *lo
 	element = &heap->values[0];
 
 resurrect:
-	element->header.live = true;
+	element->live = true;
 	return element;
 }
 
@@ -427,7 +423,7 @@ static void lone_deallocate_dead_heaps(struct lone_lisp *lone)
 
 	while (heap) {
 		for (i = 0; i < heap->count; ++i) {
-			if (heap->values[i].header.live) { /* at least one live object */ goto next_heap; }
+			if (heap->values[i].live) { /* at least one live object */ goto next_heap; }
 		}
 
 		/* no live objects */
@@ -441,51 +437,40 @@ next_heap:
 	}
 }
 
-static inline struct lone_value_container *lone_value_to_container(struct lone_value* value)
-{
-	unsigned char *bytes;
-	if (!value) { return 0; }
-	bytes = (unsigned char *) __builtin_assume_aligned(value, __alignof__(struct lone_value));
-	bytes -= __builtin_offsetof(struct lone_value_container, value);
-	return (struct lone_value_container *) __builtin_assume_aligned(bytes, __alignof__(struct lone_value_container));
-}
-
 static void lone_mark_value(struct lone_value *value)
 {
-	struct lone_value_container *container = lone_value_to_container(value);
+	if (!value || !value->live || value->marked) { return; }
 
-	if (!container || !container->header.live || container->header.marked) { return; }
+	value->marked = true;
 
-	container->header.marked = true;
-
-	switch (container->value.type) {
+	switch (value->type) {
 	case LONE_MODULE:
-		lone_mark_value(container->value.module.name);
-		lone_mark_value(container->value.module.environment);
+		lone_mark_value(value->module.name);
+		lone_mark_value(value->module.environment);
 		break;
 	case LONE_FUNCTION:
-		lone_mark_value(container->value.function.arguments);
-		lone_mark_value(container->value.function.code);
-		lone_mark_value(container->value.function.environment);
+		lone_mark_value(value->function.arguments);
+		lone_mark_value(value->function.code);
+		lone_mark_value(value->function.environment);
 		break;
 	case LONE_PRIMITIVE:
-		lone_mark_value(container->value.primitive.name);
-		lone_mark_value(container->value.primitive.closure);
+		lone_mark_value(value->primitive.name);
+		lone_mark_value(value->primitive.closure);
 		break;
 	case LONE_LIST:
-		lone_mark_value(container->value.list.first);
-		lone_mark_value(container->value.list.rest);
+		lone_mark_value(value->list.first);
+		lone_mark_value(value->list.rest);
 		break;
 	case LONE_VECTOR:
-		for (size_t i = 0; i < container->value.vector.count; ++i) {
-			lone_mark_value(container->value.vector.values[i]);
+		for (size_t i = 0; i < value->vector.count; ++i) {
+			lone_mark_value(value->vector.values[i]);
 		}
 		break;
 	case LONE_TABLE:
-		lone_mark_value(container->value.table.prototype);
-		for (size_t i = 0; i < container->value.table.capacity; ++i) {
-			lone_mark_value(container->value.table.entries[i].key);
-			lone_mark_value(container->value.table.entries[i].value);
+		lone_mark_value(value->table.prototype);
+		for (size_t i = 0; i < value->table.capacity; ++i) {
+			lone_mark_value(value->table.entries[i].key);
+			lone_mark_value(value->table.entries[i].value);
 		}
 		break;
 	case LONE_SYMBOL:
@@ -564,7 +549,7 @@ static void lone_mark_all_reachable_values(struct lone_lisp *lone)
 
 static void lone_kill_all_unmarked_values(struct lone_lisp *lone)
 {
-	struct lone_value_container *value;
+	struct lone_value *value;
 	struct lone_heap *heap;
 	size_t i;
 
@@ -572,20 +557,20 @@ static void lone_kill_all_unmarked_values(struct lone_lisp *lone)
 		for (i = 0; i < heap->count; ++i) {
 			value = &heap->values[i];
 
-			if (!value->header.live) { continue; }
+			if (!value->live) { continue; }
 
-			if (!value->header.marked) {
-				switch (value->value.type) {
+			if (!value->marked) {
+				switch (value->type) {
 				case LONE_BYTES:
 				case LONE_TEXT:
 				case LONE_SYMBOL:
-					lone_deallocate(lone, value->value.bytes.pointer);
+					lone_deallocate(lone, value->bytes.pointer);
 					break;
 				case LONE_VECTOR:
-					lone_deallocate(lone, value->value.vector.values);
+					lone_deallocate(lone, value->vector.values);
 					break;
 				case LONE_TABLE:
-					lone_deallocate(lone, value->value.table.entries);
+					lone_deallocate(lone, value->table.entries);
 					break;
 				case LONE_MODULE:
 				case LONE_FUNCTION:
@@ -597,8 +582,8 @@ static void lone_kill_all_unmarked_values(struct lone_lisp *lone)
 					break;
 				}
 
-				value->header.live = false;
-				value->header.marked = false;
+				value->live = false;
+				value->marked = false;
 			}
 		}
 	}
@@ -618,8 +603,7 @@ static void lone_garbage_collector(struct lone_lisp *lone)
    ╰────────────────────────────────────────────────────────────────────────╯ */
 static struct lone_value *lone_value_create(struct lone_lisp *lone)
 {
-	struct lone_value_container *container = lone_allocate_from_heap(lone);
-	return &container->value;
+	return lone_allocate_from_heap(lone);
 }
 
 /* ╭────────────────────────────────────────────────────────────────────────╮
