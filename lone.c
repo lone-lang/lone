@@ -1316,6 +1316,15 @@ static void lone_vector_push_va_list(struct lone_lisp *lone, struct lone_value *
 	}
 }
 
+static void lone_vector_push_all(struct lone_lisp *lone, struct lone_value *vector, size_t count, ...)
+{
+	va_list arguments;
+
+	va_start(arguments, count);
+	lone_vector_push_va_list(lone, vector, count, arguments);
+	va_end(arguments);
+}
+
 static struct lone_value *lone_vector_build(struct lone_lisp *lone, size_t count, ...)
 {
 	struct lone_value *vector = lone_vector_create(lone, count);
