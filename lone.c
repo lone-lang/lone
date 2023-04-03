@@ -1258,6 +1258,11 @@ static struct lone_bytes lone_concatenate(struct lone_lisp *lone, struct lone_va
 	return lone_join(lone, 0, arguments, is_valid);
 }
 
+/* ╭────────────────────────────────────────────────────────────────────────╮
+   │                                                                        │
+   │    Functions for vectors, lone's dynamic arrays.                       │
+   │                                                                        │
+   ╰────────────────────────────────────────────────────────────────────────╯ */
 static void lone_vector_resize(struct lone_lisp *lone, struct lone_value *vector, size_t new_capacity)
 {
 	struct lone_value **new = lone_allocate(lone, new_capacity * sizeof(struct lone_value *));
