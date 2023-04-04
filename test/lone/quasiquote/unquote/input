@@ -1,0 +1,3 @@
+(import (lone print quasiquote) (math +))
+
+(print (quasiquote (0 (unquote (+ 1 2)) 7)))

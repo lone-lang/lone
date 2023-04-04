@@ -1,0 +1,3 @@
+(import (lone print quasiquote))
+
+(print (quasiquote (x y z)))
