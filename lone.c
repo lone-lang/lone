@@ -2494,6 +2494,46 @@ static struct lone_value *lone_primitive_quote(struct lone_lisp *lone, struct lo
 	return lone_list_first(arguments);
 }
 
+static struct lone_value *lone_primitive_quasiquote(struct lone_lisp *lone, struct lone_value *closure, struct lone_value *environment, struct lone_value *arguments)
+{
+	struct lone_value *list, *head, *current, *element, *result, *first, *rest, *unquote, *splice;
+
+	if (!lone_is_nil(lone_list_rest(arguments))) { /* too many arguments: (quasiquote x y) */ linux_exit(-1); }
+
+	unquote = lone_intern_c_string(lone, "unquote");
+	splice = lone_intern_c_string(lone, "unquote*");
+	head = list = lone_list_create_nil(lone);
+	arguments = lone_list_first(arguments);
+
+	for (current = arguments; !lone_is_nil(current); current = lone_list_rest(current)) {
+		element = lone_list_first(current);
+
+		if (lone_is_list(element)) {
+			first = lone_list_first(element);
+			rest = lone_list_rest(element);
+
+			if (lone_is_equivalent(first, unquote)) {
+				first = lone_list_first(rest);
+				rest = lone_list_rest(rest);
+
+				if (!lone_is_nil(rest)) { /* too many arguments: (quasiquote (unquote x y)) */ linux_exit(-1); }
+
+				result = lone_evaluate(lone, environment, first);
+			} else {
+				result = element;
+			}
+
+		} else {
+			result = element;
+		}
+
+		lone_list_set_first(head, result);
+		head = lone_list_set_rest(head, lone_list_create_nil(lone));
+	}
+
+	return list;
+}
+
 static struct lone_value *lone_primitive_lambda_with_flags(struct lone_lisp *lone, struct lone_value *closure, struct lone_value *environment, struct lone_value *arguments, struct lone_function_flags flags)
 {
 	struct lone_value *bindings, *code;
@@ -3497,6 +3537,14 @@ static void lone_builtin_module_lone_initialize(struct lone_lisp *lone)
 	                     lone_primitive_create(lone,
 	                                           "quote",
 	                                           lone_primitive_quote,
+	                                           module,
+	                                           (struct lone_function_flags) { 0, 0, 0 }));
+
+	lone_table_set(lone, module->module.environment,
+	                     lone_intern_c_string(lone, "quasiquote"),
+	                     lone_primitive_create(lone,
+	                                           "quasiquote",
+	                                           lone_primitive_quasiquote,
 	                                           module,
 	                                           (struct lone_function_flags) { 0, 0, 0 }));
 
