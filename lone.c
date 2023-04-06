@@ -1150,6 +1150,12 @@ static struct lone_value *lone_list_set_rest(struct lone_value *list, struct lon
 	return list->list.rest = rest;
 }
 
+static struct lone_value *lone_list_append(struct lone_lisp *lone, struct lone_value *list, struct lone_value *value)
+{
+	lone_list_set_first(list, value);
+	return lone_list_set_rest(list, lone_list_create_nil(lone));
+}
+
 static struct lone_value *lone_list_build(struct lone_lisp *lone, size_t count, ...)
 {
 	struct lone_value *list = lone_list_create_nil(lone), *head = list, *argument;
