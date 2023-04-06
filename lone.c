@@ -2260,7 +2260,7 @@ static void lone_print_list(struct lone_lisp *lone, struct lone_value *list, int
 
 	lone_print(lone, first, fd);
 
-	if (rest->type == LONE_LIST) {
+	if (lone_is_list(rest)) {
 		if (!lone_is_nil(rest)) {
 			linux_write(fd, " ", 1);
 			lone_print_list(lone, rest, fd);
@@ -2463,7 +2463,7 @@ static struct lone_value *lone_primitive_let(struct lone_lisp *lone, struct lone
 
 	if (lone_is_nil(arguments)) { /* no variables to bind: (let) */ linux_exit(-1); }
 	bindings = lone_list_first(arguments);
-	if (bindings->type != LONE_LIST) { /* expected list but got something else: (let 10) */ linux_exit(-1); }
+	if (!lone_is_list(bindings)) { /* expected list but got something else: (let 10) */ linux_exit(-1); }
 
 	new_environment = lone_table_create(lone, 8, environment);
 
@@ -2595,7 +2595,7 @@ static struct lone_value *lone_primitive_lambda_with_flags(struct lone_lisp *lon
 	struct lone_value *bindings, *code;
 
 	bindings = lone_list_first(arguments);
-	if (bindings->type != LONE_LIST) { /* parameters not a list: (lambda 10) */ linux_exit(-1); }
+	if (!lone_is_list(bindings)) { /* parameters not a list: (lambda 10) */ linux_exit(-1); }
 
 	code = lone_list_rest(arguments);
 
