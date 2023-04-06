@@ -1166,8 +1166,7 @@ static struct lone_value *lone_list_build(struct lone_lisp *lone, size_t count, 
 
 	for (i = 0; i < count; ++i) {
 		argument = va_arg(arguments, struct lone_value *);
-		lone_list_set_first(head, argument);
-		head = lone_list_set_rest(head, lone_list_create_nil(lone));
+		head = lone_list_append(lone, head, argument);
 	}
 
 	va_end(arguments);
@@ -1186,13 +1185,11 @@ static struct lone_value *lone_list_flatten(struct lone_lisp *lone, struct lone_
 			return_head = lone_list_flatten(lone, first);
 
 			for (/* return_head */; !lone_is_nil(return_head); return_head = lone_list_rest(return_head)) {
-				lone_list_set_first(flat_head, lone_list_first(return_head));
-				flat_head = lone_list_set_rest(flat_head, lone_list_create_nil(lone));
+				flat_head = lone_list_append(lone, flat_head, lone_list_first(return_head));
 			}
 
 		} else {
-			lone_list_set_first(flat_head, first);
-			flat_head = lone_list_set_rest(flat_head, lone_list_create_nil(lone));
+			flat_head = lone_list_append(lone, flat_head, first);
 		}
 	}
 
@@ -1916,8 +1913,7 @@ static struct lone_value *lone_parse_list(struct lone_lisp *lone, struct lone_re
 			break;
 		}
 
-		lone_list_set_first(list, lone_parse(lone, reader, next));
-		list = lone_list_set_rest(list, lone_list_create_nil(lone));
+		list = lone_list_append(lone, list, lone_parse(lone, reader, next));
 	}
 
 	return first;
@@ -2091,8 +2087,7 @@ static struct lone_value *lone_evaluate_all(struct lone_lisp *lone, struct lone_
 	struct lone_value *evaluated = lone_list_create_nil(lone), *head;
 
 	for (head = evaluated; !lone_is_nil(list); list = lone_list_rest(list)) {
-		lone_list_set_first(head, lone_evaluate(lone, environment, lone_list_first(list)));
-		head = lone_list_set_rest(head, lone_list_create_nil(lone));
+		head = lone_list_append(lone, head, lone_evaluate(lone, environment, lone_list_first(list)));
 	}
 
 	return evaluated;
@@ -2533,8 +2528,7 @@ static struct lone_value *lone_primitive_quasiquote(struct lone_lisp *lone, stru
 			result = element;
 		}
 
-		lone_list_set_first(head, result);
-		head = lone_list_set_rest(head, lone_list_create_nil(lone));
+		head = lone_list_append(lone, head, result);
 	}
 
 	return list;
@@ -2789,9 +2783,9 @@ static struct lone_value *lone_primitive_list_map(struct lone_lisp *lone, struct
 
 	results = lone_list_create_nil(lone);
 
-	for (head = results; !lone_is_nil(list); list = lone_list_rest(list), head = lone_list_set_rest(head, lone_list_create_nil(lone))) {
+	for (head = results; !lone_is_nil(list); list = lone_list_rest(list)) {
 		arguments = lone_list_create(lone, lone_list_first(list), lone_nil(lone));
-		lone_list_set_first(head, lone_apply(lone, environment, function, arguments));
+		head = lone_list_append(lone, head, lone_apply(lone, environment, function, arguments));
 	}
 
 	return results;
@@ -3144,8 +3138,7 @@ static struct lone_value *lone_arguments_to_list(struct lone_lisp *lone, int cou
 	int i;
 
 	for (i = 0, head = arguments; i < count; ++i) {
-		lone_list_set_first(head, lone_text_create_from_c_string(lone, c_strings[i]));
-		head = lone_list_set_rest(head, lone_list_create_nil(lone));
+		head = lone_list_append(lone, head, lone_text_create_from_c_string(lone, c_strings[i]));
 	}
 
 	return arguments;
