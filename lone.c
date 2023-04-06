@@ -1286,7 +1286,7 @@ static struct lone_value *lone_vector_get(struct lone_lisp *lone, struct lone_va
 {
 	struct lone_value *value;
 	size_t i;
-	if (index->type != LONE_INTEGER) { /* only integer indexes supported */ linux_exit(-1); }
+	if (!lone_is_integer(index)) { /* only integer indexes supported */ linux_exit(-1); }
 	i = index->integer;
 	value = i < vector->vector.capacity? vector->vector.values[i] : 0;
 	return value? value : lone_nil(lone);
@@ -1301,7 +1301,7 @@ static void lone_vector_set_value_at(struct lone_lisp *lone, struct lone_value *
 
 static void lone_vector_set(struct lone_lisp *lone, struct lone_value *vector, struct lone_value *index, struct lone_value *value)
 {
-	if (index->type != LONE_INTEGER) { /* only integer indexes supported */ linux_exit(-1); }
+	if (!lone_is_integer(index)) { /* only integer indexes supported */ linux_exit(-1); }
 	lone_vector_set_value_at(lone, vector, index->integer, value);
 }
 
@@ -2665,7 +2665,7 @@ static struct lone_value *lone_primitive_integer_operation(struct lone_lisp *lon
 
 	do {
 		argument = lone_list_first(arguments);
-		if (argument->type != LONE_INTEGER) { /* argument is not a number */ linux_exit(-1); }
+		if (!lone_is_integer(argument)) { /* argument is not a number */ linux_exit(-1); }
 
 		switch (operation) {
 		case '+': accumulator += argument->integer; break;
@@ -2702,7 +2702,7 @@ static struct lone_value *lone_primitive_divide(struct lone_lisp *lone, struct l
 
 	if (lone_is_nil(arguments)) { /* at least the dividend is required, (/) is invalid */ linux_exit(-1); }
 	dividend = lone_list_first(arguments);
-	if (dividend->type != LONE_INTEGER) { /* can't divide non-numbers: (/ "not a number") */ linux_exit(-1); }
+	if (!lone_is_integer(dividend)) { /* can't divide non-numbers: (/ "not a number") */ linux_exit(-1); }
 	arguments = lone_list_rest(arguments);
 
 	if (lone_is_nil(arguments)) {
@@ -2722,7 +2722,7 @@ static struct lone_value *lone_primitive_sign(struct lone_lisp *lone, struct lon
 	value = lone_list_first(arguments);
 	if (!lone_is_nil(lone_list_rest(arguments))) { /* too many arguments: (sign 1 2 3) */ linux_exit(-1); }
 
-	if (value->type == LONE_INTEGER) {
+	if (lone_is_integer(value)) {
 		return lone_integer_create(lone, value->integer > 0? 1 : value->integer < 0? -1 : 0);
 	} else {
 		linux_exit(-1);
@@ -2732,21 +2732,21 @@ static struct lone_value *lone_primitive_sign(struct lone_lisp *lone, struct lon
 static struct lone_value *lone_primitive_is_zero(struct lone_lisp *lone, struct lone_value *closure, struct lone_value *environment, struct lone_value *arguments)
 {
 	struct lone_value *value = lone_primitive_sign(lone, closure, environment, arguments);
-	if (value->type == LONE_INTEGER && value->integer == 0) { return value; }
+	if (lone_is_integer(value) && value->integer == 0) { return value; }
 	else { return lone_nil(lone); }
 }
 
 static struct lone_value *lone_primitive_is_positive(struct lone_lisp *lone, struct lone_value *closure, struct lone_value *environment, struct lone_value *arguments)
 {
 	struct lone_value *value = lone_primitive_sign(lone, closure, environment, arguments);
-	if (value->type == LONE_INTEGER && value->integer > 0) { return value; }
+	if (lone_is_integer(value) && value->integer > 0) { return value; }
 	else { return lone_nil(lone); }
 }
 
 static struct lone_value *lone_primitive_is_negative(struct lone_lisp *lone, struct lone_value *closure, struct lone_value *environment, struct lone_value *arguments)
 {
 	struct lone_value *value = lone_primitive_sign(lone, closure, environment, arguments);
-	if (value->type == LONE_INTEGER && value->integer < 0) { return value; }
+	if (lone_is_integer(value) && value->integer < 0) { return value; }
 	else { return lone_nil(lone); }
 }
 
