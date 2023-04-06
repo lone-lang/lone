@@ -2690,7 +2690,20 @@ static struct lone_value *lone_primitive_add(struct lone_lisp *lone, struct lone
 
 static struct lone_value *lone_primitive_subtract(struct lone_lisp *lone, struct lone_value *closure, struct lone_value *environment, struct lone_value *arguments)
 {
-	return lone_primitive_integer_operation(lone, arguments, '-', 0);
+	struct lone_value *first;
+	long accumulator;
+
+	if (!lone_is_nil(arguments) && !lone_is_nil(lone_list_rest(arguments))) {
+		/* at least two arguments, set initial value to the first argument: (- 100 58) */
+		first = lone_list_first(arguments);
+		if (!lone_is_integer(first)) { /* argument is not a number */ linux_exit(-1); }
+		accumulator = first->integer;
+		arguments = lone_list_rest(arguments);
+	} else {
+		accumulator = 0;
+	}
+
+	return lone_primitive_integer_operation(lone, arguments, '-', accumulator);
 }
 
 static struct lone_value *lone_primitive_multiply(struct lone_lisp *lone, struct lone_value *closure, struct lone_value *environment, struct lone_value *arguments)
