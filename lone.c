@@ -2658,16 +2658,9 @@ static struct lone_value *lone_primitive_print(struct lone_lisp *lone, struct lo
    │    Built-in mathematical and numeric operations.                       │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
-static struct lone_value *lone_primitive_integer_operation(struct lone_lisp *lone, struct lone_value *arguments, char operation)
+static struct lone_value *lone_primitive_integer_operation(struct lone_lisp *lone, struct lone_value *arguments, char operation, long accumulator)
 {
 	struct lone_value *argument;
-	long accumulator;
-
-	switch (operation) {
-	case '+': case '-': accumulator = 0; break;
-	case '*': accumulator = 1; break;
-	default: /* invalid primitive integer operation */ linux_exit(-1);
-	}
 
 	if (lone_is_nil(arguments)) { /* wasn't given any arguments to operate on: (+), (-), (*) */ goto return_accumulator; }
 
@@ -2683,6 +2676,7 @@ static struct lone_value *lone_primitive_integer_operation(struct lone_lisp *lon
 		}
 
 		arguments = lone_list_rest(arguments);
+
 	} while (!lone_is_nil(arguments));
 
 return_accumulator:
@@ -2691,17 +2685,17 @@ return_accumulator:
 
 static struct lone_value *lone_primitive_add(struct lone_lisp *lone, struct lone_value *closure, struct lone_value *environment, struct lone_value *arguments)
 {
-	return lone_primitive_integer_operation(lone, arguments, '+');
+	return lone_primitive_integer_operation(lone, arguments, '+', 0);
 }
 
 static struct lone_value *lone_primitive_subtract(struct lone_lisp *lone, struct lone_value *closure, struct lone_value *environment, struct lone_value *arguments)
 {
-	return lone_primitive_integer_operation(lone, arguments, '-');
+	return lone_primitive_integer_operation(lone, arguments, '-', 0);
 }
 
 static struct lone_value *lone_primitive_multiply(struct lone_lisp *lone, struct lone_value *closure, struct lone_value *environment, struct lone_value *arguments)
 {
-	return lone_primitive_integer_operation(lone, arguments, '*');
+	return lone_primitive_integer_operation(lone, arguments, '*', 1);
 }
 
 static struct lone_value *lone_primitive_divide(struct lone_lisp *lone, struct lone_value *closure, struct lone_value *environment, struct lone_value *arguments)
@@ -2718,7 +2712,7 @@ static struct lone_value *lone_primitive_divide(struct lone_lisp *lone, struct l
 		return lone_integer_create(lone, 1 / dividend->integer);
 	} else {
 		/* (/ x a b c ...) = x / (a * b * c * ...) */
-		divisor = lone_primitive_integer_operation(lone, arguments, '*');
+		divisor = lone_primitive_integer_operation(lone, arguments, '*', 1);
 		return lone_integer_create(lone, dividend->integer / divisor->integer);
 	}
 }
