@@ -2498,6 +2498,7 @@ static struct lone_value *lone_primitive_quote(struct lone_lisp *lone, struct lo
 static struct lone_value *lone_primitive_quasiquote(struct lone_lisp *lone, struct lone_value *closure, struct lone_value *environment, struct lone_value *arguments)
 {
 	struct lone_value *list, *head, *current, *element, *result, *first, *rest, *unquote, *splice;
+	bool escaping, splicing;
 
 	if (!lone_is_nil(lone_list_rest(arguments))) { /* too many arguments: (quasiquote x y) */ linux_exit(-1); }
 
@@ -2514,21 +2515,44 @@ static struct lone_value *lone_primitive_quasiquote(struct lone_lisp *lone, stru
 			rest = lone_list_rest(element);
 
 			if (lone_is_equivalent(first, unquote)) {
+				escaping = true;
+				splicing = false;
+			} else if (lone_is_equivalent(first, splice)) {
+				escaping = true;
+				splicing = true;
+			} else {
+				escaping = false;
+				splicing = false;
+			}
+
+			if (escaping) {
 				first = lone_list_first(rest);
 				rest = lone_list_rest(rest);
 
-				if (!lone_is_nil(rest)) { /* too many arguments: (quasiquote (unquote x y)) */ linux_exit(-1); }
+				if (!lone_is_nil(rest)) { /* too many arguments: (quasiquote (unquote x y) (unquote* x y)) */ linux_exit(-1); }
 
 				result = lone_evaluate(lone, environment, first);
+
+				if (splicing) {
+					if (lone_is_list(result)) {
+						for (/* result */; !lone_is_nil(result); result = lone_list_rest(result)) {
+							head = lone_list_append(lone, head, lone_list_first(result));
+						}
+					} else {
+						head = lone_list_append(lone, head, result);
+					}
+
+				} else {
+					head = lone_list_append(lone, head, result);
+				}
+
 			} else {
-				result = element;
+				head = lone_list_append(lone, head, element);
 			}
 
 		} else {
-			result = element;
+			head = lone_list_append(lone, head, element);
 		}
-
-		head = lone_list_append(lone, head, result);
 	}
 
 	return list;
