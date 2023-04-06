@@ -1,0 +1,9 @@
+(import (lone set lambda if print) (math + - <))
+
+(set fibonacci (lambda (n)
+  (if (< n 2)
+      n
+      (+ (fibonacci (- n 1))
+         (fibonacci (- n 2))))))
+
+(print (fibonacci 10))
