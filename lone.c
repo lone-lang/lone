@@ -1797,7 +1797,7 @@ static struct lone_value *lone_reader_consume_character(struct lone_lisp *lone, 
 	case '(': case ')':
 	case '[': case ']':
 	case '{': case '}':
-	case '\'':
+	case '\'': case '`':
 		lone_reader_consume(reader);
 		return lone_intern(lone, bracket, 1, true);
 	default:
@@ -1856,7 +1856,7 @@ static struct lone_value *lone_lex(struct lone_lisp *lone, struct lone_reader *r
 			case '(': case ')':
 			case '[': case ']':
 			case '{': case '}':
-			case '\'':
+			case '\'': case '`':
 				token = lone_reader_consume_character(lone, reader);
 				break;
 			default:
@@ -1960,6 +1960,9 @@ static struct lone_value *lone_parse_special_character(struct lone_lisp *lone, s
 	case '\'':
 		c_string = "quote";
 		break;
+	case '`':
+		c_string = "quasiquote";
+		break;
 	default:
 		/* invalid special character */ linux_exit(-1);
 	}
@@ -1992,7 +1995,7 @@ static struct lone_value *lone_parse(struct lone_lisp *lone, struct lone_reader 
 			return lone_parse_table(lone, reader);
 		case ')': case ']': case '}':
 			goto parse_failed;
-		case '\'':
+		case '\'': case '`':
 			return lone_parse_special_character(lone, reader, character);
 		default:
 			return token;
