@@ -2611,7 +2611,7 @@ static struct lone_value *lone_primitive_lambda_star(struct lone_lisp *lone, str
 	return lone_primitive_lambda_with_flags(lone, closure, environment, arguments, flags);
 }
 
-static struct lone_value *lone_apply_equality_function(struct lone_lisp *lone, struct lone_value *arguments, lone_comparator equal)
+static struct lone_value *lone_apply_comparator(struct lone_lisp *lone, struct lone_value *arguments, lone_comparator function)
 {
 	struct lone_value *argument, *next;
 
@@ -2621,7 +2621,7 @@ static struct lone_value *lone_apply_equality_function(struct lone_lisp *lone, s
 		arguments = lone_list_rest(arguments);
 		next = lone_list_first(arguments);
 
-		if (next && !equal(argument, next)) { return lone_nil(lone); }
+		if (next && !function(argument, next)) { return lone_nil(lone); }
 	}
 
 	return lone_true(lone);
@@ -2629,17 +2629,17 @@ static struct lone_value *lone_apply_equality_function(struct lone_lisp *lone, s
 
 static struct lone_value *lone_primitive_is_identical(struct lone_lisp *lone, struct lone_value *closure, struct lone_value *environment, struct lone_value *arguments)
 {
-	return lone_apply_equality_function(lone, arguments, lone_is_identical);
+	return lone_apply_comparator(lone, arguments, lone_is_identical);
 }
 
 static struct lone_value *lone_primitive_is_equivalent(struct lone_lisp *lone, struct lone_value *closure, struct lone_value *environment, struct lone_value *arguments)
 {
-	return lone_apply_equality_function(lone, arguments, lone_is_equivalent);
+	return lone_apply_comparator(lone, arguments, lone_is_equivalent);
 }
 
 static struct lone_value *lone_primitive_is_equal(struct lone_lisp *lone, struct lone_value *closure, struct lone_value *environment, struct lone_value *arguments)
 {
-	return lone_apply_equality_function(lone, arguments, lone_is_equal);
+	return lone_apply_comparator(lone, arguments, lone_is_equal);
 }
 
 static struct lone_value *lone_primitive_print(struct lone_lisp *lone, struct lone_value *closure, struct lone_value *environment, struct lone_value *arguments)
