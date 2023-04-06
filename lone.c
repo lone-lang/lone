@@ -1951,24 +1951,39 @@ static struct lone_value *lone_parse_list(struct lone_lisp *lone, struct lone_re
 	return first;
 }
 
-static struct lone_value *lone_parse_quote(struct lone_lisp *lone, struct lone_reader *reader)
+static struct lone_value *lone_parse_special_character(struct lone_lisp *lone, struct lone_reader *reader, char character)
 {
-	struct lone_value *quote = lone_intern_c_string(lone, "quote"),
-	                  *value = lone_parse(lone, reader, lone_lex(lone, reader)),
-	                  *form = lone_list_create(lone, value, lone_nil(lone));
+	struct lone_value *symbol, *value, *form;
+	char *c_string;
 
-	return lone_list_create(lone, quote, form);
+	switch (character) {
+	case '\'':
+		c_string = "quote";
+		break;
+	default:
+		/* invalid special character */ linux_exit(-1);
+	}
+
+	symbol = lone_intern_c_string(lone, c_string);
+	value = lone_parse(lone, reader, lone_lex(lone, reader));
+	form = lone_list_create(lone, value, lone_nil(lone));
+
+	return lone_list_create(lone, symbol, form);
 }
 
 static struct lone_value *lone_parse(struct lone_lisp *lone, struct lone_reader *reader, struct lone_value *token)
 {
+	char character;
+
 	if (!token) { return 0; }
 
 	// lexer has already parsed atoms
 	// parser deals with nested structures
 	switch (token->type) {
 	case LONE_SYMBOL:
-		switch (*token->bytes.pointer) {
+		character = *token->bytes.pointer;
+
+		switch (character) {
 		case '(':
 			return lone_parse_list(lone, reader);
 		case '[':
@@ -1978,7 +1993,7 @@ static struct lone_value *lone_parse(struct lone_lisp *lone, struct lone_reader 
 		case ')': case ']': case '}':
 			goto parse_failed;
 		case '\'':
-			return lone_parse_quote(lone, reader);
+			return lone_parse_special_character(lone, reader, character);
 		default:
 			return token;
 		}
