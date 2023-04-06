@@ -1149,6 +1149,14 @@ static bool lone_integer_is_greater_than(struct lone_value *x, struct lone_value
 	else { return false; }
 }
 
+static bool lone_integer_is_greater_than_or_equal_to(struct lone_value *x, struct lone_value *y)
+{
+	if (!(lone_is_integer(x) && lone_is_integer(y))) { /* can't compare non-integers */ linux_exit(-1); }
+
+	if (x->integer >= y->integer) { return true; }
+	else { return false; }
+}
+
 /* ╭────────────────────────────────────────────────────────────────────────╮
    │                                                                        │
    │    List manipulation functions.                                        │
