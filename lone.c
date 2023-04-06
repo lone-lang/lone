@@ -2769,6 +2769,11 @@ static struct lone_value *lone_primitive_is_greater_than(struct lone_lisp *lone,
 	return lone_apply_comparator(lone, arguments, lone_integer_is_greater_than);
 }
 
+static struct lone_value *lone_primitive_is_greater_than_or_equal_to(struct lone_lisp *lone, struct lone_value *closure, struct lone_value *environment, struct lone_value *arguments)
+{
+	return lone_apply_comparator(lone, arguments, lone_integer_is_greater_than_or_equal_to);
+}
+
 static struct lone_value *lone_primitive_sign(struct lone_lisp *lone, struct lone_value *closure, struct lone_value *environment, struct lone_value *arguments)
 {
 	struct lone_value *value;
@@ -3470,6 +3475,14 @@ static void lone_builtin_module_math_initialize(struct lone_lisp *lone)
 	                     lone_primitive_create(lone,
 	                                           ">",
 	                                           lone_primitive_is_greater_than,
+	                                           module,
+	                                           (struct lone_function_flags) { 1, 0, 1 }));
+
+	lone_table_set(lone, module->module.environment,
+	                     lone_intern_c_string(lone, ">="),
+	                     lone_primitive_create(lone,
+	                                           ">=",
+	                                           lone_primitive_is_greater_than_or_equal_to,
 	                                           module,
 	                                           (struct lone_function_flags) { 1, 0, 1 }));
 
