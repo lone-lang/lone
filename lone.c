@@ -1889,7 +1889,7 @@ static struct lone_value *lone_parse_vector(struct lone_lisp *lone, struct lone_
 		value = lone_lex(lone, reader);
 
 		if (!value) { /* end of input */ reader->error = 1; return 0; }
-		if (value->type == LONE_SYMBOL && *value->bytes.pointer == ']') {
+		if (lone_is_symbol(value) && *value->bytes.pointer == ']') {
 			/* complete vector: [], [ x ], [ x y ] */
 			break;
 		}
@@ -1909,7 +1909,7 @@ static struct lone_value *lone_parse_table(struct lone_lisp *lone, struct lone_r
 		key = lone_lex(lone, reader);
 
 		if (!key) { /* end of input */ reader->error = 1; return 0; }
-		if (key->type == LONE_SYMBOL && *key->bytes.pointer == '}') {
+		if (lone_is_symbol(key) && *key->bytes.pointer == '}') {
 			/* complete table: {}, { x y } */
 			break;
 		}
@@ -1919,7 +1919,7 @@ static struct lone_value *lone_parse_table(struct lone_lisp *lone, struct lone_r
 		value = lone_lex(lone, reader);
 
 		if (!value) { /* end of input */ reader->error = 1; return 0; }
-		if (value->type == LONE_SYMBOL && *value->bytes.pointer == '}') {
+		if (lone_is_symbol(value) && *value->bytes.pointer == '}') {
 			/* incomplete table: { x }, { x y z } */
 			reader->error = 1;
 			return 0;
@@ -1941,7 +1941,7 @@ static struct lone_value *lone_parse_list(struct lone_lisp *lone, struct lone_re
 		next = lone_lex(lone, reader);
 		if (!next) { reader->error = 1; return 0; }
 
-		if (next->type == LONE_SYMBOL && *next->bytes.pointer == ')') {
+		if (lone_is_symbol(next) && *next->bytes.pointer == ')') {
 			break;
 		}
 
@@ -2470,7 +2470,7 @@ static struct lone_value *lone_primitive_let(struct lone_lisp *lone, struct lone
 	while (1) {
 		if (lone_is_nil(bindings)) { break; }
 		first = lone_list_first(bindings);
-		if (first->type != LONE_SYMBOL) { /* variable names must be symbols: (let ("x")) */ linux_exit(-1); }
+		if (!lone_is_symbol(first)) { /* variable names must be symbols: (let ("x")) */ linux_exit(-1); }
 		rest = lone_list_rest(bindings);
 		if (lone_is_nil(rest)) { /* incomplete variable/value list: (let (x 10 y)) */ linux_exit(-1); }
 		second = lone_list_first(rest);
@@ -2498,7 +2498,7 @@ static struct lone_value *lone_primitive_set(struct lone_lisp *lone, struct lone
 	}
 
 	variable = lone_list_first(arguments);
-	if (variable->type != LONE_SYMBOL) {
+	if (!lone_is_symbol(variable)) {
 		/* variable names must be symbols: (set 10) */
 		linux_exit(-1);
 	}
@@ -2927,7 +2927,7 @@ static void lone_primitive_import_only(struct lone_lisp *lone, struct lone_value
 	/* limited import, bind only specified symbols: (import (module x f)) */
 	do {
 		symbol = lone_list_first(symbols);
-		if (symbol->type != LONE_SYMBOL) { /* name not a symbol: (import (module 10)) */ linux_exit(-1); }
+		if (!lone_is_symbol(symbol)) { /* name not a symbol: (import (module 10)) */ linux_exit(-1); }
 
 		value = lone_table_get(lone, module->module.environment, symbol);
 		if (lone_is_nil(value)) { /* name not set in module */ linux_exit(-1); }
