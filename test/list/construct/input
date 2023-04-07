@@ -1,0 +1,5 @@
+(import (lone print) (list construct))
+
+(print (construct 1 ()))
+(print (construct 1 (construct 2 ())))
+(print (construct 1 2))
