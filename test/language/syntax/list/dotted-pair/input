@@ -1,0 +1,6 @@
+(import (lone print quote equal?) (list construct))
+
+(print (equal? '(1 . (2 . ())) '(1 2)))
+(print (equal? '(1 2 . (3 . ())) '(1 2 3)))
+(print (equal? '(1 . 2) (construct 1 2)))
+(print (equal? '(1 . (2 . 3)) (construct 1 (construct 2 3))))
