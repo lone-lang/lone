@@ -2016,7 +2016,7 @@ static struct lone_value *lone_parse(struct lone_lisp *lone, struct lone_reader 
 	}
 
 parse_failed:
-	linux_exit(-1);
+	/* parse failed */ linux_exit(-1);
 }
 
 static struct lone_value *lone_read(struct lone_lisp *lone, struct lone_reader *reader)
