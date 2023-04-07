@@ -1798,6 +1798,7 @@ static struct lone_value *lone_reader_consume_character(struct lone_lisp *lone, 
 	case '[': case ']':
 	case '{': case '}':
 	case '\'': case '`':
+	case '.':
 		lone_reader_consume(reader);
 		return lone_intern(lone, bracket, 1, true);
 	default:
@@ -1857,6 +1858,7 @@ static struct lone_value *lone_lex(struct lone_lisp *lone, struct lone_reader *r
 			case '[': case ']':
 			case '{': case '}':
 			case '\'': case '`':
+			case '.':
 				token = lone_reader_consume_character(lone, reader);
 				break;
 			default:
@@ -1935,16 +1937,30 @@ static struct lone_value *lone_parse_table(struct lone_lisp *lone, struct lone_r
 
 static struct lone_value *lone_parse_list(struct lone_lisp *lone, struct lone_reader *reader)
 {
-	struct lone_value *list = lone_list_create_nil(lone), *first = list, *next;
+	struct lone_value *list = lone_list_create_nil(lone), *first = list, *prev = 0, *next;
 
 	while (1) {
 		next = lone_lex(lone, reader);
 		if (!next) { reader->error = 1; return 0; }
 
-		if (lone_is_symbol(next) && *next->bytes.pointer == ')') {
-			break;
+		if (lone_is_symbol(next)) {
+			if (*next->bytes.pointer == ')') { break; }
+			else if (*next->bytes.pointer == '.') {
+				if (!prev) { reader->error = 1; return 0; }
+
+				next = lone_lex(lone, reader);
+				if (!next) { reader->error = 1; return 0; }
+
+				lone_list_set_rest(prev, lone_parse(lone, reader, next));
+
+				next = lone_lex(lone, reader);
+				if (!next || !lone_is_symbol(next) || *next->bytes.pointer != ')') { reader->error = 1; return 0; }
+
+				break;
+			}
 		}
 
+		prev = list;
 		list = lone_list_append(lone, list, lone_parse(lone, reader, next));
 	}
 
