@@ -2669,6 +2669,12 @@ static struct lone_value *lone_primitive_lambda_star(struct lone_lisp *lone, str
 	return lone_primitive_lambda_with_flags(lone, closure, environment, arguments, flags);
 }
 
+static struct lone_value *lone_apply_predicate(struct lone_lisp *lone, struct lone_value *arguments, lone_predicate function)
+{
+	if (lone_is_nil(arguments) || !lone_is_nil(lone_list_rest(arguments))) { /* predicates accept exactly one argument */ linux_exit(-1); }
+	return function(lone_list_first(arguments)) ? lone_true(lone) : lone_nil(lone);
+}
+
 static struct lone_value *lone_apply_comparator(struct lone_lisp *lone, struct lone_value *arguments, lone_comparator function)
 {
 	struct lone_value *argument, *next;
