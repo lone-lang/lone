@@ -4,7 +4,7 @@ ARCH ?= $(shell uname -m)
 ARCH.c := arch/$(ARCH).c
 CFLAGS := -Wall -Wextra -Wpedantic -Os -fwhole-program
 override definitions := -D LONE_ARCH=$(ARCH) -D LONE_ARCH_SOURCE='"$(ARCH.c)"' -D LONE_NR_SOURCE='"NR.c"'
-override essential_flags := $(definitions) -ffreestanding -nostartfiles -nostdlib -static -fno-omit-frame-pointer
+override essential_flags := $(definitions) -ffreestanding -nostartfiles -nostdlib -static -fno-omit-frame-pointer -fshort-enums
 
 lone : lone.c NR.c $(ARCH.c)
 	$(CC) $(essential_flags) $(CFLAGS) -o $@ $<
