@@ -1379,9 +1379,9 @@ static struct lone_value *lone_vector_build(struct lone_lisp *lone, size_t count
    │    Hash table functions.                                               │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
-static unsigned long  __attribute__((pure)) fnv_1a(struct lone_bytes data)
+static unsigned long __attribute__((pure)) fnv_1a(struct lone_bytes data, unsigned long offset_basis)
 {
-	unsigned long hash = FNV_OFFSET_BASIS;
+	unsigned long hash = offset_basis;
 	unsigned char *bytes = data.pointer;
 	size_t count = data.count;
 
@@ -1393,16 +1393,15 @@ static unsigned long  __attribute__((pure)) fnv_1a(struct lone_bytes data)
 	return hash;
 }
 
-static size_t lone_table_hash(struct lone_value *key)
+static size_t lone_hash_recursively(struct lone_value *key, unsigned long hash)
 {
 	struct lone_bytes bytes;
-	unsigned long hash;
 
 	if (!key) { /* a null key is probably a bug */ linux_exit(-1); }
 
 	bytes.pointer = (unsigned char *) &key->type;
 	bytes.count = sizeof(key->type);
-	hash = fnv_1a(bytes);
+	hash = fnv_1a(bytes, hash);
 
 	if (lone_is_nil(key)) { return hash; }
 
@@ -1414,7 +1413,9 @@ static size_t lone_table_hash(struct lone_value *key)
 	case LONE_TABLE:
 		linux_exit(-1);
 	case LONE_LIST:
-		return hash ^ lone_table_hash(key->list.first) ^ lone_table_hash(key->list.rest);
+		hash = lone_hash_recursively(key->list.first, hash);
+		hash = lone_hash_recursively(key->list.rest, hash);
+		return hash;
 	case LONE_SYMBOL:
 	case LONE_TEXT:
 	case LONE_BYTES:
@@ -1430,14 +1431,19 @@ static size_t lone_table_hash(struct lone_value *key)
 		break;
 	}
 
-	hash ^= fnv_1a(bytes);
+	hash = fnv_1a(bytes, hash);
 
 	return hash;
 }
 
+static size_t lone_hash(struct lone_value *value)
+{
+	return lone_hash_recursively(value, FNV_OFFSET_BASIS);
+}
+
 static unsigned long lone_table_compute_hash_for(struct lone_value *key, size_t capacity)
 {
-	return lone_table_hash(key) % capacity;
+	return lone_hash(key) % capacity;
 }
 
 static size_t lone_table_entry_find_index_for(struct lone_value *key, struct lone_table_entry *entries, size_t capacity)
