@@ -947,7 +947,9 @@ static struct lone_value *lone_primitive_import(struct lone_lisp *, struct lone_
    │    allocation system is not functional without it.                     │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
-static void lone_lisp_initialize(struct lone_lisp *lone, struct lone_bytes memory, size_t heap_size, void *stack)
+static void lone_hash_initialize(struct lone_lisp *, struct lone_bytes);
+
+static void lone_lisp_initialize(struct lone_lisp *lone, struct lone_bytes memory, size_t heap_size, void *stack, struct lone_bytes random)
 {
 	lone->memory.stack = stack;
 
@@ -957,6 +959,8 @@ static void lone_lisp_initialize(struct lone_lisp *lone, struct lone_bytes memor
 	lone->memory.general->size = memory.count - sizeof(struct lone_memory);
 
 	lone->memory.heaps = lone_allocate_heap(lone, heap_size);
+
+	lone_hash_initialize(lone, random);
 
 	/* basic initialization done, can now use value creation functions */
 
@@ -3928,10 +3932,10 @@ long lone(int argc, char **argv, char **envp, struct auxiliary *auxv)
 {
 	void *stack = __builtin_frame_address(0);
 	static unsigned char __attribute__((aligned(LONE_ALIGNMENT))) bytes[LONE_MEMORY_SIZE];
-	struct lone_bytes memory = { sizeof(bytes), bytes };
+	struct lone_bytes memory = { sizeof(bytes), bytes }, random = lone_get_auxiliary_random_bytes(auxv);
 	struct lone_lisp lone;
 
-	lone_lisp_initialize(&lone, memory, 1024, stack);
+	lone_lisp_initialize(&lone, memory, 1024, stack, random);
 	lone_modules_initialize(&lone, argc, argv, envp, auxv);
 
 	lone_module_load_from_file_descriptor(&lone, lone_module_null(&lone), 0);
