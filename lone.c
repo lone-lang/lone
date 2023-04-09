@@ -3172,6 +3172,20 @@ struct auxiliary {
 	} as;
 };
 
+static struct lone_bytes lone_get_auxiliary_random_bytes(struct auxiliary *value)
+{
+	struct lone_bytes random = { 0, 0 };
+
+	for (/* value */; value->type != AT_NULL; ++value) {
+		if (value->type == AT_RANDOM) {
+			random.pointer = value->as.pointer;
+			random.count = 16;
+		}
+	}
+
+	return random;
+}
+
 static void lone_auxiliary_value_to_table(struct lone_lisp *lone, struct lone_value *table, struct auxiliary *auxiliary_value)
 {
 	struct lone_value *key, *value;
