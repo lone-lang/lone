@@ -223,6 +223,11 @@ struct lone_lisp {
 		struct lone_value *import;
 		struct lone_value *path;
 	} modules;
+	struct {
+		struct {
+			unsigned long offset_basis;
+		} fnv_1a;
+	} hash;
 };
 
 /* ╭────────────────────┨ LONE LISP MEMORY ALLOCATION ┠─────────────────────╮
