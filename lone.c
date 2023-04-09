@@ -1398,6 +1398,11 @@ static unsigned long __attribute__((pure)) fnv_1a(struct lone_bytes data, unsign
 	return hash;
 }
 
+static void lone_hash_initialize(struct lone_lisp *lone, struct lone_bytes random)
+{
+	lone->hash.fnv_1a.offset_basis = fnv_1a(random, FNV_OFFSET_BASIS);
+}
+
 static size_t lone_hash_recursively(struct lone_value *key, unsigned long hash)
 {
 	struct lone_bytes bytes;
