@@ -1450,19 +1450,19 @@ static size_t lone_hash_recursively(struct lone_value *key, unsigned long hash)
 	return hash;
 }
 
-static size_t lone_hash(struct lone_value *value)
+static size_t lone_hash(struct lone_lisp *lone, struct lone_value *value)
 {
-	return lone_hash_recursively(value, FNV_OFFSET_BASIS);
+	return lone_hash_recursively(value, lone->hash.fnv_1a.offset_basis);
 }
 
-static unsigned long lone_table_compute_hash_for(struct lone_value *key, size_t capacity)
+static unsigned long lone_table_compute_hash_for(struct lone_lisp *lone, struct lone_value *key, size_t capacity)
 {
-	return lone_hash(key) % capacity;
+	return lone_hash(lone, key) % capacity;
 }
 
-static size_t lone_table_entry_find_index_for(struct lone_value *key, struct lone_table_entry *entries, size_t capacity)
+static size_t lone_table_entry_find_index_for(struct lone_lisp *lone, struct lone_value *key, struct lone_table_entry *entries, size_t capacity)
 {
-	size_t i = lone_table_compute_hash_for(key, capacity);
+	size_t i = lone_table_compute_hash_for(lone, key, capacity);
 
 	while (entries[i].key && !lone_is_equal(entries[i].key, key)) {
 		i = (i + 1) % capacity;
@@ -1471,9 +1471,9 @@ static size_t lone_table_entry_find_index_for(struct lone_value *key, struct lon
 	return i;
 }
 
-static int lone_table_entry_set(struct lone_table_entry *entries, size_t capacity, struct lone_value *key, struct lone_value *value)
+static int lone_table_entry_set(struct lone_lisp *lone, struct lone_table_entry *entries, size_t capacity, struct lone_value *key, struct lone_value *value)
 {
-	size_t i = lone_table_entry_find_index_for(key, entries, capacity);
+	size_t i = lone_table_entry_find_index_for(lone, key, entries, capacity);
 	struct lone_table_entry *entry = &entries[i];
 
 	if (entry->key) {
@@ -1499,7 +1499,7 @@ static void lone_table_resize(struct lone_lisp *lone, struct lone_value *table, 
 
 	for (i = 0; i < old_capacity; ++i) {
 		if (old[i].key) {
-			lone_table_entry_set(new, new_capacity, old[i].key, old[i].value);
+			lone_table_entry_set(lone, new, new_capacity, old[i].key, old[i].value);
 		}
 	}
 
@@ -1514,7 +1514,7 @@ static void lone_table_set(struct lone_lisp *lone, struct lone_value *table, str
 		lone_table_resize(lone, table, table->table.capacity * 2);
 	}
 
-	if (lone_table_entry_set(table->table.entries, table->table.capacity, key, value)) {
+	if (lone_table_entry_set(lone, table->table.entries, table->table.capacity, key, value)) {
 		++table->table.count;
 	}
 }
@@ -1525,7 +1525,7 @@ static struct lone_value *lone_table_get(struct lone_lisp *lone, struct lone_val
 	struct lone_table_entry *entries = table->table.entries, *entry;
 	struct lone_value *prototype = table->table.prototype;
 
-	i = lone_table_entry_find_index_for(key, entries, capacity);
+	i = lone_table_entry_find_index_for(lone, key, entries, capacity);
 	entry = &entries[i];
 
 	if (entry->key) {
@@ -1542,7 +1542,7 @@ static void lone_table_delete(struct lone_lisp *lone, struct lone_value *table, 
 	size_t capacity = table->table.capacity, i, j, k;
 	struct lone_table_entry *entries = table->table.entries;
 
-	i = lone_table_entry_find_index_for(key, entries, capacity);
+	i = lone_table_entry_find_index_for(lone, key, entries, capacity);
 
 	if (!entries[i].key) { return; }
 
@@ -1550,7 +1550,7 @@ static void lone_table_delete(struct lone_lisp *lone, struct lone_value *table, 
 	while (1) {
 		j = (j + 1) % capacity;
 		if (!entries[j].key) { break; }
-		k = lone_table_compute_hash_for(entries[j].key, capacity);
+		k = lone_table_compute_hash_for(lone, entries[j].key, capacity);
 		if ((j > i && (k <= i || k > j)) || (j < i && (k <= i && k > j))) {
 			entries[i] = entries[j];
 			i = j;
