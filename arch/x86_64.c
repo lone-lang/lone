@@ -207,7 +207,7 @@ __asm__
 "lea 0(%rdx), %rcx"              "\n"  //       rcx = rdx
 "0:"                             "\n"  // loop:
 "add $8, %rcx"                   "\n"  //       rcx = rcx + 9
-"cmp $0, -8(%rcx)"               "\n"  //       *(rcx - 8) == 0 ?
+"cmpq $0, -8(%rcx)"              "\n"  //       *(rcx - 8) == 0 ?
 "jnz 0b"                         "\n"  //       loop if not zero
                                        //       rcx - 8 == 0
                                        // auxv: rcx
