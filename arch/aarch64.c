@@ -202,8 +202,8 @@ __asm__
 __asm__
 (
 
-".global _start"                 "\n"  // place _start in the symbol table
-"_start:"                        "\n"  // program entry point
+".global lone_start"             "\n"  // place lone_start in the symbol table
+"lone_start:"                    "\n"  // program entry point
 
                                        // compute argc, argv, envp and auxv
 "ldr x0, [sp]"                   "\n"  // argc: x0 =   *sp
