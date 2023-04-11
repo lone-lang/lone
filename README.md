@@ -21,6 +21,7 @@ Any of the following commands can be used:
     make lone
     make clean
     make clean lone
+    make clean lone CFLAGS=-g
     make clean lone UAPI=/alternative/linux/uapi/headers
     make clean lone TARGET=x86_64 UAPI=/linux/uapi/headers/x86_64
 
