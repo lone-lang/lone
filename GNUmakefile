@@ -1,7 +1,20 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-ARCH ?= $(shell uname -m)
-ARCH.c := arch/$(ARCH).c
+
+ifdef TARGET
+  ifndef UAPI
+    $(error UAPI must be defined when cross compiling)
+  endif
+
+  TARGET.triple := $(TARGET)-unknown-linux-elf
+  override CC := clang -target $(TARGET.triple) -isystem $(UAPI)
+else
+  TARGET := $(shell uname -m)
+endif
+
+override ARCH := $(TARGET)
+override ARCH.c := arch/$(ARCH).c
+
 CFLAGS := -Wall -Wextra -Wpedantic -Os
 override definitions := -D LONE_ARCH=$(ARCH) -D LONE_ARCH_SOURCE='"$(ARCH.c)"' -D LONE_NR_SOURCE='"NR.c"'
 override essential_flags := $(definitions) -ffreestanding -nostartfiles -nostdlib -static -fno-omit-frame-pointer -fshort-enums
