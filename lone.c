@@ -170,6 +170,7 @@ struct lone_primitive {
 struct lone_module {
 	struct lone_value *name;
 	struct lone_value *environment;
+	struct lone_value *exports;
 };
 
 struct lone_value {
@@ -453,6 +454,7 @@ static void lone_mark_value(struct lone_value *value)
 	case LONE_MODULE:
 		lone_mark_value(value->module.name);
 		lone_mark_value(value->module.environment);
+		lone_mark_value(value->module.exports);
 		break;
 	case LONE_FUNCTION:
 		lone_mark_value(value->function.arguments);
@@ -940,6 +942,7 @@ static struct lone_value *lone_module_create(struct lone_lisp *lone, struct lone
 	value->module.name = name;
 	value->module.environment = lone_table_create(lone, 64, 0);
 	lone_table_set(lone, value->module.environment, lone_intern_c_string(lone, "import"), lone->modules.import);
+	value->module.exports = lone_vector_create(lone, 16);
 	return value;
 }
 
