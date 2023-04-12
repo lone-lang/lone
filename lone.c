@@ -3164,6 +3164,19 @@ static void lone_set_and_export(struct lone_lisp *lone, struct lone_value *modul
 	lone_table_set(lone, module->module.environment, symbol, value);
 }
 
+static struct lone_value *lone_primitive_export(struct lone_lisp *lone, struct lone_value *module, struct lone_value *environment, struct lone_value *arguments, struct lone_value *closure)
+{
+	struct lone_value *head, *symbol;
+
+	for (head = arguments; !lone_is_nil(head); head = lone_list_rest(head)) {
+		symbol = lone_list_first(head);
+
+		lone_export(lone, module, symbol);
+	}
+
+	return lone_nil(lone);
+}
+
 /* ╭────────────────────────────────────────────────────────────────────────╮
    │                                                                        │
    │    Linux primitive functions for issuing system calls.                 │
