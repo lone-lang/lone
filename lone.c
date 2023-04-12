@@ -1362,7 +1362,7 @@ static struct lone_value *lone_vector_get_value_at(struct lone_lisp *lone, struc
 static struct lone_value *lone_vector_get(struct lone_lisp *lone, struct lone_value *vector, struct lone_value *index)
 {
 	if (!lone_is_integer(index)) { /* only integer indexes supported */ linux_exit(-1); }
-	return lone_vector_get_value_at(lone, vector, index->integer);
+	return lone_vector_get_value_at(lone, vector, (size_t) index->integer);
 }
 
 static void lone_vector_set_value_at(struct lone_lisp *lone, struct lone_value *vector, size_t i, struct lone_value *value)
@@ -1375,7 +1375,7 @@ static void lone_vector_set_value_at(struct lone_lisp *lone, struct lone_value *
 static void lone_vector_set(struct lone_lisp *lone, struct lone_value *vector, struct lone_value *index, struct lone_value *value)
 {
 	if (!lone_is_integer(index)) { /* only integer indexes supported */ linux_exit(-1); }
-	lone_vector_set_value_at(lone, vector, index->integer, value);
+	lone_vector_set_value_at(lone, vector, (size_t) index->integer, value);
 }
 
 static void lone_vector_push(struct lone_lisp *lone, struct lone_value *vector, struct lone_value *value)
