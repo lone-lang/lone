@@ -946,8 +946,6 @@ static struct lone_value *lone_module_create(struct lone_lisp *lone, struct lone
 	return value;
 }
 
-static struct lone_value *lone_primitive_import(struct lone_lisp *, struct lone_value *, struct lone_value *, struct lone_value *);
-
 /* ╭────────────────────────────────────────────────────────────────────────╮
    │                                                                        │
    │    The lone lisp structure represents the lone lisp interpreter.       │
@@ -956,10 +954,15 @@ static struct lone_value *lone_primitive_import(struct lone_lisp *, struct lone_
    │    allocation system is not functional without it.                     │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
+static struct lone_value *lone_primitive_import(struct lone_lisp *, struct lone_value *, struct lone_value *, struct lone_value *, struct lone_value *);
+static struct lone_value *lone_primitive_export(struct lone_lisp *, struct lone_value *, struct lone_value *, struct lone_value *, struct lone_value *);
 static void lone_hash_initialize(struct lone_lisp *, struct lone_bytes);
 
 static void lone_lisp_initialize(struct lone_lisp *lone, struct lone_bytes memory, size_t heap_size, void *stack, struct lone_bytes random)
 {
+	struct lone_function_flags flags = { .evaluate_arguments = 0, .evaluate_result = 0, .variable_arguments = 1 };
+	struct lone_value *import, *export;
+
 	lone->memory.stack = stack;
 
 	lone->memory.general = (struct lone_memory *) __builtin_assume_aligned(memory.pointer, LONE_ALIGNMENT);
@@ -980,6 +983,11 @@ static void lone_lisp_initialize(struct lone_lisp *lone, struct lone_bytes memor
 	lone->modules.loaded = lone_table_create(lone, 32, 0);
 	lone->modules.top_level_environment = lone_table_create(lone, 8, 0);
 	lone->modules.path = lone_vector_create(lone, 8);
+
+	import = lone_primitive_create(lone, "import", lone_primitive_import, 0, flags);
+	export = lone_primitive_create(lone, "export", lone_primitive_export, 0, flags);
+	lone_table_set(lone, lone->modules.top_level_environment, lone_intern_c_string(lone, "import"), import);
+	lone_table_set(lone, lone->modules.top_level_environment, lone_intern_c_string(lone, "export"), export);
 	lone->modules.null = lone_module_create(lone, 0);
 }
 
