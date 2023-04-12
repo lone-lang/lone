@@ -591,8 +591,9 @@ static void lone_kill_all_unmarked_values(struct lone_lisp *lone)
 				}
 
 				value->live = false;
-				value->marked = false;
 			}
+
+			value->marked = false;
 		}
 	}
 }
