@@ -3089,10 +3089,13 @@ static void lone_primitive_import_argument(struct lone_lisp *lone, struct lone_v
 
 static struct lone_value *lone_primitive_import(struct lone_lisp *lone, struct lone_value *closure, struct lone_value *environment, struct lone_value *arguments)
 {
+	struct lone_value *argument;
+
 	if (lone_is_nil(arguments)) { /* nothing to import: (import) */ linux_exit(-1); }
 
 	for (/* argument */; !lone_is_nil(arguments); arguments = lone_list_rest(arguments)) {
-		lone_primitive_import_argument(lone, environment, lone_list_first(arguments));
+		argument = lone_list_first(arguments);
+		lone_primitive_import_argument(lone, environment, argument);
 	}
 
 	return lone_nil(lone);
