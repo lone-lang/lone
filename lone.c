@@ -3023,13 +3023,16 @@ struct lone_import_specification {
 static void lone_import_specification_all(struct lone_lisp *lone, struct lone_import_specification *spec)
 {
 	/* full import, bind all symbols: (import (module)) */
-	struct lone_value *module = spec->module, *environment = spec->environment;
+	struct lone_value *module = spec->module, *environment = spec->environment, *symbol, *value;
 	struct lone_table_entry *entries = module->module.environment->table.entries;
 	size_t i, capacity = module->module.environment->table.capacity;
 
 	for (i = 0; i < capacity; ++i) {
 		if (entries[i].key) {
-			lone_table_set(lone, environment, entries[i].key, entries[i].value);
+			symbol = entries[i].key;
+			value = entries[i].value;
+
+			lone_table_set(lone, environment, symbol, value);
 		}
 	}
 }
