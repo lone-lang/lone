@@ -3067,36 +3067,20 @@ static struct lone_value *lone_prefix_module_name(struct lone_lisp *lone, struct
 	return lone_symbol_transfer_bytes(lone, lone_join(lone, dot, arguments, lone_has_bytes), true);
 }
 
-static void lone_import_specification_all(struct lone_lisp *lone, struct lone_import_specification *spec)
+static void lone_import_specification(struct lone_lisp *lone, struct lone_import_specification *spec)
 {
-	/* full import, bind all symbols: (import (module)) */
-	struct lone_value *module = spec->module, *environment = spec->environment, *symbol, *value;
-	struct lone_table_entry *entries = module->module.environment->table.entries;
-	size_t i, capacity = module->module.environment->table.capacity;
-
-	for (i = 0; i < capacity; ++i) {
-		if (entries[i].key) {
-			symbol = entries[i].key;
-			value = entries[i].value;
-
-			if (spec->prefixed) {
-				symbol = lone_prefix_module_name(lone, spec->module, symbol);
-			}
-
-			lone_table_set(lone, environment, symbol, value);
-		}
-	}
-}
-
-static void lone_import_specification_only(struct lone_lisp *lone, struct lone_import_specification *spec)
-{
-	struct lone_value *module = spec->module, *symbols = spec->symbols, *environment = spec->environment,
+	size_t i;
+	struct lone_value *module = spec->module, *symbols = spec->symbols, *environment = spec->environment, *exports = module->module.exports,
 	                  *symbol, *value;
 
-	/* limited import, bind only specified symbols: (import (module x f)) */
-	do {
-		symbol = lone_list_first(symbols);
+	/* bind either the exported or the specified symbols: (import (module)), (import (module x f)) */
+	for (i = 0; i < symbols->vector.count; ++i) {
+		symbol = lone_vector_get_value_at(lone, symbols, i);
 		if (!lone_is_symbol(symbol)) { /* name not a symbol: (import (module 10)) */ linux_exit(-1); }
+
+		if (symbols != exports && !lone_vector_contains(exports, symbol)) {
+			/* attempt to import private symbol */ linux_exit(-1);
+		}
 
 		value = lone_table_get(lone, module->module.environment, symbol);
 
@@ -3105,24 +3089,6 @@ static void lone_import_specification_only(struct lone_lisp *lone, struct lone_i
 		}
 
 		lone_table_set(lone, environment, symbol, value);
-
-	} while (!lone_is_nil(symbols = lone_list_rest(symbols)));
-}
-
-static void lone_import_specification(struct lone_lisp *lone, struct lone_import_specification *spec)
-{
-	if (spec->symbols) {
-		/* (import (module)), (import (module symbol)) */
-		if (lone_is_nil(spec->symbols)) {
-			/* (import (module)) */
-			lone_import_specification_all(lone, spec);
-		} else {
-			/* (import (module symbol)) */
-			lone_import_specification_only(lone, spec);
-		}
-	} else {
-		/* (import module) */
-		lone_import_specification_all(lone, spec);
 	}
 }
 
@@ -3136,10 +3102,12 @@ static void lone_primitive_import_form(struct lone_lisp *lone, struct lone_impor
 
 	switch (argument->type) {
 	case LONE_SYMBOL:
+		/* (import module) */
 		name = argument;
-		argument = 0;
+		argument = lone_nil(lone);
 		break;
 	case LONE_LIST:
+		/* (import (module)), (import (module symbol)) */
 		name = lone_list_first(argument);
 		argument = lone_list_rest(argument);
 		break;
@@ -3151,9 +3119,10 @@ static void lone_primitive_import_form(struct lone_lisp *lone, struct lone_impor
 		/* not a supported import argument type */ linux_exit(-1);
 	}
 
-	spec->symbols = argument;
 	spec->module = lone_module_load(lone, name);
 	if (lone_is_nil(spec->module)) { /* module not found: (import non-existent), (import (non-existent)) */ linux_exit(-1); }
+
+	spec->symbols = lone_is_nil(argument)? spec->module->module.exports : lone_list_to_vector(lone, argument);
 
 	lone_import_specification(lone, spec);
 }
