@@ -1350,12 +1350,8 @@ static struct lone_value *lone_vector_get_value_at(struct lone_lisp *lone, struc
 
 static struct lone_value *lone_vector_get(struct lone_lisp *lone, struct lone_value *vector, struct lone_value *index)
 {
-	struct lone_value *value;
-	size_t i;
 	if (!lone_is_integer(index)) { /* only integer indexes supported */ linux_exit(-1); }
-	i = index->integer;
-	value = i < vector->vector.capacity? vector->vector.values[i] : 0;
-	return value? value : lone_nil(lone);
+	return lone_vector_get_value_at(lone, vector, index->integer);
 }
 
 static void lone_vector_set_value_at(struct lone_lisp *lone, struct lone_value *vector, size_t i, struct lone_value *value)
