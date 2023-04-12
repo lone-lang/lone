@@ -3138,7 +3138,9 @@ static void lone_primitive_import_form(struct lone_lisp *lone, struct lone_impor
 static struct lone_value *lone_primitive_import(struct lone_lisp *lone, struct lone_value *module, struct lone_value *environment, struct lone_value *arguments, struct lone_value *closure)
 {
 	struct lone_import_specification spec;
-	struct lone_value *prefixed = lone_intern_c_string(lone, "prefixed"), *argument;
+	struct lone_value *prefixed = lone_intern_c_string(lone, "prefixed"),
+	                  *unprefixed = lone_intern_c_string(lone, "unprefixed"),
+	                  *argument;
 
 	if (lone_is_nil(arguments)) { /* nothing to import: (import) */ linux_exit(-1); }
 
@@ -3151,6 +3153,7 @@ static struct lone_value *lone_primitive_import(struct lone_lisp *lone, struct l
 			lone_primitive_import_form(lone, &spec, argument);
 		} else if (lone_is_symbol(argument)) {
 			if (lone_is_equivalent(argument, prefixed)) { spec.prefixed = true; }
+			else if (lone_is_equivalent(argument, unprefixed)) { spec.prefixed = false; }
 		} else {
 			/* invalid import argument */ linux_exit(-1);
 		}
