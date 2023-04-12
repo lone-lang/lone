@@ -3175,6 +3175,12 @@ static void lone_export(struct lone_lisp *lone, struct lone_value *module, struc
 	lone_vector_push(lone, module->module.exports, symbol);
 }
 
+static void lone_set_and_export(struct lone_lisp *lone, struct lone_value *module, struct lone_value *symbol, struct lone_value *value)
+{
+	lone_export(lone, module, symbol);
+	lone_table_set(lone, module->module.environment, symbol, value);
+}
+
 /* ╭────────────────────────────────────────────────────────────────────────╮
    │                                                                        │
    │    Linux primitive functions for issuing system calls.                 │
