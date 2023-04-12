@@ -1407,6 +1407,19 @@ static struct lone_value *lone_vector_build(struct lone_lisp *lone, size_t count
 	return vector;
 }
 
+static bool lone_vector_contains(struct lone_value *vector, struct lone_value *value)
+{
+	size_t i;
+
+	for (i = 0; i < vector->vector.count; ++i) {
+		if (lone_is_equal(value, vector->vector.values[i])) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
 /* ╭────────────────────────────────────────────────────────────────────────╮
    │                                                                        │
    │    Hash table functions.                                               │
