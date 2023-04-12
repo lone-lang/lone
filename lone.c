@@ -1342,6 +1342,12 @@ static void lone_vector_resize(struct lone_lisp *lone, struct lone_value *vector
 	if (vector->vector.count > new_capacity) { vector->vector.count = new_capacity; }
 }
 
+static struct lone_value *lone_vector_get_value_at(struct lone_lisp *lone, struct lone_value *vector, size_t i)
+{
+	struct lone_value *value = i < vector->vector.capacity? vector->vector.values[i] : lone_nil(lone);
+	return value? value : lone_nil(lone);
+}
+
 static struct lone_value *lone_vector_get(struct lone_lisp *lone, struct lone_value *vector, struct lone_value *index)
 {
 	struct lone_value *value;
