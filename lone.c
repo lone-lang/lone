@@ -3024,6 +3024,8 @@ struct lone_import_specification {
 	struct lone_value *module;         /* module value to import from */
 	struct lone_value *symbols;        /* list of symbols to import */
 	struct lone_value *environment;    /* environment to import symbols to */
+
+	bool prefixed;                     /* whether to prefix symbols */
 };
 
 static void lone_import_specification_all(struct lone_lisp *lone, struct lone_import_specification *spec)
