@@ -3048,7 +3048,6 @@ static void lone_import_specification_only(struct lone_lisp *lone, struct lone_i
 		if (!lone_is_symbol(symbol)) { /* name not a symbol: (import (module 10)) */ linux_exit(-1); }
 
 		value = lone_table_get(lone, module->module.environment, symbol);
-		if (lone_is_nil(value)) { /* name not set in module */ linux_exit(-1); }
 
 		lone_table_set(lone, environment, symbol, value);
 
