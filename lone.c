@@ -3048,6 +3048,10 @@ static void lone_import_specification_all(struct lone_lisp *lone, struct lone_im
 			symbol = entries[i].key;
 			value = entries[i].value;
 
+			if (spec->prefixed) {
+				symbol = lone_prefix_module_name(lone, spec->module, symbol);
+			}
+
 			lone_table_set(lone, environment, symbol, value);
 		}
 	}
@@ -3064,6 +3068,10 @@ static void lone_import_specification_only(struct lone_lisp *lone, struct lone_i
 		if (!lone_is_symbol(symbol)) { /* name not a symbol: (import (module 10)) */ linux_exit(-1); }
 
 		value = lone_table_get(lone, module->module.environment, symbol);
+
+		if (spec->prefixed) {
+			symbol = lone_prefix_module_name(lone, spec->module, symbol);
+		}
 
 		lone_table_set(lone, environment, symbol, value);
 
@@ -3127,6 +3135,7 @@ static struct lone_value *lone_primitive_import(struct lone_lisp *lone, struct l
 	if (lone_is_nil(arguments)) { /* nothing to import: (import) */ linux_exit(-1); }
 
 	spec.environment = environment;
+	spec.prefixed = false;
 
 	for (/* argument */; !lone_is_nil(arguments); arguments = lone_list_rest(arguments)) {
 		argument = lone_list_first(arguments);
