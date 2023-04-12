@@ -156,9 +156,10 @@ struct lone_function {
 
 struct lone_lisp;
 typedef struct lone_value *(*lone_primitive)(struct lone_lisp *lone,
-                                             struct lone_value *closure,
+                                             struct lone_value *module,
                                              struct lone_value *environment,
-                                             struct lone_value *arguments);
+                                             struct lone_value *arguments,
+                                             struct lone_value *closure);
 
 struct lone_primitive {
 	struct lone_value *name;
@@ -2103,14 +2104,14 @@ static struct lone_value *lone_read(struct lone_lisp *lone, struct lone_reader *
    │    Currently supports resolving variable references.                   │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
-static struct lone_value *lone_evaluate(struct lone_lisp *, struct lone_value *, struct lone_value *);
+static struct lone_value *lone_evaluate(struct lone_lisp *, struct lone_value *, struct lone_value *, struct lone_value *);
 
 static struct lone_value *lone_evaluate_module(struct lone_lisp *lone, struct lone_value *module, struct lone_value *value)
 {
-	return lone_evaluate(lone, module->module.environment, value);
+	return lone_evaluate(lone, module, module->module.environment, value);
 }
 
-static struct lone_value *lone_evaluate_form_index(struct lone_lisp *lone, struct lone_value *environment, struct lone_value *collection, struct lone_value *arguments)
+static struct lone_value *lone_evaluate_form_index(struct lone_lisp *lone, struct lone_value *module, struct lone_value *environment, struct lone_value *collection, struct lone_value *arguments)
 {
 	struct lone_value *(*get)(struct lone_lisp *, struct lone_value *, struct lone_value *);
 	void (*set)(struct lone_lisp *, struct lone_value *, struct lone_value *, struct lone_value *);
@@ -2136,7 +2137,7 @@ static struct lone_value *lone_evaluate_form_index(struct lone_lisp *lone, struc
 	arguments = lone_list_rest(arguments);
 	if (lone_is_nil(arguments)) {
 		/* table get: (collection key) */
-		return get(lone, collection, lone_evaluate(lone, environment, key));
+		return get(lone, collection, lone_evaluate(lone, module, environment, key));
 	} else {
 		/* at least one argument */
 		value = lone_list_first(arguments);
@@ -2144,8 +2145,8 @@ static struct lone_value *lone_evaluate_form_index(struct lone_lisp *lone, struc
 		if (lone_is_nil(arguments)) {
 			/* table set: (collection key value) */
 			set(lone, collection,
-			          lone_evaluate(lone, environment, key),
-			          lone_evaluate(lone, environment, value));
+			          lone_evaluate(lone, module, environment, key),
+			          lone_evaluate(lone, module, environment, value));
 			return value;
 		} else {
 			/* too many arguments given: (collection key value extra) */
@@ -2154,23 +2155,23 @@ static struct lone_value *lone_evaluate_form_index(struct lone_lisp *lone, struc
 	}
 }
 
-static struct lone_value *lone_apply(struct lone_lisp *, struct lone_value *, struct lone_value *, struct lone_value *);
-static struct lone_value *lone_apply_function(struct lone_lisp *, struct lone_value *, struct lone_value *, struct lone_value *);
-static struct lone_value *lone_apply_primitive(struct lone_lisp *, struct lone_value *, struct lone_value *, struct lone_value *);
+static struct lone_value *lone_apply(struct lone_lisp *, struct lone_value *, struct lone_value *, struct lone_value *, struct lone_value *);
+static struct lone_value *lone_apply_function(struct lone_lisp *, struct lone_value *, struct lone_value *, struct lone_value *, struct lone_value *);
+static struct lone_value *lone_apply_primitive(struct lone_lisp *, struct lone_value *, struct lone_value *, struct lone_value *, struct lone_value *);
 
-static struct lone_value *lone_evaluate_form(struct lone_lisp *lone, struct lone_value *environment, struct lone_value *list)
+static struct lone_value *lone_evaluate_form(struct lone_lisp *lone, struct lone_value *module, struct lone_value *environment, struct lone_value *list)
 {
 	struct lone_value *first = lone_list_first(list), *rest = lone_list_rest(list);
 
 	/* apply arguments to a lone value */
-	first = lone_evaluate(lone, environment, first);
+	first = lone_evaluate(lone, module, environment, first);
 	switch (first->type) {
 	case LONE_FUNCTION:
 	case LONE_PRIMITIVE:
-		return lone_apply(lone, environment, first, rest);
+		return lone_apply(lone, module, environment, first, rest);
 	case LONE_VECTOR:
 	case LONE_TABLE:
-		return lone_evaluate_form_index(lone, environment, first, rest);
+		return lone_evaluate_form_index(lone, module, environment, first, rest);
 	case LONE_MODULE:
 	case LONE_LIST:
 	case LONE_SYMBOL:
@@ -2182,14 +2183,14 @@ static struct lone_value *lone_evaluate_form(struct lone_lisp *lone, struct lone
 	}
 }
 
-static struct lone_value *lone_evaluate(struct lone_lisp *lone, struct lone_value *environment, struct lone_value *value)
+static struct lone_value *lone_evaluate(struct lone_lisp *lone, struct lone_value *module, struct lone_value *environment, struct lone_value *value)
 {
 	if (value == 0) { return 0; }
 	if (lone_is_nil(value)) { return value; }
 
 	switch (value->type) {
 	case LONE_LIST:
-		return lone_evaluate_form(lone, environment, value);
+		return lone_evaluate_form(lone, module, environment, value);
 	case LONE_SYMBOL:
 		return lone_table_get(lone, environment, value);
 	case LONE_MODULE:
@@ -2205,35 +2206,35 @@ static struct lone_value *lone_evaluate(struct lone_lisp *lone, struct lone_valu
 	}
 }
 
-static struct lone_value *lone_evaluate_all(struct lone_lisp *lone, struct lone_value *environment, struct lone_value *list)
+static struct lone_value *lone_evaluate_all(struct lone_lisp *lone, struct lone_value *module, struct lone_value *environment, struct lone_value *list)
 {
 	struct lone_value *evaluated = lone_list_create_nil(lone), *head;
 
 	for (head = evaluated; !lone_is_nil(list); list = lone_list_rest(list)) {
-		head = lone_list_append(lone, head, lone_evaluate(lone, environment, lone_list_first(list)));
+		head = lone_list_append(lone, head, lone_evaluate(lone, module, environment, lone_list_first(list)));
 	}
 
 	return evaluated;
 }
 
-static struct lone_value *lone_apply(struct lone_lisp *lone, struct lone_value *environment, struct lone_value *applicable, struct lone_value *arguments)
+static struct lone_value *lone_apply(struct lone_lisp *lone, struct lone_value *module, struct lone_value *environment, struct lone_value *applicable, struct lone_value *arguments)
 {
 	if (!lone_is_applicable(applicable)) { /* given function is not an applicable type */ linux_exit(-1); }
 
 	if (lone_is_function(applicable)) {
-		return lone_apply_function(lone, environment, applicable, arguments);
+		return lone_apply_function(lone, module, environment, applicable, arguments);
 	} else {
-		return lone_apply_primitive(lone, environment, applicable, arguments);
+		return lone_apply_primitive(lone, module, environment, applicable, arguments);
 	}
 }
 
-static struct lone_value *lone_apply_function(struct lone_lisp *lone, struct lone_value *environment, struct lone_value *function, struct lone_value *arguments)
+static struct lone_value *lone_apply_function(struct lone_lisp *lone, struct lone_value *module, struct lone_value *environment, struct lone_value *function, struct lone_value *arguments)
 {
 	struct lone_value *new_environment = lone_table_create(lone, 16, function->function.environment),
 	                  *names = function->function.arguments, *code = function->function.code,
 	                  *value = lone_nil(lone);
 
-	if (function->function.flags.evaluate_arguments) { arguments = lone_evaluate_all(lone, environment, arguments); }
+	if (function->function.flags.evaluate_arguments) { arguments = lone_evaluate_all(lone, module, environment, arguments); }
 
 	if (function->function.flags.variable_arguments) {
 		if (lone_is_nil(names) || !lone_is_nil(lone_list_rest(names))) {
@@ -2261,21 +2262,21 @@ static struct lone_value *lone_apply_function(struct lone_lisp *lone, struct lon
 	while (1) {
 		if (lone_is_nil(code)) { break; }
 		value = lone_list_first(code);
-		value = lone_evaluate(lone, new_environment, value);
+		value = lone_evaluate(lone, module, new_environment, value);
 		code = lone_list_rest(code);
 	}
 
-	if (function->function.flags.evaluate_result) { value = lone_evaluate(lone, environment, value); }
+	if (function->function.flags.evaluate_result) { value = lone_evaluate(lone, module, environment, value); }
 
 	return value;
 }
 
-static struct lone_value *lone_apply_primitive(struct lone_lisp *lone, struct lone_value *environment, struct lone_value *primitive, struct lone_value *arguments)
+static struct lone_value *lone_apply_primitive(struct lone_lisp *lone, struct lone_value *module, struct lone_value *environment, struct lone_value *primitive, struct lone_value *arguments)
 {
 	struct lone_value *result;
-	if (primitive->primitive.flags.evaluate_arguments) { arguments = lone_evaluate_all(lone, environment, arguments); }
-	result = primitive->primitive.function(lone, primitive->primitive.closure, environment, arguments);
-	if (primitive->primitive.flags.evaluate_result) { result = lone_evaluate(lone, environment, result); }
+	if (primitive->primitive.flags.evaluate_arguments) { arguments = lone_evaluate_all(lone, module, environment, arguments); }
+	result = primitive->primitive.function(lone, module, environment, arguments, primitive->primitive.closure);
+	if (primitive->primitive.flags.evaluate_result) { result = lone_evaluate(lone, module, environment, result); }
 	return result;
 }
 
@@ -2479,19 +2480,19 @@ static void lone_print(struct lone_lisp *lone, struct lone_value *value, int fd)
    │    Lone lisp functions implemented in C.                               │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
-static struct lone_value *lone_primitive_begin(struct lone_lisp *lone, struct lone_value *closure, struct lone_value *environment, struct lone_value *arguments)
+static struct lone_value *lone_primitive_begin(struct lone_lisp *lone, struct lone_value *module, struct lone_value *environment, struct lone_value *arguments, struct lone_value *closure)
 {
 	struct lone_value *value;
 
 	for (value = lone_nil(lone); !lone_is_nil(arguments); arguments = lone_list_rest(arguments)) {
 		value = lone_list_first(arguments);
-		value = lone_evaluate(lone, environment, value);
+		value = lone_evaluate(lone, module, environment, value);
 	}
 
 	return value;
 }
 
-static struct lone_value *lone_primitive_when(struct lone_lisp *lone, struct lone_value *closure, struct lone_value *environment, struct lone_value *arguments)
+static struct lone_value *lone_primitive_when(struct lone_lisp *lone, struct lone_value *module, struct lone_value *environment, struct lone_value *arguments, struct lone_value *closure)
 {
 	struct lone_value *test;
 
@@ -2499,14 +2500,14 @@ static struct lone_value *lone_primitive_when(struct lone_lisp *lone, struct lon
 	test = lone_list_first(arguments);
 	arguments = lone_list_rest(arguments);
 
-	if (!lone_is_nil(lone_evaluate(lone, environment, test))) {
-		return lone_primitive_begin(lone, closure, environment, arguments);
+	if (!lone_is_nil(lone_evaluate(lone, module, environment, test))) {
+		return lone_primitive_begin(lone, module, environment, arguments, closure);
 	}
 
 	return lone_nil(lone);
 }
 
-static struct lone_value *lone_primitive_unless(struct lone_lisp *lone, struct lone_value *closure, struct lone_value *environment, struct lone_value *arguments)
+static struct lone_value *lone_primitive_unless(struct lone_lisp *lone, struct lone_value *module, struct lone_value *environment, struct lone_value *arguments, struct lone_value *closure)
 {
 	struct lone_value *test;
 
@@ -2514,14 +2515,14 @@ static struct lone_value *lone_primitive_unless(struct lone_lisp *lone, struct l
 	test = lone_list_first(arguments);
 	arguments = lone_list_rest(arguments);
 
-	if (lone_is_nil(lone_evaluate(lone, environment, test))) {
-		return lone_primitive_begin(lone, closure, environment, arguments);
+	if (lone_is_nil(lone_evaluate(lone, module, environment, test))) {
+		return lone_primitive_begin(lone, module, environment, arguments, closure);
 	}
 
 	return lone_nil(lone);
 }
 
-static struct lone_value *lone_primitive_if(struct lone_lisp *lone, struct lone_value *closure, struct lone_value *environment, struct lone_value *arguments)
+static struct lone_value *lone_primitive_if(struct lone_lisp *lone, struct lone_value *module, struct lone_value *environment, struct lone_value *arguments, struct lone_value *closure)
 {
 	struct lone_value *value, *consequent, *alternative = 0;
 
@@ -2539,16 +2540,16 @@ static struct lone_value *lone_primitive_if(struct lone_lisp *lone, struct lone_
 		if (!lone_is_nil(arguments)) { /* too many values (if test consequent alternative extra) */ linux_exit(-1); }
 	}
 
-	if (!lone_is_nil(lone_evaluate(lone, environment, value))) {
-		return lone_evaluate(lone, environment, consequent);
+	if (!lone_is_nil(lone_evaluate(lone, module, environment, value))) {
+		return lone_evaluate(lone, module, environment, consequent);
 	} else if (alternative) {
-		return lone_evaluate(lone, environment, alternative);
+		return lone_evaluate(lone, module, environment, alternative);
 	}
 
 	return lone_nil(lone);
 }
 
-static struct lone_value *lone_primitive_let(struct lone_lisp *lone, struct lone_value *closure, struct lone_value *environment, struct lone_value *arguments)
+static struct lone_value *lone_primitive_let(struct lone_lisp *lone, struct lone_value *module, struct lone_value *environment, struct lone_value *arguments, struct lone_value *closure)
 {
 	struct lone_value *bindings, *first, *second, *rest, *value, *new_environment;
 
@@ -2565,7 +2566,7 @@ static struct lone_value *lone_primitive_let(struct lone_lisp *lone, struct lone
 		rest = lone_list_rest(bindings);
 		if (lone_is_nil(rest)) { /* incomplete variable/value list: (let (x 10 y)) */ linux_exit(-1); }
 		second = lone_list_first(rest);
-		value = lone_evaluate(lone, new_environment, second);
+		value = lone_evaluate(lone, module, new_environment, second);
 		lone_table_set(lone, new_environment, first, value);
 		bindings = lone_list_rest(rest);
 	}
@@ -2573,13 +2574,13 @@ static struct lone_value *lone_primitive_let(struct lone_lisp *lone, struct lone
 	value = lone_nil(lone);
 
 	while (!lone_is_nil(arguments = lone_list_rest(arguments))) {
-		value = lone_evaluate(lone, new_environment, lone_list_first(arguments));
+		value = lone_evaluate(lone, module, new_environment, lone_list_first(arguments));
 	}
 
 	return value;
 }
 
-static struct lone_value *lone_primitive_set(struct lone_lisp *lone, struct lone_value *closure, struct lone_value *environment, struct lone_value *arguments)
+static struct lone_value *lone_primitive_set(struct lone_lisp *lone, struct lone_value *module, struct lone_value *environment, struct lone_value *arguments, struct lone_value *closure)
 {
 	struct lone_value *variable, *value;
 
@@ -2606,19 +2607,19 @@ static struct lone_value *lone_primitive_set(struct lone_lisp *lone, struct lone
 
 	if (!lone_is_nil(arguments)) { /* too many arguments */ linux_exit(-1); }
 
-	value = lone_evaluate(lone, environment, value);
+	value = lone_evaluate(lone, module, environment, value);
 	lone_table_set(lone, environment, variable, value);
 
 	return value;
 }
 
-static struct lone_value *lone_primitive_quote(struct lone_lisp *lone, struct lone_value *closure, struct lone_value *environment, struct lone_value *arguments)
+static struct lone_value *lone_primitive_quote(struct lone_lisp *lone, struct lone_value *module, struct lone_value *environment, struct lone_value *arguments, struct lone_value *closure)
 {
 	if (!lone_is_nil(lone_list_rest(arguments))) { /* too many arguments: (quote x y) */ linux_exit(-1); }
 	return lone_list_first(arguments);
 }
 
-static struct lone_value *lone_primitive_quasiquote(struct lone_lisp *lone, struct lone_value *closure, struct lone_value *environment, struct lone_value *arguments)
+static struct lone_value *lone_primitive_quasiquote(struct lone_lisp *lone, struct lone_value *module, struct lone_value *environment, struct lone_value *arguments, struct lone_value *closure)
 {
 	struct lone_value *list, *head, *current, *element, *result, *first, *rest, *unquote, *splice;
 	bool escaping, splicing;
@@ -2654,7 +2655,7 @@ static struct lone_value *lone_primitive_quasiquote(struct lone_lisp *lone, stru
 
 				if (!lone_is_nil(rest)) { /* too many arguments: (quasiquote (unquote x y) (unquote* x y)) */ linux_exit(-1); }
 
-				result = lone_evaluate(lone, environment, first);
+				result = lone_evaluate(lone, module, environment, first);
 
 				if (splicing) {
 					if (lone_is_list(result)) {
@@ -2681,7 +2682,7 @@ static struct lone_value *lone_primitive_quasiquote(struct lone_lisp *lone, stru
 	return list;
 }
 
-static struct lone_value *lone_primitive_lambda_with_flags(struct lone_lisp *lone, struct lone_value *closure, struct lone_value *environment, struct lone_value *arguments, struct lone_function_flags flags)
+static struct lone_value *lone_primitive_lambda_with_flags(struct lone_lisp *lone, struct lone_value *environment, struct lone_value *arguments, struct lone_function_flags flags)
 {
 	struct lone_value *bindings, *code;
 
@@ -2693,7 +2694,7 @@ static struct lone_value *lone_primitive_lambda_with_flags(struct lone_lisp *lon
 	return lone_function_create(lone, bindings, code, environment, flags);
 }
 
-static struct lone_value *lone_primitive_lambda(struct lone_lisp *lone, struct lone_value *closure, struct lone_value *environment, struct lone_value *arguments)
+static struct lone_value *lone_primitive_lambda(struct lone_lisp *lone, struct lone_value *module, struct lone_value *environment, struct lone_value *arguments, struct lone_value *closure)
 {
 	struct lone_function_flags flags = {
 		.evaluate_arguments = 1,
@@ -2701,10 +2702,10 @@ static struct lone_value *lone_primitive_lambda(struct lone_lisp *lone, struct l
 		.variable_arguments = 0,
 	};
 
-	return lone_primitive_lambda_with_flags(lone, closure, environment, arguments, flags);
+	return lone_primitive_lambda_with_flags(lone, environment, arguments, flags);
 }
 
-static struct lone_value *lone_primitive_lambda_bang(struct lone_lisp *lone, struct lone_value *closure, struct lone_value *environment, struct lone_value *arguments)
+static struct lone_value *lone_primitive_lambda_bang(struct lone_lisp *lone, struct lone_value *module, struct lone_value *environment, struct lone_value *arguments, struct lone_value *closure)
 {
 	struct lone_function_flags flags = {
 		.evaluate_arguments = 0,
@@ -2712,10 +2713,10 @@ static struct lone_value *lone_primitive_lambda_bang(struct lone_lisp *lone, str
 		.variable_arguments = 0,
 	};
 
-	return lone_primitive_lambda_with_flags(lone, closure, environment, arguments, flags);
+	return lone_primitive_lambda_with_flags(lone, environment, arguments, flags);
 }
 
-static struct lone_value *lone_primitive_lambda_star(struct lone_lisp *lone, struct lone_value *closure, struct lone_value *environment, struct lone_value *arguments)
+static struct lone_value *lone_primitive_lambda_star(struct lone_lisp *lone, struct lone_value *module, struct lone_value *environment, struct lone_value *arguments, struct lone_value *closure)
 {
 	struct lone_function_flags flags = {
 		.evaluate_arguments = 1,
@@ -2723,7 +2724,7 @@ static struct lone_value *lone_primitive_lambda_star(struct lone_lisp *lone, str
 		.variable_arguments = 1,
 	};
 
-	return lone_primitive_lambda_with_flags(lone, closure, environment, arguments, flags);
+	return lone_primitive_lambda_with_flags(lone, environment, arguments, flags);
 }
 
 static struct lone_value *lone_apply_predicate(struct lone_lisp *lone, struct lone_value *arguments, lone_predicate function)
@@ -2732,32 +2733,32 @@ static struct lone_value *lone_apply_predicate(struct lone_lisp *lone, struct lo
 	return function(lone_list_first(arguments)) ? lone_true(lone) : lone_nil(lone);
 }
 
-static struct lone_value *lone_primitive_is_list(struct lone_lisp *lone, struct lone_value *closure, struct lone_value *environment, struct lone_value *arguments)
+static struct lone_value *lone_primitive_is_list(struct lone_lisp *lone, struct lone_value *module, struct lone_value *environment, struct lone_value *arguments, struct lone_value *closure)
 {
 	return lone_apply_predicate(lone, arguments, lone_is_list);
 }
 
-static struct lone_value *lone_primitive_is_vector(struct lone_lisp *lone, struct lone_value *closure, struct lone_value *environment, struct lone_value *arguments)
+static struct lone_value *lone_primitive_is_vector(struct lone_lisp *lone, struct lone_value *module, struct lone_value *environment, struct lone_value *arguments, struct lone_value *closure)
 {
 	return lone_apply_predicate(lone, arguments, lone_is_vector);
 }
 
-static struct lone_value *lone_primitive_is_table(struct lone_lisp *lone, struct lone_value *closure, struct lone_value *environment, struct lone_value *arguments)
+static struct lone_value *lone_primitive_is_table(struct lone_lisp *lone, struct lone_value *module, struct lone_value *environment, struct lone_value *arguments, struct lone_value *closure)
 {
 	return lone_apply_predicate(lone, arguments, lone_is_table);
 }
 
-static struct lone_value *lone_primitive_is_symbol(struct lone_lisp *lone, struct lone_value *closure, struct lone_value *environment, struct lone_value *arguments)
+static struct lone_value *lone_primitive_is_symbol(struct lone_lisp *lone, struct lone_value *module, struct lone_value *environment, struct lone_value *arguments, struct lone_value *closure)
 {
 	return lone_apply_predicate(lone, arguments, lone_is_symbol);
 }
 
-static struct lone_value *lone_primitive_is_text(struct lone_lisp *lone, struct lone_value *closure, struct lone_value *environment, struct lone_value *arguments)
+static struct lone_value *lone_primitive_is_text(struct lone_lisp *lone, struct lone_value *module, struct lone_value *environment, struct lone_value *arguments, struct lone_value *closure)
 {
 	return lone_apply_predicate(lone, arguments, lone_is_text);
 }
 
-static struct lone_value *lone_primitive_is_integer(struct lone_lisp *lone, struct lone_value *closure, struct lone_value *environment, struct lone_value *arguments)
+static struct lone_value *lone_primitive_is_integer(struct lone_lisp *lone, struct lone_value *module, struct lone_value *environment, struct lone_value *arguments, struct lone_value *closure)
 {
 	return lone_apply_predicate(lone, arguments, lone_is_integer);
 }
@@ -2778,22 +2779,22 @@ static struct lone_value *lone_apply_comparator(struct lone_lisp *lone, struct l
 	return lone_true(lone);
 }
 
-static struct lone_value *lone_primitive_is_identical(struct lone_lisp *lone, struct lone_value *closure, struct lone_value *environment, struct lone_value *arguments)
+static struct lone_value *lone_primitive_is_identical(struct lone_lisp *lone, struct lone_value *module, struct lone_value *environment, struct lone_value *arguments, struct lone_value *closure)
 {
 	return lone_apply_comparator(lone, arguments, lone_is_identical);
 }
 
-static struct lone_value *lone_primitive_is_equivalent(struct lone_lisp *lone, struct lone_value *closure, struct lone_value *environment, struct lone_value *arguments)
+static struct lone_value *lone_primitive_is_equivalent(struct lone_lisp *lone, struct lone_value *module, struct lone_value *environment, struct lone_value *arguments, struct lone_value *closure)
 {
 	return lone_apply_comparator(lone, arguments, lone_is_equivalent);
 }
 
-static struct lone_value *lone_primitive_is_equal(struct lone_lisp *lone, struct lone_value *closure, struct lone_value *environment, struct lone_value *arguments)
+static struct lone_value *lone_primitive_is_equal(struct lone_lisp *lone, struct lone_value *module, struct lone_value *environment, struct lone_value *arguments, struct lone_value *closure)
 {
 	return lone_apply_comparator(lone, arguments, lone_is_equal);
 }
 
-static struct lone_value *lone_primitive_print(struct lone_lisp *lone, struct lone_value *closure, struct lone_value *environment, struct lone_value *arguments)
+static struct lone_value *lone_primitive_print(struct lone_lisp *lone, struct lone_value *module, struct lone_value *environment, struct lone_value *arguments, struct lone_value *closure)
 {
 	while (!lone_is_nil(arguments)) {
 		lone_print(lone, lone_list_first(arguments), 1);
@@ -2834,12 +2835,12 @@ return_accumulator:
 	return lone_integer_create(lone, accumulator);
 }
 
-static struct lone_value *lone_primitive_add(struct lone_lisp *lone, struct lone_value *closure, struct lone_value *environment, struct lone_value *arguments)
+static struct lone_value *lone_primitive_add(struct lone_lisp *lone, struct lone_value *module, struct lone_value *environment, struct lone_value *arguments, struct lone_value *closure)
 {
 	return lone_primitive_integer_operation(lone, arguments, '+', 0);
 }
 
-static struct lone_value *lone_primitive_subtract(struct lone_lisp *lone, struct lone_value *closure, struct lone_value *environment, struct lone_value *arguments)
+static struct lone_value *lone_primitive_subtract(struct lone_lisp *lone, struct lone_value *module, struct lone_value *environment, struct lone_value *arguments, struct lone_value *closure)
 {
 	struct lone_value *first;
 	long accumulator;
@@ -2857,12 +2858,12 @@ static struct lone_value *lone_primitive_subtract(struct lone_lisp *lone, struct
 	return lone_primitive_integer_operation(lone, arguments, '-', accumulator);
 }
 
-static struct lone_value *lone_primitive_multiply(struct lone_lisp *lone, struct lone_value *closure, struct lone_value *environment, struct lone_value *arguments)
+static struct lone_value *lone_primitive_multiply(struct lone_lisp *lone, struct lone_value *module, struct lone_value *environment, struct lone_value *arguments, struct lone_value *closure)
 {
 	return lone_primitive_integer_operation(lone, arguments, '*', 1);
 }
 
-static struct lone_value *lone_primitive_divide(struct lone_lisp *lone, struct lone_value *closure, struct lone_value *environment, struct lone_value *arguments)
+static struct lone_value *lone_primitive_divide(struct lone_lisp *lone, struct lone_value *module, struct lone_value *environment, struct lone_value *arguments, struct lone_value *closure)
 {
 	struct lone_value *dividend, *divisor;
 
@@ -2881,27 +2882,27 @@ static struct lone_value *lone_primitive_divide(struct lone_lisp *lone, struct l
 	}
 }
 
-static struct lone_value *lone_primitive_is_less_than(struct lone_lisp *lone, struct lone_value *closure, struct lone_value *environment, struct lone_value *arguments)
+static struct lone_value *lone_primitive_is_less_than(struct lone_lisp *lone, struct lone_value *module, struct lone_value *environment, struct lone_value *arguments, struct lone_value *closure)
 {
 	return lone_apply_comparator(lone, arguments, lone_integer_is_less_than);
 }
 
-static struct lone_value *lone_primitive_is_less_than_or_equal_to(struct lone_lisp *lone, struct lone_value *closure, struct lone_value *environment, struct lone_value *arguments)
+static struct lone_value *lone_primitive_is_less_than_or_equal_to(struct lone_lisp *lone, struct lone_value *module, struct lone_value *environment, struct lone_value *arguments, struct lone_value *closure)
 {
 	return lone_apply_comparator(lone, arguments, lone_integer_is_less_than_or_equal_to);
 }
 
-static struct lone_value *lone_primitive_is_greater_than(struct lone_lisp *lone, struct lone_value *closure, struct lone_value *environment, struct lone_value *arguments)
+static struct lone_value *lone_primitive_is_greater_than(struct lone_lisp *lone, struct lone_value *module, struct lone_value *environment, struct lone_value *arguments, struct lone_value *closure)
 {
 	return lone_apply_comparator(lone, arguments, lone_integer_is_greater_than);
 }
 
-static struct lone_value *lone_primitive_is_greater_than_or_equal_to(struct lone_lisp *lone, struct lone_value *closure, struct lone_value *environment, struct lone_value *arguments)
+static struct lone_value *lone_primitive_is_greater_than_or_equal_to(struct lone_lisp *lone, struct lone_value *module, struct lone_value *environment, struct lone_value *arguments, struct lone_value *closure)
 {
 	return lone_apply_comparator(lone, arguments, lone_integer_is_greater_than_or_equal_to);
 }
 
-static struct lone_value *lone_primitive_sign(struct lone_lisp *lone, struct lone_value *closure, struct lone_value *environment, struct lone_value *arguments)
+static struct lone_value *lone_primitive_sign(struct lone_lisp *lone, struct lone_value *module, struct lone_value *environment, struct lone_value *arguments, struct lone_value *closure)
 {
 	struct lone_value *value;
 	if (lone_is_nil(arguments)) { /* no arguments: (sign) */ linux_exit(-1); }
@@ -2915,23 +2916,23 @@ static struct lone_value *lone_primitive_sign(struct lone_lisp *lone, struct lon
 	}
 }
 
-static struct lone_value *lone_primitive_is_zero(struct lone_lisp *lone, struct lone_value *closure, struct lone_value *environment, struct lone_value *arguments)
+static struct lone_value *lone_primitive_is_zero(struct lone_lisp *lone, struct lone_value *module, struct lone_value *environment, struct lone_value *arguments, struct lone_value *closure)
 {
-	struct lone_value *value = lone_primitive_sign(lone, closure, environment, arguments);
+	struct lone_value *value = lone_primitive_sign(lone, module, environment, arguments, closure);
 	if (lone_is_integer(value) && value->integer == 0) { return value; }
 	else { return lone_nil(lone); }
 }
 
-static struct lone_value *lone_primitive_is_positive(struct lone_lisp *lone, struct lone_value *closure, struct lone_value *environment, struct lone_value *arguments)
+static struct lone_value *lone_primitive_is_positive(struct lone_lisp *lone, struct lone_value *module, struct lone_value *environment, struct lone_value *arguments, struct lone_value *closure)
 {
-	struct lone_value *value = lone_primitive_sign(lone, closure, environment, arguments);
+	struct lone_value *value = lone_primitive_sign(lone, module, environment, arguments, closure);
 	if (lone_is_integer(value) && value->integer > 0) { return value; }
 	else { return lone_nil(lone); }
 }
 
-static struct lone_value *lone_primitive_is_negative(struct lone_lisp *lone, struct lone_value *closure, struct lone_value *environment, struct lone_value *arguments)
+static struct lone_value *lone_primitive_is_negative(struct lone_lisp *lone, struct lone_value *module, struct lone_value *environment, struct lone_value *arguments, struct lone_value *closure)
 {
-	struct lone_value *value = lone_primitive_sign(lone, closure, environment, arguments);
+	struct lone_value *value = lone_primitive_sign(lone, module, environment, arguments, closure);
 	if (lone_is_integer(value) && value->integer < 0) { return value; }
 	else { return lone_nil(lone); }
 }
@@ -2941,12 +2942,12 @@ static struct lone_value *lone_primitive_is_negative(struct lone_lisp *lone, str
    │    Text operations.                                                    │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
-static struct lone_value *lone_primitive_join(struct lone_lisp *lone, struct lone_value *closure, struct lone_value *environment, struct lone_value *arguments)
+static struct lone_value *lone_primitive_join(struct lone_lisp *lone, struct lone_value *module, struct lone_value *environment, struct lone_value *arguments, struct lone_value *closure)
 {
 	return lone_text_transfer_bytes(lone, lone_join(lone, lone_list_first(arguments), lone_list_rest(arguments), lone_is_text), true);
 }
 
-static struct lone_value *lone_primitive_concatenate(struct lone_lisp *lone, struct lone_value *closure, struct lone_value *environment, struct lone_value *arguments)
+static struct lone_value *lone_primitive_concatenate(struct lone_lisp *lone, struct lone_value *module, struct lone_value *environment, struct lone_value *arguments, struct lone_value *closure)
 {
 	return lone_text_transfer_bytes(lone, lone_concatenate(lone, arguments, lone_is_text), true);
 }
@@ -2956,7 +2957,7 @@ static struct lone_value *lone_primitive_concatenate(struct lone_lisp *lone, str
    │    List operations.                                                    │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
-static struct lone_value *lone_primitive_construct(struct lone_lisp *lone, struct lone_value *closure, struct lone_value *environment, struct lone_value *arguments)
+static struct lone_value *lone_primitive_construct(struct lone_lisp *lone, struct lone_value *module, struct lone_value *environment, struct lone_value *arguments, struct lone_value *closure)
 {
 	struct lone_value *first, *rest;
 
@@ -2973,7 +2974,7 @@ static struct lone_value *lone_primitive_construct(struct lone_lisp *lone, struc
 	return lone_list_create(lone, first, rest);
 }
 
-static struct lone_value *lone_primitive_first(struct lone_lisp *lone, struct lone_value *closure, struct lone_value *environment, struct lone_value *arguments)
+static struct lone_value *lone_primitive_first(struct lone_lisp *lone, struct lone_value *module, struct lone_value *environment, struct lone_value *arguments, struct lone_value *closure)
 {
 	struct lone_value *argument;
 	if (lone_is_nil(arguments)) { linux_exit(-1); }
@@ -2984,7 +2985,7 @@ static struct lone_value *lone_primitive_first(struct lone_lisp *lone, struct lo
 	return lone_list_first(argument);
 }
 
-static struct lone_value *lone_primitive_rest(struct lone_lisp *lone, struct lone_value *closure, struct lone_value *environment, struct lone_value *arguments)
+static struct lone_value *lone_primitive_rest(struct lone_lisp *lone, struct lone_value *module, struct lone_value *environment, struct lone_value *arguments, struct lone_value *closure)
 {
 	struct lone_value *argument;
 	if (lone_is_nil(arguments)) { linux_exit(-1); }
@@ -2995,7 +2996,7 @@ static struct lone_value *lone_primitive_rest(struct lone_lisp *lone, struct lon
 	return lone_list_rest(argument);
 }
 
-static struct lone_value *lone_primitive_list_map(struct lone_lisp *lone, struct lone_value *closure, struct lone_value *environment, struct lone_value *arguments)
+static struct lone_value *lone_primitive_list_map(struct lone_lisp *lone, struct lone_value *module, struct lone_value *environment, struct lone_value *arguments, struct lone_value *closure)
 {
 	struct lone_value *function, *list, *results, *head;
 
@@ -3012,13 +3013,13 @@ static struct lone_value *lone_primitive_list_map(struct lone_lisp *lone, struct
 
 	for (head = results; !lone_is_nil(list); list = lone_list_rest(list)) {
 		arguments = lone_list_create(lone, lone_list_first(list), lone_nil(lone));
-		head = lone_list_append(lone, head, lone_apply(lone, environment, function, arguments));
+		head = lone_list_append(lone, head, lone_apply(lone, module, environment, function, arguments));
 	}
 
 	return results;
 }
 
-static struct lone_value *lone_primitive_list_reduce(struct lone_lisp *lone, struct lone_value *closure, struct lone_value *environment, struct lone_value *arguments)
+static struct lone_value *lone_primitive_list_reduce(struct lone_lisp *lone, struct lone_value *module, struct lone_value *environment, struct lone_value *arguments, struct lone_value *closure)
 {
 	struct lone_value *function, *list, *result;
 
@@ -3035,13 +3036,13 @@ static struct lone_value *lone_primitive_list_reduce(struct lone_lisp *lone, str
 
 	for (/* list */; !lone_is_nil(list); list = lone_list_rest(list)) {
 		arguments = lone_list_build(lone, 2, result, lone_list_first(list));
-		result = lone_apply(lone, environment, function, arguments);
+		result = lone_apply(lone, module, environment, function, arguments);
 	}
 
 	return result;
 }
 
-static struct lone_value *lone_primitive_flatten(struct lone_lisp *lone, struct lone_value *closure, struct lone_value *environment, struct lone_value *arguments)
+static struct lone_value *lone_primitive_flatten(struct lone_lisp *lone, struct lone_value *module, struct lone_value *environment, struct lone_value *arguments, struct lone_value *closure)
 {
 	return lone_list_flatten(lone, arguments);
 }
@@ -3127,7 +3128,7 @@ static void lone_primitive_import_form(struct lone_lisp *lone, struct lone_impor
 	lone_import_specification(lone, spec);
 }
 
-static struct lone_value *lone_primitive_import(struct lone_lisp *lone, struct lone_value *closure, struct lone_value *environment, struct lone_value *arguments)
+static struct lone_value *lone_primitive_import(struct lone_lisp *lone, struct lone_value *module, struct lone_value *environment, struct lone_value *arguments, struct lone_value *closure)
 {
 	struct lone_import_specification spec;
 	struct lone_value *prefixed = lone_intern_c_string(lone, "prefixed"), *argument;
@@ -3199,7 +3200,7 @@ static inline long lone_value_to_linux_system_call_argument(struct lone_value *v
 	}
 }
 
-static struct lone_value *lone_primitive_linux_system_call(struct lone_lisp *lone, struct lone_value *linux_system_call_table, struct lone_value *environment, struct lone_value *arguments)
+static struct lone_value *lone_primitive_linux_system_call(struct lone_lisp *lone, struct lone_value *module, struct lone_value *environment, struct lone_value *arguments, struct lone_value *linux_system_call_table)
 {
 	struct lone_value *argument;
 	long result, number, args[6];
