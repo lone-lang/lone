@@ -222,7 +222,7 @@ struct lone_lisp {
 	struct {
 		struct lone_value *loaded;
 		struct lone_value *null;
-		struct lone_value *import;
+		struct lone_value *top_level_environment;
 		struct lone_value *path;
 	} modules;
 	struct {
@@ -499,7 +499,7 @@ static void lone_mark_known_roots(struct lone_lisp *lone)
 	lone_mark_value(lone->constants.truth);
 	lone_mark_value(lone->modules.loaded);
 	lone_mark_value(lone->modules.null);
-	lone_mark_value(lone->modules.import);
+	lone_mark_value(lone->modules.top_level_environment);
 	lone_mark_value(lone->modules.path);
 }
 
@@ -941,8 +941,7 @@ static struct lone_value *lone_module_create(struct lone_lisp *lone, struct lone
 	struct lone_value *value = lone_value_create(lone);
 	value->type = LONE_MODULE;
 	value->module.name = name;
-	value->module.environment = lone_table_create(lone, 64, 0);
-	lone_table_set(lone, value->module.environment, lone_intern_c_string(lone, "import"), lone->modules.import);
+	value->module.environment = lone_table_create(lone, 64, lone->modules.top_level_environment);
 	value->module.exports = lone_vector_create(lone, 16);
 	return value;
 }
@@ -977,9 +976,9 @@ static void lone_lisp_initialize(struct lone_lisp *lone, struct lone_bytes memor
 	lone->symbol_table = lone_table_create(lone, 256, 0);
 	lone->constants.nil = lone_list_create_nil(lone);
 	lone->constants.truth = lone_intern_c_string(lone, "true");
+
 	lone->modules.loaded = lone_table_create(lone, 32, 0);
-	struct lone_function_flags import_flags = { .evaluate_arguments = 0, .evaluate_result = 0, .variable_arguments = 1 };
-	lone->modules.import = lone_primitive_create(lone, "import", lone_primitive_import, 0, import_flags);
+	lone->modules.top_level_environment = lone_table_create(lone, 8, 0);
 	lone->modules.path = lone_vector_create(lone, 8);
 	lone->modules.null = lone_module_create(lone, 0);
 }
