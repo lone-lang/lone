@@ -3020,9 +3020,10 @@ struct lone_import_specification {
 	struct lone_value *environment;    /* environment to import symbols to */
 };
 
-static void lone_primitive_import_all(struct lone_lisp *lone, struct lone_value *environment, struct lone_value *module)
+static void lone_primitive_import_all(struct lone_lisp *lone, struct lone_import_specification *spec)
 {
 	/* full import, bind all symbols: (import (module)) */
+	struct lone_value *module = spec->module, *environment = spec->environment;
 	struct lone_table_entry *entries = module->module.environment->table.entries;
 	size_t i, capacity = module->module.environment->table.capacity;
 
@@ -3033,9 +3034,10 @@ static void lone_primitive_import_all(struct lone_lisp *lone, struct lone_value 
 	}
 }
 
-static void lone_primitive_import_only(struct lone_lisp *lone, struct lone_value *environment, struct lone_value *module, struct lone_value *symbols)
+static void lone_primitive_import_only(struct lone_lisp *lone, struct lone_import_specification *spec)
 {
-	struct lone_value *symbol, *value;
+	struct lone_value *module = spec->module, *symbols = spec->symbols, *environment = spec->environment,
+	                  *symbol, *value;
 
 	/* limited import, bind only specified symbols: (import (module x f)) */
 	do {
@@ -3052,9 +3054,9 @@ static void lone_primitive_import_only(struct lone_lisp *lone, struct lone_value
 
 static struct lone_value *lone_module_load(struct lone_lisp *lone, struct lone_value *name);
 
-static void lone_primitive_import_argument(struct lone_lisp *lone, struct lone_value *environment, struct lone_value *argument)
+static void lone_primitive_import_argument(struct lone_lisp *lone, struct lone_import_specification *spec, struct lone_value *argument)
 {
-	struct lone_value *name, *module;
+	struct lone_value *name;
 
 	if (lone_is_nil(argument)) { /* nothing to import: (import ()) */ linux_exit(-1); }
 
@@ -3075,34 +3077,38 @@ static void lone_primitive_import_argument(struct lone_lisp *lone, struct lone_v
 		/* not a supported import argument type */ linux_exit(-1);
 	}
 
-	module = lone_module_load(lone, name);
-	if (lone_is_nil(module)) { /* module not found: (import non-existent), (import (non-existent)) */ linux_exit(-1); }
+	spec->symbols = argument;
+	spec->module = lone_module_load(lone, name);
+	if (lone_is_nil(spec->module)) { /* module not found: (import non-existent), (import (non-existent)) */ linux_exit(-1); }
 
-	if (argument) {
+	if (spec->symbols) {
 		/* (import (module)), (import (module symbol)) */
-		if (lone_is_nil(argument)) {
+		if (lone_is_nil(spec->symbols)) {
 			/* (import (module)) */
-			lone_primitive_import_all(lone, environment, module);
+			lone_primitive_import_all(lone, spec);
 		} else {
 			/* (import (module symbol)) */
-			lone_primitive_import_only(lone, environment, module, argument);
+			lone_primitive_import_only(lone, spec);
 		}
 	} else {
 		/* (import module) */
-		lone_primitive_import_all(lone, environment, module);
+		lone_primitive_import_all(lone, spec);
 	}
 }
 
 static struct lone_value *lone_primitive_import(struct lone_lisp *lone, struct lone_value *closure, struct lone_value *environment, struct lone_value *arguments)
 {
+	struct lone_import_specification spec;
 	struct lone_value *argument;
 
 	if (lone_is_nil(arguments)) { /* nothing to import: (import) */ linux_exit(-1); }
 
+	spec.environment = environment;
+
 	for (/* argument */; !lone_is_nil(arguments); arguments = lone_list_rest(arguments)) {
 		argument = lone_list_first(arguments);
 		if (lone_is_list(argument)) {
-			lone_primitive_import_argument(lone, environment, argument);
+			lone_primitive_import_argument(lone, &spec, argument);
 		} else {
 			/* invalid import argument */ linux_exit(-1);
 		}
