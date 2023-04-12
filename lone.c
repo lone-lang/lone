@@ -1221,6 +1221,19 @@ static struct lone_value *lone_list_build(struct lone_lisp *lone, size_t count, 
 	return list;
 }
 
+static void lone_vector_push(struct lone_lisp *, struct lone_value *, struct lone_value *);
+
+static struct lone_value *lone_list_to_vector(struct lone_lisp *lone, struct lone_value *list)
+{
+	struct lone_value *vector = lone_vector_create(lone, 16), *head;
+
+	for (head = list; !lone_is_nil(head); head = lone_list_rest(head)) {
+		lone_vector_push(lone, vector, lone_list_first(head));
+	}
+
+	return vector;
+}
+
 static struct lone_value *lone_list_flatten(struct lone_lisp *lone, struct lone_value *list)
 {
 	struct lone_value *flattened = lone_list_create_nil(lone), *head, *flat_head, *return_head, *first;
