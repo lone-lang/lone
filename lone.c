@@ -3584,19 +3584,14 @@ static void lone_builtin_module_linux_initialize(struct lone_lisp *lone, int arg
 	struct lone_value *name = lone_module_name_to_key(lone, lone_intern_c_string(lone, "linux")),
 	                  *module = lone_module_create(lone, name),
 	                  *linux_system_call_table = lone_table_create(lone, 1024, 0),
-	                  *count, *arguments, *environment, *auxiliary_values;
+	                  *count, *arguments, *environment, *auxiliary_values,
+	                  *primitive;
 
-	lone_table_set(lone, module->module.environment,
-	                     lone_intern_c_string(lone, "system-call"),
-	                     lone_primitive_create(lone,
-	                                           "linux_system_call",
-	                                           lone_primitive_linux_system_call,
-	                                           linux_system_call_table,
-	                                           (struct lone_function_flags) { 1, 0, 1 }));
+	struct lone_function_flags flags = { .evaluate_arguments = true, .evaluate_result = false, .variable_arguments = true };
+	primitive = lone_primitive_create(lone, "linux_system_call", lone_primitive_linux_system_call, linux_system_call_table, flags);
+	lone_set_and_export(lone, module, lone_intern_c_string(lone, "system-call"), primitive);
 
-	lone_table_set(lone, module->module.environment,
-	                     lone_intern_c_string(lone, "system-call-table"),
-	                     linux_system_call_table);
+	lone_set_and_export(lone, module, lone_intern_c_string(lone, "system-call-table"), linux_system_call_table);
 
 	lone_fill_linux_system_call_table(lone, linux_system_call_table);
 
@@ -3605,18 +3600,10 @@ static void lone_builtin_module_linux_initialize(struct lone_lisp *lone, int arg
 	environment = lone_environment_to_table(lone, envp);
 	auxiliary_values = lone_auxiliary_vector_to_table(lone, auxv);
 
-	lone_table_set(lone, module->module.environment,
-	                     lone_intern_c_string(lone, "argument-count"),
-	                     count);
-	lone_table_set(lone, module->module.environment,
-	                     lone_intern_c_string(lone, "arguments"),
-	                     arguments);
-	lone_table_set(lone, module->module.environment,
-	                     lone_intern_c_string(lone, "environment"),
-	                     environment);
-	lone_table_set(lone, module->module.environment,
-	                     lone_intern_c_string(lone, "auxiliary-values"),
-	                     auxiliary_values);
+	lone_set_and_export(lone, module, lone_intern_c_string(lone, "argument-count"), count);
+	lone_set_and_export(lone, module, lone_intern_c_string(lone, "arguments"), arguments);
+	lone_set_and_export(lone, module, lone_intern_c_string(lone, "environment"), environment);
+	lone_set_and_export(lone, module, lone_intern_c_string(lone, "auxiliary-values"), auxiliary_values);
 
 	lone_table_set(lone, lone->modules.loaded, name, module);
 }
@@ -3624,103 +3611,46 @@ static void lone_builtin_module_linux_initialize(struct lone_lisp *lone, int arg
 static void lone_builtin_module_math_initialize(struct lone_lisp *lone)
 {
 	struct lone_value *name = lone_module_name_to_key(lone, lone_intern_c_string(lone, "math")),
-	                  *module = lone_module_create(lone, name);
+	                  *module = lone_module_create(lone, name),
+	                  *primitive;
 
-	lone_table_set(lone, module->module.environment,
-	                     lone_intern_c_string(lone, "+"),
-	                     lone_primitive_create(lone,
-	                                           "add",
-	                                           lone_primitive_add,
-	                                           module,
-	                                           (struct lone_function_flags) { 1, 0, 1 }));
+	struct lone_function_flags flags = { .evaluate_arguments = true, .evaluate_result = false, .variable_arguments = true };
 
-	lone_table_set(lone, module->module.environment,
-	                     lone_intern_c_string(lone, "-"),
-	                     lone_primitive_create(lone,
-	                                           "subtract",
-	                                           lone_primitive_subtract,
-	                                           module,
-	                                           (struct lone_function_flags) { 1, 0, 1 }));
+	primitive = lone_primitive_create(lone, "add", lone_primitive_add, module, flags);
+	lone_set_and_export(lone, module, lone_intern_c_string(lone, "+"), primitive);
 
-	lone_table_set(lone, module->module.environment,
-	                     lone_intern_c_string(lone, "*"),
-	                     lone_primitive_create(lone,
-	                                           "multiply",
-	                                           lone_primitive_multiply,
-	                                           module,
-	                                           (struct lone_function_flags) { 1, 0, 1 }));
+	primitive = lone_primitive_create(lone, "subtract", lone_primitive_subtract, module, flags);
+	lone_set_and_export(lone, module, lone_intern_c_string(lone, "-"), primitive);
 
-	lone_table_set(lone, module->module.environment,
-	                     lone_intern_c_string(lone, "/"),
-	                     lone_primitive_create(lone,
-	                                           "divide",
-	                                           lone_primitive_divide,
-	                                           module,
-	                                           (struct lone_function_flags) { 1, 0, 1 }));
+	primitive = lone_primitive_create(lone, "multiply", lone_primitive_multiply, module, flags);
+	lone_set_and_export(lone, module, lone_intern_c_string(lone, "*"), primitive);
 
-	lone_table_set(lone, module->module.environment,
-	                     lone_intern_c_string(lone, "<"),
-	                     lone_primitive_create(lone,
-	                                           "<",
-	                                           lone_primitive_is_less_than,
-	                                           module,
-	                                           (struct lone_function_flags) { 1, 0, 1 }));
+	primitive = lone_primitive_create(lone, "divide", lone_primitive_divide, module, flags);
+	lone_set_and_export(lone, module, lone_intern_c_string(lone, "/"), primitive);
 
-	lone_table_set(lone, module->module.environment,
-	                     lone_intern_c_string(lone, "<="),
-	                     lone_primitive_create(lone,
-	                                           "<=",
-	                                           lone_primitive_is_less_than_or_equal_to,
-	                                           module,
-	                                           (struct lone_function_flags) { 1, 0, 1 }));
+	primitive = lone_primitive_create(lone, "is_less_than", lone_primitive_is_less_than, module, flags);
+	lone_set_and_export(lone, module, lone_intern_c_string(lone, "<"), primitive);
 
-	lone_table_set(lone, module->module.environment,
-	                     lone_intern_c_string(lone, ">"),
-	                     lone_primitive_create(lone,
-	                                           ">",
-	                                           lone_primitive_is_greater_than,
-	                                           module,
-	                                           (struct lone_function_flags) { 1, 0, 1 }));
+	primitive = lone_primitive_create(lone, "is_less_than_or_equal_to", lone_primitive_is_less_than_or_equal_to, module, flags);
+	lone_set_and_export(lone, module, lone_intern_c_string(lone, "<="), primitive);
 
-	lone_table_set(lone, module->module.environment,
-	                     lone_intern_c_string(lone, ">="),
-	                     lone_primitive_create(lone,
-	                                           ">=",
-	                                           lone_primitive_is_greater_than_or_equal_to,
-	                                           module,
-	                                           (struct lone_function_flags) { 1, 0, 1 }));
+	primitive = lone_primitive_create(lone, "is_greater_than", lone_primitive_is_greater_than, module, flags);
+	lone_set_and_export(lone, module, lone_intern_c_string(lone, ">"), primitive);
 
-	lone_table_set(lone, module->module.environment,
-	                     lone_intern_c_string(lone, "sign"),
-	                     lone_primitive_create(lone,
-	                                           "sign",
-	                                           lone_primitive_sign,
-	                                           module,
-	                                           (struct lone_function_flags) { 1, 0, 1 }));
+	primitive = lone_primitive_create(lone, "is_greater_than_or_equal_to", lone_primitive_is_greater_than_or_equal_to, module, flags);
+	lone_set_and_export(lone, module, lone_intern_c_string(lone, ">="), primitive);
 
-	lone_table_set(lone, module->module.environment,
-	                     lone_intern_c_string(lone, "zero?"),
-	                     lone_primitive_create(lone,
-	                                           "is_zero",
-	                                           lone_primitive_is_zero,
-	                                           module,
-	                                           (struct lone_function_flags) { 1, 0, 1 }));
+	primitive = lone_primitive_create(lone, "sign", lone_primitive_sign, module, flags);
+	lone_set_and_export(lone, module, lone_intern_c_string(lone, "sign"), primitive);
 
-	lone_table_set(lone, module->module.environment,
-	                     lone_intern_c_string(lone, "positive?"),
-	                     lone_primitive_create(lone,
-	                                           "is_positive",
-	                                           lone_primitive_is_positive,
-	                                           module,
-	                                           (struct lone_function_flags) { 1, 0, 1 }));
+	primitive = lone_primitive_create(lone, "is_zero", lone_primitive_is_zero, module, flags);
+	lone_set_and_export(lone, module, lone_intern_c_string(lone, "zero?"), primitive);
 
-	lone_table_set(lone, module->module.environment,
-	                     lone_intern_c_string(lone, "negative?"),
-	                     lone_primitive_create(lone,
-	                                           "is_negative",
-	                                           lone_primitive_is_negative,
-	                                           module,
-	                                           (struct lone_function_flags) { 1, 0, 1 }));
+	primitive = lone_primitive_create(lone, "is_positive", lone_primitive_is_positive, module, flags);
+	lone_set_and_export(lone, module, lone_intern_c_string(lone, "positive?"), primitive);
+
+	primitive = lone_primitive_create(lone, "is_negative", lone_primitive_is_negative, module, flags);
+	lone_set_and_export(lone, module, lone_intern_c_string(lone, "negative?"), primitive);
 
 	lone_table_set(lone, lone->modules.loaded, name, module);
 }
@@ -3728,23 +3658,16 @@ static void lone_builtin_module_math_initialize(struct lone_lisp *lone)
 static void lone_builtin_module_text_initialize(struct lone_lisp *lone)
 {
 	struct lone_value *name = lone_module_name_to_key(lone, lone_intern_c_string(lone, "text")),
-	                  *module = lone_module_create(lone, name);
+	                  *module = lone_module_create(lone, name),
+	                  *primitive;
 
-	lone_table_set(lone, module->module.environment,
-	                     lone_intern_c_string(lone, "join"),
-	                     lone_primitive_create(lone,
-	                                           "join",
-	                                           lone_primitive_join,
-	                                           module,
-	                                           (struct lone_function_flags) { 1, 0, 1 }));
+	struct lone_function_flags flags = { .evaluate_arguments = true, .evaluate_result = false, .variable_arguments = true };
 
-	lone_table_set(lone, module->module.environment,
-	                     lone_intern_c_string(lone, "concatenate"),
-	                     lone_primitive_create(lone,
-	                                           "concatenate",
-	                                           lone_primitive_concatenate,
-	                                           module,
-	                                           (struct lone_function_flags) { 1, 0, 1 }));
+	primitive = lone_primitive_create(lone, "join", lone_primitive_join, module, flags);
+	lone_set_and_export(lone, module, lone_intern_c_string(lone, "join"), primitive);
+
+	primitive = lone_primitive_create(lone, "concatenate", lone_primitive_concatenate, module, flags);
+	lone_set_and_export(lone, module, lone_intern_c_string(lone, "concatenate"), primitive);
 
 	lone_table_set(lone, lone->modules.loaded, name, module);
 }
@@ -3752,55 +3675,28 @@ static void lone_builtin_module_text_initialize(struct lone_lisp *lone)
 static void lone_builtin_module_list_initialize(struct lone_lisp *lone)
 {
 	struct lone_value *name = lone_module_name_to_key(lone, lone_intern_c_string(lone, "list")),
-	                  *module = lone_module_create(lone, name);
+	                  *module = lone_module_create(lone, name),
+	                  *primitive;
 
-	lone_table_set(lone, module->module.environment,
-	                     lone_intern_c_string(lone, "construct"),
-	                     lone_primitive_create(lone,
-	                                           "construct",
-	                                           lone_primitive_construct,
-	                                           module,
-	                                           (struct lone_function_flags) { 1, 0, 1 }));
+	struct lone_function_flags flags = { .evaluate_arguments = true, .evaluate_result = false, .variable_arguments = true };
 
-	lone_table_set(lone, module->module.environment,
-	                     lone_intern_c_string(lone, "first"),
-	                     lone_primitive_create(lone,
-	                                           "first",
-	                                           lone_primitive_first,
-	                                           module,
-	                                           (struct lone_function_flags) { 1, 0, 1 }));
+	primitive = lone_primitive_create(lone, "construct", lone_primitive_construct, module, flags);
+	lone_set_and_export(lone, module, lone_intern_c_string(lone, "construct"), primitive);
 
-	lone_table_set(lone, module->module.environment,
-	                     lone_intern_c_string(lone, "rest"),
-	                     lone_primitive_create(lone,
-	                                           "rest",
-	                                           lone_primitive_rest,
-	                                           module,
-	                                           (struct lone_function_flags) { 1, 0, 1 }));
+	primitive = lone_primitive_create(lone, "first", lone_primitive_first, module, flags);
+	lone_set_and_export(lone, module, lone_intern_c_string(lone, "first"), primitive);
 
-	lone_table_set(lone, module->module.environment,
-	                     lone_intern_c_string(lone, "map"),
-	                     lone_primitive_create(lone,
-	                                           "map",
-	                                           lone_primitive_list_map,
-	                                           module,
-	                                           (struct lone_function_flags) { 1, 0, 1 }));
+	primitive = lone_primitive_create(lone, "rest", lone_primitive_rest, module, flags);
+	lone_set_and_export(lone, module, lone_intern_c_string(lone, "rest"), primitive);
 
-	lone_table_set(lone, module->module.environment,
-	                     lone_intern_c_string(lone, "reduce"),
-	                     lone_primitive_create(lone,
-	                                           "reduce",
-	                                           lone_primitive_list_reduce,
-	                                           module,
-	                                           (struct lone_function_flags) { 1, 0, 1 }));
+	primitive = lone_primitive_create(lone, "map", lone_primitive_list_map, module, flags);
+	lone_set_and_export(lone, module, lone_intern_c_string(lone, "map"), primitive);
 
-	lone_table_set(lone, module->module.environment,
-	                     lone_intern_c_string(lone, "flatten"),
-	                     lone_primitive_create(lone,
-	                                           "flatten",
-	                                           lone_primitive_flatten,
-	                                           module,
-	                                           (struct lone_function_flags) { 1, 0, 1 }));
+	primitive = lone_primitive_create(lone, "reduce", lone_primitive_list_reduce, module, flags);
+	lone_set_and_export(lone, module, lone_intern_c_string(lone, "reduce"), primitive);
+
+	primitive = lone_primitive_create(lone, "flatten", lone_primitive_flatten, module, flags);
+	lone_set_and_export(lone, module, lone_intern_c_string(lone, "flatten"), primitive);
 
 	lone_table_set(lone, lone->modules.loaded, name, module);
 }
@@ -3808,175 +3704,75 @@ static void lone_builtin_module_list_initialize(struct lone_lisp *lone)
 static void lone_builtin_module_lone_initialize(struct lone_lisp *lone)
 {
 	struct lone_value *name = lone_module_name_to_key(lone, lone_intern_c_string(lone, "lone")),
-	                  *module = lone_module_create(lone, name);
+	                  *module = lone_module_create(lone, name),
+	                  *primitive;
 
-	lone_table_set(lone, module->module.environment,
-	                     lone_intern_c_string(lone, "begin"),
-	                     lone_primitive_create(lone,
-	                                           "begin",
-	                                           lone_primitive_begin,
-	                                           module,
-	                                           (struct lone_function_flags) { 0, 0, 1 }));
+	struct lone_function_flags flags = { .evaluate_arguments = false, .evaluate_result = false, .variable_arguments = true };
 
-	lone_table_set(lone, module->module.environment,
-	                     lone_intern_c_string(lone, "when"),
-	                     lone_primitive_create(lone,
-	                                           "when",
-	                                           lone_primitive_when,
-	                                           module,
-	                                           (struct lone_function_flags) { 0, 0, 1 }));
+	primitive = lone_primitive_create(lone, "begin", lone_primitive_begin, module, flags);
+	lone_set_and_export(lone, module, lone_intern_c_string(lone, "begin"), primitive);
 
-	lone_table_set(lone, module->module.environment,
-	                     lone_intern_c_string(lone, "unless"),
-	                     lone_primitive_create(lone,
-	                                           "unless",
-	                                           lone_primitive_unless,
-	                                           module,
-	                                           (struct lone_function_flags) { 0, 0, 1 }));
+	primitive = lone_primitive_create(lone, "when", lone_primitive_when, module, flags);
+	lone_set_and_export(lone, module, lone_intern_c_string(lone, "when"), primitive);
 
-	lone_table_set(lone, module->module.environment,
-	                     lone_intern_c_string(lone, "if"),
-	                     lone_primitive_create(lone,
-	                                           "if",
-	                                           lone_primitive_if,
-	                                           module,
-	                                           (struct lone_function_flags) { 0, 0, 0 }));
+	primitive = lone_primitive_create(lone, "unless", lone_primitive_unless, module, flags);
+	lone_set_and_export(lone, module, lone_intern_c_string(lone, "unless"), primitive);
 
-	lone_table_set(lone, module->module.environment,
-	                     lone_intern_c_string(lone, "let"),
-	                     lone_primitive_create(lone,
-	                                           "let",
-	                                           lone_primitive_let,
-	                                           module,
-	                                           (struct lone_function_flags) { 0, 0, 0 }));
+	primitive = lone_primitive_create(lone, "if", lone_primitive_if, module, flags);
+	lone_set_and_export(lone, module, lone_intern_c_string(lone, "if"), primitive);
 
-	lone_table_set(lone, module->module.environment,
-	                     lone_intern_c_string(lone, "set"),
-	                     lone_primitive_create(lone,
-	                                           "set",
-	                                           lone_primitive_set,
-	                                           module,
-	                                           (struct lone_function_flags) { 0, 0, 0 }));
+	primitive = lone_primitive_create(lone, "let", lone_primitive_let, module, flags);
+	lone_set_and_export(lone, module, lone_intern_c_string(lone, "let"), primitive);
 
-	lone_table_set(lone, module->module.environment,
-	                     lone_intern_c_string(lone, "quote"),
-	                     lone_primitive_create(lone,
-	                                           "quote",
-	                                           lone_primitive_quote,
-	                                           module,
-	                                           (struct lone_function_flags) { 0, 0, 0 }));
+	primitive = lone_primitive_create(lone, "set", lone_primitive_set, module, flags);
+	lone_set_and_export(lone, module, lone_intern_c_string(lone, "set"), primitive);
 
-	lone_table_set(lone, module->module.environment,
-	                     lone_intern_c_string(lone, "quasiquote"),
-	                     lone_primitive_create(lone,
-	                                           "quasiquote",
-	                                           lone_primitive_quasiquote,
-	                                           module,
-	                                           (struct lone_function_flags) { 0, 0, 0 }));
+	primitive = lone_primitive_create(lone, "quote", lone_primitive_quote, module, flags);
+	lone_set_and_export(lone, module, lone_intern_c_string(lone, "quote"), primitive);
 
-	lone_table_set(lone, module->module.environment,
-	                     lone_intern_c_string(lone, "lambda"),
-	                     lone_primitive_create(lone,
-	                                           "lambda",
-	                                           lone_primitive_lambda,
-	                                           module,
-	                                           (struct lone_function_flags) { 0, 0, 0 }));
+	primitive = lone_primitive_create(lone, "quasiquote", lone_primitive_quasiquote, module, flags);
+	lone_set_and_export(lone, module, lone_intern_c_string(lone, "quasiquote"), primitive);
 
-	lone_table_set(lone, module->module.environment,
-	                     lone_intern_c_string(lone, "lambda!"),
-	                     lone_primitive_create(lone,
-	                                           "lambda_bang",
-	                                           lone_primitive_lambda_bang,
-	                                           module,
-	                                           (struct lone_function_flags) { 0, 0, 0 }));
+	primitive = lone_primitive_create(lone, "lambda", lone_primitive_lambda, module, flags);
+	lone_set_and_export(lone, module, lone_intern_c_string(lone, "lambda"), primitive);
 
-	lone_table_set(lone, module->module.environment,
-	                     lone_intern_c_string(lone, "lambda*"),
-	                     lone_primitive_create(lone,
-	                                           "lambda_star",
-	                                           lone_primitive_lambda_star,
-	                                           module,
-	                                           (struct lone_function_flags) { 0, 0, 0 }));
+	primitive = lone_primitive_create(lone, "lambda_bang", lone_primitive_lambda_bang, module, flags);
+	lone_set_and_export(lone, module, lone_intern_c_string(lone, "lambda!"), primitive);
 
-	lone_table_set(lone, module->module.environment,
-	                     lone_intern_c_string(lone, "print"),
-	                     lone_primitive_create(lone,
-	                                           "print",
-	                                           lone_primitive_print,
-	                                           module,
-	                                           (struct lone_function_flags) { 1, 0, 1 }));
+	primitive = lone_primitive_create(lone, "lambda_star", lone_primitive_lambda_star, module, flags);
+	lone_set_and_export(lone, module, lone_intern_c_string(lone, "lambda*"), primitive);
 
-	lone_table_set(lone, module->module.environment,
-	                     lone_intern_c_string(lone, "list?"),
-	                     lone_primitive_create(lone,
-	                                           "is_list",
-	                                           lone_primitive_is_list,
-	                                           module,
-	                                           (struct lone_function_flags) { 1, 0, 1 }));
+	flags = (struct lone_function_flags) { .evaluate_arguments = true, .evaluate_result = false, .variable_arguments = true };
 
-	lone_table_set(lone, module->module.environment,
-	                     lone_intern_c_string(lone, "vector?"),
-	                     lone_primitive_create(lone,
-	                                           "is_vector",
-	                                           lone_primitive_is_vector,
-	                                           module,
-	                                           (struct lone_function_flags) { 1, 0, 1 }));
+	primitive = lone_primitive_create(lone, "print", lone_primitive_print, module, flags);
+	lone_set_and_export(lone, module, lone_intern_c_string(lone, "print"), primitive);
 
-	lone_table_set(lone, module->module.environment,
-	                     lone_intern_c_string(lone, "table?"),
-	                     lone_primitive_create(lone,
-	                                           "is_table",
-	                                           lone_primitive_is_table,
-	                                           module,
-	                                           (struct lone_function_flags) { 1, 0, 1 }));
+	primitive = lone_primitive_create(lone, "is_list", lone_primitive_is_list, module, flags);
+	lone_set_and_export(lone, module, lone_intern_c_string(lone, "list?"), primitive);
 
-	lone_table_set(lone, module->module.environment,
-	                     lone_intern_c_string(lone, "symbol?"),
-	                     lone_primitive_create(lone,
-	                                           "is_symbol",
-	                                           lone_primitive_is_symbol,
-	                                           module,
-	                                           (struct lone_function_flags) { 1, 0, 1 }));
+	primitive = lone_primitive_create(lone, "is_vector", lone_primitive_is_vector, module, flags);
+	lone_set_and_export(lone, module, lone_intern_c_string(lone, "vector?"), primitive);
 
-	lone_table_set(lone, module->module.environment,
-	                     lone_intern_c_string(lone, "text?"),
-	                     lone_primitive_create(lone,
-	                                           "is_text",
-	                                           lone_primitive_is_text,
-	                                           module,
-	                                           (struct lone_function_flags) { 1, 0, 1 }));
+	primitive = lone_primitive_create(lone, "is_table", lone_primitive_is_table, module, flags);
+	lone_set_and_export(lone, module, lone_intern_c_string(lone, "table?"), primitive);
 
-	lone_table_set(lone, module->module.environment,
-	                     lone_intern_c_string(lone, "integer?"),
-	                     lone_primitive_create(lone,
-	                                           "is_integer",
-	                                           lone_primitive_is_integer,
-	                                           module,
-	                                           (struct lone_function_flags) { 1, 0, 1 }));
+	primitive = lone_primitive_create(lone, "is_symbol", lone_primitive_is_symbol, module, flags);
+	lone_set_and_export(lone, module, lone_intern_c_string(lone, "symbol?"), primitive);
 
-	lone_table_set(lone, module->module.environment,
-	                     lone_intern_c_string(lone, "identical?"),
-	                     lone_primitive_create(lone,
-	                                           "is_identical",
-	                                           lone_primitive_is_identical,
-	                                           module,
-	                                           (struct lone_function_flags) { 1, 0, 1 }));
+	primitive = lone_primitive_create(lone, "is_text", lone_primitive_is_text, module, flags);
+	lone_set_and_export(lone, module, lone_intern_c_string(lone, "text?"), primitive);
 
-	lone_table_set(lone, module->module.environment,
-	                     lone_intern_c_string(lone, "equivalent?"),
-	                     lone_primitive_create(lone,
-	                                           "is_equivalent",
-	                                           lone_primitive_is_equivalent,
-	                                           module,
-	                                           (struct lone_function_flags) { 1, 0, 1 }));
+	primitive = lone_primitive_create(lone, "is_integer", lone_primitive_is_integer, module, flags);
+	lone_set_and_export(lone, module, lone_intern_c_string(lone, "integer?"), primitive);
 
-	lone_table_set(lone, module->module.environment,
-	                     lone_intern_c_string(lone, "equal?"),
-	                     lone_primitive_create(lone,
-	                                           "is_equal",
-	                                           lone_primitive_is_equal,
-	                                           module,
-	                                           (struct lone_function_flags) { 1, 0, 1 }));
+	primitive = lone_primitive_create(lone, "is_identical", lone_primitive_is_identical, module, flags);
+	lone_set_and_export(lone, module, lone_intern_c_string(lone, "identical?"), primitive);
+
+	primitive = lone_primitive_create(lone, "is_equivalent", lone_primitive_is_equivalent, module, flags);
+	lone_set_and_export(lone, module, lone_intern_c_string(lone, "equivalent?"), primitive);
+
+	primitive = lone_primitive_create(lone, "is_equal", lone_primitive_is_equal, module, flags);
+	lone_set_and_export(lone, module, lone_intern_c_string(lone, "equal?"), primitive);
 
 	lone_table_set(lone, lone->modules.loaded, name, module);
 }
