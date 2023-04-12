@@ -3014,6 +3014,12 @@ static struct lone_value *lone_primitive_flatten(struct lone_lisp *lone, struct 
    │    Module importing and loading operations.                            │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
+struct lone_import_specification {
+	struct lone_value *module;         /* module value to import from */
+	struct lone_value *symbols;        /* list of symbols to import */
+	struct lone_value *environment;    /* environment to import symbols to */
+};
+
 static void lone_primitive_import_all(struct lone_lisp *lone, struct lone_value *environment, struct lone_value *module)
 {
 	/* full import, bind all symbols: (import (module)) */
