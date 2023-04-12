@@ -3028,6 +3028,14 @@ struct lone_import_specification {
 	bool prefixed;                     /* whether to prefix symbols */
 };
 
+static struct lone_value *lone_prefix_module_name(struct lone_lisp *lone, struct lone_value *module, struct lone_value *symbol)
+{
+	struct lone_value *arguments = lone_list_flatten(lone, lone_list_build(lone, 2, module->module.name, symbol)),
+	                  *dot = lone_intern_c_string(lone, ".");
+
+	return lone_symbol_transfer_bytes(lone, lone_join(lone, dot, arguments, lone_has_bytes), true);
+}
+
 static void lone_import_specification_all(struct lone_lisp *lone, struct lone_import_specification *spec)
 {
 	/* full import, bind all symbols: (import (module)) */
