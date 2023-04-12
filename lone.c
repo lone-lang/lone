@@ -3035,7 +3035,7 @@ static struct lone_value *lone_primitive_flatten(struct lone_lisp *lone, struct 
 
 /* ╭────────────────────────────────────────────────────────────────────────╮
    │                                                                        │
-   │    Module importing and loading operations.                            │
+   │    Module importing, exporting and loading operations.                 │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
 struct lone_import_specification {
@@ -3167,6 +3167,12 @@ static struct lone_value *lone_primitive_import(struct lone_lisp *lone, struct l
 	}
 
 	return lone_nil(lone);
+}
+
+static void lone_export(struct lone_lisp *lone, struct lone_value *module, struct lone_value *symbol)
+{
+	if (!lone_is_symbol(symbol)) { /* only symbols can be exported */ linux_exit(-1); }
+	lone_vector_push(lone, module->module.exports, symbol);
 }
 
 /* ╭────────────────────────────────────────────────────────────────────────╮
