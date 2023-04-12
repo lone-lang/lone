@@ -891,6 +891,11 @@ static struct lone_value *lone_symbol_transfer(struct lone_lisp *lone, unsigned 
 	return value;
 }
 
+static struct lone_value *lone_symbol_transfer_bytes(struct lone_lisp *lone, struct lone_bytes bytes, bool should_deallocate)
+{
+	return lone_symbol_transfer(lone, bytes.pointer, bytes.count, should_deallocate);
+}
+
 static struct lone_value *lone_symbol_create(struct lone_lisp *lone, unsigned char *text, size_t length)
 {
 	struct lone_value *value = lone_bytes_create(lone, text, length);
