@@ -5,6 +5,7 @@
    │                       The standalone Linux Lisp                        │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
+#include <stdint.h>
 #include <stdbool.h>
 #include <stdarg.h>
 
