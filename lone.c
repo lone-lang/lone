@@ -2375,6 +2375,15 @@ static void lone_print_integer(int fd, long n)
 	linux_write(fd, digit, count);
 }
 
+static void lone_print_pointer(struct lone_lisp *lone, struct lone_value *pointer, int fd)
+{
+	if (pointer->pointer.type == LONE_TO_UNKNOWN) {
+		lone_print_integer(fd, (intptr_t) pointer->pointer.address);
+	} else {
+		lone_print(lone, lone_pointer_dereference(lone, pointer), fd);
+	}
+}
+
 static void lone_print_bytes(struct lone_lisp *lone, struct lone_value *bytes, int fd)
 {
 	size_t count = bytes->bytes.count;
@@ -2529,8 +2538,10 @@ static void lone_print(struct lone_lisp *lone, struct lone_value *value, int fd)
 		linux_write(fd, "\"", 1);
 		break;
 	case LONE_INTEGER:
-	case LONE_POINTER:
 		lone_print_integer(fd, value->integer);
+		break;
+	case LONE_POINTER:
+		lone_print_pointer(lone, value, fd);
 		break;
 	}
 }
