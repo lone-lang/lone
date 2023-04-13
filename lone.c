@@ -184,6 +184,11 @@ enum lone_pointer_type {
 	LONE_TO_U64, LONE_TO_I64,
 };
 
+struct lone_pointer {
+	enum lone_pointer_type type;
+	void *address;
+};
+
 struct lone_value {
 	struct {
 		bool live: 1;
