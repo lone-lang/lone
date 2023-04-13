@@ -206,8 +206,8 @@ struct lone_value {
 		struct lone_vector vector;
 		struct lone_table table;
 		struct lone_bytes bytes;   /* also used by texts and symbols */
+		struct lone_pointer pointer;
 		long integer;
-		void *pointer;
 	};
 };
 
@@ -849,11 +849,12 @@ static struct lone_value *lone_integer_parse(struct lone_lisp *lone, unsigned ch
    │    Lone pointers do not own the data they point to.                    │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
-static struct lone_value *lone_pointer_create(struct lone_lisp *lone, void *pointer)
+static struct lone_value *lone_pointer_create(struct lone_lisp *lone, void *pointer, enum lone_pointer_type type)
 {
 	struct lone_value *value = lone_value_create(lone);
 	value->type = LONE_POINTER;
-	value->pointer = pointer;
+	value->pointer.type = type;
+	value->pointer.address = pointer;
 	return value;
 }
 
@@ -1111,7 +1112,7 @@ static bool lone_is_equivalent(struct lone_value *x, struct lone_value *y)
 	case LONE_INTEGER:
 		return x->integer == y->integer;
 	case LONE_POINTER:
-		return x->pointer == y->pointer;
+		return x->pointer.address == y->pointer.address;
 
 	case LONE_MODULE: case LONE_FUNCTION: case LONE_PRIMITIVE:
 	case LONE_LIST: case LONE_VECTOR: case LONE_TABLE:
@@ -3231,7 +3232,7 @@ static inline long lone_value_to_linux_system_call_argument(struct lone_value *v
 {
 	switch (value->type) {
 	case LONE_INTEGER: return value->integer;
-	case LONE_POINTER: return (long) value->pointer;
+	case LONE_POINTER: return (long) value->pointer.address;
 	case LONE_BYTES: case LONE_TEXT: case LONE_SYMBOL: return (long) value->bytes.pointer;
 	case LONE_PRIMITIVE: return (long) value->primitive.function;
 	case LONE_FUNCTION: case LONE_LIST: case LONE_VECTOR: case LONE_TABLE: case LONE_MODULE: linux_exit(-1);
@@ -3324,19 +3325,19 @@ static void lone_auxiliary_value_to_table(struct lone_lisp *lone, struct lone_va
 		break;
 	case AT_BASE:
 		key = lone_intern_c_string(lone, "interpreter-base-address");
-		value = lone_pointer_create(lone, auxiliary_value->as.pointer);
+		value = lone_pointer_create(lone, auxiliary_value->as.pointer, LONE_TO_UNKNOWN);
 		break;
 	case AT_ENTRY:
 		key = lone_intern_c_string(lone, "entry-point");
-		value = lone_pointer_create(lone, auxiliary_value->as.pointer);
+		value = lone_pointer_create(lone, auxiliary_value->as.pointer, LONE_TO_UNKNOWN);
 		break;
 	case AT_SYSINFO_EHDR:
 		key = lone_intern_c_string(lone, "vDSO");
-		value = lone_pointer_create(lone, auxiliary_value->as.pointer);
+		value = lone_pointer_create(lone, auxiliary_value->as.pointer, LONE_TO_UNKNOWN);
 		break;
 	case AT_PHDR:
 		key = lone_intern_c_string(lone, "program-headers-address");
-		value = lone_pointer_create(lone, auxiliary_value->as.pointer);
+		value = lone_pointer_create(lone, auxiliary_value->as.pointer, LONE_TO_UNKNOWN);
 		break;
 	case AT_PHENT:
 		key = lone_intern_c_string(lone, "program-headers-entry-size");
