@@ -9,5 +9,6 @@
 #include <lone/struct/function.h>
 #include <lone/struct/primitive.h>
 #include <lone/struct/module.h>
+#include <lone/struct/pointer.h>
 
 #endif /* LONE_STRUCTURES_SOURCE_HEADER */

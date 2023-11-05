@@ -46,20 +46,6 @@ static ssize_t __attribute__((fd_arg_write(1), tainted_args)) linux_write(int fd
 
 #include <lone/definitions.h>
 
-enum lone_pointer_type {
-	LONE_TO_UNKNOWN,
-
-	LONE_TO_U8,  LONE_TO_I8,
-	LONE_TO_U16, LONE_TO_I16,
-	LONE_TO_U32, LONE_TO_I32,
-	LONE_TO_U64, LONE_TO_I64,
-};
-
-struct lone_pointer {
-	enum lone_pointer_type type;
-	void *address;
-};
-
 struct lone_value {
 	struct {
 		bool live: 1;
