@@ -59,3 +59,4 @@ NR.c: NR.list scripts/NR.generate
 	scripts/NR.generate < $< > $@
 
 .PHONY: $(phony)
+.DEFAULT_GOAL := lone
