@@ -3,6 +3,10 @@
 directories.build := build
 directories.create := $(directories.build)
 
+phony += directories
+directories:
+	mkdir -p $(directories.create)
+
 ifdef TARGET
   ifndef UAPI
     $(error UAPI must be defined when cross compiling)
