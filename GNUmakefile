@@ -14,6 +14,7 @@ to_prerequisites = $(call add_prefix_and_suffix,$(directories.build.prerequisite
 
 flags.prerequisites_generation = -MMD -MF $(call to_prerequisites,$(<))
 flags.include_directories := -I $(directories.include)
+flags.system_include_directories = $(if $(UAPI),-isystem $(UAPI))
 
 ifdef TARGET
   ifndef UAPI
@@ -30,10 +31,8 @@ override ARCH := $(TARGET)
 override ARCH.c := arch/$(ARCH).c
 
 CFLAGS := -Wall -Wextra -Wpedantic -Os
-override directories := $(if $(UAPI),-isystem $(UAPI))
 override definitions := -D LONE_ARCH=$(ARCH) -D LONE_ARCH_SOURCE='"$(ARCH.c)"' -D LONE_NR_SOURCE='"NR.c"'
-override essential_flags := $(flags.include_directories) $(definitions) -ffreestanding -nostdlib -Wl,-elone_start -static -fno-omit-frame-pointer -fshort-enums
-override CC := $(strip $(CC) $(directories))
+override essential_flags := $(flags.system_include_directories) $(flags.include_directories) $(definitions) -ffreestanding -nostdlib -Wl,-elone_start -static -fno-omit-frame-pointer -fshort-enums
 
 lone : lone.c NR.c $(ARCH.c) | directories
 	$(CC) $(flags.prerequisites_generation) $(essential_flags) $(CFLAGS) -o $@ $<
