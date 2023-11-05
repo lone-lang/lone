@@ -46,12 +46,6 @@ static ssize_t __attribute__((fd_arg_write(1), tainted_args)) linux_write(int fd
 
 #include <lone/definitions.h>
 
-struct lone_module {
-	struct lone_value *name;
-	struct lone_value *environment;
-	struct lone_value *exports;
-};
-
 enum lone_pointer_type {
 	LONE_TO_UNKNOWN,
 

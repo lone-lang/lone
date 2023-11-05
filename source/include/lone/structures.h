@@ -8,5 +8,6 @@
 #include <lone/struct/table.h>
 #include <lone/struct/function.h>
 #include <lone/struct/primitive.h>
+#include <lone/struct/module.h>
 
 #endif /* LONE_STRUCTURES_SOURCE_HEADER */
