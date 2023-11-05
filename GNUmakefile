@@ -35,6 +35,8 @@ flags.all = $(flags.system_include_directories) $(flags.include_directories) $(f
 
 CFLAGS := -Wall -Wextra -Wpedantic -Os
 
+targets.lone := $(directories.build)/lone
+
 lone : lone.c NR.c $(ARCH.c) | directories
 	$(strip $(CC) $(flags.all) $(CFLAGS) -o $@ $<)
 
