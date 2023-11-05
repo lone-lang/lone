@@ -61,3 +61,5 @@ directories:
 
 .PHONY: $(targets.phony)
 .DEFAULT_GOAL := lone
+
+sinclude $(shell find $(directories.build.prerequisites) -type f)
