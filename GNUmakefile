@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 directories.build := build
+directories.create := $(directories.build)
 
 ifdef TARGET
   ifndef UAPI
