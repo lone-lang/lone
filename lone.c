@@ -14,6 +14,7 @@
 #include <linux/fcntl.h>
 
 #include <lone/types.h>
+#include <lone/structures.h>
 
 #include LONE_ARCH_SOURCE
 
@@ -75,11 +76,6 @@ enum lone_type {
 	LONE_BYTES,
 	LONE_INTEGER,
 	LONE_POINTER,
-};
-
-struct lone_bytes {
-	size_t count;
-	unsigned char *pointer;
 };
 
 struct lone_list {

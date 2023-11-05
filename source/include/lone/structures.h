@@ -1,0 +1,6 @@
+#ifndef LONE_STRUCTURES_SOURCE_HEADER
+#define LONE_STRUCTURES_SOURCE_HEADER
+
+#include <lone/struct/bytes.h>
+
+#endif /* LONE_STRUCTURES_SOURCE_HEADER */
