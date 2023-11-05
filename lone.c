@@ -6,7 +6,6 @@
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
 #include <stdint.h>
-#include <stdbool.h>
 #include <stdarg.h>
 
 #include <linux/auxvec.h>
@@ -176,9 +175,6 @@ struct lone_value {
 		long integer;
 	};
 };
-
-typedef bool (*lone_predicate)(struct lone_value *);
-typedef bool (*lone_comparator)(struct lone_value *, struct lone_value *);
 
 /* ╭───────────────────────┨ LONE LISP INTERPRETER ┠────────────────────────╮
    │                                                                        │
