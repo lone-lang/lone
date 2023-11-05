@@ -1,6 +1,6 @@
 #!/usr/bin/bash
 
-lone=${1:-./lone}
+lone=${1:-lone}
 tests_directory=${2:-test}
 
 code=0
