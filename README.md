@@ -32,7 +32,7 @@ Any of the following commands can be used to run it:
 
     make test
     make clean test
-    scripts/test.bash
+    scripts/test.bash [lone-executable [test-suite-directory]]
 
 New tests are added by creating directories inside `test/`,
 forming an arbitrary directory tree which determines the test name.
