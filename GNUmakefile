@@ -27,13 +27,13 @@ add_prefix_and_suffix = $(addprefix $(1),$(addsuffix $(2),$(3)))
 to_prerequisites = $(call add_prefix_and_suffix,$(directories.build.prerequisites)/,.d,$(basename $(1)))
 
 flags.lone := -ffreestanding -nostdlib -Wl,-elone_start -static -fno-omit-frame-pointer -fshort-enums
+flags.definitions := -D LONE_ARCH=$(ARCH) -D LONE_ARCH_SOURCE='"$(ARCH.c)"' -D LONE_NR_SOURCE='"NR.c"'
 flags.include_directories := -I $(directories.include)
 flags.system_include_directories = $(if $(UAPI),-isystem $(UAPI))
 flags.prerequisites_generation = -MMD -MF $(call to_prerequisites,$(<))
 
 CFLAGS := -Wall -Wextra -Wpedantic -Os
-override definitions := -D LONE_ARCH=$(ARCH) -D LONE_ARCH_SOURCE='"$(ARCH.c)"' -D LONE_NR_SOURCE='"NR.c"'
-override essential_flags := $(flags.system_include_directories) $(flags.include_directories) $(definitions) $(flags.lone)
+override essential_flags := $(flags.system_include_directories) $(flags.include_directories) $(flags.definitions) $(flags.lone)
 
 lone : lone.c NR.c $(ARCH.c) | directories
 	$(CC) $(flags.prerequisites_generation) $(essential_flags) $(CFLAGS) -o $@ $<
