@@ -57,18 +57,6 @@ struct lone_vector {
 	size_t capacity;
 };
 
-struct lone_table_entry {
-	struct lone_value *key;
-	struct lone_value *value;
-};
-
-struct lone_table {
-	size_t count;
-	size_t capacity;
-	struct lone_table_entry *entries;
-	struct lone_value *prototype;
-};
-
 /* https://dl.acm.org/doi/10.1145/947941.947948
  * https://user.ceng.metu.edu.tr/~ucoluk/research/lisp/lispman/node24.html
  */

@@ -3,5 +3,6 @@
 
 #include <lone/enum/type.h>
 #include <lone/struct/bytes.h>
+#include <lone/struct/table.h>
 
 #endif /* LONE_STRUCTURES_SOURCE_HEADER */
