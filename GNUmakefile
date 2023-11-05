@@ -1,5 +1,7 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
+MAKEFLAGS += --no-builtin-variables --no-builtin-rules
+
 ifdef TARGET
   ifndef UAPI
     $(error UAPI must be defined when cross compiling)
@@ -32,6 +34,7 @@ flags.system_include_directories = $(if $(UAPI),-isystem $(UAPI))
 flags.prerequisites_generation = -MMD -MF $(call to_prerequisites,$(<))
 flags.all = $(flags.system_include_directories) $(flags.include_directories) $(flags.prerequisites_generation) $(flags.definitions) $(flags.lone)
 
+CC := cc
 CFLAGS := -Wall -Wextra -Wpedantic -Os
 
 $(targets.lone): lone.c NR.c $(ARCH.c) | directories
