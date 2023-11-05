@@ -9,6 +9,7 @@ directories:
 	mkdir -p $(directories.create)
 
 add_prefix_and_suffix = $(addprefix $(1),$(addsuffix $(2),$(3)))
+to_prerequisites = $(call add_prefix_and_suffix,$(directories.build.prerequisites)/,.d,$(basename $(1)))
 
 ifdef TARGET
   ifndef UAPI
