@@ -14,12 +14,13 @@ endif
 ARCH := $(TARGET)
 ARCH.c := arch/$(ARCH).c
 
-targets.phony :=
-
 directories.include := include
 directories.build := build/$(ARCH)
 directories.build.prerequisites := $(directories.build)/prerequisites
 directories.create := $(directories.build) $(directories.build.prerequisites)
+
+targets.phony :=
+targets.lone := $(directories.build)/lone
 
 targets.phony += directories
 directories:
@@ -36,8 +37,6 @@ flags.prerequisites_generation = -MMD -MF $(call to_prerequisites,$(<))
 flags.all = $(flags.system_include_directories) $(flags.include_directories) $(flags.prerequisites_generation) $(flags.definitions) $(flags.lone)
 
 CFLAGS := -Wall -Wextra -Wpedantic -Os
-
-targets.lone := $(directories.build)/lone
 
 $(targets.lone): lone.c NR.c $(ARCH.c) | directories
 	$(strip $(CC) $(flags.all) $(CFLAGS) -o $@ $<)
