@@ -14,12 +14,14 @@ endif
 ARCH := $(TARGET)
 ARCH.c := arch/$(ARCH).c
 
+targets.phony :=
+
 directories.include := include
 directories.build := build/$(ARCH)
 directories.build.prerequisites := $(directories.build)/prerequisites
 directories.create := $(directories.build) $(directories.build.prerequisites)
 
-phony += directories
+targets.phony += directories
 directories:
 	mkdir -p $(directories.create)
 
@@ -46,17 +48,17 @@ NR.c: NR.list scripts/NR.generate
 NR.list: scripts/NR.filter
 	$(CC) -E -dM -include linux/unistd.h - < /dev/null | scripts/NR.filter > $@
 
-phony += lone
+targets.phony += lone
 lone: $(targets.lone)
 
-phony += clean
+targets.phony += clean
 clean:
 	rm -f lone NR.list NR.c
 	rm -rf $(directories.create)
 
-phony += test
+targets.phony += test
 test: $(targets.lone)
 	scripts/test.bash $<
 
-.PHONY: $(phony)
+.PHONY: $(targets.phony)
 .DEFAULT_GOAL := lone
