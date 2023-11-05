@@ -36,7 +36,7 @@ flags.all = $(flags.system_include_directories) $(flags.include_directories) $(f
 CFLAGS := -Wall -Wextra -Wpedantic -Os
 
 lone : lone.c NR.c $(ARCH.c) | directories
-	$(CC) $(flags.all) $(CFLAGS) -o $@ $<
+	$(strip $(CC) $(flags.all) $(CFLAGS) -o $@ $<)
 
 phony += clean
 clean:
