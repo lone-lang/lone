@@ -13,6 +13,7 @@ add_prefix_and_suffix = $(addprefix $(1),$(addsuffix $(2),$(3)))
 to_prerequisites = $(call add_prefix_and_suffix,$(directories.build.prerequisites)/,.d,$(basename $(1)))
 
 flags.prerequisites_generation = -MMD -MF $(call to_prerequisites,$(<))
+flags.include_directories := -I $(directories.include)
 
 ifdef TARGET
   ifndef UAPI
