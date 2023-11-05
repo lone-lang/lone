@@ -15,7 +15,7 @@ ARCH := $(TARGET)
 ARCH.c := arch/$(ARCH).c
 
 directories.include := include
-directories.build := build
+directories.build := build/$(ARCH)
 directories.build.prerequisites := $(directories.build)/prerequisites
 directories.create := $(directories.build) $(directories.build.prerequisites)
 
