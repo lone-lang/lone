@@ -30,7 +30,7 @@ override definitions := -D LONE_ARCH=$(ARCH) -D LONE_ARCH_SOURCE='"$(ARCH.c)"' -
 override essential_flags := $(definitions) -ffreestanding -nostdlib -Wl,-elone_start -static -fno-omit-frame-pointer -fshort-enums
 override CC := $(strip $(CC) $(directories))
 
-lone : lone.c NR.c $(ARCH.c)
+lone : lone.c NR.c $(ARCH.c) | directories
 	$(CC) $(essential_flags) $(CFLAGS) -o $@ $<
 
 phony += clean
