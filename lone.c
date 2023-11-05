@@ -57,22 +57,6 @@ struct lone_vector {
 	size_t capacity;
 };
 
-/* https://dl.acm.org/doi/10.1145/947941.947948
- * https://user.ceng.metu.edu.tr/~ucoluk/research/lisp/lispman/node24.html
- */
-struct lone_function_flags {
-	bool evaluate_arguments: 1;
-	bool evaluate_result: 1;
-	bool variable_arguments: 1;
-};
-
-struct lone_function {
-	struct lone_value *arguments;        /* the bindings */
-	struct lone_value *code;             /* the lambda */
-	struct lone_value *environment;      /* the closure */
-	struct lone_function_flags flags;    /* how to evaluate & apply */
-};
-
 typedef struct lone_value *(*lone_primitive)(struct lone_lisp *lone,
                                              struct lone_value *module,
                                              struct lone_value *environment,
