@@ -40,6 +40,12 @@ targets.lone := $(directories.build)/lone
 $(targets.lone): lone.c NR.c $(ARCH.c) | directories
 	$(strip $(CC) $(flags.all) $(CFLAGS) -o $@ $<)
 
+NR.c: NR.list scripts/NR.generate
+	scripts/NR.generate < $< > $@
+
+NR.list: scripts/NR.filter
+	$(CC) -E -dM -include linux/unistd.h - < /dev/null | scripts/NR.filter > $@
+
 phony += lone
 lone: $(targets.lone)
 
@@ -51,12 +57,6 @@ clean:
 phony += test
 test: lone
 	scripts/test.bash
-
-NR.list: scripts/NR.filter
-	$(CC) -E -dM -include linux/unistd.h - < /dev/null | scripts/NR.filter > $@
-
-NR.c: NR.list scripts/NR.generate
-	scripts/NR.generate < $< > $@
 
 .PHONY: $(phony)
 .DEFAULT_GOAL := lone
