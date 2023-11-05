@@ -2,6 +2,7 @@
 #define LONE_STRUCTURES_SOURCE_HEADER
 
 #include <lone/enum/type.h>
+#include <lone/struct/value.h>
 #include <lone/struct/bytes.h>
 #include <lone/struct/list.h>
 #include <lone/struct/vector.h>

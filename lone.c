@@ -46,28 +46,6 @@ static ssize_t __attribute__((fd_arg_write(1), tainted_args)) linux_write(int fd
 
 #include <lone/definitions.h>
 
-struct lone_value {
-	struct {
-		bool live: 1;
-		bool marked: 1;
-		bool should_deallocate_bytes: 1;
-	};
-
-	enum lone_type type;
-
-	union {
-		struct lone_module module;
-		struct lone_function function;
-		struct lone_primitive primitive;
-		struct lone_list list;
-		struct lone_vector vector;
-		struct lone_table table;
-		struct lone_bytes bytes;   /* also used by texts and symbols */
-		struct lone_pointer pointer;
-		long integer;
-	};
-};
-
 /* ╭───────────────────────┨ LONE LISP INTERPRETER ┠────────────────────────╮
    │                                                                        │
    │    The lone lisp interpreter is composed of all internal state         │
