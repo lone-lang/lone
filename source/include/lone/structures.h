@@ -7,5 +7,6 @@
 #include <lone/struct/vector.h>
 #include <lone/struct/table.h>
 #include <lone/struct/function.h>
+#include <lone/struct/primitive.h>
 
 #endif /* LONE_STRUCTURES_SOURCE_HEADER */
