@@ -11,7 +11,7 @@ directories:
 add_prefix_and_suffix = $(addprefix $(1),$(addsuffix $(2),$(3)))
 to_prerequisites = $(call add_prefix_and_suffix,$(directories.build.prerequisites)/,.d,$(basename $(1)))
 
-prerequisites_generation_flags = -MMD -MF $(call to_prerequisites,$(<))
+flags.prerequisites_generation = -MMD -MF $(call to_prerequisites,$(<))
 
 ifdef TARGET
   ifndef UAPI
@@ -34,7 +34,7 @@ override essential_flags := $(definitions) -ffreestanding -nostdlib -Wl,-elone_s
 override CC := $(strip $(CC) $(directories))
 
 lone : lone.c NR.c $(ARCH.c) | directories
-	$(CC) $(prerequisites_generation_flags) $(essential_flags) $(CFLAGS) -o $@ $<
+	$(CC) $(flags.prerequisites_generation) $(essential_flags) $(CFLAGS) -o $@ $<
 
 phony += clean
 clean:
