@@ -55,8 +55,8 @@ clean:
 	rm -rf $(directories.create)
 
 phony += test
-test: lone
-	scripts/test.bash
+test: $(targets.lone)
+	scripts/test.bash $<
 
 .PHONY: $(phony)
 .DEFAULT_GOAL := lone
