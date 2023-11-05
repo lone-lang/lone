@@ -11,6 +11,8 @@ directories:
 add_prefix_and_suffix = $(addprefix $(1),$(addsuffix $(2),$(3)))
 to_prerequisites = $(call add_prefix_and_suffix,$(directories.build.prerequisites)/,.d,$(basename $(1)))
 
+prerequisites_generation_flags = -MMD -MF $(call to_prerequisites,$(<))
+
 ifdef TARGET
   ifndef UAPI
     $(error UAPI must be defined when cross compiling)
