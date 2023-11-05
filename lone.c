@@ -122,7 +122,6 @@ struct lone_function {
 	struct lone_function_flags flags;    /* how to evaluate & apply */
 };
 
-struct lone_lisp;
 typedef struct lone_value *(*lone_primitive)(struct lone_lisp *lone,
                                              struct lone_value *module,
                                              struct lone_value *environment,
