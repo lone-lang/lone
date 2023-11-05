@@ -4,6 +4,7 @@
 #include <lone/enum/type.h>
 #include <lone/struct/bytes.h>
 #include <lone/struct/list.h>
+#include <lone/struct/vector.h>
 #include <lone/struct/table.h>
 #include <lone/struct/function.h>
 

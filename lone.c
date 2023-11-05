@@ -46,12 +46,6 @@ static ssize_t __attribute__((fd_arg_write(1), tainted_args)) linux_write(int fd
 
 #include <lone/definitions.h>
 
-struct lone_vector {
-	struct lone_value **values;
-	size_t count;
-	size_t capacity;
-};
-
 typedef struct lone_value *(*lone_primitive)(struct lone_lisp *lone,
                                              struct lone_value *module,
                                              struct lone_value *environment,
