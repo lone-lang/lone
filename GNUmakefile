@@ -31,12 +31,12 @@ flags.definitions := -D LONE_ARCH=$(ARCH) -D LONE_ARCH_SOURCE='"$(ARCH.c)"' -D L
 flags.include_directories := -I $(directories.include)
 flags.system_include_directories = $(if $(UAPI),-isystem $(UAPI))
 flags.prerequisites_generation = -MMD -MF $(call to_prerequisites,$(<))
+flags.all = $(flags.system_include_directories) $(flags.include_directories) $(flags.prerequisites_generation) $(flags.definitions) $(flags.lone)
 
 CFLAGS := -Wall -Wextra -Wpedantic -Os
-override essential_flags := $(flags.system_include_directories) $(flags.include_directories) $(flags.definitions) $(flags.lone)
 
 lone : lone.c NR.c $(ARCH.c) | directories
-	$(CC) $(flags.prerequisites_generation) $(essential_flags) $(CFLAGS) -o $@ $<
+	$(CC) $(flags.all) $(CFLAGS) -o $@ $<
 
 phony += clean
 clean:
