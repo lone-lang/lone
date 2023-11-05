@@ -13,6 +13,7 @@
 #include <linux/errno.h>
 #include <linux/fcntl.h>
 
+#include <lone/definitions.h>
 #include <lone/types.h>
 #include <lone/structures.h>
 
@@ -43,8 +44,6 @@ static ssize_t __attribute__((fd_arg_write(1), tainted_args)) linux_write(int fd
 {
 	return system_call_3(__NR_write, fd, (long) buffer, (long) count);
 }
-
-#include <lone/definitions.h>
 
 /* ╭───────────────────────┨ LONE LISP INTERPRETER ┠────────────────────────╮
    │                                                                        │
