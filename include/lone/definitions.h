@@ -1,3 +1,6 @@
+#ifndef LONE_DEFINITIONS_HEADER
+#define LONE_DEFINITIONS_HEADER
+
 /* ╭────────────────────────────────────────────────────────────────────────╮
    │                                                                        │
    │                                      bits = 32    |    bits = 64       │
@@ -30,3 +33,5 @@
 #ifndef LONE_ALIGNMENT
 	#define LONE_ALIGNMENT 16
 #endif
+
+#endif /* LONE_DEFINITIONS_HEADER */
