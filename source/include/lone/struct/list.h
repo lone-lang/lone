@@ -8,4 +8,4 @@ struct lone_list {
 	struct lone_value *rest;
 };
 
-#endif LONE_STRUCT_LIST_SOURCE_HEADER
+#endif /* LONE_STRUCT_LIST_SOURCE_HEADER */
