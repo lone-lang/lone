@@ -36,6 +36,7 @@ lone : lone.c NR.c $(ARCH.c)
 phony += clean
 clean:
 	rm -f lone NR.list NR.c
+	rm -rf $(directories.create)
 
 phony += test
 test: lone
