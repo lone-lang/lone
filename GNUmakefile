@@ -34,7 +34,7 @@ override essential_flags := $(definitions) -ffreestanding -nostdlib -Wl,-elone_s
 override CC := $(strip $(CC) $(directories))
 
 lone : lone.c NR.c $(ARCH.c) | directories
-	$(CC) $(essential_flags) $(CFLAGS) -o $@ $<
+	$(CC) $(prerequisites_generation_flags) $(essential_flags) $(CFLAGS) -o $@ $<
 
 phony += clean
 clean:
