@@ -1,7 +1,8 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 directories.build := build
-directories.create := $(directories.build)
+directories.build.prerequisites := $(directories.build)/prerequisites
+directories.create := $(directories.build) $(directories.build.prerequisites)
 
 phony += directories
 directories:
