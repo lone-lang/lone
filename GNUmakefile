@@ -40,6 +40,9 @@ targets.lone := $(directories.build)/lone
 $(targets.lone): lone.c NR.c $(ARCH.c) | directories
 	$(strip $(CC) $(flags.all) $(CFLAGS) -o $@ $<)
 
+phony += lone
+lone: $(targets.lone)
+
 phony += clean
 clean:
 	rm -f lone NR.list NR.c
