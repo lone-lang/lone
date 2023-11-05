@@ -9,14 +9,12 @@
 #include <stdbool.h>
 #include <stdarg.h>
 
-#include <linux/types.h>
 #include <linux/auxvec.h>
 #include <linux/unistd.h>
 #include <linux/errno.h>
 #include <linux/fcntl.h>
 
-typedef __kernel_size_t size_t;
-typedef __kernel_ssize_t ssize_t;
+#include <lone/types.h>
 
 #include LONE_ARCH_SOURCE
 
