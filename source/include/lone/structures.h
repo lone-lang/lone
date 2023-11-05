@@ -1,6 +1,7 @@
 #ifndef LONE_STRUCTURES_SOURCE_HEADER
 #define LONE_STRUCTURES_SOURCE_HEADER
 
+#include <lone/struct/lisp.h>
 #include <lone/enum/type.h>
 #include <lone/struct/value.h>
 #include <lone/struct/bytes.h>
