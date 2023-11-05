@@ -26,9 +26,9 @@ directories:
 add_prefix_and_suffix = $(addprefix $(1),$(addsuffix $(2),$(3)))
 to_prerequisites = $(call add_prefix_and_suffix,$(directories.build.prerequisites)/,.d,$(basename $(1)))
 
-flags.prerequisites_generation = -MMD -MF $(call to_prerequisites,$(<))
 flags.include_directories := -I $(directories.include)
 flags.system_include_directories = $(if $(UAPI),-isystem $(UAPI))
+flags.prerequisites_generation = -MMD -MF $(call to_prerequisites,$(<))
 
 CFLAGS := -Wall -Wextra -Wpedantic -Os
 override definitions := -D LONE_ARCH=$(ARCH) -D LONE_ARCH_SOURCE='"$(ARCH.c)"' -D LONE_NR_SOURCE='"NR.c"'
