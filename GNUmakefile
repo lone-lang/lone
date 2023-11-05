@@ -1,5 +1,7 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
+directories.build := build
+
 ifdef TARGET
   ifndef UAPI
     $(error UAPI must be defined when cross compiling)
