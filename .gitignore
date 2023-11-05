@@ -1,5 +1,5 @@
-# lone binary
-./lone
+# build tree
+build/
 
 # generated files and code
 NR.list
