@@ -1,6 +1,8 @@
 #ifndef LONE_DEFINITIONS_HEADER
 #define LONE_DEFINITIONS_HEADER
 
+#include <asm/bitsperlong.h>
+
 /* ╭────────────────────────────────────────────────────────────────────────╮
    │                                                                        │
    │                                      bits = 32    |    bits = 64       │
