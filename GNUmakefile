@@ -24,7 +24,7 @@ directories.source := source
 directories.build := build/$(ARCH)
 directories.build.objects := $(directories.build)/objects
 directories.build.prerequisites := $(directories.build)/prerequisites
-directories.create := $(directories.build.objects) $(directories.build.prerequisites)
+directories.create :=
 
 files.sources := $(shell find $(directories.source) -type f)
 
