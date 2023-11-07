@@ -2,6 +2,9 @@
 
 MAKEFLAGS += --no-builtin-variables --no-builtin-rules
 
+CC := cc
+CFLAGS := -Wall -Wextra -Wpedantic -Os
+
 ifdef TARGET
   ifndef UAPI
     $(error UAPI must be defined when cross compiling)
@@ -46,9 +49,6 @@ flags.prerequisites_generation = -MMD -MF $(call source_to_prerequisite,$(<))
 flags.common := -static -ffreestanding -nostdlib -fno-omit-frame-pointer -fshort-enums -flto
 flags.object = $(flags.system_include_directories) $(flags.include_directories) $(flags.prerequisites_generation) $(flags.definitions) $(flags.common)
 flags.lone = $(flags.common) -Wl,-elone_start
-
-CC := cc
-CFLAGS := -Wall -Wextra -Wpedantic -Os
 
 $(directories.build.objects)/%.o: $(directories.source)/%.c | directories
 	$(strip $(CC) $(flags.object) $(CFLAGS) -o $@ -c $<)
