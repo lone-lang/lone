@@ -38,7 +38,7 @@ directories.create += $(dir $(targets.objects) $(targets.prerequisites))
 flags.lone := -ffreestanding -nostdlib -Wl,-elone_start -static -fno-omit-frame-pointer -fshort-enums
 flags.definitions := -D LONE_ARCH=$(ARCH) -D LONE_ARCH_SOURCE='"$(ARCH.c)"' -D LONE_NR_SOURCE='"NR.c"'
 flags.include_directories := $(foreach directory,$(directories.include),-I $(directory))
-flags.system_include_directories = $(if $(UAPI),-isystem $(UAPI))
+flags.system_include_directories := $(if $(UAPI),-isystem $(UAPI))
 flags.prerequisites_generation = -MMD -MF $(call source_to_prerequisite,$(<))
 flags.all = $(flags.system_include_directories) $(flags.include_directories) $(flags.prerequisites_generation) $(flags.definitions) $(flags.lone)
 
