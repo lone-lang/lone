@@ -13,7 +13,6 @@ else
   TARGET := $(shell uname -m)
 endif
 
-add_prefix_and_suffix = $(addprefix $(1),$(addsuffix $(2),$(3)))
 source_to_object = $(patsubst $(directories.source)/%.c,$(directories.build.objects)/%.o,$(1))
 source_to_prerequisite = $(patsubst $(directories.source)/%.c,$(directories.build.prerequisites)/%.d,$(1))
 
