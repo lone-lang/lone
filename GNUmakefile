@@ -24,7 +24,7 @@ directories.source := source
 directories.build := build/$(ARCH)
 directories.build.objects := $(directories.build)/objects
 directories.build.prerequisites := $(directories.build)/prerequisites
-directories.create := $(directories.build) $(directories.build.prerequisites)
+directories.create := $(directories.build) $(directories.build.objects) $(directories.build.prerequisites)
 
 targets.phony :=
 targets.lone := $(directories.build)/lone
