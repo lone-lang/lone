@@ -31,6 +31,7 @@ files.sources := $(shell find $(directories.source) -type f)
 targets.phony :=
 targets.objects := $(call source_to_object,$(files.sources))
 targets.lone := $(directories.build)/lone
+targets.prerequisites := $(call source_to_prerequisite,$(files.sources))
 
 
 flags.lone := -ffreestanding -nostdlib -Wl,-elone_start -static -fno-omit-frame-pointer -fshort-enums
