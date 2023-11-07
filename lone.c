@@ -16,6 +16,7 @@
 #include <lone/definitions.h>
 #include <lone/types.h>
 #include <lone/structures.h>
+#include <lone/memory.h>
 
 #include LONE_ARCH_SOURCE
 
@@ -43,20 +44,6 @@ static ssize_t __attribute__((fd_arg_read(1), tainted_args)) linux_read(int fd, 
 static ssize_t __attribute__((fd_arg_write(1), tainted_args)) linux_write(int fd, const void *buffer, size_t count)
 {
 	return system_call_3(__NR_write, fd, (long) buffer, (long) count);
-}
-
-static void lone_memory_move(void *from, void *to, size_t count)
-{
-	unsigned char *source = from, *destination = to;
-
-	if (source >= destination) {
-		/* destination is at or behind source, copy forwards */
-		while (count--) { *destination++ = *source++; }
-	} else {
-		/* destination is ahead of source, copy backwards */
-		source += count; destination += count;
-		while (count--) { *--destination = *--source; }
-	}
 }
 
 static void lone_memory_split(struct lone_memory *block, size_t used)
