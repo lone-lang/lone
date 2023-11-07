@@ -57,3 +57,12 @@ lone_allocate(struct lone_lisp *lone, size_t requested_size)
 {
 	return lone_allocate_aligned(lone, requested_size, LONE_ALIGNMENT);
 }
+
+void lone_deallocate(struct lone_lisp *lone, void *pointer)
+{
+	struct lone_memory *block = ((struct lone_memory *) pointer) - 1;
+	block->free = 1;
+
+	lone_memory_coalesce(block);
+	lone_memory_coalesce(block->prev);
+}

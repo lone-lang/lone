@@ -16,15 +16,6 @@
 
 #include <lone/architecture.c>
 
-static void lone_deallocate(struct lone_lisp *lone, void * pointer)
-{
-	struct lone_memory *block = ((struct lone_memory *) pointer) - 1;
-	block->free = 1;
-
-	lone_memory_coalesce(block);
-	lone_memory_coalesce(block->prev);
-}
-
 static void * __attribute__((alloc_size(3))) lone_reallocate(struct lone_lisp *lone, void *pointer, size_t size)
 {
 	struct lone_memory *old = ((struct lone_memory *) pointer) - 1,
