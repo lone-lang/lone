@@ -17,9 +17,8 @@ source_to_object = $(patsubst $(directories.source)/%.c,$(directories.build.obje
 source_to_prerequisite = $(patsubst $(directories.source)/%.c,$(directories.build.prerequisites)/%.d,$(1))
 
 ARCH := $(TARGET)
-ARCH.c := arch/$(ARCH).c
 
-directories.include := include
+directories.include := include arch/$(ARCH)/include
 directories.source := source
 directories.build := build/$(ARCH)
 directories.build.objects := $(directories.build)/objects
@@ -35,7 +34,7 @@ targets.prerequisites := $(call source_to_prerequisite,$(files.sources))
 
 directories.create += $(dir $(targets.lone) $(targets.objects) $(targets.prerequisites))
 
-flags.definitions := -D LONE_ARCH=$(ARCH) -D LONE_ARCH_SOURCE='"../$(ARCH.c)"' -D LONE_NR_SOURCE='"../NR.c"'
+flags.definitions := -D LONE_ARCH=$(ARCH) -D LONE_NR_SOURCE='"../NR.c"'
 flags.include_directories := $(foreach directory,$(directories.include),-I $(directory))
 flags.system_include_directories := $(if $(UAPI),-isystem $(UAPI))
 flags.prerequisites_generation = -MMD -MF $(call source_to_prerequisite,$(<))

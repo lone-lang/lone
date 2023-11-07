@@ -18,7 +18,7 @@
 #include <lone/structures.h>
 #include <lone/memory.h>
 
-#include LONE_ARCH_SOURCE
+#include <lone/architecture.c>
 
 static void __attribute__((noreturn)) linux_exit(int code)
 {
