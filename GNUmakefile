@@ -29,6 +29,7 @@ directories.create := $(directories.build) $(directories.build.objects) $(direct
 files.sources := $(shell find $(directories.source) -type f)
 
 targets.phony :=
+targets.objects := $(call source_to_object,$(files.sources))
 targets.lone := $(directories.build)/lone
 
 to_prerequisites = $(call add_prefix_and_suffix,$(directories.build.prerequisites)/,.d,$(basename $(1)))
