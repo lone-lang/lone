@@ -33,6 +33,7 @@ targets.objects := $(call source_to_object,$(files.sources))
 targets.lone := $(directories.build)/lone
 targets.prerequisites := $(call source_to_prerequisite,$(files.sources))
 
+directories.create += $(dir $(targets.objects) $(targets.prerequisites))
 
 flags.lone := -ffreestanding -nostdlib -Wl,-elone_start -static -fno-omit-frame-pointer -fshort-enums
 flags.definitions := -D LONE_ARCH=$(ARCH) -D LONE_ARCH_SOURCE='"$(ARCH.c)"' -D LONE_NR_SOURCE='"NR.c"'
