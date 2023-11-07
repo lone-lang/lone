@@ -33,7 +33,7 @@ targets.objects := $(call source_to_object,$(files.sources))
 targets.lone := $(directories.build)/lone
 targets.prerequisites := $(call source_to_prerequisite,$(files.sources))
 
-directories.create += $(dir $(targets.objects) $(targets.prerequisites))
+directories.create += $(dir $(targets.lone) $(targets.objects) $(targets.prerequisites))
 
 flags.definitions := -D LONE_ARCH=$(ARCH) -D LONE_ARCH_SOURCE='"../$(ARCH.c)"' -D LONE_NR_SOURCE='"../NR.c"'
 flags.include_directories := $(foreach directory,$(directories.include),-I $(directory))
