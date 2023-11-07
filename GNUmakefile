@@ -26,6 +26,8 @@ directories.build.objects := $(directories.build)/objects
 directories.build.prerequisites := $(directories.build)/prerequisites
 directories.create := $(directories.build) $(directories.build.objects) $(directories.build.prerequisites)
 
+files.sources := $(shell find $(directories.source) -type f)
+
 targets.phony :=
 targets.lone := $(directories.build)/lone
 
