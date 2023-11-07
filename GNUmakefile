@@ -66,7 +66,7 @@ test: $(targets.lone)
 
 targets.phony += directories
 directories:
-	mkdir -p $(directories.create)
+	mkdir -p $(sort $(directories.create))
 
 .PHONY: $(targets.phony)
 .DEFAULT_GOAL := lone
