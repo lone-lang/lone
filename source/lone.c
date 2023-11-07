@@ -16,19 +16,6 @@
 
 #include <lone/architecture.c>
 
-static void * __attribute__((alloc_size(3))) lone_reallocate(struct lone_lisp *lone, void *pointer, size_t size)
-{
-	struct lone_memory *old = ((struct lone_memory *) pointer) - 1,
-	                   *new = ((struct lone_memory *) lone_allocate(lone, size)) - 1;
-
-	if (pointer) {
-		lone_memory_move(old->pointer, new->pointer, new->size < old->size ? new->size : old->size);
-		lone_deallocate(lone, pointer);
-	}
-
-	return new->pointer;
-}
-
 static struct lone_heap *lone_allocate_heap(struct lone_lisp *lone, size_t count)
 {
 	size_t i, size = sizeof(struct lone_heap) + (sizeof(struct lone_value) * count);
