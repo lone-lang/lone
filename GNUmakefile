@@ -44,7 +44,7 @@ flags.include_directories := $(foreach directory,$(directories.include),-I $(dir
 flags.system_include_directories := $(if $(UAPI),-isystem $(UAPI))
 flags.prerequisites_generation = -MMD -MF $(call source_to_prerequisite,$(<))
 flags.common := -static -ffreestanding -nostdlib -fno-omit-frame-pointer -fshort-enums -flto
-flags.object = $(flags.system_include_directories) $(flags.prerequisites_generation) $(flags.include_directories) $(flags.definitions) $(flags.common)
+flags.object = $(flags.system_include_directories) $(flags.include_directories) $(flags.prerequisites_generation) $(flags.definitions) $(flags.common)
 flags.lone = $(flags.common) -Wl,-elone_start
 
 CC := cc
