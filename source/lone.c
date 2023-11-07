@@ -8,43 +8,13 @@
 #include <stdint.h>
 #include <stdarg.h>
 
-#include <linux/auxvec.h>
-#include <linux/unistd.h>
-#include <linux/errno.h>
-#include <linux/fcntl.h>
-
 #include <lone/definitions.h>
 #include <lone/types.h>
 #include <lone/structures.h>
 #include <lone/memory.h>
+#include <lone/linux.h>
 
 #include <lone/architecture.c>
-
-static void __attribute__((noreturn)) linux_exit(int code)
-{
-	system_call_1(__NR_exit, code);
-	__builtin_unreachable();
-}
-
-static long __attribute__((tainted_args)) linux_openat(int dirfd, unsigned char *path, int flags)
-{
-	return system_call_4(__NR_openat, dirfd, (long) path, flags, 0);
-}
-
-static long __attribute__((tainted_args)) linux_close(int fd)
-{
-	return system_call_1(__NR_close, fd);
-}
-
-static ssize_t __attribute__((fd_arg_read(1), tainted_args)) linux_read(int fd, const void *buffer, size_t count)
-{
-	return system_call_3(__NR_read, fd, (long) buffer, (long) count);
-}
-
-static ssize_t __attribute__((fd_arg_write(1), tainted_args)) linux_write(int fd, const void *buffer, size_t count)
-{
-	return system_call_3(__NR_write, fd, (long) buffer, (long) count);
-}
 
 static void * __attribute__((malloc, alloc_size(2), alloc_align(3))) lone_allocate_aligned(struct lone_lisp *lone, size_t requested_size, size_t alignment)
 {
@@ -3002,7 +2972,7 @@ static struct lone_value *lone_primitive_linux_system_call(struct lone_lisp *lon
 
 	if (!lone_is_nil(arguments)) { /* too many arguments given */ linux_exit(-1); }
 
-	result = system_call_6(number, args[0], args[1], args[2], args[3], args[4], args[5]);
+	result = linux_system_call_6(number, args[0], args[1], args[2], args[3], args[4], args[5]);
 
 	return lone_integer_create(lone, result);
 }
@@ -3569,6 +3539,9 @@ static void lone_modules_initialize(struct lone_lisp *lone, int argc, char **arg
    │    allocates 64 KiB of memory for the early bootstrapping process.     │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
+
+#include <lone/architecture/linux/entry_point.c>
+
 long lone(int argc, char **argv, char **envp, struct auxiliary *auxv)
 {
 	void *stack = __builtin_frame_address(0);
