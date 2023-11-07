@@ -16,5 +16,9 @@ void *
 __attribute__((malloc, alloc_size(2), alloc_align(3)))
 lone_allocate_aligned(struct lone_lisp *lone, size_t requested_size, size_t alignment);
 
+void *
+__attribute__((malloc, alloc_size(2), assume_aligned(LONE_ALIGNMENT)))
+lone_allocate(struct lone_lisp *lone, size_t requested_size);
+
 
 #endif /* LONE_MEMORY_HEADER */
