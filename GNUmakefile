@@ -18,23 +18,28 @@ source_to_prerequisite = $(patsubst $(directories.source)/%.c,$(directories.buil
 
 ARCH := $(TARGET)
 
-directories.include := include arch/$(ARCH)/include
-directories.source := source
 directories.build := build/$(ARCH)
 directories.build.objects := $(directories.build)/objects
 directories.build.prerequisites := $(directories.build)/prerequisites
+directories.build.include := $(directories.build)/include
 directories.create :=
+
+directories.include := include arch/$(ARCH)/include $(directories.build.include)
+directories.source := source
 
 files.sources := $(shell find $(directories.source) -type f)
 
 targets.phony :=
+targets.NR.list := $(directories.build)/NR.list
+targets.NR.c := $(directories.build.include)/lone/NR.c
+targets.NR := $(targets.NR.list) $(targets.NR.c)
 targets.objects := $(call source_to_object,$(files.sources))
 targets.lone := $(directories.build)/lone
 targets.prerequisites := $(call source_to_prerequisite,$(files.sources))
 
-directories.create += $(dir $(targets.lone) $(targets.objects) $(targets.prerequisites))
+directories.create += $(dir $(targets.lone) $(targets.objects) $(targets.prerequisites) $(targets.NR))
 
-flags.definitions := -D LONE_ARCH=$(ARCH) -D LONE_NR_SOURCE='"../NR.c"'
+flags.definitions := -D LONE_ARCH=$(ARCH)
 flags.include_directories := $(foreach directory,$(directories.include),-I $(directory))
 flags.system_include_directories := $(if $(UAPI),-isystem $(UAPI))
 flags.prerequisites_generation = -MMD -MF $(call source_to_prerequisite,$(<))
@@ -51,12 +56,12 @@ $(directories.build.objects)/%.o: $(directories.source)/%.c | directories
 $(targets.lone): $(targets.objects) | directories
 	$(strip $(CC) $(flags.lone) $(CFLAGS) -o $@ $^)
 
-$(call source_to_object,source/lone.c): NR.c
+$(call source_to_object,source/lone.c): $(targets.NR.c)
 
-NR.c: NR.list scripts/NR.generate
+$(targets.NR.c): $(targets.NR.list) scripts/NR.generate
 	scripts/NR.generate < $< > $@
 
-NR.list: scripts/NR.filter
+$(targets.NR.list): scripts/NR.filter
 	$(CC) -E -dM -include linux/unistd.h - < /dev/null | scripts/NR.filter > $@
 
 targets.phony += lone

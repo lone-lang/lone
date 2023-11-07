@@ -3251,7 +3251,7 @@ static void lone_fill_linux_system_call_table(struct lone_lisp *lone, struct lon
 	} linux_system_calls[] = {
 
 		/* huge generated array initializer with all the system calls found on the host platform */
-		#include LONE_NR_SOURCE
+		#include <lone/NR.c>
 
 	};
 
