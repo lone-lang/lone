@@ -52,8 +52,7 @@ void * lone_allocate_aligned(struct lone_lisp *lone, size_t requested_size, size
 	return block->pointer;
 }
 
-void *
-lone_allocate(struct lone_lisp *lone, size_t requested_size)
+void * lone_allocate(struct lone_lisp *lone, size_t requested_size)
 {
 	return lone_allocate_aligned(lone, requested_size, LONE_ALIGNMENT);
 }

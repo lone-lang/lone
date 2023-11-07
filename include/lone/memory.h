@@ -7,7 +7,9 @@
 
 void lone_memory_move(void *from, void *to, size_t count);
 
-size_t __attribute__((const)) lone_align(size_t size, size_t alignment);
+size_t
+__attribute__((const))
+lone_align(size_t size, size_t alignment);
 
 void lone_memory_split(struct lone_memory *block, size_t used);
 void lone_memory_coalesce(struct lone_memory *block);
