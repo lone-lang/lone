@@ -46,8 +46,13 @@ flags.lone = $(flags.common) -Wl,-elone_start
 CC := cc
 CFLAGS := -Wall -Wextra -Wpedantic -Os
 
-$(targets.lone): lone.c NR.c $(ARCH.c) | directories
-	$(strip $(CC) $(flags.all) $(CFLAGS) -o $@ $<)
+$(directories.build.objects)/%.o: $(directories.source)/%.c | directories
+	$(strip $(CC) $(flags.object) $(CFLAGS) -o $@ -c $<)
+
+$(targets.lone): $(targets.objects) | directories
+	$(strip $(CC) $(flags.lone) $(CFLAGS) -o $@ $^)
+
+$(call source_to_object,source/lone.c): NR.c $(ARCH.c)
 
 NR.c: NR.list scripts/NR.generate
 	scripts/NR.generate < $< > $@
