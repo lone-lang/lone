@@ -58,7 +58,7 @@ lone: $(targets.lone)
 targets.phony += clean
 clean:
 	rm -f lone NR.list NR.c
-	rm -rf $(directories.create)
+	rm -rf $(directories.build)
 
 targets.phony += test
 test: $(targets.lone)
