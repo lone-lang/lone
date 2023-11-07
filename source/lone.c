@@ -46,24 +46,6 @@ static ssize_t __attribute__((fd_arg_write(1), tainted_args)) linux_write(int fd
 	return system_call_3(__NR_write, fd, (long) buffer, (long) count);
 }
 
-static size_t __attribute__((const)) lone_next_power_of_2(size_t n)
-{
-	size_t next = 1;
-	while (next < n) { next *= 2; }
-	return next;
-}
-
-static size_t __attribute__((const)) lone_next_power_of_2_multiple(size_t n, size_t m)
-{
-	m = lone_next_power_of_2(m);
-	return (n + m - 1) & (~(m - 1));
-}
-
-static size_t __attribute__((const)) lone_align(size_t size, size_t alignment)
-{
-	return lone_next_power_of_2_multiple(size, alignment);
-}
-
 static void * __attribute__((malloc, alloc_size(2), alloc_align(3))) lone_allocate_aligned(struct lone_lisp *lone, size_t requested_size, size_t alignment)
 {
 	size_t needed_size = requested_size + sizeof(struct lone_memory);
