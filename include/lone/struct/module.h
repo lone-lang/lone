@@ -1,5 +1,5 @@
-#ifndef LONE_STRUCT_MODULE_SOURCE_HEADER
-#define LONE_STRUCT_MODULE_SOURCE_HEADER
+#ifndef LONE_STRUCT_MODULE_HEADER
+#define LONE_STRUCT_MODULE_HEADER
 
 #include <lone/types.h>
 
@@ -9,4 +9,4 @@ struct lone_module {
 	struct lone_value *exports;
 };
 
-#endif /* LONE_STRUCT_MODULE_SOURCE_HEADER */
+#endif /* LONE_STRUCT_MODULE_HEADER */

@@ -1,5 +1,5 @@
-#ifndef LONE_STRUCT_MEMORY_SOURCE_HEADER
-#define LONE_STRUCT_MEMORY_SOURCE_HEADER
+#ifndef LONE_STRUCT_MEMORY_HEADER
+#define LONE_STRUCT_MEMORY_HEADER
 
 #include <lone/types.h>
 #include <lone/struct/value.h>
@@ -49,4 +49,4 @@ struct lone_heap {
 	struct lone_value values[];
 };
 
-#endif /* LONE_STRUCT_MEMORY_SOURCE_HEADER */
+#endif /* LONE_STRUCT_MEMORY_HEADER */

@@ -1,5 +1,5 @@
-#ifndef LONE_STRUCT_POINTER_SOURCE_HEADER
-#define LONE_STRUCT_POINTER_SOURCE_HEADER
+#ifndef LONE_STRUCT_POINTER_HEADER
+#define LONE_STRUCT_POINTER_HEADER
 
 #include <lone/types.h>
 
@@ -17,4 +17,4 @@ struct lone_pointer {
 	void *address;
 };
 
-#endif /* LONE_STRUCT_POINTER_SOURCE_HEADER */
+#endif /* LONE_STRUCT_POINTER_HEADER */

@@ -1,5 +1,5 @@
-#ifndef LONE_STRUCT_TABLE_SOURCE_HEADER
-#define LONE_STRUCT_TABLE_SOURCE_HEADER
+#ifndef LONE_STRUCT_TABLE_HEADER
+#define LONE_STRUCT_TABLE_HEADER
 
 #include <lone/types.h>
 
@@ -15,4 +15,4 @@ struct lone_table {
 	struct lone_value *prototype;
 };
 
-#endif /* LONE_STRUCT_TABLE_SOURCE_HEADER */
+#endif /* LONE_STRUCT_TABLE_HEADER */

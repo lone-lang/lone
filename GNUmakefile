@@ -18,7 +18,7 @@ add_prefix_and_suffix = $(addprefix $(1),$(addsuffix $(2),$(3)))
 ARCH := $(TARGET)
 ARCH.c := arch/$(ARCH).c
 
-directories.include := include source/include
+directories.include := include
 directories.build := build/$(ARCH)
 directories.build.prerequisites := $(directories.build)/prerequisites
 directories.create := $(directories.build) $(directories.build.prerequisites)

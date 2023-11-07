@@ -1,5 +1,5 @@
-#ifndef LONE_STRUCTURES_SOURCE_HEADER
-#define LONE_STRUCTURES_SOURCE_HEADER
+#ifndef LONE_STRUCTURES_HEADER
+#define LONE_STRUCTURES_HEADER
 
 #include <lone/struct/lisp.h>
 #include <lone/struct/memory.h>
@@ -14,4 +14,4 @@
 #include <lone/struct/module.h>
 #include <lone/struct/pointer.h>
 
-#endif /* LONE_STRUCTURES_SOURCE_HEADER */
+#endif /* LONE_STRUCTURES_HEADER */

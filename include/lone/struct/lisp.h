@@ -1,5 +1,5 @@
-#ifndef LONE_STRUCT_LISP_SOURCE_HEADER
-#define LONE_STRUCT_LISP_SOURCE_HEADER
+#ifndef LONE_STRUCT_LISP_HEADER
+#define LONE_STRUCT_LISP_HEADER
 
 #include <lone/types.h>
 
@@ -40,4 +40,4 @@ struct lone_lisp {
 	} hash;
 };
 
-#endif /* LONE_STRUCT_LISP_SOURCE_HEADER */
+#endif /* LONE_STRUCT_LISP_HEADER */

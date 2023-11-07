@@ -1,5 +1,5 @@
-#ifndef LONE_STRUCT_PRIMITIVE_SOURCE_HEADER
-#define LONE_STRUCT_PRIMITIVE_SOURCE_HEADER
+#ifndef LONE_STRUCT_PRIMITIVE_HEADER
+#define LONE_STRUCT_PRIMITIVE_HEADER
 
 #include <lone/types.h>
 
@@ -16,4 +16,4 @@ struct lone_primitive {
 	struct lone_function_flags flags;    /* primitives always accept variable arguments */
 };
 
-#endif /* LONE_STRUCT_PRIMITIVE_SOURCE_HEADER */
+#endif /* LONE_STRUCT_PRIMITIVE_HEADER */

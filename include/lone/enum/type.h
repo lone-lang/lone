@@ -1,5 +1,5 @@
-#ifndef LONE_ENUM_TYPE_SOURCE_HEADER
-#define LONE_ENUM_TYPE_SOURCE_HEADER
+#ifndef LONE_ENUM_TYPE_HEADER
+#define LONE_ENUM_TYPE_HEADER
 
 /* ╭──────────────────────────┨ LONE LISP TYPES ┠───────────────────────────╮
    │                                                                        │
@@ -34,4 +34,4 @@ enum lone_type {
 	LONE_POINTER,
 };
 
-#endif /* LONE_ENUM_TYPE_SOURCE_HEADER */
+#endif /* LONE_ENUM_TYPE_HEADER */

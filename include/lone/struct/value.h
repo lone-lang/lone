@@ -1,5 +1,5 @@
-#ifndef LONE_STRUCT_VALUE_SOURCE_HEADER
-#define LONE_STRUCT_VALUE_SOURCE_HEADER
+#ifndef LONE_STRUCT_VALUE_HEADER
+#define LONE_STRUCT_VALUE_HEADER
 
 #include <lone/types.h>
 
@@ -35,4 +35,4 @@ struct lone_value {
 	};
 };
 
-#endif /* LONE_STRUCT_VALUE_SOURCE_HEADER */
+#endif /* LONE_STRUCT_VALUE_HEADER */

@@ -1,5 +1,5 @@
-#ifndef LONE_STRUCT_FUNCTION_SOURCE_HEADER
-#define LONE_STRUCT_FUNCTION_SOURCE_HEADER
+#ifndef LONE_STRUCT_FUNCTION_HEADER
+#define LONE_STRUCT_FUNCTION_HEADER
 
 #include <lone/types.h>
 
@@ -19,4 +19,4 @@ struct lone_function {
 	struct lone_function_flags flags;    /* how to evaluate & apply */
 };
 
-#endif /* LONE_STRUCT_FUNCTION_SOURCE_HEADER */
+#endif /* LONE_STRUCT_FUNCTION_HEADER */
