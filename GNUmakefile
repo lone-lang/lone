@@ -51,7 +51,7 @@ $(directories.build.objects)/%.o: $(directories.source)/%.c | directories
 $(targets.lone): $(targets.objects) | directories
 	$(strip $(CC) $(flags.lone) $(CFLAGS) -o $@ $^)
 
-$(call source_to_object,source/lone.c): NR.c $(ARCH.c)
+$(call source_to_object,source/lone.c): NR.c
 
 NR.c: NR.list scripts/NR.generate
 	scripts/NR.generate < $< > $@
