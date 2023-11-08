@@ -11,18 +11,9 @@
 #include <lone/definitions.h>
 #include <lone/types.h>
 #include <lone/structures.h>
+#include <lone/value.h>
 #include <lone/memory.h>
 #include <lone/linux.h>
-
-/* ╭────────────────────────────────────────────────────────────────────────╮
-   │                                                                        │
-   │    Initializers and creation functions for lone's types.               │
-   │                                                                        │
-   ╰────────────────────────────────────────────────────────────────────────╯ */
-static struct lone_value *lone_value_create(struct lone_lisp *lone)
-{
-	return lone_allocate_from_heap(lone);
-}
 
 /* ╭────────────────────────────────────────────────────────────────────────╮
    │                                                                        │
