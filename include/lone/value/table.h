@@ -20,4 +20,14 @@
 
 struct lone_value *lone_table_create(struct lone_lisp *lone, size_t capacity, struct lone_value *prototype);
 
+/* ╭────────────────────────────────────────────────────────────────────────╮
+   │                                                                        │
+   │    Hash table functions.                                               │
+   │                                                                        │
+   ╰────────────────────────────────────────────────────────────────────────╯ */
+
+struct lone_value *lone_table_get(struct lone_lisp *lone, struct lone_value *table, struct lone_value *key);
+void lone_table_set(struct lone_lisp *lone, struct lone_value *table, struct lone_value *key, struct lone_value *value);
+void lone_table_delete(struct lone_lisp *lone, struct lone_value *table, struct lone_value *key);
+
 #endif /* LONE_VALUE_TABLE_HEADER */
