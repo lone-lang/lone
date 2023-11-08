@@ -9,7 +9,10 @@ typedef __kernel_size_t size_t;
 typedef __kernel_ssize_t ssize_t;
 
 struct lone_lisp;
+
 struct lone_value;
+struct lone_bytes;
+
 struct lone_memory;
 
 typedef bool (*lone_predicate)(struct lone_value *);

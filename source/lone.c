@@ -12,47 +12,10 @@
 #include <lone/types.h>
 #include <lone/structures.h>
 #include <lone/value.h>
+#include <lone/value/bytes.h>
 #include <lone/memory.h>
 #include <lone/linux.h>
 
-/* ╭────────────────────────────────────────────────────────────────────────╮
-   │                                                                        │
-   │    Lone bytes values are initialized with a pointer to a memory        │
-   │    block of known size. It can take ownership of the block             │
-   │    through the transfer functions or it can make a copy of it          │
-   │    via the create functions. Ownership means the block is              │
-   │    deallocated when the value is garbage collected,                    │
-   │    so it is advisable to copy data not owned by lone                   │
-   │    such as C string literals.                                          │
-   │                                                                        │
-   │    Copies will automatically include a hidden trailing null            │
-   │    byte to ease compatibility with code expecting C strings.           │
-   │    Transferred buffers should also contain that null byte              │
-   │    but the lone bytes type currently has no way to enforce this.       │
-   │                                                                        │
-   ╰────────────────────────────────────────────────────────────────────────╯ */
-static struct lone_value *lone_bytes_transfer(struct lone_lisp *lone, unsigned char *pointer, size_t count, bool should_deallocate)
-{
-	struct lone_value *value = lone_value_create(lone);
-	value->type = LONE_BYTES;
-	value->bytes.count = count;
-	value->bytes.pointer = pointer;
-	value->should_deallocate_bytes = should_deallocate;
-	return value;
-}
-
-static struct lone_value *lone_bytes_transfer_bytes(struct lone_lisp *lone, struct lone_bytes bytes, bool should_deallocate)
-{
-	return lone_bytes_transfer(lone, bytes.pointer, bytes.count, should_deallocate);
-}
-
-static struct lone_value *lone_bytes_create(struct lone_lisp *lone, unsigned char *pointer, size_t count)
-{
-	unsigned char *copy = lone_allocate(lone, count + 1);
-	lone_memory_move(pointer, copy, count);
-	copy[count] = '\0';
-	return lone_bytes_transfer(lone, copy, count, true);
-}
 
 /* ╭────────────────────────────────────────────────────────────────────────╮
    │                                                                        │
