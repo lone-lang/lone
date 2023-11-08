@@ -17,6 +17,16 @@ struct lone_bytes;
 struct lone_list;
 struct lone_vector;
 struct lone_table;
+struct lone_pointer;
+
+enum lone_pointer_type {
+	LONE_TO_UNKNOWN,
+
+	LONE_TO_U8,  LONE_TO_I8,
+	LONE_TO_U16, LONE_TO_I16,
+	LONE_TO_U32, LONE_TO_I32,
+	LONE_TO_U64, LONE_TO_I64,
+};
 
 struct lone_memory;
 

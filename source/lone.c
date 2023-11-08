@@ -19,26 +19,13 @@
 #include <lone/value/vector.h>
 #include <lone/value/table.h>
 #include <lone/value/integer.h>
+#include <lone/value/pointer.h>
 #include <lone/memory.h>
 #include <lone/linux.h>
 
 static struct lone_value *lone_true(struct lone_lisp *lone)
 {
 	return lone->constants.truth;
-}
-
-/* ╭────────────────────────────────────────────────────────────────────────╮
-   │                                                                        │
-   │    Lone pointers do not own the data they point to.                    │
-   │                                                                        │
-   ╰────────────────────────────────────────────────────────────────────────╯ */
-static struct lone_value *lone_pointer_create(struct lone_lisp *lone, void *pointer, enum lone_pointer_type type)
-{
-	struct lone_value *value = lone_value_create(lone);
-	value->type = LONE_POINTER;
-	value->pointer.type = type;
-	value->pointer.address = pointer;
-	return value;
 }
 
 /* ╭────────────────────────────────────────────────────────────────────────╮
