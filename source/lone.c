@@ -17,6 +17,7 @@
 #include <lone/value/primitive.h>
 #include <lone/value/bytes.h>
 #include <lone/value/text.h>
+#include <lone/value/symbol.h>
 #include <lone/value/list.h>
 #include <lone/value/vector.h>
 #include <lone/value/table.h>
@@ -28,33 +29,6 @@
 static struct lone_value *lone_true(struct lone_lisp *lone)
 {
 	return lone->constants.truth;
-}
-
-/* ╭────────────────────────────────────────────────────────────────────────╮
-   │                                                                        │
-   │    Lone symbols are like lone texts but are interned in a table.       │
-   │    Symbol table interning deduplicates them in memory,                 │
-   │    enabling fast identity-based comparisons via pointer equality.      │
-   │    However, this means they won't be garbage collected.                │
-   │                                                                        │
-   ╰────────────────────────────────────────────────────────────────────────╯ */
-static struct lone_value *lone_symbol_transfer(struct lone_lisp *lone, unsigned char *text, size_t length, bool should_deallocate)
-{
-	struct lone_value *value = lone_bytes_transfer(lone, text, length, should_deallocate);
-	value->type = LONE_SYMBOL;
-	return value;
-}
-
-static struct lone_value *lone_symbol_transfer_bytes(struct lone_lisp *lone, struct lone_bytes bytes, bool should_deallocate)
-{
-	return lone_symbol_transfer(lone, bytes.pointer, bytes.count, should_deallocate);
-}
-
-static struct lone_value *lone_symbol_create(struct lone_lisp *lone, unsigned char *text, size_t length)
-{
-	struct lone_value *value = lone_bytes_create(lone, text, length);
-	value->type = LONE_SYMBOL;
-	return value;
 }
 
 static bool lone_is_nil(struct lone_value *);
