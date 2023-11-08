@@ -12,6 +12,7 @@ struct lone_lisp;
 
 struct lone_value;
 struct lone_bytes;
+struct lone_list;
 
 struct lone_memory;
 
