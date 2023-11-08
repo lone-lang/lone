@@ -13,6 +13,7 @@
 #include <lone/structures.h>
 #include <lone/value.h>
 #include <lone/value/function.h>
+#include <lone/value/primitive.h>
 #include <lone/value/bytes.h>
 #include <lone/value/list.h>
 #include <lone/memory.h>
@@ -21,28 +22,6 @@
 static struct lone_value *lone_true(struct lone_lisp *lone)
 {
 	return lone->constants.truth;
-}
-
-/* ╭────────────────────────────────────────────────────────────────────────╮
-   │                                                                        │
-   │    Primitives are lone functions implemented in C.                     │
-   │    They are always variadic and must check their arguments.            │
-   │    All of them must follow the primitive function prototype.           │
-   │    They also have closures which are pointers to arbitrary data.       │
-   │                                                                        │
-   ╰────────────────────────────────────────────────────────────────────────╯ */
-static struct lone_value *lone_intern_c_string(struct lone_lisp *, char *);
-
-static struct lone_value *lone_primitive_create(struct lone_lisp *lone, char *name, lone_primitive function, struct lone_value *closure, struct lone_function_flags flags)
-{
-	struct lone_value *value = lone_value_create(lone);
-	value->type = LONE_PRIMITIVE;
-	value->primitive.name = lone_intern_c_string(lone, name);
-	value->primitive.function = function;
-	value->primitive.closure = closure;
-	value->primitive.flags = flags;
-	value->primitive.flags.variable_arguments = 1;
-	return value;
 }
 
 /* ╭────────────────────────────────────────────────────────────────────────╮
@@ -226,7 +205,7 @@ static struct lone_value *lone_intern(struct lone_lisp *lone, unsigned char *byt
 	return value;
 }
 
-static struct lone_value *lone_intern_c_string(struct lone_lisp *lone, char *c_string)
+struct lone_value *lone_intern_c_string(struct lone_lisp *lone, char *c_string)
 {
 	return lone_intern(lone, (unsigned char *) c_string, lone_c_string_length(c_string), false);
 }

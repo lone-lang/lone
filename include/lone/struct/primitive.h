@@ -3,12 +3,6 @@
 
 #include <lone/types.h>
 
-typedef struct lone_value *(*lone_primitive)(struct lone_lisp *lone,
-                                             struct lone_value *module,
-                                             struct lone_value *environment,
-                                             struct lone_value *arguments,
-                                             struct lone_value *closure);
-
 struct lone_primitive {
 	struct lone_value *name;
 	lone_primitive function;
