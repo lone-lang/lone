@@ -13,3 +13,11 @@ void lone_memory_move(void *from, void *to, size_t count)
 		while (count--) { *--destination = *--source; }
 	}
 }
+
+size_t lone_c_string_length(char *c_string)
+{
+	size_t length = 0;
+	if (!c_string) { return 0; }
+	while (c_string[length++]);
+	return length - 1;
+}

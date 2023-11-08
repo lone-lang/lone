@@ -53,14 +53,6 @@ static struct lone_value *lone_text_create(struct lone_lisp *lone, unsigned char
 	return value;
 }
 
-static size_t lone_c_string_length(char *c_string)
-{
-	size_t length = 0;
-	if (!c_string) { return 0; }
-	while (c_string[length++]);
-	return length - 1;
-}
-
 static struct lone_value *lone_text_create_from_c_string(struct lone_lisp *lone, char *c_string)
 {
 	return lone_text_transfer(lone, (unsigned char *) c_string, lone_c_string_length(c_string), false);
