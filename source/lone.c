@@ -10,6 +10,7 @@
 #include <lone/definitions.h>
 #include <lone/types.h>
 #include <lone/structures.h>
+#include <lone/hash.h>
 #include <lone/value.h>
 #include <lone/value/module.h>
 #include <lone/value/function.h>
@@ -54,25 +55,6 @@ struct lone_value *lone_intern_c_string(struct lone_lisp *lone, char *c_string)
    │    Hash table functions.                                               │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
-static unsigned long __attribute__((pure)) fnv_1a(struct lone_bytes data, unsigned long offset_basis)
-{
-	unsigned long hash = offset_basis;
-	unsigned char *bytes = data.pointer;
-	size_t count = data.count;
-
-	while (count--) {
-		hash ^= *bytes++;
-		hash *= FNV_PRIME;
-	}
-
-	return hash;
-}
-
-void lone_hash_initialize(struct lone_lisp *lone, struct lone_bytes random)
-{
-	lone->hash.fnv_1a.offset_basis = fnv_1a(random, FNV_OFFSET_BASIS);
-}
-
 static size_t lone_hash_recursively(struct lone_value *key, unsigned long hash)
 {
 	struct lone_bytes bytes;
@@ -81,7 +63,7 @@ static size_t lone_hash_recursively(struct lone_value *key, unsigned long hash)
 
 	bytes.pointer = (unsigned char *) &key->type;
 	bytes.count = sizeof(key->type);
-	hash = fnv_1a(bytes, hash);
+	hash = lone_hash_fnv_1a(bytes, hash);
 
 	if (lone_is_nil(key)) { return hash; }
 
@@ -111,7 +93,7 @@ static size_t lone_hash_recursively(struct lone_value *key, unsigned long hash)
 		break;
 	}
 
-	hash = fnv_1a(bytes, hash);
+	hash = lone_hash_fnv_1a(bytes, hash);
 
 	return hash;
 }
