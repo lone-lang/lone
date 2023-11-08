@@ -6,5 +6,6 @@
 #include <lone/struct/bytes.h>
 
 void lone_hash_initialize(struct lone_lisp *lone, struct lone_bytes random);
+size_t lone_hash(struct lone_lisp *lone, struct lone_value *value);
 
 #endif /* LONE_HASH_HEADER */
