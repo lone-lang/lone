@@ -1,6 +1,8 @@
-#include <lone/struct/lisp.h>
 #include <lone/memory.h>
 #include <lone/linux.h>
+
+#include <lone/struct/lisp.h>
+#include <lone/struct/memory.h>
 
 void lone_memory_split(struct lone_memory *block, size_t used)
 {

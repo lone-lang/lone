@@ -1,7 +1,8 @@
 #include <lone/memory.h>
-#include <lone/memory/garbage_collector.h>
+
 #include <lone/struct/lisp.h>
 #include <lone/struct/value.h>
+#include <lone/struct/memory.h>
 
 #include <lone/architecture/garbage_collector.c>
 

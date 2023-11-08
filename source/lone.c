@@ -12,7 +12,6 @@
 #include <lone/types.h>
 #include <lone/structures.h>
 #include <lone/memory.h>
-#include <lone/memory/garbage_collector.h>
 #include <lone/linux.h>
 
 /* ╭────────────────────────────────────────────────────────────────────────╮
