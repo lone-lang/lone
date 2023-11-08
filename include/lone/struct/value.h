@@ -3,7 +3,6 @@
 
 #include <lone/types.h>
 
-#include <lone/enum/type.h>
 #include <lone/struct/module.h>
 #include <lone/struct/function.h>
 #include <lone/struct/primitive.h>

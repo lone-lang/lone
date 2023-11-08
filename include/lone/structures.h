@@ -3,7 +3,6 @@
 
 #include <lone/struct/lisp.h>
 #include <lone/struct/memory.h>
-#include <lone/enum/type.h>
 #include <lone/struct/value.h>
 #include <lone/struct/bytes.h>
 #include <lone/struct/list.h>
