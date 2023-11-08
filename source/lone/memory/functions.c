@@ -1,4 +1,4 @@
-#include <lone/memory.h>
+#include <lone/memory/functions.h>
 
 void lone_memory_move(void *from, void *to, size_t count)
 {
