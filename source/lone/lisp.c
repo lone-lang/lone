@@ -1,6 +1,7 @@
 #include <lone/definitions.h>
 
 #include <lone/lisp.h>
+#include <lone/hash.h>
 #include <lone/memory/garbage_collector.h>
 
 #include <lone/value/module.h>
@@ -8,6 +9,7 @@
 #include <lone/value/list.h>
 #include <lone/value/vector.h>
 #include <lone/value/table.h>
+#include <lone/value/symbol.h>
 
 #include <lone/struct/lisp.h>
 #include <lone/struct/function.h>
@@ -16,9 +18,6 @@
 
 struct lone_value *lone_primitive_import(struct lone_lisp *, struct lone_value *, struct lone_value *, struct lone_value *, struct lone_value *);
 struct lone_value *lone_primitive_export(struct lone_lisp *, struct lone_value *, struct lone_value *, struct lone_value *, struct lone_value *);
-void lone_table_set(struct lone_lisp *, struct lone_value *, struct lone_value *, struct lone_value *);
-struct lone_value *lone_intern_c_string(struct lone_lisp *lone, char *c_string);
-void lone_hash_initialize(struct lone_lisp *lone, struct lone_bytes random);
 
 void lone_lisp_initialize(struct lone_lisp *lone, struct lone_bytes memory, size_t heap_size, void *stack, struct lone_bytes random)
 {
