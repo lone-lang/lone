@@ -2,6 +2,7 @@
 #define LONE_STRUCTURES_HEADER
 
 #include <lone/struct/lisp.h>
+#include <lone/struct/reader.h>
 #include <lone/struct/memory.h>
 #include <lone/struct/value.h>
 #include <lone/struct/bytes.h>
