@@ -12,6 +12,7 @@
 #include <lone/types.h>
 #include <lone/structures.h>
 #include <lone/value.h>
+#include <lone/value/module.h>
 #include <lone/value/function.h>
 #include <lone/value/primitive.h>
 #include <lone/value/bytes.h>
@@ -78,21 +79,6 @@ static struct lone_value *lone_intern(struct lone_lisp *lone, unsigned char *byt
 struct lone_value *lone_intern_c_string(struct lone_lisp *lone, char *c_string)
 {
 	return lone_intern(lone, (unsigned char *) c_string, lone_c_string_length(c_string), false);
-}
-
-/* ╭────────────────────────────────────────────────────────────────────────╮
-   │                                                                        │
-   │    Lone modules are named isolated environments for evaluation.        │
-   │                                                                        │
-   ╰────────────────────────────────────────────────────────────────────────╯ */
-static struct lone_value *lone_module_create(struct lone_lisp *lone, struct lone_value *name)
-{
-	struct lone_value *value = lone_value_create(lone);
-	value->type = LONE_MODULE;
-	value->module.name = name;
-	value->module.environment = lone_table_create(lone, 64, lone->modules.top_level_environment);
-	value->module.exports = lone_vector_create(lone, 16);
-	return value;
 }
 
 /* ╭────────────────────────────────────────────────────────────────────────╮

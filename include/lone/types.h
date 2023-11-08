@@ -11,6 +11,7 @@ typedef __kernel_ssize_t ssize_t;
 struct lone_lisp;
 
 struct lone_value;
+struct lone_module;
 struct lone_function;
 struct lone_function_flags;
 struct lone_bytes;
