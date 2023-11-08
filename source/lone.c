@@ -18,42 +18,13 @@
 #include <lone/value/list.h>
 #include <lone/value/vector.h>
 #include <lone/value/table.h>
+#include <lone/value/integer.h>
 #include <lone/memory.h>
 #include <lone/linux.h>
 
 static struct lone_value *lone_true(struct lone_lisp *lone)
 {
 	return lone->constants.truth;
-}
-
-/* ╭────────────────────────────────────────────────────────────────────────╮
-   │                                                                        │
-   │    Lone integers are currently signed fixed-length integers.           │
-   │                                                                        │
-   ╰────────────────────────────────────────────────────────────────────────╯ */
-static struct lone_value *lone_integer_create(struct lone_lisp *lone, long integer)
-{
-	struct lone_value *value = lone_value_create(lone);
-	value->type = LONE_INTEGER;
-	value->integer = integer;
-	return value;
-}
-
-static struct lone_value *lone_integer_parse(struct lone_lisp *lone, unsigned char *digits, size_t count)
-{
-	size_t i = 0;
-	long integer = 0;
-
-	switch (*digits) { case '+': case '-': ++i; break; }
-
-	while (i < count) {
-		integer *= 10;
-		integer += digits[i++] - '0';
-	}
-
-	if (*digits == '-') { integer *= -1; }
-
-	return lone_integer_create(lone, integer);
 }
 
 /* ╭────────────────────────────────────────────────────────────────────────╮
