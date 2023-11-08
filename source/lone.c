@@ -17,43 +17,13 @@
 #include <lone/value/bytes.h>
 #include <lone/value/list.h>
 #include <lone/value/vector.h>
+#include <lone/value/table.h>
 #include <lone/memory.h>
 #include <lone/linux.h>
 
 static struct lone_value *lone_true(struct lone_lisp *lone)
 {
 	return lone->constants.truth;
-}
-
-/* ╭────────────────────────────────────────────────────────────────────────╮
-   │                                                                        │
-   │    Lone tables are openly addressed, linearly probed hash tables.      │
-   │    Currently, lone tables use the FNV-1a hashing algorithm.            │
-   │    They also strive to maintain a load factor of at most 0.5:          │
-   │    tables will be rehashed once they're above half capacity.           │
-   │    They do not use tombstones to delete keys.                          │
-   │                                                                        │
-   │    Tables are able to inherit from another table: missing keys         │
-   │    are also looked up in the parent table. This is currently used      │
-   │    to implement nested environments but will also serve as a           │
-   │    prototype-based object system as in Javascript and Self.            │
-   │                                                                        │
-   ╰────────────────────────────────────────────────────────────────────────╯ */
-static struct lone_value *lone_table_create(struct lone_lisp *lone, size_t capacity, struct lone_value *prototype)
-{
-	struct lone_value *value = lone_value_create(lone);
-	value->type = LONE_TABLE;
-	value->table.prototype = prototype;
-	value->table.capacity = capacity;
-	value->table.count = 0;
-	value->table.entries = lone_allocate(lone, capacity * sizeof(*value->table.entries));
-
-	for (size_t i = 0; i < capacity; ++i) {
-		value->table.entries[i].key = 0;
-		value->table.entries[i].value = 0;
-	}
-
-	return value;
 }
 
 /* ╭────────────────────────────────────────────────────────────────────────╮

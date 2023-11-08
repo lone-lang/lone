@@ -16,6 +16,7 @@ struct lone_function_flags;
 struct lone_bytes;
 struct lone_list;
 struct lone_vector;
+struct lone_table;
 
 struct lone_memory;
 
