@@ -26,11 +26,6 @@
 #include <lone/linux.h>
 #include <lone/lisp.h>
 
-static struct lone_value *lone_true(struct lone_lisp *lone)
-{
-	return lone->constants.truth;
-}
-
 static struct lone_value *lone_table_get(struct lone_lisp *, struct lone_value *, struct lone_value *);
 void lone_table_set(struct lone_lisp *, struct lone_value *, struct lone_value *, struct lone_value *);
 

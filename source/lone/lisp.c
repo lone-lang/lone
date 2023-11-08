@@ -52,3 +52,13 @@ void lone_lisp_initialize(struct lone_lisp *lone, struct lone_bytes memory, size
 	lone_table_set(lone, lone->modules.top_level_environment, lone_intern_c_string(lone, "export"), export);
 	lone->modules.null = lone_module_create(lone, 0);
 }
+
+struct lone_value *lone_nil(struct lone_lisp *lone)
+{
+	return lone->constants.nil;
+}
+
+struct lone_value *lone_true(struct lone_lisp *lone)
+{
+	return lone->constants.truth;
+}

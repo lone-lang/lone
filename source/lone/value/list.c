@@ -5,7 +5,6 @@
 #include <lone/memory/allocator.h>
 #include <lone/memory/functions.h>
 
-#include <lone/struct/lisp.h>
 #include <lone/struct/value.h>
 #include <lone/struct/list.h>
 
@@ -21,11 +20,6 @@ struct lone_value *lone_list_create(struct lone_lisp *lone, struct lone_value *f
 struct lone_value *lone_list_create_nil(struct lone_lisp *lone)
 {
 	return lone_list_create(lone, 0, 0);
-}
-
-struct lone_value *lone_nil(struct lone_lisp *lone)
-{
-	return lone->constants.nil;
 }
 
 struct lone_value *lone_list_first(struct lone_value *value)
