@@ -32,7 +32,6 @@ static struct lone_value *lone_true(struct lone_lisp *lone)
 	return lone->constants.truth;
 }
 
-static bool lone_is_nil(struct lone_value *);
 static struct lone_value *lone_table_get(struct lone_lisp *, struct lone_value *, struct lone_value *);
 void lone_table_set(struct lone_lisp *, struct lone_value *, struct lone_value *, struct lone_value *);
 
@@ -54,86 +53,6 @@ static struct lone_value *lone_intern(struct lone_lisp *lone, unsigned char *byt
 struct lone_value *lone_intern_c_string(struct lone_lisp *lone, char *c_string)
 {
 	return lone_intern(lone, (unsigned char *) c_string, lone_c_string_length(c_string), false);
-}
-
-/* ╭────────────────────────────────────────────────────────────────────────╮
-   │                                                                        │
-   │    Type predicate functions.                                           │
-   │                                                                        │
-   ╰────────────────────────────────────────────────────────────────────────╯ */
-static bool lone_has_same_type(struct lone_value *x, struct lone_value *y)
-{
-	return x->type == y->type;
-}
-
-static bool lone_is_module(struct lone_value *value)
-{
-	return value->type == LONE_MODULE;
-}
-
-static bool lone_is_function(struct lone_value *value)
-{
-	return value->type == LONE_FUNCTION;
-}
-
-static bool lone_is_primitive(struct lone_value *value)
-{
-	return value->type == LONE_PRIMITIVE;
-}
-
-static bool lone_is_applicable(struct lone_value *value)
-{
-	return lone_is_function(value) || lone_is_primitive(value);
-}
-
-static bool lone_is_list(struct lone_value *value)
-{
-	return value->type == LONE_LIST;
-}
-
-static bool lone_is_vector(struct lone_value *value)
-{
-	return value->type == LONE_VECTOR;
-}
-
-static bool lone_is_table(struct lone_value *value)
-{
-	return value->type == LONE_TABLE;
-}
-
-static bool lone_is_nil(struct lone_value *value)
-{
-	return lone_is_list(value) && value->list.first == 0 && value->list.rest == 0;
-}
-
-static bool lone_has_bytes(struct lone_value *value)
-{
-	return value->type == LONE_TEXT || value->type == LONE_SYMBOL || value->type == LONE_BYTES;
-}
-
-static bool lone_is_bytes(struct lone_value *value)
-{
-	return value->type == LONE_BYTES;
-}
-
-static bool lone_is_text(struct lone_value *value)
-{
-	return value->type == LONE_TEXT;
-}
-
-static bool lone_is_symbol(struct lone_value *value)
-{
-	return value->type == LONE_SYMBOL;
-}
-
-static bool lone_is_integer(struct lone_value *value)
-{
-	return value->type == LONE_INTEGER;
-}
-
-static bool lone_is_pointer(struct lone_value *value)
-{
-	return value->type == LONE_POINTER;
 }
 
 /* ╭────────────────────────────────────────────────────────────────────────╮
