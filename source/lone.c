@@ -16,34 +16,13 @@
 #include <lone/value/primitive.h>
 #include <lone/value/bytes.h>
 #include <lone/value/list.h>
+#include <lone/value/vector.h>
 #include <lone/memory.h>
 #include <lone/linux.h>
 
 static struct lone_value *lone_true(struct lone_lisp *lone)
 {
 	return lone->constants.truth;
-}
-
-/* ╭────────────────────────────────────────────────────────────────────────╮
-   │                                                                        │
-   │    Lone vectors are simple dynamic arrays of lone values.              │
-   │    They grow automatically as elements are added.                      │
-   │    Any index may be used regardless of current length:                 │
-   │    all the elements remain unset as the array grows.                   │
-   │    Unset elements are null pointers which are currently                │
-   │    converted to nil automatically but might one day serve              │
-   │    as an undefined value like in other languages.                      │
-   │                                                                        │
-   ╰────────────────────────────────────────────────────────────────────────╯ */
-static struct lone_value *lone_vector_create(struct lone_lisp *lone, size_t capacity)
-{
-	struct lone_value *value = lone_value_create(lone);
-	value->type = LONE_VECTOR;
-	value->vector.capacity = capacity;
-	value->vector.count = 0;
-	value->vector.values = lone_allocate(lone, capacity * sizeof(*value->vector.values));
-	for (size_t i = 0; i < value->vector.capacity; ++i) { value->vector.values[i] = 0; }
-	return value;
 }
 
 /* ╭────────────────────────────────────────────────────────────────────────╮
