@@ -54,11 +54,11 @@ struct lone_value;
 struct lone_module;
 struct lone_function;
 struct lone_function_flags;
-struct lone_bytes;
-struct lone_text;
 struct lone_list;
 struct lone_vector;
 struct lone_table;
+struct lone_text;
+struct lone_bytes;
 struct lone_pointer;
 
 struct lone_lisp;
