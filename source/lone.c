@@ -10,6 +10,7 @@
 #include <lone/definitions.h>
 #include <lone/types.h>
 #include <lone/structures.h>
+#include <lone/constants.h>
 #include <lone/hash.h>
 #include <lone/value.h>
 #include <lone/value/module.h>
