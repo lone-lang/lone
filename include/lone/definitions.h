@@ -29,4 +29,14 @@
 	#define LONE_ALIGNMENT 16
 #endif
 
+#define LONE_PRIMITIVE(name)                  \
+struct lone_value *lone_primitive_ ## name    \
+(                                             \
+	struct lone_lisp *lone,               \
+	struct lone_value *module,            \
+	struct lone_value *environment,       \
+	struct lone_value *arguments,         \
+	struct lone_value *closure            \
+)
+
 #endif /* LONE_DEFINITIONS_HEADER */
