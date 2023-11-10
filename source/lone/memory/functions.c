@@ -31,3 +31,10 @@ size_t lone_c_string_length(char *c_string)
 	while (c_string[length++]);
 	return length - 1;
 }
+
+/* Compilers emit calls to mem* functions even with -nostdlib */
+void *memset(void *to, int byte, size_t count)
+{
+	lone_memory_set(to, (unsigned char) byte, count);
+	return to;
+}
