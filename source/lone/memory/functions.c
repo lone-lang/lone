@@ -14,6 +14,16 @@ void lone_memory_move(void *from, void *to, size_t count)
 	}
 }
 
+void lone_memory_set(void *to, unsigned char byte, size_t count)
+{
+	unsigned char *memory = to;
+	size_t i;
+
+	for (i = 0; i < count; ++i) {
+		memory[i] = byte;
+	}
+}
+
 size_t lone_c_string_length(char *c_string)
 {
 	size_t length = 0;
