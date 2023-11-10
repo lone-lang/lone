@@ -33,138 +33,7 @@
 #include <lone/utilities.h>
 #include <lone/modules.h>
 #include <lone/modules/lone.h>
-
-/* ╭────────────────────────────────────────────────────────────────────────╮
-   │                                                                        │
-   │    Built-in mathematical and numeric operations.                       │
-   │                                                                        │
-   ╰────────────────────────────────────────────────────────────────────────╯ */
-static struct lone_value *lone_primitive_integer_operation(struct lone_lisp *lone, struct lone_value *arguments, char operation, long accumulator)
-{
-	struct lone_value *argument;
-
-	if (lone_is_nil(arguments)) { /* wasn't given any arguments to operate on: (+), (-), (*) */ goto return_accumulator; }
-
-	do {
-		argument = lone_list_first(arguments);
-		if (!lone_is_integer(argument)) { /* argument is not a number */ linux_exit(-1); }
-
-		switch (operation) {
-		case '+': accumulator += argument->integer; break;
-		case '-': accumulator -= argument->integer; break;
-		case '*': accumulator *= argument->integer; break;
-		default: /* invalid primitive integer operation */ linux_exit(-1);
-		}
-
-		arguments = lone_list_rest(arguments);
-
-	} while (!lone_is_nil(arguments));
-
-return_accumulator:
-	return lone_integer_create(lone, accumulator);
-}
-
-static struct lone_value *lone_primitive_add(struct lone_lisp *lone, struct lone_value *module, struct lone_value *environment, struct lone_value *arguments, struct lone_value *closure)
-{
-	return lone_primitive_integer_operation(lone, arguments, '+', 0);
-}
-
-static struct lone_value *lone_primitive_subtract(struct lone_lisp *lone, struct lone_value *module, struct lone_value *environment, struct lone_value *arguments, struct lone_value *closure)
-{
-	struct lone_value *first;
-	long accumulator;
-
-	if (!lone_is_nil(arguments) && !lone_is_nil(lone_list_rest(arguments))) {
-		/* at least two arguments, set initial value to the first argument: (- 100 58) */
-		first = lone_list_first(arguments);
-		if (!lone_is_integer(first)) { /* argument is not a number */ linux_exit(-1); }
-		accumulator = first->integer;
-		arguments = lone_list_rest(arguments);
-	} else {
-		accumulator = 0;
-	}
-
-	return lone_primitive_integer_operation(lone, arguments, '-', accumulator);
-}
-
-static struct lone_value *lone_primitive_multiply(struct lone_lisp *lone, struct lone_value *module, struct lone_value *environment, struct lone_value *arguments, struct lone_value *closure)
-{
-	return lone_primitive_integer_operation(lone, arguments, '*', 1);
-}
-
-static struct lone_value *lone_primitive_divide(struct lone_lisp *lone, struct lone_value *module, struct lone_value *environment, struct lone_value *arguments, struct lone_value *closure)
-{
-	struct lone_value *dividend, *divisor;
-
-	if (lone_is_nil(arguments)) { /* at least the dividend is required, (/) is invalid */ linux_exit(-1); }
-	dividend = lone_list_first(arguments);
-	if (!lone_is_integer(dividend)) { /* can't divide non-numbers: (/ "not a number") */ linux_exit(-1); }
-	arguments = lone_list_rest(arguments);
-
-	if (lone_is_nil(arguments)) {
-		/* not given a divisor, return 1/x instead: (/ 2) = 1/2 */
-		return lone_integer_create(lone, 1 / dividend->integer);
-	} else {
-		/* (/ x a b c ...) = x / (a * b * c * ...) */
-		divisor = lone_primitive_integer_operation(lone, arguments, '*', 1);
-		return lone_integer_create(lone, dividend->integer / divisor->integer);
-	}
-}
-
-static struct lone_value *lone_primitive_is_less_than(struct lone_lisp *lone, struct lone_value *module, struct lone_value *environment, struct lone_value *arguments, struct lone_value *closure)
-{
-	return lone_apply_comparator(lone, arguments, lone_integer_is_less_than);
-}
-
-static struct lone_value *lone_primitive_is_less_than_or_equal_to(struct lone_lisp *lone, struct lone_value *module, struct lone_value *environment, struct lone_value *arguments, struct lone_value *closure)
-{
-	return lone_apply_comparator(lone, arguments, lone_integer_is_less_than_or_equal_to);
-}
-
-static struct lone_value *lone_primitive_is_greater_than(struct lone_lisp *lone, struct lone_value *module, struct lone_value *environment, struct lone_value *arguments, struct lone_value *closure)
-{
-	return lone_apply_comparator(lone, arguments, lone_integer_is_greater_than);
-}
-
-static struct lone_value *lone_primitive_is_greater_than_or_equal_to(struct lone_lisp *lone, struct lone_value *module, struct lone_value *environment, struct lone_value *arguments, struct lone_value *closure)
-{
-	return lone_apply_comparator(lone, arguments, lone_integer_is_greater_than_or_equal_to);
-}
-
-static struct lone_value *lone_primitive_sign(struct lone_lisp *lone, struct lone_value *module, struct lone_value *environment, struct lone_value *arguments, struct lone_value *closure)
-{
-	struct lone_value *value;
-	if (lone_is_nil(arguments)) { /* no arguments: (sign) */ linux_exit(-1); }
-	value = lone_list_first(arguments);
-	if (!lone_is_nil(lone_list_rest(arguments))) { /* too many arguments: (sign 1 2 3) */ linux_exit(-1); }
-
-	if (lone_is_integer(value)) {
-		return lone_integer_create(lone, value->integer > 0? 1 : value->integer < 0? -1 : 0);
-	} else {
-		linux_exit(-1);
-	}
-}
-
-static struct lone_value *lone_primitive_is_zero(struct lone_lisp *lone, struct lone_value *module, struct lone_value *environment, struct lone_value *arguments, struct lone_value *closure)
-{
-	struct lone_value *value = lone_primitive_sign(lone, module, environment, arguments, closure);
-	if (lone_is_integer(value) && value->integer == 0) { return value; }
-	else { return lone_nil(lone); }
-}
-
-static struct lone_value *lone_primitive_is_positive(struct lone_lisp *lone, struct lone_value *module, struct lone_value *environment, struct lone_value *arguments, struct lone_value *closure)
-{
-	struct lone_value *value = lone_primitive_sign(lone, module, environment, arguments, closure);
-	if (lone_is_integer(value) && value->integer > 0) { return value; }
-	else { return lone_nil(lone); }
-}
-
-static struct lone_value *lone_primitive_is_negative(struct lone_lisp *lone, struct lone_value *module, struct lone_value *environment, struct lone_value *arguments, struct lone_value *closure)
-{
-	struct lone_value *value = lone_primitive_sign(lone, module, environment, arguments, closure);
-	if (lone_is_integer(value) && value->integer < 0) { return value; }
-	else { return lone_nil(lone); }
-}
+#include <lone/modules/math.h>
 
 /* ╭────────────────────────────────────────────────────────────────────────╮
    │                                                                        │
@@ -581,53 +450,6 @@ static void lone_builtin_module_linux_initialize(struct lone_lisp *lone, int arg
 	lone_table_set(lone, lone->modules.loaded, name, module);
 }
 
-static void lone_builtin_module_math_initialize(struct lone_lisp *lone)
-{
-	struct lone_value *name = lone_intern_c_string(lone, "math"),
-	                  *module = lone_module_for_name(lone, name),
-	                  *primitive;
-
-	struct lone_function_flags flags = { .evaluate_arguments = true, .evaluate_result = false, .variable_arguments = true };
-
-	primitive = lone_primitive_create(lone, "add", lone_primitive_add, module, flags);
-	lone_set_and_export(lone, module, lone_intern_c_string(lone, "+"), primitive);
-
-	primitive = lone_primitive_create(lone, "subtract", lone_primitive_subtract, module, flags);
-	lone_set_and_export(lone, module, lone_intern_c_string(lone, "-"), primitive);
-
-	primitive = lone_primitive_create(lone, "multiply", lone_primitive_multiply, module, flags);
-	lone_set_and_export(lone, module, lone_intern_c_string(lone, "*"), primitive);
-
-	primitive = lone_primitive_create(lone, "divide", lone_primitive_divide, module, flags);
-	lone_set_and_export(lone, module, lone_intern_c_string(lone, "/"), primitive);
-
-	primitive = lone_primitive_create(lone, "is_less_than", lone_primitive_is_less_than, module, flags);
-	lone_set_and_export(lone, module, lone_intern_c_string(lone, "<"), primitive);
-
-	primitive = lone_primitive_create(lone, "is_less_than_or_equal_to", lone_primitive_is_less_than_or_equal_to, module, flags);
-	lone_set_and_export(lone, module, lone_intern_c_string(lone, "<="), primitive);
-
-	primitive = lone_primitive_create(lone, "is_greater_than", lone_primitive_is_greater_than, module, flags);
-	lone_set_and_export(lone, module, lone_intern_c_string(lone, ">"), primitive);
-
-	primitive = lone_primitive_create(lone, "is_greater_than_or_equal_to", lone_primitive_is_greater_than_or_equal_to, module, flags);
-	lone_set_and_export(lone, module, lone_intern_c_string(lone, ">="), primitive);
-
-	primitive = lone_primitive_create(lone, "sign", lone_primitive_sign, module, flags);
-	lone_set_and_export(lone, module, lone_intern_c_string(lone, "sign"), primitive);
-
-	primitive = lone_primitive_create(lone, "is_zero", lone_primitive_is_zero, module, flags);
-	lone_set_and_export(lone, module, lone_intern_c_string(lone, "zero?"), primitive);
-
-	primitive = lone_primitive_create(lone, "is_positive", lone_primitive_is_positive, module, flags);
-	lone_set_and_export(lone, module, lone_intern_c_string(lone, "positive?"), primitive);
-
-	primitive = lone_primitive_create(lone, "is_negative", lone_primitive_is_negative, module, flags);
-	lone_set_and_export(lone, module, lone_intern_c_string(lone, "negative?"), primitive);
-
-	lone_table_set(lone, lone->modules.loaded, name, module);
-}
-
 static void lone_builtin_module_text_initialize(struct lone_lisp *lone)
 {
 	struct lone_value *name = lone_intern_c_string(lone, "text"),
@@ -678,7 +500,7 @@ static void lone_modules_initialize(struct lone_lisp *lone, int argc, char **arg
 {
 	lone_builtin_module_linux_initialize(lone, argc, argv, envp, auxv);
 	lone_module_lone_initialize(lone);
-	lone_builtin_module_math_initialize(lone);
+	lone_module_math_initialize(lone);
 	lone_builtin_module_text_initialize(lone);
 	lone_builtin_module_list_initialize(lone);
 
