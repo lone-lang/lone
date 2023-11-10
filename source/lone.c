@@ -34,21 +34,7 @@
 #include <lone/modules.h>
 #include <lone/modules/lone.h>
 #include <lone/modules/math.h>
-
-/* ╭────────────────────────────────────────────────────────────────────────╮
-   │                                                                        │
-   │    Text operations.                                                    │
-   │                                                                        │
-   ╰────────────────────────────────────────────────────────────────────────╯ */
-static struct lone_value *lone_primitive_join(struct lone_lisp *lone, struct lone_value *module, struct lone_value *environment, struct lone_value *arguments, struct lone_value *closure)
-{
-	return lone_text_transfer_bytes(lone, lone_join(lone, lone_list_first(arguments), lone_list_rest(arguments), lone_is_text), true);
-}
-
-static struct lone_value *lone_primitive_concatenate(struct lone_lisp *lone, struct lone_value *module, struct lone_value *environment, struct lone_value *arguments, struct lone_value *closure)
-{
-	return lone_text_transfer_bytes(lone, lone_concatenate(lone, arguments, lone_is_text), true);
-}
+#include <lone/modules/text.h>
 
 /* ╭────────────────────────────────────────────────────────────────────────╮
    │                                                                        │
@@ -450,23 +436,6 @@ static void lone_builtin_module_linux_initialize(struct lone_lisp *lone, int arg
 	lone_table_set(lone, lone->modules.loaded, name, module);
 }
 
-static void lone_builtin_module_text_initialize(struct lone_lisp *lone)
-{
-	struct lone_value *name = lone_intern_c_string(lone, "text"),
-	                  *module = lone_module_for_name(lone, name),
-	                  *primitive;
-
-	struct lone_function_flags flags = { .evaluate_arguments = true, .evaluate_result = false, .variable_arguments = true };
-
-	primitive = lone_primitive_create(lone, "join", lone_primitive_join, module, flags);
-	lone_set_and_export(lone, module, lone_intern_c_string(lone, "join"), primitive);
-
-	primitive = lone_primitive_create(lone, "concatenate", lone_primitive_concatenate, module, flags);
-	lone_set_and_export(lone, module, lone_intern_c_string(lone, "concatenate"), primitive);
-
-	lone_table_set(lone, lone->modules.loaded, name, module);
-}
-
 static void lone_builtin_module_list_initialize(struct lone_lisp *lone)
 {
 	struct lone_value *name = lone_intern_c_string(lone, "list"),
@@ -501,7 +470,7 @@ static void lone_modules_initialize(struct lone_lisp *lone, int argc, char **arg
 	lone_builtin_module_linux_initialize(lone, argc, argv, envp, auxv);
 	lone_module_lone_initialize(lone);
 	lone_module_math_initialize(lone);
-	lone_builtin_module_text_initialize(lone);
+	lone_module_text_initialize(lone);
 	lone_builtin_module_list_initialize(lone);
 
 	lone_vector_push_all(lone, lone->modules.path, 4,
