@@ -1,0 +1,8 @@
+#ifndef LONE_UTILITIES_HEADER
+#define LONE_UTILITIES_HEADER
+
+struct lone_value *lone_apply_predicate(struct lone_lisp *lone, struct lone_value *arguments, lone_predicate function);
+struct lone_value *lone_apply_comparator(struct lone_lisp *lone, struct lone_value *arguments, lone_comparator function);
+
+#endif /* LONE_UTILITIES_HEADER */
+

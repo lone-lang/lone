@@ -30,6 +30,7 @@
 #include <lone/lisp/reader.h>
 #include <lone/lisp/evaluator.h>
 #include <lone/lisp/printer.h>
+#include <lone/utilities.h>
 #include <lone/modules.h>
 
 /* ╭───────────────────┨ LONE LISP PRIMITIVE FUNCTIONS ┠────────────────────╮
@@ -284,11 +285,6 @@ static struct lone_value *lone_primitive_lambda_star(struct lone_lisp *lone, str
 	return lone_primitive_lambda_with_flags(lone, environment, arguments, flags);
 }
 
-static struct lone_value *lone_apply_predicate(struct lone_lisp *lone, struct lone_value *arguments, lone_predicate function)
-{
-	if (lone_is_nil(arguments) || !lone_is_nil(lone_list_rest(arguments))) { /* predicates accept exactly one argument */ linux_exit(-1); }
-	return function(lone_list_first(arguments)) ? lone_true(lone) : lone_nil(lone);
-}
 
 static struct lone_value *lone_primitive_is_list(struct lone_lisp *lone, struct lone_value *module, struct lone_value *environment, struct lone_value *arguments, struct lone_value *closure)
 {
@@ -318,22 +314,6 @@ static struct lone_value *lone_primitive_is_text(struct lone_lisp *lone, struct 
 static struct lone_value *lone_primitive_is_integer(struct lone_lisp *lone, struct lone_value *module, struct lone_value *environment, struct lone_value *arguments, struct lone_value *closure)
 {
 	return lone_apply_predicate(lone, arguments, lone_is_integer);
-}
-
-static struct lone_value *lone_apply_comparator(struct lone_lisp *lone, struct lone_value *arguments, lone_comparator function)
-{
-	struct lone_value *argument, *next;
-
-	while (1) {
-		if (lone_is_nil(arguments)) { break; }
-		argument = lone_list_first(arguments);
-		arguments = lone_list_rest(arguments);
-		next = lone_list_first(arguments);
-
-		if (next && !function(argument, next)) { return lone_nil(lone); }
-	}
-
-	return lone_true(lone);
 }
 
 static struct lone_value *lone_primitive_is_identical(struct lone_lisp *lone, struct lone_value *module, struct lone_value *environment, struct lone_value *arguments, struct lone_value *closure)
