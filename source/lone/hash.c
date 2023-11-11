@@ -1,6 +1,8 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later */
 
 #include <lone/hash.h>
+#include <lone/hash/fnv_1a.h>
+
 #include <lone/linux.h>
 
 #include <lone/struct/lisp.h>
