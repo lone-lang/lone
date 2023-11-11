@@ -5,6 +5,8 @@
 
 #include <lone/types.h>
 
+#include <lone/struct/bytes.h>
+
 /* ╭────────────────────────────────────────────────────────────────────────╮
    │                                                                        │
    │    The lone lisp structure represents the lone lisp interpreter.       │
