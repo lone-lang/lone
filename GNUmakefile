@@ -5,6 +5,13 @@ MAKEFLAGS += --no-builtin-variables --no-builtin-rules
 CC := cc
 CFLAGS := -Wall -Wextra -Wpedantic -Wno-unused-function -Wno-unused-parameter -Os
 
+ifdef LTO
+  flags.lto := -flto
+  ifeq ($(CC),gcc)
+    flags.whole_program := -fwhole-program
+  endif
+endif
+
 ifdef TARGET
   ifndef UAPI
     $(error UAPI must be defined when cross compiling)
@@ -46,9 +53,9 @@ flags.definitions := -D LONE_ARCH=$(ARCH)
 flags.include_directories := $(foreach directory,$(directories.include),-I $(directory))
 flags.system_include_directories := $(if $(UAPI),-isystem $(UAPI))
 flags.prerequisites_generation = -MMD -MF $(call source_to_prerequisite,$(<))
-flags.common := -static -ffreestanding -nostdlib -fno-omit-frame-pointer -fshort-enums -flto
+flags.common := -static -ffreestanding -nostdlib -fno-omit-frame-pointer -fshort-enums $(flags.lto)
 flags.object = $(flags.system_include_directories) $(flags.include_directories) $(flags.prerequisites_generation) $(flags.definitions) $(flags.common)
-flags.lone = $(flags.common) -Wl,-elone_start
+flags.lone = $(flags.common) $(flags.whole_program) -Wl,-elone_start
 
 $(directories.build.objects)/%.o: $(directories.source)/%.c | directories
 	$(strip $(CC) $(flags.object) $(CFLAGS) -o $@ -c $<)
