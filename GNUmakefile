@@ -27,7 +27,7 @@ directories.build.prerequisites := $(directories.build)/prerequisites
 directories.build.include := $(directories.build)/include
 directories.create :=
 
-directories.include := include arch/$(ARCH)/include $(directories.build.include)
+directories.include := include architecture/$(ARCH)/include $(directories.build.include)
 directories.source := source
 
 files.sources := $(shell find $(directories.source) -type f)
