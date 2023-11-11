@@ -4,7 +4,6 @@
 
 #include <lone/lisp.h>
 #include <lone/hash.h>
-#include <lone/memory/garbage_collector.h>
 
 #include <lone/value/module.h>
 #include <lone/value/primitive.h>
@@ -17,6 +16,8 @@
 #include <lone/struct/function.h>
 #include <lone/struct/bytes.h>
 #include <lone/struct/memory.h>
+
+struct lone_heap *lone_allocate_heap(struct lone_lisp *lone, size_t count);
 
 struct lone_value *lone_primitive_import(struct lone_lisp *, struct lone_value *, struct lone_value *, struct lone_value *, struct lone_value *);
 struct lone_value *lone_primitive_export(struct lone_lisp *, struct lone_value *, struct lone_value *, struct lone_value *, struct lone_value *);
