@@ -1,4 +1,5 @@
 #!/usr/bin/bash
+# SPDX-License-Identifier: AGPL-3.0-or-later
 
 if [[ -z "${1}" ]]; then
   1>&2 printf "Test name not specified\n"

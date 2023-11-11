@@ -1,6 +1,7 @@
 #!/usr/bin/bash
+# SPDX-License-Identifier: AGPL-3.0-or-later
 
-lone=${1:-./lone}
+lone=${1:-lone}
 tests_directory=${2:-test}
 
 code=0
