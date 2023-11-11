@@ -88,16 +88,23 @@ struct lone_bytes lone_concatenate(struct lone_lisp *lone, struct lone_value *ar
 	return lone_join(lone, 0, arguments, is_valid);
 }
 
+struct auxiliary_value lone_get_auxiliary_value(struct auxiliary_vector *auxiliary, long type)
+{
+	for (/* auxiliary */; auxiliary->type != AT_NULL; ++auxiliary) {
+		if (auxiliary->type == type) {
+			return auxiliary->value;
+		}
+	}
+
+	return (struct auxiliary_value) { .as.integer = 0 };
+}
+
 struct lone_bytes lone_get_auxiliary_random(struct auxiliary_vector *auxiliary)
 {
 	struct lone_bytes random = { 0, 0 };
 
-	for (/* auxiliary */; auxiliary->type != AT_NULL; ++auxiliary) {
-		if (auxiliary->type == AT_RANDOM) {
-			random.pointer = auxiliary->value.as.pointer;
-			random.count = 16;
-		}
-	}
+	random.pointer = lone_get_auxiliary_value(auxiliary, AT_RANDOM).as.pointer;
+	random.count = 16;
 
 	return random;
 }

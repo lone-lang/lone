@@ -12,6 +12,7 @@ struct lone_value *lone_apply_predicate(struct lone_lisp *lone, struct lone_valu
 struct lone_value *lone_apply_comparator(struct lone_lisp *lone, struct lone_value *arguments, lone_comparator function);
 struct lone_bytes lone_join(struct lone_lisp *lone, struct lone_value *separator, struct lone_value *arguments, lone_predicate is_valid);
 struct lone_bytes lone_concatenate(struct lone_lisp *lone, struct lone_value *arguments, lone_predicate is_valid);
+struct auxiliary_value lone_get_auxiliary_value(struct auxiliary_vector *values, long type);
 struct lone_bytes lone_get_auxiliary_random(struct auxiliary_vector *values);
 
 #endif /* LONE_UTILITIES_HEADER */
