@@ -12,6 +12,7 @@ struct auxiliary_value {
 		char *c_string;
 		void *pointer;
 		long integer;
+		unsigned long unsigned_integer;
 	} as;
 };
 
