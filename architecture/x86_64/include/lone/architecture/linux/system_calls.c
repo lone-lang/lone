@@ -11,7 +11,7 @@
  * clobbers:        rcx r11
  **/
 
-long system_call_0(long number)
+long linux_system_call_0(long number)
 {
 	register long rax __asm__("rax") = number;
 
@@ -25,7 +25,7 @@ long system_call_0(long number)
 	return rax;
 }
 
-long system_call_1(long number, long _1)
+long linux_system_call_1(long number, long _1)
 {
 	register long rax __asm__("rax") = number;
 	register long rdi __asm__("rdi") = _1;
@@ -40,7 +40,7 @@ long system_call_1(long number, long _1)
 	return rax;
 }
 
-long system_call_2(long number, long _1, long _2)
+long linux_system_call_2(long number, long _1, long _2)
 {
 	register long rax __asm__("rax") = number;
 	register long rdi __asm__("rdi") = _1;
@@ -56,7 +56,7 @@ long system_call_2(long number, long _1, long _2)
 	return rax;
 }
 
-long system_call_3(long number, long _1, long _2, long _3)
+long linux_system_call_3(long number, long _1, long _2, long _3)
 {
 	register long rax __asm__("rax") = number;
 	register long rdi __asm__("rdi") = _1;
@@ -73,7 +73,7 @@ long system_call_3(long number, long _1, long _2, long _3)
 	return rax;
 }
 
-long system_call_4(long number, long _1, long _2, long _3, long _4)
+long linux_system_call_4(long number, long _1, long _2, long _3, long _4)
 {
 	register long rax __asm__("rax") = number;
 	register long rdi __asm__("rdi") = _1;
@@ -94,7 +94,7 @@ long system_call_4(long number, long _1, long _2, long _3, long _4)
 	return rax;
 }
 
-long system_call_5(long number, long _1, long _2, long _3, long _4, long _5)
+long linux_system_call_5(long number, long _1, long _2, long _3, long _4, long _5)
 {
 	register long rax __asm__("rax") = number;
 	register long rdi __asm__("rdi") = _1;
@@ -116,7 +116,7 @@ long system_call_5(long number, long _1, long _2, long _3, long _4, long _5)
 	return rax;
 }
 
-long system_call_6(long number, long _1, long _2, long _3, long _4, long _5, long _6)
+long linux_system_call_6(long number, long _1, long _2, long _3, long _4, long _5, long _6)
 {
 	register long rax __asm__("rax") = number;
 	register long rdi __asm__("rdi") = _1;
