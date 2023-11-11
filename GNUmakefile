@@ -56,7 +56,7 @@ $(directories.build.objects)/%.o: $(directories.source)/%.c | directories
 $(targets.lone): $(targets.objects) | directories
 	$(strip $(CC) $(flags.lone) $(CFLAGS) -o $@ $^)
 
-$(call source_to_object,source/lone.c): $(targets.NR.c)
+$(call source_to_object,source/lone/modules/linux.c): $(targets.NR.c)
 
 $(targets.NR.c): $(targets.NR.list) scripts/NR.generate
 	scripts/NR.generate < $< > $@
