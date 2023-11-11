@@ -88,13 +88,13 @@ struct lone_bytes lone_concatenate(struct lone_lisp *lone, struct lone_value *ar
 	return lone_join(lone, 0, arguments, is_valid);
 }
 
-struct lone_bytes lone_get_auxiliary_random(struct auxiliary *value)
+struct lone_bytes lone_get_auxiliary_random(struct auxiliary_vector *auxiliary)
 {
 	struct lone_bytes random = { 0, 0 };
 
-	for (/* value */; value->type != AT_NULL; ++value) {
-		if (value->type == AT_RANDOM) {
-			random.pointer = value->as.pointer;
+	for (/* auxiliary */; auxiliary->type != AT_NULL; ++auxiliary) {
+		if (auxiliary->type == AT_RANDOM) {
+			random.pointer = auxiliary->value.as.pointer;
 			random.count = 16;
 		}
 	}

@@ -3,6 +3,6 @@
 
 #include <lone/struct/auxiliary.h>
 
-long lone(int argc, char **argv, char **envp, struct auxiliary *auxv);
+long lone(int argc, char **argv, char **envp, struct auxiliary_vector *auxv);
 
 #endif /* LONE_HEADER */

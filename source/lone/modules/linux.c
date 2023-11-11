@@ -19,115 +19,116 @@
 
 #include <lone/linux.h>
 
-static void lone_auxiliary_value_to_table(struct lone_lisp *lone, struct lone_value *table, struct auxiliary *auxiliary_value)
+static void lone_auxiliary_value_to_table(struct lone_lisp *lone, struct lone_value *table, struct auxiliary_vector *auxiliary)
 {
 	struct lone_value *key, *value;
-	switch (auxiliary_value->type) {
+
+	switch (auxiliary->type) {
 	case AT_BASE_PLATFORM:
 		key = lone_intern_c_string(lone, "base-platform");
-		value = lone_text_create_from_c_string(lone, auxiliary_value->as.c_string);
+		value = lone_text_create_from_c_string(lone, auxiliary->value.as.c_string);
 		break;
 	case AT_PLATFORM:
 		key = lone_intern_c_string(lone, "platform");
-		value = lone_text_create_from_c_string(lone, auxiliary_value->as.c_string);
+		value = lone_text_create_from_c_string(lone, auxiliary->value.as.c_string);
 		break;
 	case AT_HWCAP:
 		key = lone_intern_c_string(lone, "hardware-capabilities");
-		value = lone_integer_create(lone, auxiliary_value->as.integer);
+		value = lone_integer_create(lone, auxiliary->value.as.integer);
 		break;
 	case AT_HWCAP2:
 		key = lone_intern_c_string(lone, "hardware-capabilities-2");
-		value = lone_integer_create(lone, auxiliary_value->as.integer);
+		value = lone_integer_create(lone, auxiliary->value.as.integer);
 		break;
 	case AT_FLAGS:
 		key = lone_intern_c_string(lone, "flags");
-		value = lone_integer_create(lone, auxiliary_value->as.integer);
+		value = lone_integer_create(lone, auxiliary->value.as.integer);
 		break;
 	case AT_NOTELF:
 		key = lone_intern_c_string(lone, "not-ELF");
-		value = lone_integer_create(lone, auxiliary_value->as.integer);
+		value = lone_integer_create(lone, auxiliary->value.as.integer);
 		break;
 	case AT_BASE:
 		key = lone_intern_c_string(lone, "interpreter-base-address");
-		value = lone_pointer_create(lone, auxiliary_value->as.pointer, LONE_TO_UNKNOWN);
+		value = lone_pointer_create(lone, auxiliary->value.as.pointer, LONE_TO_UNKNOWN);
 		break;
 	case AT_ENTRY:
 		key = lone_intern_c_string(lone, "entry-point");
-		value = lone_pointer_create(lone, auxiliary_value->as.pointer, LONE_TO_UNKNOWN);
+		value = lone_pointer_create(lone, auxiliary->value.as.pointer, LONE_TO_UNKNOWN);
 		break;
 	case AT_SYSINFO_EHDR:
 		key = lone_intern_c_string(lone, "vDSO");
-		value = lone_pointer_create(lone, auxiliary_value->as.pointer, LONE_TO_UNKNOWN);
+		value = lone_pointer_create(lone, auxiliary->value.as.pointer, LONE_TO_UNKNOWN);
 		break;
 	case AT_PHDR:
 		key = lone_intern_c_string(lone, "program-headers-address");
-		value = lone_pointer_create(lone, auxiliary_value->as.pointer, LONE_TO_UNKNOWN);
+		value = lone_pointer_create(lone, auxiliary->value.as.pointer, LONE_TO_UNKNOWN);
 		break;
 	case AT_PHENT:
 		key = lone_intern_c_string(lone, "program-headers-entry-size");
-		value = lone_integer_create(lone, auxiliary_value->as.integer);
+		value = lone_integer_create(lone, auxiliary->value.as.integer);
 		break;
 	case AT_PHNUM:
 		key = lone_intern_c_string(lone, "program-headers-count");
-		value = lone_integer_create(lone, auxiliary_value->as.integer);
+		value = lone_integer_create(lone, auxiliary->value.as.integer);
 		break;
 	case AT_EXECFN:
 		key = lone_intern_c_string(lone, "executable-file-name");
-		value = lone_text_create_from_c_string(lone, auxiliary_value->as.c_string);
+		value = lone_text_create_from_c_string(lone, auxiliary->value.as.c_string);
 		break;
 	case AT_EXECFD:
 		key = lone_intern_c_string(lone, "executable-file-descriptor");
-		value = lone_integer_create(lone, auxiliary_value->as.integer);
+		value = lone_integer_create(lone, auxiliary->value.as.integer);
 		break;
 	case AT_UID:
 		key = lone_intern_c_string(lone, "user-id");
-		value = lone_integer_create(lone, auxiliary_value->as.integer);
+		value = lone_integer_create(lone, auxiliary->value.as.integer);
 		break;
 	case AT_EUID:
 		key = lone_intern_c_string(lone, "effective-user-id");
-		value = lone_integer_create(lone, auxiliary_value->as.integer);
+		value = lone_integer_create(lone, auxiliary->value.as.integer);
 		break;
 	case AT_GID:
 		key = lone_intern_c_string(lone, "group-id");
-		value = lone_integer_create(lone, auxiliary_value->as.integer);
+		value = lone_integer_create(lone, auxiliary->value.as.integer);
 		break;
 	case AT_EGID:
 		key = lone_intern_c_string(lone, "effective-group-id");
-		value = lone_integer_create(lone, auxiliary_value->as.integer);
+		value = lone_integer_create(lone, auxiliary->value.as.integer);
 		break;
 	case AT_PAGESZ:
 		key = lone_intern_c_string(lone, "page-size");
-		value = lone_integer_create(lone, auxiliary_value->as.integer);
+		value = lone_integer_create(lone, auxiliary->value.as.integer);
 		break;
 #ifdef AT_MINSIGSTKSZ
 	case AT_MINSIGSTKSZ:
 		key = lone_intern_c_string(lone, "minimum-signal-delivery-stack-size");
-		value = lone_integer_create(lone, auxiliary_value->as.integer);
+		value = lone_integer_create(lone, auxiliary->value.as.integer);
 		break;
 #endif
 	case AT_CLKTCK:
 		key = lone_intern_c_string(lone, "clock-tick");
-		value = lone_integer_create(lone, auxiliary_value->as.integer);
+		value = lone_integer_create(lone, auxiliary->value.as.integer);
 		break;
 	case AT_RANDOM:
 		key = lone_intern_c_string(lone, "random");
-		value = lone_bytes_create(lone, auxiliary_value->as.pointer, 16);
+		value = lone_bytes_create(lone, auxiliary->value.as.pointer, 16);
 		break;
 	case AT_SECURE:
 		key = lone_intern_c_string(lone, "secure");
-		value = lone_integer_create(lone, auxiliary_value->as.integer);
+		value = lone_integer_create(lone, auxiliary->value.as.integer);
 		break;
 	default:
 		key = lone_intern_c_string(lone, "unknown");
 		value = lone_list_create(lone,
-		                         lone_integer_create(lone, auxiliary_value->type),
-		                         lone_integer_create(lone, auxiliary_value->as.integer));
+		                         lone_integer_create(lone, auxiliary->type),
+		                         lone_integer_create(lone, auxiliary->value.as.integer));
 	}
 
 	lone_table_set(lone, table, key, value);
 }
 
-static struct lone_value *lone_auxiliary_vector_to_table(struct lone_lisp *lone, struct auxiliary *auxiliary_vector)
+static struct lone_value *lone_auxiliary_vector_to_table(struct lone_lisp *lone, struct auxiliary_vector *auxiliary_vector)
 {
 	struct lone_value *table = lone_table_create(lone, 32, 0);
 	size_t i;
@@ -198,7 +199,7 @@ static void lone_fill_linux_system_call_table(struct lone_lisp *lone, struct lon
 	}
 }
 
-void lone_module_linux_initialize(struct lone_lisp *lone, int argc, char **argv, char **envp, struct auxiliary *auxv)
+void lone_module_linux_initialize(struct lone_lisp *lone, int argc, char **argv, char **envp, struct auxiliary_vector *auxv)
 {
 	struct lone_value *name = lone_intern_c_string(lone, "linux"),
 	                  *module = lone_module_for_name(lone, name),

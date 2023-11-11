@@ -7,13 +7,17 @@
 
 #include <lone/types.h>
 
-struct auxiliary {
-	long type;
+struct auxiliary_value {
 	union {
 		char *c_string;
 		void *pointer;
 		long integer;
 	} as;
+};
+
+struct auxiliary_vector {
+	long type;
+	struct auxiliary_value value;
 };
 
 #endif /* LONE_STRUCT_AUXILIARY_HEADER */

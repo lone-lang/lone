@@ -30,7 +30,7 @@
 
 #include <lone/architecture/linux/entry_point.c>
 
-long lone(int argc, char **argv, char **envp, struct auxiliary *auxv)
+long lone(int argc, char **argv, char **envp, struct auxiliary_vector *auxv)
 {
 	void *stack = __builtin_frame_address(0);
 	static unsigned char __attribute__((aligned(LONE_ALIGNMENT))) bytes[LONE_MEMORY_SIZE];

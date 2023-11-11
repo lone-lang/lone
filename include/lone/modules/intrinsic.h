@@ -16,7 +16,7 @@ void lone_modules_intrinsic_initialize(
 	int argument_count,
 	char **argument_vector,
 	char **environment,
-	struct auxiliary *auxiliary_vector
+	struct auxiliary_vector *auxiliary_vector
 );
 
 #endif /* LONE_MODULES_INTRINSIC_HEADER */
