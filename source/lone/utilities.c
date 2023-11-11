@@ -2,7 +2,7 @@
 
 #include <lone/types.h>
 #include <lone/utilities.h>
-#include <lone/constants.h>
+#include <lone/lisp/constants.h>
 
 #include <lone/memory/allocator.h>
 #include <lone/memory/functions.h>

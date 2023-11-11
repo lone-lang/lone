@@ -5,7 +5,7 @@
 
 #include <lone/lisp/evaluator.h>
 #include <lone/lisp/printer.h>
-#include <lone/constants.h>
+#include <lone/lisp/constants.h>
 #include <lone/utilities.h>
 
 #include <lone/value/function.h>
