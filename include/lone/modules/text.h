@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
 #ifndef LONE_MODULES_TEXT_HEADER
 #define LONE_MODULES_TEXT_HEADER
 

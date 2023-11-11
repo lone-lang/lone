@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
 #include <lone/constants.h>
 
 #include <lone/struct/lisp.h>

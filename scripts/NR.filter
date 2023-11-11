@@ -1,3 +1,4 @@
 #!/usr/bin/bash
+# SPDX-License-Identifier: AGPL-3.0-or-later
 
 grep __NR_ | sed 's/#define //g' | cut -d ' ' -f 1

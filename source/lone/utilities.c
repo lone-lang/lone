@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
 #include <lone/types.h>
 #include <lone/utilities.h>
 #include <lone/constants.h>

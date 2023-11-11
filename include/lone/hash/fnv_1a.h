@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
 #ifndef LONE_HASH_FNV_1A_HEADER
 #define LONE_HASH_FNV_1A_HEADER
 

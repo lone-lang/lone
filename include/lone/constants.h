@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
 #ifndef LONE_CONSTANTS_HEADER
 #define LONE_CONSTANTS_HEADER
 

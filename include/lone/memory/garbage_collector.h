@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
 #ifndef LONE_MEMORY_GARBAGE_COLLECTOR_HEADER
 #define LONE_MEMORY_GARBAGE_COLLECTOR_HEADER
 

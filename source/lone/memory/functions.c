@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
 #include <lone/memory/functions.h>
 
 void lone_memory_move(void *from, void *to, size_t count)

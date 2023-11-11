@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
 #include <lone/value/bytes.h>
 #include <lone/value/table.h>
 #include <lone/memory/functions.h>
