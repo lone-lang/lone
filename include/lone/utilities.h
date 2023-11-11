@@ -5,6 +5,7 @@
 
 #include <lone/types.h>
 
+#include <lone/struct/auxiliary.h>
 #include <lone/struct/bytes.h>
 
 struct lone_value *lone_apply_predicate(struct lone_lisp *lone, struct lone_value *arguments, lone_predicate function);

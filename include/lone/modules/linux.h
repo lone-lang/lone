@@ -6,6 +6,8 @@
 #include <lone/definitions.h>
 #include <lone/types.h>
 
+#include <lone/struct/auxiliary.h>
+
 /* ╭────────────────────────┨ LONE / MODULE / LINUX ┠───────────────────────╮
    │                                                                        │
    │    Linux system calls and process parameters.                          │
