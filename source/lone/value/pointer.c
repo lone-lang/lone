@@ -1,5 +1,6 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later */
 
+#include <lone/types.h>
 #include <lone/linux.h>
 #include <lone/value.h>
 #include <lone/value/pointer.h>

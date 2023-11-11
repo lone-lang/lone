@@ -4,6 +4,7 @@
 #define LONE_TYPES_HEADER
 
 #include <stdbool.h>
+#include <stdint.h>
 
 #include <linux/types.h>
 
