@@ -1,7 +1,6 @@
 #ifndef LONE_LINUX_HEADER
 #define LONE_LINUX_HEADER
 
-#include <linux/auxvec.h>
 #include <linux/unistd.h>
 #include <linux/errno.h>
 #include <linux/fcntl.h>

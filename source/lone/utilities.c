@@ -8,6 +8,7 @@
 #include <lone/value/list.h>
 
 #include <lone/struct/value.h>
+#include <lone/struct/auxiliary.h>
 
 #include <lone/linux.h>
 
@@ -83,4 +84,18 @@ struct lone_bytes lone_join(struct lone_lisp *lone, struct lone_value *separator
 struct lone_bytes lone_concatenate(struct lone_lisp *lone, struct lone_value *arguments, lone_predicate is_valid)
 {
 	return lone_join(lone, 0, arguments, is_valid);
+}
+
+struct lone_bytes lone_get_auxiliary_random(struct auxiliary *value)
+{
+	struct lone_bytes random = { 0, 0 };
+
+	for (/* value */; value->type != AT_NULL; ++value) {
+		if (value->type == AT_RANDOM) {
+			random.pointer = value->as.pointer;
+			random.count = 16;
+		}
+	}
+
+	return random;
 }
