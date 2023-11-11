@@ -5,39 +5,15 @@
    │                       The standalone Linux Lisp                        │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
-#include <stdint.h>
-
 #include <lone/definitions.h>
 #include <lone/types.h>
-#include <lone/structures.h>
-#include <lone/constants.h>
-#include <lone/hash.h>
-#include <lone/value.h>
-#include <lone/value/module.h>
-#include <lone/value/function.h>
-#include <lone/value/primitive.h>
-#include <lone/value/bytes.h>
-#include <lone/value/text.h>
-#include <lone/value/symbol.h>
-#include <lone/value/list.h>
-#include <lone/value/vector.h>
-#include <lone/value/table.h>
-#include <lone/value/integer.h>
-#include <lone/value/pointer.h>
-#include <lone/memory.h>
-#include <lone/linux.h>
 #include <lone/lisp.h>
-#include <lone/lisp/reader.h>
-#include <lone/lisp/evaluator.h>
-#include <lone/lisp/printer.h>
-#include <lone/utilities.h>
 #include <lone/modules.h>
-#include <lone/modules/lone.h>
-#include <lone/modules/math.h>
-#include <lone/modules/list.h>
-#include <lone/modules/text.h>
-#include <lone/modules/linux.h>
 #include <lone/modules/intrinsic.h>
+#include <lone/utilities.h>
+
+#include <lone/struct/lisp.h>
+#include <lone/struct/bytes.h>
 
 /* ╭───────────────────────┨ LONE LISP ENTRY POINT ┠────────────────────────╮
    │                                                                        │
