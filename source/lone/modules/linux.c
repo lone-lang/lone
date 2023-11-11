@@ -61,15 +61,15 @@ static void lone_auxiliary_value_to_table(struct lone_lisp *lone, struct lone_va
 		value = lone_pointer_create(lone, auxiliary->value.as.pointer, LONE_TO_UNKNOWN);
 		break;
 	case AT_PHDR:
-		key = lone_intern_c_string(lone, "program-headers-address");
+		key = lone_intern_c_string(lone, "program-header-table-address");
 		value = lone_pointer_create(lone, auxiliary->value.as.pointer, LONE_TO_UNKNOWN);
 		break;
 	case AT_PHENT:
-		key = lone_intern_c_string(lone, "program-headers-entry-size");
+		key = lone_intern_c_string(lone, "program-header-table-entry-size");
 		value = lone_integer_create(lone, auxiliary->value.as.integer);
 		break;
 	case AT_PHNUM:
-		key = lone_intern_c_string(lone, "program-headers-count");
+		key = lone_intern_c_string(lone, "program-header-table-entry-count");
 		value = lone_integer_create(lone, auxiliary->value.as.integer);
 		break;
 	case AT_EXECFN:
