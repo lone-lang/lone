@@ -4,7 +4,6 @@
 #define LONE_STRUCT_MEMORY_HEADER
 
 #include <lone/types.h>
-#include <lone/struct/value.h>
 
 /* ╭────────────────────┨ LONE LISP MEMORY ALLOCATION ┠─────────────────────╮
    │                                                                        │
@@ -43,12 +42,6 @@ struct lone_memory {
 	int free;
 	size_t size;
 	unsigned char pointer[];
-};
-
-struct lone_heap {
-	struct lone_heap *next;
-	size_t count;
-	struct lone_value values[];
 };
 
 #endif /* LONE_STRUCT_MEMORY_HEADER */

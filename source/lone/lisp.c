@@ -3,6 +3,7 @@
 #include <lone/definitions.h>
 
 #include <lone/lisp.h>
+#include <lone/memory.h>
 #include <lone/hash.h>
 #include <lone/modules.h>
 
@@ -16,23 +17,13 @@
 #include <lone/struct/lisp.h>
 #include <lone/struct/function.h>
 #include <lone/struct/bytes.h>
-#include <lone/struct/memory.h>
-
-struct lone_heap *lone_allocate_heap(struct lone_lisp *lone, size_t count);
 
 void lone_lisp_initialize(struct lone_lisp *lone, struct lone_bytes memory, size_t heap_size, void *stack, struct lone_bytes random)
 {
 	struct lone_function_flags flags = { .evaluate_arguments = 0, .evaluate_result = 0, .variable_arguments = 1 };
 	struct lone_value *import, *export;
 
-	lone->memory.stack = stack;
-
-	lone->memory.general = (struct lone_memory *) __builtin_assume_aligned(memory.pointer, LONE_ALIGNMENT);
-	lone->memory.general->prev = lone->memory.general->next = 0;
-	lone->memory.general->free = 1;
-	lone->memory.general->size = memory.count - sizeof(struct lone_memory);
-
-	lone->memory.heaps = lone_allocate_heap(lone, heap_size);
+	lone_memory_initialize(lone, memory, heap_size, stack);
 
 	lone_hash_initialize(lone, random);
 

@@ -3,8 +3,15 @@
 #ifndef LONE_MEMORY_HEADER
 #define LONE_MEMORY_HEADER
 
-#include <lone/memory/functions.h>
-#include <lone/memory/allocator.h>
-#include <lone/memory/garbage_collector.h>
+#include <lone/types.h>
+
+#include <lone/struct/bytes.h>
+
+void lone_memory_initialize(
+	struct lone_lisp *lone,
+	struct lone_bytes memory,
+	size_t heap_size,
+	void *stack
+);
 
 #endif /* LONE_MEMORY_HEADER */

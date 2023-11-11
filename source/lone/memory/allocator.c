@@ -1,7 +1,9 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later */
 
-#include <lone/memory.h>
+#include <lone/definitions.h>
 #include <lone/linux.h>
+#include <lone/memory/allocator.h>
+#include <lone/memory/functions.h>
 
 #include <lone/struct/lisp.h>
 #include <lone/struct/memory.h>
