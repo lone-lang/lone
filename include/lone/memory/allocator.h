@@ -10,9 +10,6 @@ size_t
 __attribute__((const))
 lone_align(size_t size, size_t alignment);
 
-void lone_memory_split(struct lone_memory *block, size_t used);
-void lone_memory_coalesce(struct lone_memory *block);
-
 void *
 __attribute__((malloc, alloc_size(2), alloc_align(3)))
 lone_allocate_aligned(struct lone_lisp *lone, size_t requested_size, size_t alignment);

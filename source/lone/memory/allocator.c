@@ -24,7 +24,7 @@ size_t __attribute__((const)) lone_align(size_t size, size_t alignment)
 	return lone_next_power_of_2_multiple(size, alignment);
 }
 
-void lone_memory_split(struct lone_memory *block, size_t used)
+static void lone_memory_split(struct lone_memory *block, size_t used)
 {
 	size_t excess = block->size - used;
 
@@ -40,7 +40,7 @@ void lone_memory_split(struct lone_memory *block, size_t used)
 	}
 }
 
-void lone_memory_coalesce(struct lone_memory *block)
+static void lone_memory_coalesce(struct lone_memory *block)
 {
 	struct lone_memory *next;
 
