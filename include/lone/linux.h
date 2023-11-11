@@ -7,6 +7,8 @@
 #include <linux/errno.h>
 #include <linux/fcntl.h>
 
+#include <lone/types.h>
+
 long linux_system_call_0(long n);
 long linux_system_call_1(long n, long _1);
 long linux_system_call_2(long n, long _1, long _2);
