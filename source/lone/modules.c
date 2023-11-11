@@ -285,3 +285,33 @@ struct lone_value *lone_primitive_import(struct lone_lisp *lone, struct lone_val
 
 	return lone_nil(lone);
 }
+
+void lone_module_path_push(struct lone_lisp *lone, struct lone_value *directory)
+{
+	lone_vector_push(lone, lone->modules.path, directory);
+}
+
+void lone_module_path_push_c_string(struct lone_lisp *lone, char *directory)
+{
+	lone_module_path_push(lone, lone_text_create_from_c_string(lone, directory));
+}
+
+void lone_module_path_push_va_list(struct lone_lisp *lone, size_t count, va_list directories)
+{
+	struct lone_value *directory;
+	size_t i;
+
+	for (i = 0; i < count; ++i) {
+		directory = va_arg(directories, struct lone_value *);
+		lone_module_path_push(lone, directory);
+	}
+}
+
+void lone_module_path_push_all(struct lone_lisp *lone, size_t count, ...)
+{
+	va_list directories;
+
+	va_start(directories, count);
+	lone_module_path_push_va_list(lone, count, directories);
+	va_end(directories);
+}

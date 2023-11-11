@@ -37,29 +37,7 @@
 #include <lone/modules/list.h>
 #include <lone/modules/text.h>
 #include <lone/modules/linux.h>
-
-/* ╭─────────────────────────┨ LONE LISP MODULES ┠──────────────────────────╮
-   │                                                                        │
-   │    Built-in modules containing essential functionality.                │
-   │                                                                        │
-   ╰────────────────────────────────────────────────────────────────────────╯ */
-static void lone_modules_initialize(struct lone_lisp *lone, int argc, char **argv, char **envp, struct auxiliary *auxv)
-{
-	lone_module_linux_initialize(lone, argc, argv, envp, auxv);
-	lone_module_lone_initialize(lone);
-	lone_module_math_initialize(lone);
-	lone_module_text_initialize(lone);
-	lone_module_list_initialize(lone);
-
-	lone_vector_push_all(lone, lone->modules.path, 4,
-
-		lone_text_create_from_c_string(lone, "."),
-		lone_text_create_from_c_string(lone, "~/.lone/modules"),
-		lone_text_create_from_c_string(lone, "~/.local/lib/lone/modules"),
-		lone_text_create_from_c_string(lone, "/usr/lib/lone/modules")
-
-	);
-}
+#include <lone/modules/intrinsic.h>
 
 /* ╭───────────────────────┨ LONE LISP ENTRY POINT ┠────────────────────────╮
    │                                                                        │
@@ -84,7 +62,15 @@ long lone(int argc, char **argv, char **envp, struct auxiliary *auxv)
 	struct lone_lisp lone;
 
 	lone_lisp_initialize(&lone, memory, 1024, stack, random);
-	lone_modules_initialize(&lone, argc, argv, envp, auxv);
+	lone_modules_intrinsic_initialize(&lone, argc, argv, envp, auxv);
+	lone_module_path_push_all(&lone, 4,
+
+		".",
+		"~/.lone/modules",
+		"~/.local/lib/lone/modules",
+		"/usr/lib/lone/modules"
+
+	);
 
 	lone_module_load_null_from_standard_input(&lone);
 
