@@ -25,6 +25,11 @@ Any of the following commands can be used:
     make clean lone UAPI=/alternative/linux/uapi/headers
     make clean lone TARGET=x86_64 UAPI=/linux/uapi/headers/x86_64
 
+Currently supported targets:
+
+ - `x86_64`
+ - `aarch64`
+
 ## Testing
 
 Lone has an automated test suite that exercises language features.
