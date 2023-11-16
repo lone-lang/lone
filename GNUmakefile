@@ -57,6 +57,15 @@ directories.create += $(dir $(targets.lone) $(targets.objects.all) $(targets.pre
 flags.whole_program.gcc := -fwhole-program
 flags.whole_program := -fvisibility=hidden $(flags.whole_program.$(CC))
 
+ifeq ($(LD),ld)
+  # ld is already the default, don't override
+  # gcc does not support ld as an argument either
+  # not overriding in this case prevents errors
+  flags.use_ld :=
+else
+  flags.use_ld := -fuse-ld=$(LD)
+endif
+
 ifdef LTO
   flags.lto := -flto
 else
@@ -69,7 +78,7 @@ flags.system_include_directories := $(if $(UAPI),-isystem $(UAPI))
 flags.prerequisites_generation = -MMD -MF $(call source_to_prerequisite,$(<))
 flags.common := -static -ffreestanding -nostdlib -fno-omit-frame-pointer -fshort-enums $(flags.lto)
 flags.object = $(flags.system_include_directories) $(flags.include_directories) $(flags.prerequisites_generation) $(flags.definitions) $(flags.common)
-flags.executable = $(flags.common) $(flags.whole_program) -fuse-ld=$(LD) -Wl,-elone_start
+flags.executable = $(flags.common) $(flags.whole_program) $(flags.use_ld) -Wl,-elone_start
 
 $(directories.build.objects)/%.o: $(directories.source)/%.c | directories
 	$(strip $(CC) $(flags.object) $(CFLAGS) -o $@ -c $<)
