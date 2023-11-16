@@ -2,6 +2,34 @@
 
 #include <lone/memory/functions.h>
 
+int lone_memory_compare(unsigned char *a, unsigned char *b, size_t count)
+{
+	size_t i;
+	unsigned char x, y;
+
+	if (a == b || count == 0) {
+		return 0;
+	}
+
+	for (i = 0; i < count; ++i) {
+		x = a[i];
+		y = b[i];
+
+		if (x == y) {
+			continue;
+		}
+
+		return x - y;
+	}
+
+	return 0;
+}
+
+bool lone_memory_is_equal(unsigned char *a, unsigned char *b, size_t count)
+{
+	return lone_memory_compare(a, b, count) == 0;
+}
+
 void lone_memory_move(void *from, void *to, size_t count)
 {
 	unsigned char *source = from, *destination = to;
