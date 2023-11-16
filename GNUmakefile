@@ -116,6 +116,7 @@ directories:
 	mkdir -p $(sort $(directories.create))
 
 .PHONY: $(targets.phony)
+.SECONDARY: $(targets.objects.all)
 .DEFAULT_GOAL := lone
 
 sinclude $(targets.prerequisites)
