@@ -91,6 +91,9 @@ $(targets.NR.list): scripts/NR.filter
 targets.phony += lone
 lone: $(targets.lone)
 
+targets.phony += tools
+tools: $(targets.tools)
+
 targets.phony += clean
 clean:
 	rm -rf $(directories.build)
