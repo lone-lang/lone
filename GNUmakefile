@@ -5,13 +5,6 @@ MAKEFLAGS += --no-builtin-variables --no-builtin-rules
 CC := cc
 CFLAGS := -Wall -Wextra -Wpedantic -Wno-unused-function -Wno-unused-parameter -Os
 
-ifdef LTO
-  flags.lto := -flto
-  ifeq ($(CC),gcc)
-    flags.whole_program := -fwhole-program
-  endif
-endif
-
 ifdef TARGET
   ifndef UAPI
     $(error UAPI must be defined when cross compiling)
@@ -48,6 +41,15 @@ targets.lone := $(directories.build)/lone
 targets.prerequisites := $(call source_to_prerequisite,$(files.sources))
 
 directories.create += $(dir $(targets.lone) $(targets.objects) $(targets.prerequisites) $(targets.NR))
+
+flags.whole_program := -fvisibility=hidden
+
+ifdef LTO
+  flags.lto := -flto
+  ifeq ($(CC),gcc)
+    flags.whole_program += -fwhole-program
+  endif
+endif
 
 flags.definitions := -D LONE_ARCH=$(ARCH)
 flags.include_directories := $(foreach directory,$(directories.include),-I $(directory))
