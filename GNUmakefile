@@ -19,6 +19,7 @@ endif
 
 source_to_object = $(patsubst $(directories.source)/%.c,$(directories.build.objects)/%.o,$(1))
 source_to_prerequisite = $(patsubst $(directories.source)/%.c,$(directories.build.prerequisites)/%.d,$(1))
+source_to_tool = $(patsubst $(directories.source.tools)/%.c,$(directories.build.tools)/%,$(1))
 
 ARCH := $(TARGET)
 
