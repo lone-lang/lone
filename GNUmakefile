@@ -23,13 +23,16 @@ source_to_prerequisite = $(patsubst $(directories.source)/%.c,$(directories.buil
 ARCH := $(TARGET)
 
 directories.build := build/$(ARCH)
+directories.build.tools := $(directories.build)/tools
 directories.build.objects := $(directories.build)/objects
+directories.build.objects.tools := $(directories.build.objects)/tools
 directories.build.prerequisites := $(directories.build)/prerequisites
 directories.build.include := $(directories.build)/include
 directories.create :=
 
 directories.include := include architecture/$(ARCH)/include $(directories.build.include)
 directories.source := source
+directories.source.tools := $(directories.source)/tools
 
 files.sources := $(shell find $(directories.source) -type f)
 
