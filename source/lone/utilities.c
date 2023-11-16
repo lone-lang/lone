@@ -11,6 +11,7 @@
 
 #include <lone/struct/value.h>
 #include <lone/struct/auxiliary.h>
+#include <lone/struct/elf.h>
 
 #include <lone/linux.h>
 
@@ -107,4 +108,13 @@ struct lone_bytes lone_get_auxiliary_random(struct auxiliary_vector *auxiliary)
 	random.count = 16;
 
 	return random;
+}
+
+struct lone_elf_program_header_table lone_auxiliary_vector_elf_program_header_table(struct auxiliary_vector *auxiliary)
+{
+	return (struct lone_elf_program_header_table) {
+		.address     = lone_get_auxiliary_value(auxiliary, AT_PHDR).as.pointer,
+		.entry_size  = lone_get_auxiliary_value(auxiliary, AT_PHENT).as.unsigned_integer,
+		.entry_count = lone_get_auxiliary_value(auxiliary, AT_PHNUM).as.unsigned_integer
+	};
 }
