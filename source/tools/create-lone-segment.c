@@ -176,7 +176,7 @@ static size_t adjust_elf_header(struct lone_bytes elf, unsigned char elf_class, 
 	}
 }
 
-static void adjust_and_cover_phdr_entry(struct lone_bytes elf, unsigned char elf_class, struct lone_elf_program_header_table phdrs)
+static size_t adjust_and_cover_phdr_entry(struct lone_bytes elf, unsigned char elf_class, struct lone_elf_program_header_table phdrs)
 {
 	unsigned char *table = phdrs.address;
 	size_t table_offset = table - elf.pointer;
@@ -247,9 +247,11 @@ static void adjust_and_cover_phdr_entry(struct lone_bytes elf, unsigned char elf
 	default:
 		/* Invalid ELF class but somehow made it here? */ linux_exit(6);
 	}
+
+	return base;
 }
 
-static void set_lone_entry(struct lone_bytes elf, unsigned char elf_class, struct lone_elf_program_header_table phdrs)
+static void set_lone_entry(struct lone_bytes elf, unsigned char elf_class, struct lone_elf_program_header_table phdrs, size_t base)
 {
 	unsigned char *table = phdrs.address;
 	Elf32_Phdr *phdr32;
@@ -262,6 +264,7 @@ static void set_lone_entry(struct lone_bytes elf, unsigned char elf_class, struc
 			phdr64 = ((Elf64_Phdr *) table) + i;
 			if (phdr64->p_type == PT_NULL) {
 				phdr64->p_type = PT_LONE;
+				phdr64->p_vaddr = phdr64->p_paddr = base;
 				break;
 			}
 		}
@@ -271,6 +274,7 @@ static void set_lone_entry(struct lone_bytes elf, unsigned char elf_class, struc
 			phdr32 = ((Elf32_Phdr *) table) + i;
 			if (phdr32->p_type == PT_NULL) {
 				phdr32->p_type = PT_LONE;
+				phdr32->p_vaddr = phdr32->p_paddr = base;
 				break;
 			}
 		}
@@ -303,7 +307,7 @@ long lone(int argc, char **argv, char **envp, struct auxiliary_vector *auxvec)
 	struct lone_bytes elf = { sizeof(buffer), buffer };
 	struct lone_elf_program_header_table phdrs;
 	unsigned char elf_class;
-	size_t elf_size, new_offset;
+	size_t elf_size, new_offset, base;
 
 	check_arguments(argc, argv);
 	elf_size = read_elf(argv[1], elf);
@@ -313,8 +317,8 @@ long lone(int argc, char **argv, char **envp, struct auxiliary_vector *auxvec)
 	elf_size = append_program_header_table_entry(elf, elf_size, elf_class, &phdrs);
 	elf_size = append_program_header_table_entry(elf, elf_size, elf_class, &phdrs);
 	new_offset = adjust_elf_header(elf, elf_class, phdrs);
-	adjust_and_cover_phdr_entry(elf, elf_class, phdrs);
-	set_lone_entry(elf, elf_class, phdrs);
+	base = adjust_and_cover_phdr_entry(elf, elf_class, phdrs);
+	set_lone_entry(elf, elf_class, phdrs, base);
 	write_elf(argv[2], elf, elf_size);
 
 	return 0;
