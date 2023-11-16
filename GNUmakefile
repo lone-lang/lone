@@ -77,6 +77,9 @@ $(directories.build.objects)/%.o: $(directories.source)/%.c | directories
 $(targets.lone): $(targets.objects.lone) | directories
 	$(strip $(CC) $(flags.executable) $(CFLAGS) -o $@ $^)
 
+$(directories.build.tools)/%: $(directories.build.objects.tools)/%.o $(targets.objects.lone.without_entry_point) | directories
+	$(strip $(CC) $(flags.executable) $(CFLAGS) -o $@ $^)
+
 $(call source_to_object,source/lone/modules/linux.c): $(targets.NR.c)
 
 $(targets.NR.c): $(targets.NR.list) scripts/NR.generate
