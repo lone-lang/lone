@@ -35,15 +35,17 @@ directories.include := include architecture/$(ARCH)/include $(directories.build.
 directories.source := source
 directories.source.tools := $(directories.source)/tools
 
-files.sources := $(shell find $(directories.source) -type f)
+files.sources.all := $(shell find $(directories.source) -type f)
+files.sources.tools := $(filter $(directories.source.tools)/%,$(files.sources.all))
+files.sources.lone := $(filter-out $(directories.source.tools)/%,$(files.sources.all))
 
 targets.phony :=
 targets.NR.list := $(directories.build)/NR.list
 targets.NR.c := $(directories.build.include)/lone/NR.c
 targets.NR := $(targets.NR.list) $(targets.NR.c)
-targets.objects := $(call source_to_object,$(files.sources))
+targets.objects := $(call source_to_object,$(files.sources.all))
 targets.lone := $(directories.build)/lone
-targets.prerequisites := $(call source_to_prerequisite,$(files.sources))
+targets.prerequisites := $(call source_to_prerequisite,$(files.sources.all))
 
 directories.create += $(dir $(targets.lone) $(targets.objects) $(targets.prerequisites) $(targets.NR))
 
