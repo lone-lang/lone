@@ -43,11 +43,13 @@ targets.phony :=
 targets.NR.list := $(directories.build)/NR.list
 targets.NR.c := $(directories.build.include)/lone/NR.c
 targets.NR := $(targets.NR.list) $(targets.NR.c)
-targets.objects := $(call source_to_object,$(files.sources.all))
+targets.objects.all := $(call source_to_object,$(files.sources.all))
+targets.objects.lone := $(call source_to_object,$(files.sources.lone))
+targets.objects.tools := $(call source_to_object,$(files.sources.tools))
 targets.lone := $(directories.build)/lone
 targets.prerequisites := $(call source_to_prerequisite,$(files.sources.all))
 
-directories.create += $(dir $(targets.lone) $(targets.objects) $(targets.prerequisites) $(targets.NR))
+directories.create += $(dir $(targets.lone) $(targets.objects.all) $(targets.prerequisites) $(targets.NR))
 
 flags.whole_program := -fvisibility=hidden
 
@@ -69,7 +71,7 @@ flags.executable = $(flags.common) $(flags.whole_program) -fuse-ld=$(LD) -Wl,-el
 $(directories.build.objects)/%.o: $(directories.source)/%.c | directories
 	$(strip $(CC) $(flags.object) $(CFLAGS) -o $@ -c $<)
 
-$(targets.lone): $(targets.objects) | directories
+$(targets.lone): $(targets.objects.lone) | directories
 	$(strip $(CC) $(flags.executable) $(CFLAGS) -o $@ $^)
 
 $(call source_to_object,source/lone/modules/linux.c): $(targets.NR.c)
