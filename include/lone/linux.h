@@ -37,4 +37,8 @@ ssize_t
 __attribute__((fd_arg_write(1), tainted_args))
 linux_write(int fd, const void *buffer, size_t count);
 
+off_t
+__attribute__((tainted_args))
+linux_lseek(int fd, off_t offset, int origin);
+
 #endif /* LONE_LINUX_HEADER */
