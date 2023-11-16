@@ -58,13 +58,13 @@ flags.system_include_directories := $(if $(UAPI),-isystem $(UAPI))
 flags.prerequisites_generation = -MMD -MF $(call source_to_prerequisite,$(<))
 flags.common := -static -ffreestanding -nostdlib -fno-omit-frame-pointer -fshort-enums $(flags.lto)
 flags.object = $(flags.system_include_directories) $(flags.include_directories) $(flags.prerequisites_generation) $(flags.definitions) $(flags.common)
-flags.lone = $(flags.common) $(flags.whole_program) -fuse-ld=$(LD) -Wl,-elone_start
+flags.executable = $(flags.common) $(flags.whole_program) -fuse-ld=$(LD) -Wl,-elone_start
 
 $(directories.build.objects)/%.o: $(directories.source)/%.c | directories
 	$(strip $(CC) $(flags.object) $(CFLAGS) -o $@ -c $<)
 
 $(targets.lone): $(targets.objects) | directories
-	$(strip $(CC) $(flags.lone) $(CFLAGS) -o $@ $^)
+	$(strip $(CC) $(flags.executable) $(CFLAGS) -o $@ $^)
 
 $(call source_to_object,source/lone/modules/linux.c): $(targets.NR.c)
 
