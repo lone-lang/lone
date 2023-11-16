@@ -70,6 +70,7 @@ struct lone_reader;
 
 struct auxiliary_vector;
 struct auxiliary_value;
+struct lone_elf_program_header_table;
 
 typedef bool (*lone_predicate)(struct lone_value *);
 typedef bool (*lone_comparator)(struct lone_value *, struct lone_value *);
