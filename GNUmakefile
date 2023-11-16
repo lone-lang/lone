@@ -54,13 +54,13 @@ targets.tools := $(call source_to_tool,$(files.sources.tools))
 
 directories.create += $(dir $(targets.lone) $(targets.objects.all) $(targets.prerequisites) $(targets.NR) $(targets.tools))
 
-flags.whole_program := -fvisibility=hidden
+flags.whole_program.gcc := -fwhole-program
+flags.whole_program := -fvisibility=hidden $(flags.whole_program.$(CC))
 
 ifdef LTO
   flags.lto := -flto
-  ifeq ($(CC),gcc)
-    flags.whole_program += -fwhole-program
-  endif
+else
+  flags.lto :=
 endif
 
 flags.definitions := -D LONE_ARCH=$(ARCH)
