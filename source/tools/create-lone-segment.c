@@ -2,23 +2,36 @@
 #include <lone/types.h>
 #include <lone/linux.h>
 #include <lone/elf.h>
-#include <lone/struct/elf.h>
 #include <lone/struct/bytes.h>
 #include <lone/memory/functions.h>
 
+struct elf {
+	struct lone_bytes header;
+	unsigned char class;
+	struct {
+		size_t offset;
+		size_t entry_size;
+		size_t entry_count;
+		struct lone_bytes memory;
+	} program_header_table;
+};
+
 static void check_arguments(int argc, char **argv)
 {
-	if (argc <= 2) { /* at least two arguments are needed */ linux_exit(1); }
+	if (argc <= 1) { /* at least 1 argument is needed */ linux_exit(1); }
 }
 
-static size_t read_elf(char *path, struct lone_bytes buffer)
+static int open_elf(char *path)
+{
+	int fd = linux_openat(AT_FDCWD, path, O_RDWR | O_CLOEXEC);
+	if (fd < 0) { /* error opening file descriptor */ linux_exit(2); }
+	return fd;
+}
+
+static size_t read_bytes(int fd, struct lone_bytes buffer)
 {
 	size_t total = 0;
 	ssize_t read_or_error;
-	int fd;
-
-	fd = linux_openat(AT_FDCWD, path, O_RDONLY | O_CLOEXEC);
-	if (fd < 0) { /* error opening ELF */ linux_exit(2); }
 
 	while (total < buffer.count) {
 		read_or_error = linux_read(fd, buffer.pointer + total, buffer.count - total);
@@ -38,91 +51,131 @@ static size_t read_elf(char *path, struct lone_bytes buffer)
 		}
 	}
 
-	fd = linux_close(fd);
-	if (fd < 0) { /* error closing ELF */ linux_exit(4); }
+	return total;
+}
+
+static size_t write_bytes(int fd, struct lone_bytes buffer)
+{
+	size_t total = 0;
+	ssize_t written_or_error;
+
+	while (total < buffer.count) {
+		written_or_error = linux_write(fd, buffer.pointer + total, buffer.count - total);
+
+		if (written_or_error > 0) {
+			total += written_or_error;
+		} else if (written_or_error == 0) {
+			break;
+		} else {
+			switch (written_or_error) {
+			case -EINTR:
+			case -EAGAIN:
+				continue;
+			default:
+				/* error writing output file */ linux_exit(4);
+			}
+		}
+	}
 
 	return total;
 }
 
-static bool has_valid_elf_magic_numbers(struct lone_bytes elf)
+static void *map(size_t size)
 {
-	return elf.count            >= SELFMAG &&
-	       elf.pointer[EI_MAG0] == ELFMAG0 &&
-	       elf.pointer[EI_MAG1] == ELFMAG1 &&
-	       elf.pointer[EI_MAG2] == ELFMAG2 &&
-	       elf.pointer[EI_MAG3] == ELFMAG3;
+	intptr_t memory = linux_mmap(0, size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+	if (memory < 0) { /* memory allocation error */ linux_exit(5); }
+	return (void *) memory;
 }
 
-static bool has_valid_elf_class(struct lone_bytes elf)
+static bool has_valid_elf_magic_numbers(struct lone_bytes buffer)
 {
-	return elf.count             >= SELFMAG + 1  &&
-	       elf.pointer[EI_CLASS] >  ELFCLASSNONE &&
-	       elf.pointer[EI_CLASS] <  ELFCLASSNUM;
+	return buffer.pointer[EI_MAG0] == ELFMAG0 &&
+	       buffer.pointer[EI_MAG1] == ELFMAG1 &&
+	       buffer.pointer[EI_MAG2] == ELFMAG2 &&
+	       buffer.pointer[EI_MAG3] == ELFMAG3;
 }
 
-static bool has_valid_elf_header_size(size_t elf_size, unsigned char class)
+static bool has_valid_elf_class(struct lone_bytes buffer)
+{
+	return buffer.pointer[EI_CLASS] > ELFCLASSNONE &&
+	       buffer.pointer[EI_CLASS] < ELFCLASSNUM;
+}
+
+static bool has_valid_elf_header_size(size_t size, unsigned char class)
 {
 	switch (class) {
 	case ELFCLASS64:
-		return elf_size >= sizeof(Elf64_Ehdr);
+		return size >= sizeof(Elf64_Ehdr);
 	case ELFCLASS32:
-		return elf_size >= sizeof(Elf32_Ehdr);
+		return size >= sizeof(Elf32_Ehdr);
 	default:
 		/* Invalid ELF class but somehow made it here? */ linux_exit(6);
 	}
 }
 
-static unsigned char validate_elf_header(struct lone_bytes elf)
+static void validate_elf_header(struct elf *elf)
 {
-	unsigned char elf_class = ELFCLASSNONE;
+	elf->class = ELFCLASSNONE;
 
-	if (!(has_valid_elf_magic_numbers(elf) && has_valid_elf_class(elf))) {
-		/* Definitely not an ELF */ linux_exit(5);
+	if (!(has_valid_elf_magic_numbers(elf->header) && has_valid_elf_class(elf->header))) {
+		/* Definitely not an ELF */ linux_exit(6);
 	}
 
-	elf_class = elf.pointer[EI_CLASS];
-	if (!has_valid_elf_header_size(elf.count, elf_class)) {
-		/* Incomplete or corrupt ELF */ linux_exit(6);
-	}
+	elf->class = elf->header.pointer[EI_CLASS];
 
-	return elf_class;
+	if (!has_valid_elf_header_size(elf->header.count, elf->class)) {
+		/* Incomplete or corrupt ELF */ linux_exit(7);
+	}
 }
 
-static struct lone_elf_program_header_table find_program_header_table(struct lone_bytes elf, unsigned char elf_class)
+static void load_program_header_table(struct elf *elf, int fd)
 {
 	Elf32_Ehdr *elf32;
 	Elf64_Ehdr *elf64;
+	size_t offset, entry_size, entry_count, size;
+	void *address;
 
-	switch (elf_class) {
+	switch (elf->class) {
 	case ELFCLASS64:
-		elf64 = (Elf64_Ehdr *) elf.pointer;
-		return (struct lone_elf_program_header_table) {
-			.address = elf.pointer + elf64->e_phoff,
-			.entry_size = elf64->e_phentsize,
-			.entry_count = elf64->e_phnum
-		};
+		elf64 = (Elf64_Ehdr *) elf->header.pointer;
+		offset = elf64->e_phoff;
+		entry_size = elf64->e_phentsize;
+		entry_count = elf64->e_phnum;
+		break;
 	case ELFCLASS32:
-		elf32 = (Elf32_Ehdr *) elf.pointer;
-		return (struct lone_elf_program_header_table) {
-			.address = elf.pointer + elf32->e_phoff,
-			.entry_size = elf32->e_phentsize,
-			.entry_count = elf32->e_phnum
-		};
+		elf32 = (Elf32_Ehdr *) elf->header.pointer;
+		offset = elf32->e_phoff;
+		entry_size = elf32->e_phentsize;
+		entry_count = elf32->e_phnum;
+		break;
 	default:
 		/* Invalid ELF class but somehow made it here? */ linux_exit(6);
 	}
+
+	size = entry_size * entry_count;
+	address = map(size);
+
+	elf->program_header_table.offset = offset;
+	elf->program_header_table.entry_size = entry_size;
+	elf->program_header_table.entry_count = entry_count;
+	elf->program_header_table.memory.count = size;
+	elf->program_header_table.memory.pointer = address;
+
+	linux_lseek(fd, offset, SEEK_SET);
+	read_bytes(fd, elf->program_header_table.memory);
 }
 
-static void set_lone_entry(struct lone_bytes elf, unsigned char elf_class, struct lone_elf_program_header_table phdrs)
+static void set_lone_entry(struct elf *elf)
 {
-	unsigned char *table = phdrs.address;
-	size_t i;
+	unsigned char *table = elf->program_header_table.memory.pointer;
+	size_t entry_count = elf->program_header_table.entry_count;
 	Elf32_Phdr *pt_phdr32 = NULL, *phdr32;
 	Elf64_Phdr *pt_phdr64 = NULL, *phdr64;
+	size_t i;
 
-	switch (elf_class) {
+	switch (elf->class) {
 	case ELFCLASS64:
-		for (i = 0; i < phdrs.entry_count; ++i) {
+		for (i = 0; i < entry_count; ++i) {
 			phdr64 = ((Elf64_Phdr *) table) + i;
 
 			switch (phdr64->p_type) {
@@ -160,12 +213,12 @@ set_lone_entry_64:
 			goto set_lone_entry_64;
 		} else {
 			// ... and there's no PT_PHDR segment
-			linux_exit(7);
+			linux_exit(8);
 		}
 
 		break;
 	case ELFCLASS32:
-		for (i = 0; i < phdrs.entry_count; ++i) {
+		for (i = 0; i < entry_count; ++i) {
 			phdr32 = ((Elf32_Phdr *) table) + i;
 
 			switch (phdr32->p_type) {
@@ -203,7 +256,7 @@ set_lone_entry_32:
 			goto set_lone_entry_32;
 		} else {
 			// ... and there's no PT_PHDR segment
-			linux_exit(7);
+			linux_exit(8);
 		}
 		break;
 	default:
@@ -214,53 +267,30 @@ lone_entry_set:
 	return;
 }
 
-static size_t write_elf(char *path, struct lone_bytes buffer, size_t elf_size)
+void patch_elf(int fd, struct elf *elf)
 {
-	size_t total = 0;
-	ssize_t written_or_error;
-	int fd;
-
-	fd = linux_openat(AT_FDCWD, path, O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC);
-	if (fd < 0) { /* error opening output file */ linux_exit(8); }
-
-	while (total < elf_size) {
-		written_or_error = linux_write(fd, buffer.pointer + total, elf_size - total);
-
-		if (written_or_error > 0) {
-			total += written_or_error;
-		} else if (written_or_error == 0) {
-			break;
-		} else {
-			switch (written_or_error) {
-			case -EINTR:
-			case -EAGAIN:
-				continue;
-			default:
-				/* error writing output file */ linux_exit(9);
-			}
-		}
-	}
-
-	fd = linux_close(fd);
-	if (fd < 0) { /* error closing output file */ linux_exit(10); }
-
-	return total;
+	linux_lseek(fd, elf->program_header_table.offset, SEEK_SET);
+	write_bytes(fd, elf->program_header_table.memory);
 }
 
 long lone(int argc, char **argv, char **envp, struct auxiliary_vector *auxvec)
 {
-	static unsigned char buffer[1024 * 1024];
-	struct lone_bytes elf = { sizeof(buffer), buffer };
-	struct lone_elf_program_header_table phdrs;
-	unsigned char elf_class;
-	size_t elf_size;
+	static unsigned char elf_header_buffer[0x40];
+	struct elf elf = { .header = { sizeof(elf_header_buffer), elf_header_buffer } };
+	size_t total_read;
+	int fd;
 
 	check_arguments(argc, argv);
-	elf_size = read_elf(argv[1], elf);
-	elf_class = validate_elf_header(elf);
-	phdrs = find_program_header_table(elf, elf_class);
-	set_lone_entry(elf, elf_class, phdrs);
-	write_elf(argv[2], elf, elf_size);
+
+	fd = open_elf(argv[1]);
+	total_read = read_bytes(fd, elf.header);
+
+	validate_elf_header(&elf);
+	load_program_header_table(&elf, fd);
+
+	set_lone_entry(&elf);
+
+	patch_elf(fd, &elf);
 
 	return 0;
 }
