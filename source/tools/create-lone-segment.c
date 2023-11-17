@@ -13,19 +13,35 @@ static void check_arguments(int argc, char **argv)
 
 static size_t read_elf(char *path, struct lone_bytes buffer)
 {
-	size_t bytes_read;
+	size_t total = 0;
+	ssize_t read_or_error;
 	int fd;
 
 	fd = linux_openat(AT_FDCWD, path, O_RDONLY | O_CLOEXEC);
 	if (fd < 0) { /* error opening ELF */ linux_exit(2); }
 
-	bytes_read = linux_read(fd, buffer.pointer, buffer.count);
-	if (bytes_read < 0) { /* error reading ELF */ linux_exit(3); }
+	while (total < buffer.count) {
+		read_or_error = linux_read(fd, buffer.pointer + total, buffer.count - total);
+
+		if (read_or_error > 0) {
+			total += read_or_error;
+		} else if (read_or_error == 0) {
+			break;
+		} else {
+			switch (read_or_error) {
+			case -EINTR:
+			case -EAGAIN:
+				continue;
+			default:
+				/* error reading ELF */ linux_exit(3);
+			}
+		}
+	}
 
 	fd = linux_close(fd);
 	if (fd < 0) { /* error closing ELF */ linux_exit(4); }
 
-	return bytes_read;
+	return total;
 }
 
 static bool has_valid_elf_magic_numbers(struct lone_bytes elf)
@@ -200,19 +216,35 @@ lone_entry_set:
 
 static size_t write_elf(char *path, struct lone_bytes buffer, size_t elf_size)
 {
-	size_t bytes_written;
+	size_t total = 0;
+	ssize_t written_or_error;
 	int fd;
 
 	fd = linux_openat(AT_FDCWD, path, O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC);
 	if (fd < 0) { /* error opening output file */ linux_exit(8); }
 
-	bytes_written = linux_write(fd, buffer.pointer, elf_size);
-	if (bytes_written < 0) { /* error writing output file */ linux_exit(9); }
+	while (total < elf_size) {
+		written_or_error = linux_write(fd, buffer.pointer + total, elf_size - total);
+
+		if (written_or_error > 0) {
+			total += written_or_error;
+		} else if (written_or_error == 0) {
+			break;
+		} else {
+			switch (written_or_error) {
+			case -EINTR:
+			case -EAGAIN:
+				continue;
+			default:
+				/* error writing output file */ linux_exit(9);
+			}
+		}
+	}
 
 	fd = linux_close(fd);
 	if (fd < 0) { /* error closing output file */ linux_exit(10); }
 
-	return bytes_written;
+	return total;
 }
 
 long lone(int argc, char **argv, char **envp, struct auxiliary_vector *auxvec)
