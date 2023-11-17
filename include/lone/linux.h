@@ -5,6 +5,7 @@
 
 #include <linux/unistd.h>
 #include <linux/errno.h>
+#include <linux/fs.h>
 #include <linux/fcntl.h>
 
 #include <lone/types.h>
