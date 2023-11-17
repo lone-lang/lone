@@ -116,7 +116,7 @@ static struct lone_elf_program_header_table find_program_header_table(struct lon
 static void set_lone_entry(struct lone_bytes elf, unsigned char elf_class, struct lone_elf_program_header_table phdrs)
 {
 	unsigned char *table = phdrs.address;
-	size_t base, address, size, alignment, flags, i;
+	size_t i;
 	Elf32_Phdr *pt_phdr32 = NULL, *phdr32;
 	Elf64_Phdr *pt_phdr64 = NULL, *phdr64;
 
