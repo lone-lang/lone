@@ -34,3 +34,13 @@ off_t linux_lseek(int fd, off_t offset, int origin)
 {
 	return linux_system_call_3(__NR_lseek, fd, (long) offset, (long) origin);
 }
+
+intptr_t linux_mmap(void *address, size_t length, int protections, int flags, int file_descriptor, off_t offset)
+{
+	return linux_system_call_6(__NR_mmap, (long) address, (long) length, (long) protections, (long) flags, (long) file_descriptor, (long) offset);
+}
+
+int linux_munmap(void *address, size_t length)
+{
+	return linux_system_call_2(__NR_munmap, (long) address, (long) length);
+}

@@ -7,6 +7,7 @@
 #include <linux/errno.h>
 #include <linux/fs.h>
 #include <linux/fcntl.h>
+#include <linux/mman.h>
 
 #include <lone/types.h>
 
@@ -41,5 +42,13 @@ linux_write(int fd, const void *buffer, size_t count);
 off_t
 __attribute__((tainted_args))
 linux_lseek(int fd, off_t offset, int origin);
+
+intptr_t
+__attribute__((tainted_args))
+linux_mmap(void *address, size_t length, int protections, int flags, int file_descriptor, off_t offset);
+
+int
+__attribute__((tainted_args))
+limux_munmap(void *address, size_t length);
 
 #endif /* LONE_LINUX_HEADER */
