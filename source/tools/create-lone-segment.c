@@ -87,6 +87,13 @@ static void *map(size_t size)
 	return (void *) memory;
 }
 
+static off_t seek_to(int fd, off_t offset)
+{
+	off_t offset_or_error = linux_lseek(fd, offset, SEEK_SET);
+	if (offset_or_error < 0) { /* error seeking to offset */ linux_exit(6); }
+	return offset;
+}
+
 static bool has_valid_elf_magic_numbers(struct lone_bytes buffer)
 {
 	return buffer.pointer[EI_MAG0] == ELFMAG0 &&
@@ -109,7 +116,7 @@ static bool has_valid_elf_header_size(size_t size, unsigned char class)
 	case ELFCLASS32:
 		return size >= sizeof(Elf32_Ehdr);
 	default:
-		/* Invalid ELF class but somehow made it here? */ linux_exit(6);
+		/* Invalid ELF class but somehow made it here? */ linux_exit(8);
 	}
 }
 
@@ -118,13 +125,13 @@ static void validate_elf_header(struct elf *elf)
 	elf->class = ELFCLASSNONE;
 
 	if (!(has_valid_elf_magic_numbers(elf->header) && has_valid_elf_class(elf->header))) {
-		/* Definitely not an ELF */ linux_exit(6);
+		/* Definitely not an ELF */ linux_exit(7);
 	}
 
 	elf->class = elf->header.pointer[EI_CLASS];
 
 	if (!has_valid_elf_header_size(elf->header.count, elf->class)) {
-		/* Incomplete or corrupt ELF */ linux_exit(7);
+		/* Incomplete or corrupt ELF */ linux_exit(8);
 	}
 }
 
@@ -149,7 +156,7 @@ static void load_program_header_table(struct elf *elf, int fd)
 		entry_count = elf32->e_phnum;
 		break;
 	default:
-		/* Invalid ELF class but somehow made it here? */ linux_exit(6);
+		/* Invalid ELF class but somehow made it here? */ linux_exit(8);
 	}
 
 	size = entry_size * entry_count;
@@ -161,7 +168,7 @@ static void load_program_header_table(struct elf *elf, int fd)
 	elf->program_header_table.memory.count = size;
 	elf->program_header_table.memory.pointer = address;
 
-	linux_lseek(fd, offset, SEEK_SET);
+	seek_to(fd, offset);
 	read_bytes(fd, elf->program_header_table.memory);
 }
 
@@ -213,7 +220,7 @@ set_lone_entry_64:
 			goto set_lone_entry_64;
 		} else {
 			// ... and there's no PT_PHDR segment
-			linux_exit(8);
+			linux_exit(9);
 		}
 
 		break;
@@ -256,11 +263,11 @@ set_lone_entry_32:
 			goto set_lone_entry_32;
 		} else {
 			// ... and there's no PT_PHDR segment
-			linux_exit(8);
+			linux_exit(9);
 		}
 		break;
 	default:
-		/* Invalid ELF class but somehow made it here? */ linux_exit(6);
+		/* Invalid ELF class but somehow made it here? */ linux_exit(8);
 	}
 
 lone_entry_set:
@@ -269,7 +276,7 @@ lone_entry_set:
 
 void patch_elf(int fd, struct elf *elf)
 {
-	linux_lseek(fd, elf->program_header_table.offset, SEEK_SET);
+	seek_to(fd, elf->program_header_table.offset);
 	write_bytes(fd, elf->program_header_table.memory);
 }
 
