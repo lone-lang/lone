@@ -212,8 +212,8 @@ static void set_lone_entry(struct elf *elf)
 {
 	unsigned char *table = elf->program_header_table.memory.pointer;
 	size_t entry_count = elf->program_header_table.entry_count;
-	Elf32_Phdr *pt_phdr32 = NULL, *phdr32;
-	Elf64_Phdr *pt_phdr64 = NULL, *phdr64;
+	Elf32_Phdr *pt_phdr32 = 0, *phdr32;
+	Elf64_Phdr *pt_phdr64 = 0, *phdr64;
 	size_t base;
 	size_t i;
 
