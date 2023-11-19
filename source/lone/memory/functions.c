@@ -73,3 +73,9 @@ void *memset(void *to, int byte, size_t count)
 	lone_memory_set(to, (unsigned char) byte, count);
 	return to;
 }
+
+void *memcpy(void *to, void *from, size_t count)
+{
+	lone_memory_move(from, to, count);
+	return to;
+}
