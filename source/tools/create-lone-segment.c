@@ -225,7 +225,7 @@ static void set_lone_entry(struct elf *elf)
 			switch (phdr64->p_type) {
 			case PT_NULL: // linker allocated spare segment
 set_lone_entry_64:
-				phdr64->p_type = PT_LONE;
+				phdr64->p_type = PT_LOAD;
 
 			case PT_LONE: // existing lone segment
 
@@ -269,7 +269,7 @@ set_lone_entry_64:
 			switch (phdr32->p_type) {
 			case PT_NULL: // linker allocated spare segment
 set_lone_entry_32:
-				phdr32->p_type = PT_LONE;
+				phdr32->p_type = PT_LOAD;
 
 			case PT_LONE: // existing lone segment
 
