@@ -17,7 +17,16 @@
 #include <lone/struct/value.h>
 #include <lone/struct/bytes.h>
 
-void lone_reader_initialize(struct lone_lisp *lone, struct lone_reader *reader, size_t buffer_size, int file_descriptor)
+void lone_reader_for_bytes(struct lone_lisp *lone, struct lone_reader *reader, struct lone_bytes bytes)
+{
+	reader->file_descriptor = -1;
+	reader->buffer.bytes = bytes;
+	reader->buffer.position.read = 0;
+	reader->buffer.position.write = bytes.count;
+	reader->error = 0;
+}
+
+void lone_reader_for_file_descriptor(struct lone_lisp *lone, struct lone_reader *reader, size_t buffer_size, int file_descriptor)
 {
 	reader->file_descriptor = file_descriptor;
 	reader->buffer.bytes.count = buffer_size;
@@ -29,7 +38,9 @@ void lone_reader_initialize(struct lone_lisp *lone, struct lone_reader *reader, 
 
 void lone_reader_finalize(struct lone_lisp *lone, struct lone_reader *reader)
 {
-	lone_deallocate(lone, reader->buffer.bytes.pointer);
+	if (reader->file_descriptor != -1) {
+		lone_deallocate(lone, reader->buffer.bytes.pointer);
+	}
 }
 
 static size_t lone_reader_fill_buffer(struct lone_lisp *lone, struct lone_reader *reader)
@@ -38,6 +49,11 @@ static size_t lone_reader_fill_buffer(struct lone_lisp *lone, struct lone_reader
 	size_t size = reader->buffer.bytes.count, position = reader->buffer.position.write,
 	       allocated = size, bytes_read = 0, total_read = 0;
 	ssize_t read_result = 0;
+
+	if (reader->file_descriptor == -1) {
+		/* reading from a fixed buffer, can't read more */
+		return 0;
+	}
 
 	while (1) {
 		read_result = linux_read(reader->file_descriptor, buffer + position, size);
