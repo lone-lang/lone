@@ -100,6 +100,11 @@ struct auxiliary_value lone_get_auxiliary_value(struct auxiliary_vector *auxilia
 	return (struct auxiliary_value) { .as.integer = 0 };
 }
 
+size_t lone_auxiliary_vector_page_size(struct auxiliary_vector *auxiliary)
+{
+	return lone_get_auxiliary_value(auxiliary, AT_PAGESZ).as.integer;
+}
+
 struct lone_bytes lone_get_auxiliary_random(struct auxiliary_vector *auxiliary)
 {
 	struct lone_bytes random = { 0, 0 };
