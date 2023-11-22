@@ -15,7 +15,8 @@ Currently in the early stages of development.
 ## Building
 
 Lone is built by a simple GNU Make file.
-The following commands can be used:
+
+The following phony targets can be used:
 
     make
     make clean
@@ -23,6 +24,8 @@ The following commands can be used:
     make tools
     make clean lone
     make clean lone tools
+
+The following variables are recognized:
 
     make CFLAGS=-g
     make LD=mold
