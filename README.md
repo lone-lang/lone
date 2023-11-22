@@ -15,15 +15,15 @@ Currently in the early stages of development.
 ## Building
 
 Lone is built by a simple GNU Make file.
-Any of the following commands can be used:
+The following commands can be used:
 
     make
     make lone
     make clean
     make clean lone
-    make clean lone CFLAGS=-g
-    make clean lone UAPI=/alternative/linux/uapi/headers
-    make clean lone TARGET=x86_64 UAPI=/linux/uapi/headers/x86_64
+    make lone CFLAGS=-g
+    make lone UAPI=/alternative/linux/uapi/headers
+    make lone TARGET=x86_64 UAPI=/linux/uapi/headers/x86_64
     make tools
 
 Currently supported targets:
