@@ -2,6 +2,7 @@
 #include <lone/types.h>
 #include <lone/linux.h>
 #include <lone/elf.h>
+#include <lone/utilities.h>
 #include <lone/struct/bytes.h>
 #include <lone/memory/functions.h>
 
@@ -9,24 +10,50 @@
 #define IO_BUFFER_SIZE 1024 * 4096
 #endif
 
+#define REQUIRED_PT_NULLS 2
+
 struct elf {
 	struct lone_bytes header;
 	unsigned char class;
+	size_t page_size;
+
+	struct {
+		struct {
+			size_t file;
+			size_t virtual;
+			size_t physical;
+		} start;
+		struct {
+			size_t file;
+			size_t virtual;
+			size_t physical;
+		} end;
+	} limits;
 
 	struct {
 		size_t offset;
 		size_t entry_size;
 		size_t entry_count;
+		size_t nulls_count;
 		struct lone_bytes memory;
 	} program_header_table;
 
-	int file_descriptor;
+	struct {
+		int descriptor;
+		size_t size;
+	} file;
+
 	struct {
 		int file_descriptor;
 		size_t offset;
 		size_t size;
 	} data;
 };
+
+static size_t align(size_t n, size_t a) { return ((size_t) ((n + (a - 1)) / a)) * a; }
+static size_t align_to_page(struct elf *elf, size_t n) { return align(n, elf->page_size); }
+static size_t min(size_t x, size_t y) { return x < y? x : y; }
+static size_t max(size_t x, size_t y) { return x > y? x : y; }
 
 static void check_arguments(int argc, char **argv)
 {
@@ -123,9 +150,7 @@ static off_t seek_to_end(int fd)
 
 static off_t file_size(int fd)
 {
-	size_t size = seek_to_end(fd);
-	seek_to_start(fd);
-	return size;
+	return seek_to_end(fd);
 }
 
 static bool has_valid_elf_magic_numbers(struct lone_bytes buffer)
@@ -156,7 +181,7 @@ static bool has_valid_elf_header_size(size_t size, unsigned char class)
 
 static void validate_elf_header(struct elf *elf)
 {
-	read_bytes(elf->file_descriptor, elf->header);
+	read_bytes(elf->file.descriptor, elf->header);
 
 	elf->class = ELFCLASSNONE;
 
@@ -173,9 +198,9 @@ static void validate_elf_header(struct elf *elf)
 
 static void load_program_header_table(struct elf *elf)
 {
+	size_t offset, entry_size, entry_count, size;
 	Elf32_Ehdr *elf32;
 	Elf64_Ehdr *elf64;
-	size_t offset, entry_size, entry_count, size;
 	void *address;
 
 	switch (elf->class) {
@@ -201,20 +226,90 @@ static void load_program_header_table(struct elf *elf)
 	elf->program_header_table.offset = offset;
 	elf->program_header_table.entry_size = entry_size;
 	elf->program_header_table.entry_count = entry_count;
+	elf->program_header_table.nulls_count = 0;
 	elf->program_header_table.memory.count = size;
 	elf->program_header_table.memory.pointer = address;
 
-	seek_to(elf->file_descriptor, offset);
-	read_bytes(elf->file_descriptor, elf->program_header_table.memory);
+	seek_to(elf->file.descriptor, offset);
+	read_bytes(elf->file.descriptor, elf->program_header_table.memory);
 }
 
-static void set_lone_entry(struct elf *elf)
+static void analyze(struct elf *elf)
 {
-	unsigned char *table = elf->program_header_table.memory.pointer;
 	size_t entry_count = elf->program_header_table.entry_count;
-	Elf32_Phdr *pt_phdr32 = 0, *phdr32;
-	Elf64_Phdr *pt_phdr64 = 0, *phdr64;
-	size_t base;
+	void *table = elf->program_header_table.memory.pointer;
+	struct { size_t file, virtual, physical; } start = {0}, end = {-1};
+	Elf32_Phdr *phdr32;
+	Elf64_Phdr *phdr64;
+	size_t i;
+
+	switch (elf->class) {
+	case ELFCLASS64:
+		for (i = 0; i < entry_count; ++i) {
+			phdr64 = ((Elf64_Phdr *) table) + i;
+
+			if (phdr64->p_type == PT_LOAD) {
+				start.file = min(phdr64->p_offset, start.file);
+				end.file = max(phdr64->p_offset + phdr64->p_filesz, end.file);
+
+				start.virtual = min(phdr64->p_vaddr - phdr64->p_offset, start.virtual);
+				end.virtual = max(phdr64->p_vaddr + phdr64->p_memsz, end.virtual);
+
+				start.physical = min(phdr64->p_paddr - phdr64->p_offset, start.physical);
+				end.physical = max(phdr64->p_paddr + phdr64->p_memsz, end.physical);
+
+			} else if (phdr64->p_type == PT_NULL) {
+				++elf->program_header_table.nulls_count;
+			}
+		}
+
+		break;
+	case ELFCLASS32:
+		for (i = 0; i < entry_count; ++i) {
+			phdr32 = ((Elf32_Phdr *) table) + i;
+
+			if (phdr32->p_type == PT_LOAD) {
+				start.file = min(phdr32->p_offset, start.file);
+				end.file = max(phdr32->p_offset + phdr32->p_filesz, end.file);
+
+				start.virtual = min(phdr32->p_vaddr - phdr32->p_offset, start.virtual);
+				end.virtual = max(phdr32->p_vaddr + phdr32->p_memsz, end.virtual);
+
+				start.physical = min(phdr32->p_paddr - phdr32->p_offset, start.physical);
+				end.physical = max(phdr32->p_paddr + phdr32->p_memsz, end.physical);
+
+			} else if (phdr32->p_type == PT_NULL) {
+				++elf->program_header_table.nulls_count;
+			}
+		}
+
+		break;
+	default:
+		/* Invalid ELF class but somehow made it here? */ linux_exit(8);
+	}
+
+	if (elf->program_header_table.nulls_count < REQUIRED_PT_NULLS) {
+		/* Not enough null segments to patch this ELF */ linux_exit(9);
+	}
+
+	elf->limits.start.file = start.file;
+	elf->limits.start.virtual = start.virtual;
+	elf->limits.start.physical = start.physical;
+	elf->limits.end.file = end.file;
+	elf->limits.end.virtual = end.virtual;
+	elf->limits.end.physical = end.physical;
+
+	elf->data.offset = align_to_page(elf, elf->file.size);
+}
+
+static void set_lone_segments(struct elf *elf)
+{
+	size_t entry_count = elf->program_header_table.entry_count;
+	size_t table_size = elf->program_header_table.memory.count;
+	void *table = elf->program_header_table.memory.pointer;
+	bool set_load_segment = false, set_lone_segment = false;
+	Elf32_Phdr *phdr32;
+	Elf64_Phdr *phdr64;
 	size_t i;
 
 	switch (elf->class) {
@@ -224,43 +319,42 @@ static void set_lone_entry(struct elf *elf)
 
 			switch (phdr64->p_type) {
 			case PT_NULL: // linker allocated spare segment
-set_lone_entry_64:
-				phdr64->p_type = PT_LOAD;
 
-			case PT_LONE: // existing lone segment
+				if (!set_load_segment) {
+					phdr64->p_type = PT_LOAD;
 
-				base = phdr64->p_vaddr - phdr64->p_offset;
-				phdr64->p_filesz = phdr64->p_memsz = elf->data.size;
-				phdr64->p_vaddr = phdr64->p_paddr = base + elf->data.offset;
-				phdr64->p_offset = elf->data.offset;
-				phdr64->p_align = 1;
-				phdr64->p_flags = PF_R;
+					phdr64->p_offset = elf->data.offset;
+					phdr64->p_vaddr = phdr64->p_paddr = align_to_page(elf, elf->limits.end.virtual);
+					phdr64->p_filesz = phdr64->p_memsz = align_to_page(elf, elf->data.size);
+					phdr64->p_align = elf->page_size;
+					phdr64->p_flags = PF_R;
 
-				goto lone_entry_set;
+					set_load_segment = true;
 
-			case PT_PHDR:
-				/* The PT_PHDR entry is optional
-				   and will become a PT_LONE entry
-				   if no linker spares are provided */
+				} else if (!set_lone_segment) {
+					phdr64->p_type = PT_LONE;
 
-				pt_phdr64 = phdr64;
+					phdr64->p_offset = elf->data.offset;
+					phdr64->p_vaddr = phdr64->p_paddr = align_to_page(elf, elf->limits.end.virtual);
+					phdr64->p_filesz = phdr64->p_memsz = elf->data.size;
+					phdr64->p_align = 1;
+					phdr64->p_flags = PF_R;
 
-				break;
+					set_lone_segment = true;
+
+				} else {
+					break;
+				}
 
 			default:
 				continue;
 			}
+
+			if (set_lone_segment && set_load_segment) {
+				break;
+			}
 		}
 
-		// no spare segments were provided by the linker...
-		if (pt_phdr64) {
-			// ... but there's a PT_PHDR segment
-			phdr64 = pt_phdr64;
-			goto set_lone_entry_64;
-		} else {
-			// ... and there's no PT_PHDR segment
-			linux_exit(9);
-		}
 		break;
 	case ELFCLASS32:
 		for (i = 0; i < entry_count; ++i) {
@@ -268,68 +362,69 @@ set_lone_entry_64:
 
 			switch (phdr32->p_type) {
 			case PT_NULL: // linker allocated spare segment
-set_lone_entry_32:
-				phdr32->p_type = PT_LOAD;
 
-			case PT_LONE: // existing lone segment
+				if (!set_load_segment) {
+					phdr32->p_type = PT_LOAD;
 
-				base = phdr32->p_vaddr - phdr32->p_offset;
-				phdr32->p_filesz = phdr32->p_memsz = elf->data.size;
-				phdr32->p_vaddr = phdr32->p_paddr = base + elf->data.offset;
-				phdr32->p_offset = elf->data.offset;
-				phdr32->p_align = 1;
-				phdr32->p_flags = PF_R;
+					phdr32->p_offset = elf->data.offset;
+					phdr32->p_vaddr = phdr32->p_paddr = align_to_page(elf, elf->limits.end.virtual);
+					phdr32->p_filesz = phdr32->p_memsz = align_to_page(elf, elf->data.size);
+					phdr32->p_align = elf->page_size;
+					phdr32->p_flags = PF_R;
 
-				goto lone_entry_set;
+					set_load_segment = true;
 
-			case PT_PHDR:
-				/* The PT_PHDR entry is optional
-				   and will become a PT_LONE entry
-				   if no linker spares are provided */
+				} else if (!set_lone_segment) {
+					phdr64->p_type = PT_LONE;
 
-				pt_phdr32 = phdr32;
+					phdr32->p_offset = elf->data.offset;
+					phdr32->p_vaddr = phdr32->p_paddr = align_to_page(elf, elf->limits.end.virtual);
+					phdr32->p_filesz = phdr32->p_memsz = elf->data.size;
+					phdr32->p_align = 1;
+					phdr32->p_flags = PF_R;
 
-				break;
+					set_lone_segment = true;
+
+				} else {
+					break;
+				}
 
 			default:
 				continue;
 			}
+
+			if (set_lone_segment && set_load_segment) {
+				break;
+			}
 		}
 
-		// no spare segments were provided by the linker...
-		if (pt_phdr32) {
-			// ... but there's a PT_PHDR segment
-			phdr32 = pt_phdr32;
-			goto set_lone_entry_32;
-		} else {
-			// ... and there's no PT_PHDR segment
-			linux_exit(9);
-		}
 		break;
 	default:
 		/* Invalid ELF class but somehow made it here? */ linux_exit(8);
 	}
+}
 
-lone_entry_set:
-	return;
+static void set_page_size(struct elf *elf, struct auxiliary_vector *auxvec)
+{
+	elf->page_size = lone_auxiliary_vector_page_size(auxvec);
 }
 
 static void open_files(struct elf *elf, char *elf_path, char *data_path)
 {
-	elf->file_descriptor = open_path(elf_path);
+	elf->file.descriptor = open_path(elf_path);
 	elf->data.file_descriptor = open_path(data_path);
 }
 
-static void compute_sizes_and_offsets(struct elf *elf)
+static void query_file_sizes(struct elf *elf)
 {
+	elf->file.size = file_size(elf->file.descriptor);
 	elf->data.size = file_size(elf->data.file_descriptor);
-	elf->data.offset = file_size(elf->file_descriptor);
 }
 
 static void patch_program_header_table(struct elf *elf)
 {
-	seek_to(elf->file_descriptor, elf->program_header_table.offset);
-	write_bytes(elf->file_descriptor, elf->program_header_table.memory);
+	seek_to(elf->file.descriptor, elf->program_header_table.offset);
+	write_bytes(elf->file.descriptor, elf->program_header_table.memory);
 }
 
 static void append_data(struct elf *elf)
@@ -338,14 +433,15 @@ static void append_data(struct elf *elf)
 	static struct lone_bytes input_buffer = { sizeof(io_buffer), io_buffer }, output_buffer = { 0, io_buffer };
 	size_t total;
 
-	seek_to_end(elf->file_descriptor);
+	seek_to_start(elf->data.file_descriptor);
+	seek_to(elf->file.descriptor, elf->data.offset);
 
 	while ((output_buffer.count = read_bytes(elf->data.file_descriptor, input_buffer)) > 0) {
-		write_bytes(elf->file_descriptor, output_buffer);
+		write_bytes(elf->file.descriptor, output_buffer);
 	}
 }
 
-static void patch_elf(struct elf *elf)
+static void patch(struct elf *elf)
 {
 	patch_program_header_table(elf);
 	append_data(elf);
@@ -361,12 +457,14 @@ long lone(int argc, char **argv, char **envp, struct auxiliary_vector *auxvec)
 
 	validate_elf_header(&elf);
 
-	compute_sizes_and_offsets(&elf);
+	set_page_size(&elf, auxvec);
+	query_file_sizes(&elf);
 	load_program_header_table(&elf);
+	analyze(&elf);
 
-	set_lone_entry(&elf);
+	set_lone_segments(&elf);
 
-	patch_elf(&elf);
+	patch(&elf);
 
 	return 0;
 }
