@@ -89,7 +89,7 @@ struct lone_bytes lone_concatenate(struct lone_lisp *lone, struct lone_value *ar
 	return lone_join(lone, 0, arguments, is_valid);
 }
 
-struct auxiliary_value lone_get_auxiliary_value(struct auxiliary_vector *auxiliary, long type)
+struct auxiliary_value lone_auxiliary_vector_value(struct auxiliary_vector *auxiliary, long type)
 {
 	for (/* auxiliary */; auxiliary->type != AT_NULL; ++auxiliary) {
 		if (auxiliary->type == type) {
@@ -102,14 +102,14 @@ struct auxiliary_value lone_get_auxiliary_value(struct auxiliary_vector *auxilia
 
 size_t lone_auxiliary_vector_page_size(struct auxiliary_vector *auxiliary)
 {
-	return lone_get_auxiliary_value(auxiliary, AT_PAGESZ).as.integer;
+	return lone_auxiliary_vector_value(auxiliary, AT_PAGESZ).as.integer;
 }
 
-struct lone_bytes lone_get_auxiliary_random(struct auxiliary_vector *auxiliary)
+struct lone_bytes lone_auxiliary_vector_random(struct auxiliary_vector *auxiliary)
 {
 	struct lone_bytes random = { 0, 0 };
 
-	random.pointer = lone_get_auxiliary_value(auxiliary, AT_RANDOM).as.pointer;
+	random.pointer = lone_auxiliary_vector_value(auxiliary, AT_RANDOM).as.pointer;
 	random.count = 16;
 
 	return random;
@@ -118,8 +118,8 @@ struct lone_bytes lone_get_auxiliary_random(struct auxiliary_vector *auxiliary)
 struct lone_elf_program_header_table lone_auxiliary_vector_elf_program_header_table(struct auxiliary_vector *auxiliary)
 {
 	return (struct lone_elf_program_header_table) {
-		.address     = lone_get_auxiliary_value(auxiliary, AT_PHDR).as.pointer,
-		.entry_size  = lone_get_auxiliary_value(auxiliary, AT_PHENT).as.unsigned_integer,
-		.entry_count = lone_get_auxiliary_value(auxiliary, AT_PHNUM).as.unsigned_integer
+		.address     = lone_auxiliary_vector_value(auxiliary, AT_PHDR).as.pointer,
+		.entry_size  = lone_auxiliary_vector_value(auxiliary, AT_PHENT).as.unsigned_integer,
+		.entry_count = lone_auxiliary_vector_value(auxiliary, AT_PHNUM).as.unsigned_integer
 	};
 }

@@ -13,10 +13,11 @@ struct lone_value *lone_apply_predicate(struct lone_lisp *lone, struct lone_valu
 struct lone_value *lone_apply_comparator(struct lone_lisp *lone, struct lone_value *arguments, lone_comparator function);
 struct lone_bytes lone_join(struct lone_lisp *lone, struct lone_value *separator, struct lone_value *arguments, lone_predicate is_valid);
 struct lone_bytes lone_concatenate(struct lone_lisp *lone, struct lone_value *arguments, lone_predicate is_valid);
-struct auxiliary_value lone_get_auxiliary_value(struct auxiliary_vector *values, long type);
-size_t lone_auxiliary_vector_page_size(struct auxiliary_vector *auxiliary);
-struct lone_bytes lone_get_auxiliary_random(struct auxiliary_vector *values);
-struct lone_elf_program_header_table lone_auxiliary_vector_elf_program_header_table(struct auxiliary_vector *auxiliary);
+
+struct auxiliary_value lone_auxiliary_vector_value(struct auxiliary_vector *values, long type);
+size_t lone_auxiliary_vector_page_size(struct auxiliary_vector *values);
+struct lone_bytes lone_auxiliary_vector_random(struct auxiliary_vector *values);
+struct lone_elf_program_header_table lone_auxiliary_vector_elf_program_header_table(struct auxiliary_vector *values);
 
 #endif /* LONE_UTILITIES_HEADER */
 

@@ -34,7 +34,7 @@ long lone(int argc, char **argv, char **envp, struct auxiliary_vector *auxv)
 {
 	void *stack = __builtin_frame_address(0);
 	static unsigned char __attribute__((aligned(LONE_ALIGNMENT))) bytes[LONE_MEMORY_SIZE];
-	struct lone_bytes memory = { sizeof(bytes), bytes }, random = lone_get_auxiliary_random(auxv);
+	struct lone_bytes memory = { sizeof(bytes), bytes }, random = lone_auxiliary_vector_random(auxv);
 	struct lone_lisp lone;
 
 	lone_lisp_initialize(&lone, memory, 1024, stack, random);
