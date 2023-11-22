@@ -1,5 +1,8 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later */
 
+#include <lone/definitions.h>
+#include <lone/types.h>
+
 #include <lone/modules.h>
 #include <lone/modules/linux.h>
 
@@ -15,11 +18,10 @@
 #include <lone/struct/lisp.h>
 #include <lone/struct/value.h>
 #include <lone/struct/function.h>
-#include <lone/struct/auxiliary.h>
 
 #include <lone/linux.h>
 
-static void lone_auxiliary_value_to_table(struct lone_lisp *lone, struct lone_value *table, struct auxiliary_vector *auxiliary)
+static void lone_auxiliary_value_to_table(struct lone_lisp *lone, struct lone_value *table, struct lone_auxiliary_vector *auxiliary)
 {
 	struct lone_value *key, *value;
 
@@ -128,7 +130,7 @@ static void lone_auxiliary_value_to_table(struct lone_lisp *lone, struct lone_va
 	lone_table_set(lone, table, key, value);
 }
 
-static struct lone_value *lone_auxiliary_vector_to_table(struct lone_lisp *lone, struct auxiliary_vector *auxiliary_vector)
+static struct lone_value *lone_auxiliary_vector_to_table(struct lone_lisp *lone, struct lone_auxiliary_vector *auxiliary_vector)
 {
 	struct lone_value *table = lone_table_create(lone, 32, 0);
 	size_t i;
@@ -199,7 +201,7 @@ static void lone_fill_linux_system_call_table(struct lone_lisp *lone, struct lon
 	}
 }
 
-void lone_module_linux_initialize(struct lone_lisp *lone, int argc, char **argv, char **envp, struct auxiliary_vector *auxv)
+void lone_module_linux_initialize(struct lone_lisp *lone, int argc, char **argv, char **envp, struct lone_auxiliary_vector *auxv)
 {
 	struct lone_value *name = lone_intern_c_string(lone, "linux"),
 	                  *module = lone_module_for_name(lone, name),

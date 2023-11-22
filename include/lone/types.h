@@ -29,6 +29,20 @@ struct lone_elf_segments {
 	lone_elf_segment *segments;
 };
 
+struct lone_auxiliary_value {
+	union {
+		char *c_string;
+		void *pointer;
+		long integer;
+		unsigned long unsigned_integer;
+	} as;
+};
+
+struct lone_auxiliary_vector {
+	long type;
+	struct lone_auxiliary_value value;
+};
+
 /* ╭──────────────────────────┨ LONE LISP TYPES ┠───────────────────────────╮
    │                                                                        │
    │    Lone implements dynamic data types as a tagged union.               │
@@ -85,9 +99,6 @@ struct lone_pointer;
 struct lone_lisp;
 struct lone_memory;
 struct lone_reader;
-
-struct auxiliary_vector;
-struct auxiliary_value;
 
 typedef bool (*lone_predicate)(struct lone_value *);
 typedef bool (*lone_comparator)(struct lone_value *, struct lone_value *);

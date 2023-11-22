@@ -3,6 +3,7 @@
 #ifndef LONE_DEFINITIONS_HEADER
 #define LONE_DEFINITIONS_HEADER
 
+#include <linux/auxvec.h>
 #include <asm/bitsperlong.h>
 
 /* ╭────────────────────────────────────────────────────────────────────────╮

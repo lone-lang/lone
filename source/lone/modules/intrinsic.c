@@ -9,7 +9,7 @@
 #include <lone/modules/text.h>
 #include <lone/modules/list.h>
 
-void lone_modules_intrinsic_initialize(struct lone_lisp *lone, int argc, char **argv, char **envp, struct auxiliary_vector *auxv)
+void lone_modules_intrinsic_initialize(struct lone_lisp *lone, int argc, char **argv, char **envp, struct lone_auxiliary_vector *auxv)
 {
 	lone_module_linux_initialize(lone, argc, argv, envp, auxv);
 	lone_module_lone_initialize(lone);

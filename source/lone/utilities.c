@@ -1,5 +1,6 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later */
 
+#include <lone/definitions.h>
 #include <lone/types.h>
 #include <lone/utilities.h>
 #include <lone/lisp/constants.h>
@@ -10,7 +11,6 @@
 #include <lone/value/list.h>
 
 #include <lone/struct/value.h>
-#include <lone/struct/auxiliary.h>
 
 #include <lone/linux.h>
 
@@ -88,7 +88,7 @@ struct lone_bytes lone_concatenate(struct lone_lisp *lone, struct lone_value *ar
 	return lone_join(lone, 0, arguments, is_valid);
 }
 
-struct auxiliary_value lone_auxiliary_vector_value(struct auxiliary_vector *auxiliary, long type)
+struct lone_auxiliary_value lone_auxiliary_vector_value(struct lone_auxiliary_vector *auxiliary, long type)
 {
 	for (/* auxiliary */; auxiliary->type != AT_NULL; ++auxiliary) {
 		if (auxiliary->type == type) {
@@ -96,15 +96,15 @@ struct auxiliary_value lone_auxiliary_vector_value(struct auxiliary_vector *auxi
 		}
 	}
 
-	return (struct auxiliary_value) { .as.integer = 0 };
+	return (struct lone_auxiliary_value) { .as.integer = 0 };
 }
 
-size_t lone_auxiliary_vector_page_size(struct auxiliary_vector *auxiliary)
+size_t lone_auxiliary_vector_page_size(struct lone_auxiliary_vector *auxiliary)
 {
 	return lone_auxiliary_vector_value(auxiliary, AT_PAGESZ).as.integer;
 }
 
-struct lone_bytes lone_auxiliary_vector_random(struct auxiliary_vector *auxiliary)
+struct lone_bytes lone_auxiliary_vector_random(struct lone_auxiliary_vector *auxiliary)
 {
 	struct lone_bytes random = { 0, 0 };
 
@@ -114,7 +114,7 @@ struct lone_bytes lone_auxiliary_vector_random(struct auxiliary_vector *auxiliar
 	return random;
 }
 
-struct lone_elf_segments lone_auxiliary_vector_elf_segments(struct auxiliary_vector *auxiliary)
+struct lone_elf_segments lone_auxiliary_vector_elf_segments(struct lone_auxiliary_vector *auxiliary)
 {
 	return (struct lone_elf_segments) {
 		.entry_size  = lone_auxiliary_vector_value(auxiliary, AT_PHENT).as.unsigned_integer,

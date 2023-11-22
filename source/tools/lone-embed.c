@@ -1,4 +1,5 @@
 #include <lone.h>
+#include <lone/definitions.h>
 #include <lone/types.h>
 #include <lone/linux.h>
 #include <lone/utilities.h>
@@ -403,7 +404,7 @@ static void set_lone_segments(struct elf *elf)
 	}
 }
 
-static void set_page_size(struct elf *elf, struct auxiliary_vector *auxvec)
+static void set_page_size(struct elf *elf, struct lone_auxiliary_vector *auxvec)
 {
 	elf->page_size = lone_auxiliary_vector_page_size(auxvec);
 }
@@ -446,7 +447,7 @@ static void patch(struct elf *elf)
 	append_data(elf);
 }
 
-long lone(int argc, char **argv, char **envp, struct auxiliary_vector *auxvec)
+long lone(int argc, char **argv, char **envp, struct lone_auxiliary_vector *auxvec)
 {
 	static unsigned char elf_header_buffer[0x40];
 	struct elf elf = { .header = { sizeof(elf_header_buffer), elf_header_buffer } };

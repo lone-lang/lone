@@ -109,7 +109,6 @@ the successful status code `0` is expected.
         │   ├── math.h                 # Mathematical functions
         │   └── text.h                 # Text manipulation functions
         ├── struct/                    # Lone structure definitions
-        │   ├── auxiliary.h            # Auxiliary vector elements
         │   ├── bytes.h                # Memory segments of known size
         │   ├── function.h             # Reusable code blocks
         │   ├── heap.h                 # Heap from where values are allocated
