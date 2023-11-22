@@ -138,9 +138,11 @@ the successful status code `0` is expected.
         ├── utilities.h                # Useful functions
         └── value.h                    # Blank slate lone value creation
 
-    lone/source/    # Lone lisp implementation source code
-    ├── lone/       # Matches the structure or the include/ directory
-    └── lone.c      # The main lone function
+    lone/source/            # Lone lisp implementation source code
+    ├── tools/              # General use utilities and development tools
+    │   └── lone-embed.c    # Embeds code into a lone interpreter executable
+    ├── lone/               # Matches the structure or the include/ directory
+    └── lone.c              # The main lone function
 
     lone/architecture/
     └── $ARCH/
@@ -157,6 +159,8 @@ the successful status code `0` is expected.
         │   └── lone/
         │       └── NR.c      # Generated Linux system call table initializers
         ├── objects/          # Compiled object files; mirrors source tree structure
+        ├── tools/            # Compiled utilities and tools
+        │   └── lone-embed    # Embeds code into a lone interpreter executable
         ├── prerequisites/    # Prerequisite files; mirrors source tree structure
         ├── NR.list           # List of system calls found on the targeted Linux UAPI
         └── lone              # The built lone lisp freestanding executable
