@@ -7,10 +7,27 @@
 #include <stdint.h>
 
 #include <linux/types.h>
+#include <linux/elf.h>
 
 typedef __kernel_size_t size_t;
 typedef __kernel_ssize_t ssize_t;
 typedef __kernel_off_t off_t;
+
+#if __BITS_PER_LONG == 64
+typedef Elf64_Ehdr lone_elf_header;
+typedef Elf64_Phdr lone_elf_segment;
+#elif __BITS_PER_LONG == 32
+typedef Elf32_Ehdr lone_elf_header;
+typedef Elf32_Phdr lone_elf_segment;
+#else
+	#error "Unsupported architecture"
+#endif
+
+struct lone_elf_segments {
+	size_t entry_size;
+	size_t entry_count;
+	lone_elf_segment *segments;
+};
 
 /* ╭──────────────────────────┨ LONE LISP TYPES ┠───────────────────────────╮
    │                                                                        │
@@ -71,7 +88,6 @@ struct lone_reader;
 
 struct auxiliary_vector;
 struct auxiliary_value;
-struct lone_elf_program_header_table;
 
 typedef bool (*lone_predicate)(struct lone_value *);
 typedef bool (*lone_comparator)(struct lone_value *, struct lone_value *);

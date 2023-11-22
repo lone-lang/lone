@@ -11,7 +11,6 @@
 
 #include <lone/struct/value.h>
 #include <lone/struct/auxiliary.h>
-#include <lone/struct/elf.h>
 
 #include <lone/linux.h>
 
@@ -115,11 +114,11 @@ struct lone_bytes lone_auxiliary_vector_random(struct auxiliary_vector *auxiliar
 	return random;
 }
 
-struct lone_elf_program_header_table lone_auxiliary_vector_elf_program_header_table(struct auxiliary_vector *auxiliary)
+struct lone_elf_segments lone_auxiliary_vector_elf_segments(struct auxiliary_vector *auxiliary)
 {
-	return (struct lone_elf_program_header_table) {
-		.address     = lone_auxiliary_vector_value(auxiliary, AT_PHDR).as.pointer,
+	return (struct lone_elf_segments) {
 		.entry_size  = lone_auxiliary_vector_value(auxiliary, AT_PHENT).as.unsigned_integer,
-		.entry_count = lone_auxiliary_vector_value(auxiliary, AT_PHNUM).as.unsigned_integer
+		.entry_count = lone_auxiliary_vector_value(auxiliary, AT_PHNUM).as.unsigned_integer,
+		.segments    = lone_auxiliary_vector_value(auxiliary, AT_PHDR).as.pointer
 	};
 }

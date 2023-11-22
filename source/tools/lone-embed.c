@@ -1,7 +1,6 @@
 #include <lone.h>
 #include <lone/types.h>
 #include <lone/linux.h>
-#include <lone/elf.h>
 #include <lone/utilities.h>
 #include <lone/struct/bytes.h>
 #include <lone/memory/functions.h>

@@ -41,4 +41,13 @@ struct lone_value *lone_primitive_ ## name    \
 	struct lone_value *closure            \
 )
 
+#ifndef PT_LONE
+//      PT_LONE   l o n e
+#define PT_LONE 0x6c6f6e65
+#endif
+
+#if PT_LONE < PT_LOOS || PT_LONE > PT_HIOS
+	#warning "PT_LONE outside reserved operating system specific range"
+#endif
+
 #endif /* LONE_DEFINITIONS_HEADER */
