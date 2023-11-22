@@ -117,22 +117,35 @@ static int lone_module_search(struct lone_lisp *lone, struct lone_value *symbols
 	linux_exit(-1); /* module not found */
 }
 
-static void lone_module_load_from_file_descriptor(struct lone_lisp *lone, struct lone_value *module, int file_descriptor)
+static void lone_module_load_from_reader(struct lone_lisp *lone, struct lone_value *module, struct lone_reader *reader)
 {
 	struct lone_value *value;
-	struct lone_reader reader;
-
-	lone_reader_initialize(lone, &reader, LONE_BUFFER_SIZE, file_descriptor);
 
 	while (1) {
-		value = lone_read(lone, &reader);
-		if (!value) { if (reader.error) { linux_exit(-1); } else { break; } }
+		value = lone_read(lone, reader);
+		if (!value) { if (reader->error) { linux_exit(-1); } else { break; } }
 
 		value = lone_evaluate_module(lone, module, value);
 	}
 
-	lone_reader_finalize(lone, &reader);
+	lone_reader_finalize(lone, reader);
 	lone_garbage_collector(lone);
+}
+
+void lone_module_load_from_bytes(struct lone_lisp *lone, struct lone_value *module, struct lone_bytes bytes)
+{
+	struct lone_reader reader;
+
+	lone_reader_for_bytes(lone, &reader, bytes);
+	lone_module_load_from_reader(lone, module, &reader);
+}
+
+static void lone_module_load_from_file_descriptor(struct lone_lisp *lone, struct lone_value *module, int file_descriptor)
+{
+	struct lone_reader reader;
+
+	lone_reader_for_file_descriptor(lone, &reader, LONE_BUFFER_SIZE, file_descriptor);
+	lone_module_load_from_reader(lone, module, &reader);
 }
 
 struct lone_value *lone_module_load(struct lone_lisp *lone, struct lone_value *name)
