@@ -10,6 +10,7 @@
 #include <lone/lisp.h>
 #include <lone/modules.h>
 #include <lone/modules/intrinsic.h>
+#include <lone/modules/embedded.h>
 #include <lone/utilities.h>
 
 #include <lone/struct/lisp.h>
@@ -47,6 +48,8 @@ long lone(int argc, char **argv, char **envp, struct lone_auxiliary_vector *auxv
 		"/usr/lib/lone/modules"
 
 	);
+
+	lone_modules_embedded_load(&lone, auxv);
 
 	lone_module_load_null_from_standard_input(&lone);
 
