@@ -18,13 +18,17 @@ Lone is built by a simple GNU Make file.
 The following commands can be used:
 
     make
-    make lone
     make clean
-    make clean lone
-    make lone CFLAGS=-g
-    make lone UAPI=/alternative/linux/uapi/headers
-    make lone TARGET=x86_64 UAPI=/linux/uapi/headers/x86_64
+    make lone
     make tools
+    make clean lone
+    make clean lone tools
+
+    make CFLAGS=-g
+    make LD=mold
+    make LTO=yes
+    make UAPI=/alternative/linux/uapi/headers
+    make TARGET=x86_64 UAPI=/linux/uapi/headers/x86_64
 
 Currently supported targets:
 
