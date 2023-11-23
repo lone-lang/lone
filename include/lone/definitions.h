@@ -4,6 +4,7 @@
 #define LONE_DEFINITIONS_HEADER
 
 #include <linux/auxvec.h>
+#include <linux/elf.h>
 #include <asm/bitsperlong.h>
 
 /* ╭────────────────────────────────────────────────────────────────────────╮
