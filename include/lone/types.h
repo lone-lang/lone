@@ -278,22 +278,28 @@ bool lone_bytes_equals_c_string(struct lone_bytes bytes, char *c_string);
    │                                                                        │
    │    Memory blocks are segments prefixed by a block descriptor           │
    │    that tracks its size, allocation status as well as pointers         │
-   │    to surrounding memory blocks.                                       │
+   │    to surrounding memory blocks. It is simple to obtain a pointer      │
+   │    to the block descriptor from a pointer to the memory block:         │
+   │    simply subtract the block descriptor's size from the pointer.       │
+   │                                                                        │
+   │    All allocated lone lisp values are placed in the value heap,        │
+   │    essentially a linked list of arrays of contiguous lone values.      │
    │                                                                        │
    │    Lone employs a very simple mark-and-sweep garbage collector.        │
-   │    It starts by marking all values reachable by the interpreter        │
-   │    in its current state. Then it walks the list of all values,         │
-   │    deallocating any unmarked object it finds as well as any            │
-   │    memory they happen own based on the value's type.                   │
+   │    It walks through the whole interpreter, including the processor     │
+   │    stack and registers, looking for pointers that fall within the      │
+   │    ranges of each allocated value heap and marking them as used.       │
+   │    The purpose of the heap is to enable more efficient pointer         │
+   │    ranging computations so as to avoid the need to quadratically       │
+   │    check every discovered pointer against every managed pointer.       │
+   │    Once all reachable pointers are marked, the garbage collector       │
+   │    sweeps through the value heap, killing all unmarked values          │
+   │    by marking them as unused. Future lone value allocations            │
+   │    may simply return these objects, thereby resurrecting them.         │
    │                                                                        │
-   │    Like memory blocks, lone values are prefixed by a header            │
-   │    structure containing metadata such as its marked state              │
-   │    as well as a pointer to the next object in the list.                │
-   │                                                                        │
-   │    Since these headers are prefixed to pointers returned by            │
-   │    allocation and value creation functions, it is simple to            │
-   │    calculate their locations given a pointer to a memory block         │
-   │    or lone value: simply subtract the header's size from it.           │
+   │    When a value heap is allocated, all values within it are dead.      │
+   │    After each garbage collection cycle, completely dead heaps          │
+   │    are deallocated, thereby freeing up memory for other uses.          │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
 struct lone_memory {
