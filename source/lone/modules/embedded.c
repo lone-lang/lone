@@ -19,6 +19,8 @@ static void lone_load_segment(struct lone_lisp *lone, struct lone_bytes bytes)
 	size_t offset, start, end, size, i;
 	struct lone_bytes code;
 
+	if (bytes.count == 0) { /* empty lone segment */ return; }
+
 	lone_reader_for_bytes(lone, &reader, bytes);
 	descriptor = lone_read(lone, &reader);
 	if (!descriptor || !lone_is_table(descriptor)) { /* empty or corrupt segment */ linux_exit(-1); }
