@@ -6,9 +6,6 @@
 #include <lone/memory/allocator.h>
 #include <lone/memory/heap.h>
 
-#include <lone/struct/memory.h>
-#include <lone/struct/heap.h>
-
 #include <lone/architecture/garbage_collector.c>
 
 static void lone_mark_value(struct lone_value *value)

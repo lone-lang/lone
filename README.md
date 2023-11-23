@@ -108,9 +108,6 @@ the successful status code `0` is expected.
         │   ├── lone.h                 # Lone language primitives
         │   ├── math.h                 # Mathematical functions
         │   └── text.h                 # Text manipulation functions
-        ├── struct/                    # Lone structure definitions
-        │   ├── heap.h                 # Heap from where values are allocated
-        │   └── memory.h               # Memory blocks managed by lone
         ├── value/                     # Functions for each type of value
         │   ├── bytes.h                # Creation and transfer functions
         │   ├── function.h             # Function and closure instantiation

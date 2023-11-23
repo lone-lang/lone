@@ -3,8 +3,6 @@
 #include <lone/memory/heap.h>
 #include <lone/memory/allocator.h>
 
-#include <lone/struct/heap.h>
-
 static struct lone_heap *lone_allocate_heap(struct lone_lisp *lone, size_t count)
 {
 	size_t i, size = sizeof(struct lone_heap) + (sizeof(struct lone_value) * count);
