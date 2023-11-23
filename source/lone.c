@@ -11,7 +11,7 @@
 #include <lone/modules.h>
 #include <lone/modules/intrinsic.h>
 #include <lone/modules/embedded.h>
-#include <lone/utilities.h>
+#include <lone/auxiliary_vector.h>
 
 /* ╭───────────────────────┨ LONE LISP ENTRY POINT ┠────────────────────────╮
    │                                                                        │
@@ -33,6 +33,7 @@ long lone(int argc, char **argv, char **envp, struct lone_auxiliary_vector *auxv
 	void *stack = __builtin_frame_address(0);
 	static unsigned char __attribute__((aligned(LONE_ALIGNMENT))) bytes[LONE_MEMORY_SIZE];
 	struct lone_bytes memory = { sizeof(bytes), bytes }, random = lone_auxiliary_vector_random(auxv);
+	struct lone_value *descriptor;
 	struct lone_lisp lone;
 
 	lone_lisp_initialize(&lone, memory, 1024, stack, random);

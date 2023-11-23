@@ -2,7 +2,7 @@
 #include <lone/definitions.h>
 #include <lone/types.h>
 #include <lone/linux.h>
-#include <lone/utilities.h>
+#include <lone/auxiliary_vector.h>
 #include <lone/memory/functions.h>
 
 #ifndef IO_BUFFER_SIZE

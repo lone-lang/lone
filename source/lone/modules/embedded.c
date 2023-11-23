@@ -3,7 +3,7 @@
 
 #include <lone/modules/embedded.h>
 #include <lone/modules.h>
-#include <lone/utilities.h>
+#include <lone/auxiliary_vector.h>
 #include <lone/linux.h>
 
 #include <lone/lisp/reader.h>
