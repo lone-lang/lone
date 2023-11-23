@@ -1,11 +1,12 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later */
 
+#include <lone/types.h>
+
 #include <lone/memory/garbage_collector.h>
 #include <lone/memory/allocator.h>
 #include <lone/memory/heap.h>
 
 #include <lone/struct/lisp.h>
-#include <lone/struct/value.h>
 #include <lone/struct/memory.h>
 #include <lone/struct/heap.h>
 

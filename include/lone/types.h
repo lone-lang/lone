@@ -43,10 +43,10 @@ struct lone_auxiliary_vector {
 	struct lone_auxiliary_value value;
 };
 
-struct lone_bytes {
-	size_t count;
-	unsigned char *pointer;
-};
+struct lone_lisp;
+struct lone_memory;
+struct lone_reader;
+
 
 /* ╭──────────────────────────┨ LONE LISP TYPES ┠───────────────────────────╮
    │                                                                        │
@@ -62,8 +62,8 @@ struct lone_bytes {
    │        ◦ Symbol       the keyword and interned string type             │
    │        ◦ Text         the UTF-8 encoded text type                      │
    │        ◦ Bytes        the binary data and low level string type        │
-   │        ◦ Integer      the signed integer type                          │
    │        ◦ Pointer      the memory addressing and dereferencing type     │
+   │        ◦ Integer      the signed integer type                          │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
 
@@ -77,8 +77,8 @@ enum lone_type {
 	LONE_SYMBOL,
 	LONE_TEXT,
 	LONE_BYTES,
-	LONE_INTEGER,
 	LONE_POINTER,
+	LONE_INTEGER,
 };
 
 enum lone_pointer_type {
@@ -90,29 +90,98 @@ enum lone_pointer_type {
 	LONE_TO_U64, LONE_TO_I64,
 };
 
-struct lone_value;
-struct lone_module;
-struct lone_function;
-struct lone_function_flags;
-struct lone_list;
-struct lone_vector;
-struct lone_table;
-struct lone_text;
-struct lone_bytes;
-struct lone_pointer;
+struct lone_module {
+	struct lone_value *name;
+	struct lone_value *environment;
+	struct lone_value *exports;
+};
 
-struct lone_lisp;
-struct lone_memory;
-struct lone_reader;
+/* https://dl.acm.org/doi/10.1145/947941.947948
+ * https://user.ceng.metu.edu.tr/~ucoluk/research/lisp/lispman/node24.html
+ */
+struct lone_function_flags {
+	bool evaluate_arguments: 1;
+	bool evaluate_result: 1;
+	bool variable_arguments: 1;
+};
 
-typedef bool (*lone_predicate)(struct lone_value *);
-typedef bool (*lone_comparator)(struct lone_value *, struct lone_value *);
+struct lone_function {
+	struct lone_value *arguments;        /* the bindings */
+	struct lone_value *code;             /* the lambda */
+	struct lone_value *environment;      /* the closure */
+	struct lone_function_flags flags;    /* how to evaluate & apply */
+};
 
 typedef struct lone_value *(*lone_primitive)(struct lone_lisp *lone,
                                              struct lone_value *module,
                                              struct lone_value *environment,
                                              struct lone_value *arguments,
                                              struct lone_value *closure);
+
+struct lone_primitive {
+	struct lone_value *name;
+	lone_primitive function;
+	struct lone_value *closure;
+	struct lone_function_flags flags;    /* primitives always accept variable arguments */
+};
+
+struct lone_list {
+	struct lone_value *first;
+	struct lone_value *rest;
+};
+
+struct lone_vector {
+	struct lone_value **values;
+	size_t count;
+	size_t capacity;
+};
+
+struct lone_table_entry {
+	struct lone_value *key;
+	struct lone_value *value;
+};
+
+struct lone_bytes {
+	size_t count;
+	unsigned char *pointer;
+};
+
+struct lone_table {
+	size_t count;
+	size_t capacity;
+	struct lone_table_entry *entries;
+	struct lone_value *prototype;
+};
+
+struct lone_pointer {
+	enum lone_pointer_type type;
+	void *address;
+};
+
+struct lone_value {
+	struct {
+		bool live: 1;
+		bool marked: 1;
+		bool should_deallocate_bytes: 1;
+	};
+
+	enum lone_type type;
+
+	union {
+		struct lone_module module;
+		struct lone_function function;
+		struct lone_primitive primitive;
+		struct lone_list list;
+		struct lone_vector vector;
+		struct lone_table table;
+		struct lone_bytes bytes;   /* also used by texts and symbols */
+		struct lone_pointer pointer;
+		long integer;
+	};
+};
+
+typedef bool (*lone_predicate)(struct lone_value *);
+typedef bool (*lone_comparator)(struct lone_value *, struct lone_value *);
 
 /* ╭────────────────────────────────────────────────────────────────────────╮
    │                                                                        │

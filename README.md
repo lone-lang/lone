@@ -109,19 +109,10 @@ the successful status code `0` is expected.
         │   ├── math.h                 # Mathematical functions
         │   └── text.h                 # Text manipulation functions
         ├── struct/                    # Lone structure definitions
-        │   ├── bytes.h                # Memory segments of known size
-        │   ├── function.h             # Reusable code blocks
         │   ├── heap.h                 # Heap from where values are allocated
         │   ├── lisp.h                 # Lone lisp interpreter
-        │   ├── list.h                 # Linked list of lone values
         │   ├── memory.h               # Memory blocks managed by lone
-        │   ├── module.h               # Modules
-        │   ├── pointer.h              # Typed pointers
-        │   ├── primitive.h            # Functions implemented in C
-        │   ├── reader.h               # Reader state and buffer
-        │   ├── table.h                # Hash table with prototypal inheritance
-        │   ├── value.h                # Tagged and flagged union of all value types
-        │   └── vector.h               # Contiguous arrays of lone values
+        │   └── reader.h               # Reader state and buffer
         ├── value/                     # Functions for each type of value
         │   ├── bytes.h                # Creation and transfer functions
         │   ├── function.h             # Function and closure instantiation

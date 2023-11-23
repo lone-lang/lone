@@ -3,8 +3,6 @@
 #include <lone/value.h>
 #include <lone/value/integer.h>
 
-#include <lone/struct/value.h>
-
 struct lone_value *lone_integer_create(struct lone_lisp *lone, long integer)
 {
 	struct lone_value *value = lone_value_create(lone);

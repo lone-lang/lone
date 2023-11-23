@@ -19,7 +19,6 @@
 
 #include <lone/struct/lisp.h>
 #include <lone/struct/reader.h>
-#include <lone/struct/value.h>
 
 struct lone_value *lone_module_null(struct lone_lisp *lone)
 {

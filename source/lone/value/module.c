@@ -6,8 +6,6 @@
 #include <lone/value/table.h>
 
 #include <lone/struct/lisp.h>
-#include <lone/struct/value.h>
-#include <lone/struct/module.h>
 
 struct lone_value *lone_module_create(struct lone_lisp *lone, struct lone_value *name)
 {

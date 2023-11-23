@@ -1,5 +1,6 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later */
 
+#include <lone/types.h>
 #include <lone/lisp/printer.h>
 #include <lone/memory/allocator.h>
 #include <lone/memory/functions.h>
@@ -10,8 +11,6 @@
 #include <lone/value/pointer.h>
 
 #include <lone/linux.h>
-
-#include <lone/struct/value.h>
 
 static void lone_print_integer(int fd, long n)
 {

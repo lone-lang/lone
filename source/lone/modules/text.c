@@ -11,7 +11,6 @@
 #include <lone/value/text.h>
 
 #include <lone/struct/lisp.h>
-#include <lone/struct/function.h>
 
 void lone_module_text_initialize(struct lone_lisp *lone)
 {

@@ -4,7 +4,6 @@
 #define LONE_STRUCT_HEAP_HEADER
 
 #include <lone/types.h>
-#include <lone/struct/value.h>
 
 struct lone_heap {
 	struct lone_heap *next;

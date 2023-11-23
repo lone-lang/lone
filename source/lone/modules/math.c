@@ -10,8 +10,6 @@
 #include <lone/value/integer.h>
 
 #include <lone/struct/lisp.h>
-#include <lone/struct/value.h>
-#include <lone/struct/function.h>
 
 #include <lone/utilities.h>
 #include <lone/linux.h>

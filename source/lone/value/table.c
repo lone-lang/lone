@@ -5,9 +5,6 @@
 #include <lone/value.h>
 #include <lone/value/table.h>
 
-#include <lone/struct/value.h>
-#include <lone/struct/table.h>
-
 #include <lone/memory/allocator.h>
 
 struct lone_value *lone_table_create(struct lone_lisp *lone, size_t capacity, struct lone_value *prototype)

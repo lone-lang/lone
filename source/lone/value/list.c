@@ -7,9 +7,6 @@
 #include <lone/memory/allocator.h>
 #include <lone/memory/functions.h>
 
-#include <lone/struct/value.h>
-#include <lone/struct/list.h>
-
 struct lone_value *lone_list_create(struct lone_lisp *lone, struct lone_value *first, struct lone_value *rest)
 {
 	struct lone_value *value = lone_value_create(lone);

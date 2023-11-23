@@ -10,8 +10,6 @@
 
 #include <lone/value/list.h>
 
-#include <lone/struct/value.h>
-
 #include <lone/linux.h>
 
 struct lone_value *lone_apply_predicate(struct lone_lisp *lone, struct lone_value *arguments, lone_predicate function)

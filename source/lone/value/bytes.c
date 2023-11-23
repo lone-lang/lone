@@ -5,8 +5,6 @@
 #include <lone/memory/allocator.h>
 #include <lone/memory/functions.h>
 
-#include <lone/struct/value.h>
-
 struct lone_value *lone_bytes_transfer(struct lone_lisp *lone, unsigned char *pointer, size_t count, bool should_deallocate)
 {
 	struct lone_value *value = lone_value_create(lone);

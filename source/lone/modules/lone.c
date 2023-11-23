@@ -15,7 +15,6 @@
 #include <lone/value/symbol.h>
 
 #include <lone/struct/lisp.h>
-#include <lone/struct/function.h>
 
 #include <lone/linux.h>
 

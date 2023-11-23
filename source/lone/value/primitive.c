@@ -3,9 +3,6 @@
 #include <lone/value.h>
 #include <lone/value/primitive.h>
 
-#include <lone/struct/value.h>
-#include <lone/struct/primitive.h>
-
 struct lone_value *lone_intern_c_string(struct lone_lisp *, char *);
 
 struct lone_value *lone_primitive_create(

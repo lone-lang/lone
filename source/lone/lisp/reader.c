@@ -1,5 +1,6 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later */
 
+#include <lone/types.h>
 #include <lone/lisp.h>
 #include <lone/lisp/reader.h>
 
@@ -14,7 +15,6 @@
 #include <lone/linux.h>
 
 #include <lone/struct/reader.h>
-#include <lone/struct/value.h>
 
 void lone_reader_for_bytes(struct lone_lisp *lone, struct lone_reader *reader, struct lone_bytes bytes)
 {

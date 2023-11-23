@@ -6,9 +6,6 @@
 #include <lone/value/list.h>
 #include <lone/memory/allocator.h>
 
-#include <lone/struct/value.h>
-#include <lone/struct/vector.h>
-
 struct lone_value *lone_vector_create(struct lone_lisp *lone, size_t capacity)
 {
 	struct lone_value *value = lone_value_create(lone);

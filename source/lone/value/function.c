@@ -3,9 +3,6 @@
 #include <lone/value.h>
 #include <lone/value/function.h>
 
-#include <lone/struct/value.h>
-#include <lone/struct/function.h>
-
 struct lone_value *lone_function_create(
 	struct lone_lisp *lone,
 	struct lone_value *arguments,

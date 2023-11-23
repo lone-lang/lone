@@ -1,12 +1,11 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later */
 
+#include <lone/types.h>
 #include <lone/lisp/evaluator.h>
 
 #include <lone/value/list.h>
 #include <lone/value/vector.h>
 #include <lone/value/table.h>
-
-#include <lone/struct/value.h>
 
 #include <lone/linux.h>
 

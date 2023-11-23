@@ -16,7 +16,6 @@
 #include <lone/value/symbol.h>
 
 #include <lone/struct/lisp.h>
-#include <lone/struct/function.h>
 
 void lone_lisp_initialize(struct lone_lisp *lone, struct lone_bytes memory, size_t heap_size, void *stack, struct lone_bytes random)
 {

@@ -1,12 +1,12 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later */
 
+#include <lone/types.h>
 #include <lone/hash.h>
 #include <lone/hash/fnv_1a.h>
 
 #include <lone/linux.h>
 
 #include <lone/struct/lisp.h>
-#include <lone/struct/value.h>
 
 void lone_hash_initialize(struct lone_lisp *lone, struct lone_bytes random)
 {
