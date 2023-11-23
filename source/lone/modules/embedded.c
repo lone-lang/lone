@@ -21,7 +21,7 @@ static void lone_load_segment(struct lone_lisp *lone, struct lone_bytes bytes)
 
 	lone_reader_for_bytes(lone, &reader, bytes);
 	descriptor = lone_read(lone, &reader);
-	if (!lone_is_table(descriptor)) { /* empty or corrupt segment */ linux_exit(-1); }
+	if (!descriptor || !lone_is_table(descriptor)) { /* empty or corrupt segment */ linux_exit(-1); }
 
 	offset = reader.buffer.position.read;
 	run = lone_intern_c_string(lone, "run");
