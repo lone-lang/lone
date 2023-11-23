@@ -11,7 +11,7 @@
 #include <lone/value/table.h>
 #include <lone/value/symbol.h>
 
-static void lone_load_segment_modules(struct lone_lisp *lone, struct lone_bytes bytes)
+static void lone_load_segment(struct lone_lisp *lone, struct lone_bytes bytes)
 {
 	struct lone_reader reader;
 	struct lone_value *descriptor;
@@ -44,26 +44,8 @@ static void lone_load_segment_modules(struct lone_lisp *lone, struct lone_bytes 
 	lone_module_load_from_bytes(lone, module, code);
 }
 
-static void lone_load_segment(struct lone_lisp *lone, lone_elf_segment *segment)
-{
-	struct lone_bytes bytes = {
-		.count = segment->p_memsz,
-		.pointer = (unsigned char *) segment->p_vaddr
-	};
-
-	lone_load_segment_modules(lone, bytes);
-}
-
 void lone_modules_embedded_load(struct lone_lisp *lone, struct lone_auxiliary_vector *values)
 {
-	struct lone_elf_segments table = lone_auxiliary_vector_elf_segments(values);
-
-	for (size_t i = 0; i < table.entry_count; ++i) {
-		lone_elf_segment *segment = &table.segments[i];
-
-		if (segment->p_type == PT_LONE) {
-			lone_load_segment(lone, segment);
-			break;
-		}
-	}
+	struct lone_bytes segment = lone_auxiliary_vector_embedded_segment(values);
+	lone_load_segment(lone, segment);
 }
