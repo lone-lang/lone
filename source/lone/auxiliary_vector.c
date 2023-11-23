@@ -37,24 +37,37 @@ struct lone_elf_segments lone_auxiliary_vector_elf_segments(struct lone_auxiliar
 	};
 }
 
-struct lone_bytes lone_auxiliary_vector_embedded_segment(struct lone_auxiliary_vector *values)
+lone_elf_segment *lone_auxiliary_vector_embedded_segment(struct lone_auxiliary_vector *values)
 {
 	struct lone_elf_segments table;
-	struct lone_bytes segment;
 	size_t i;
 
 	table = lone_auxiliary_vector_elf_segments(values);
-	segment.count = 0; segment.pointer = 0;
 
 	for (i = 0; i < table.entry_count; ++i) {
 		lone_elf_segment *entry = &table.segments[i];
 
 		if (entry->p_type == PT_LONE) {
-			segment.count = entry->p_memsz;
-			segment.pointer = (unsigned char *) entry->p_vaddr;
-			break;
+			return entry;
 		}
 	}
 
-	return segment;
+	return 0;
+}
+
+struct lone_bytes lone_auxiliary_vector_embedded_bytes(struct lone_auxiliary_vector *values)
+{
+	lone_elf_segment *segment = lone_auxiliary_vector_embedded_segment(values);
+
+	if (!segment) {
+		return (struct lone_bytes) {
+			.count = 0,
+			.pointer = 0
+		};
+	}
+
+	return (struct lone_bytes) {
+		.count = segment->p_memsz,
+		.pointer = (unsigned char *) segment->p_vaddr
+	};
 }

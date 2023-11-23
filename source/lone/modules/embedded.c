@@ -48,6 +48,6 @@ static void lone_load_segment(struct lone_lisp *lone, struct lone_bytes bytes)
 
 void lone_modules_embedded_load(struct lone_lisp *lone, struct lone_auxiliary_vector *values)
 {
-	struct lone_bytes segment = lone_auxiliary_vector_embedded_segment(values);
+	struct lone_bytes segment = lone_auxiliary_vector_embedded_bytes(values);
 	lone_load_segment(lone, segment);
 }
