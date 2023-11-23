@@ -13,8 +13,6 @@
 #include <lone/modules/embedded.h>
 #include <lone/utilities.h>
 
-#include <lone/struct/lisp.h>
-
 /* ╭───────────────────────┨ LONE LISP ENTRY POINT ┠────────────────────────╮
    │                                                                        │
    │    Linux places argument, environment and auxiliary value arrays       │

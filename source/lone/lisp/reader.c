@@ -14,8 +14,6 @@
 #include <lone/memory/allocator.h>
 #include <lone/linux.h>
 
-#include <lone/struct/reader.h>
-
 void lone_reader_for_bytes(struct lone_lisp *lone, struct lone_reader *reader, struct lone_bytes bytes)
 {
 	reader->file_descriptor = -1;

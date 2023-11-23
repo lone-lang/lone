@@ -5,7 +5,6 @@
 #include <lone/memory/allocator.h>
 #include <lone/memory/functions.h>
 
-#include <lone/struct/lisp.h>
 #include <lone/struct/memory.h>
 
 static size_t __attribute__((const)) lone_next_power_of_2(size_t n)

@@ -9,8 +9,6 @@
 #include <lone/value/symbol.h>
 #include <lone/value/integer.h>
 
-#include <lone/struct/lisp.h>
-
 #include <lone/utilities.h>
 #include <lone/linux.h>
 

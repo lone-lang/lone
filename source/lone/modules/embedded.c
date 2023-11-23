@@ -11,8 +11,6 @@
 #include <lone/value/table.h>
 #include <lone/value/symbol.h>
 
-#include <lone/struct/reader.h>
-
 static void lone_load_segment_modules(struct lone_lisp *lone, struct lone_bytes bytes)
 {
 	struct lone_reader reader;

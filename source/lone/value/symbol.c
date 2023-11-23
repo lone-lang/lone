@@ -4,8 +4,6 @@
 #include <lone/value/table.h>
 #include <lone/memory/functions.h>
 
-#include <lone/struct/lisp.h>
-
 struct lone_value *lone_symbol_transfer(struct lone_lisp *lone, unsigned char *text, size_t length, bool should_deallocate)
 {
 	struct lone_value *value = lone_bytes_transfer(lone, text, length, should_deallocate);

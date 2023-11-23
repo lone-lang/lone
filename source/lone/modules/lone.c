@@ -14,8 +14,6 @@
 #include <lone/value/table.h>
 #include <lone/value/symbol.h>
 
-#include <lone/struct/lisp.h>
-
 #include <lone/linux.h>
 
 void lone_module_lone_initialize(struct lone_lisp *lone)

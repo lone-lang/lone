@@ -110,9 +110,7 @@ the successful status code `0` is expected.
         │   └── text.h                 # Text manipulation functions
         ├── struct/                    # Lone structure definitions
         │   ├── heap.h                 # Heap from where values are allocated
-        │   ├── lisp.h                 # Lone lisp interpreter
-        │   ├── memory.h               # Memory blocks managed by lone
-        │   └── reader.h               # Reader state and buffer
+        │   └── memory.h               # Memory blocks managed by lone
         ├── value/                     # Functions for each type of value
         │   ├── bytes.h                # Creation and transfer functions
         │   ├── function.h             # Function and closure instantiation

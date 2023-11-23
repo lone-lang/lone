@@ -10,8 +10,6 @@
 #include <lone/value/symbol.h>
 #include <lone/value/text.h>
 
-#include <lone/struct/lisp.h>
-
 void lone_module_text_initialize(struct lone_lisp *lone)
 {
 	struct lone_value *name = lone_intern_c_string(lone, "text"),

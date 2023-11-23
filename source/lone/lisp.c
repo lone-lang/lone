@@ -15,8 +15,6 @@
 #include <lone/value/table.h>
 #include <lone/value/symbol.h>
 
-#include <lone/struct/lisp.h>
-
 void lone_lisp_initialize(struct lone_lisp *lone, struct lone_bytes memory, size_t heap_size, void *stack, struct lone_bytes random)
 {
 	struct lone_function_flags flags = { .evaluate_arguments = 0, .evaluate_result = 0, .variable_arguments = 1 };

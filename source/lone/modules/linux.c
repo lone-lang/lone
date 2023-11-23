@@ -15,8 +15,6 @@
 #include <lone/value/integer.h>
 #include <lone/value/pointer.h>
 
-#include <lone/struct/lisp.h>
-
 #include <lone/linux.h>
 
 static void lone_auxiliary_value_to_table(struct lone_lisp *lone, struct lone_value *table, struct lone_auxiliary_vector *auxiliary)

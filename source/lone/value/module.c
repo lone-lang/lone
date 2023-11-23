@@ -5,8 +5,6 @@
 #include <lone/value/vector.h>
 #include <lone/value/table.h>
 
-#include <lone/struct/lisp.h>
-
 struct lone_value *lone_module_create(struct lone_lisp *lone, struct lone_value *name)
 {
 	struct lone_value *value = lone_value_create(lone);
