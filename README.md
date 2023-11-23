@@ -126,8 +126,7 @@ the successful status code `0` is expected.
         ├── lisp.h                     # Lone lisp interpreter initialization
         ├── memory.h                   # Lone memory subsystem initialization
         ├── modules.h                  # Module loading, search, path management
-        ├── structures.h               # Includes all lone structure definitions
-        ├── types.h                    # Basic type definitions and forward declarations
+        ├── types.h                    # Primitive and aggregate type definitions
         ├── utilities.h                # Useful functions
         └── value.h                    # Blank slate lone value creation
 
