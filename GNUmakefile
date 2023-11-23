@@ -4,7 +4,7 @@ MAKEFLAGS += --no-builtin-variables --no-builtin-rules
 
 CC := cc
 LD := ld
-CFLAGS := -Wall -Wextra -Wpedantic -Wno-unused-function -Wno-unused-parameter -Os
+CFLAGS := -Wall -Wextra -Wpedantic -Wno-unused-function -Wno-unused-parameter -Wno-unknown-attributes -Os
 
 ifdef TARGET
   ifndef UAPI
