@@ -14,7 +14,6 @@
 #include <lone/utilities.h>
 
 #include <lone/struct/lisp.h>
-#include <lone/struct/bytes.h>
 
 /* ╭───────────────────────┨ LONE LISP ENTRY POINT ┠────────────────────────╮
    │                                                                        │

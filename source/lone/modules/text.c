@@ -12,7 +12,6 @@
 
 #include <lone/struct/lisp.h>
 #include <lone/struct/function.h>
-#include <lone/struct/bytes.h>
 
 void lone_module_text_initialize(struct lone_lisp *lone)
 {

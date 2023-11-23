@@ -3,7 +3,6 @@
 #include <lone/hash/fnv_1a.h>
 
 #include <lone/struct/lisp.h>
-#include <lone/struct/bytes.h>
 
 unsigned long __attribute__((pure)) lone_hash_fnv_1a(struct lone_bytes data, unsigned long offset_basis)
 {

@@ -11,7 +11,6 @@
 #include <lone/value/table.h>
 #include <lone/value/symbol.h>
 
-#include <lone/struct/bytes.h>
 #include <lone/struct/reader.h>
 #include <lone/struct/value.h>
 

@@ -7,7 +7,6 @@
 #include <lone/value/table.h>
 
 #include <lone/struct/value.h>
-#include <lone/struct/bytes.h>
 
 #include <lone/linux.h>
 

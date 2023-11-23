@@ -6,7 +6,6 @@
 #include <stdarg.h>
 
 #include <lone/types.h>
-#include <lone/struct/bytes.h>
 
 /* ╭───────────────────────────┨ LONE / MODULES ┠───────────────────────────╮
    │                                                                        │

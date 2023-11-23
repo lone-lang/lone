@@ -5,8 +5,6 @@
 
 #include <lone/types.h>
 
-#include <lone/struct/bytes.h>
-
 void lone_memory_initialize(
 	struct lone_lisp *lone,
 	struct lone_bytes memory,

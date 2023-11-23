@@ -1,6 +1,7 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later */
 
 #include <lone/definitions.h>
+#include <lone/types.h>
 
 #include <lone/lisp.h>
 #include <lone/memory.h>
@@ -16,7 +17,6 @@
 
 #include <lone/struct/lisp.h>
 #include <lone/struct/function.h>
-#include <lone/struct/bytes.h>
 
 void lone_lisp_initialize(struct lone_lisp *lone, struct lone_bytes memory, size_t heap_size, void *stack, struct lone_bytes random)
 {

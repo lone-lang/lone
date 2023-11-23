@@ -3,10 +3,8 @@
 #ifndef LONE_HASH_FNV_1A_HEADER
 #define LONE_HASH_FNV_1A_HEADER
 
-#include <asm/bitsperlong.h>
-
+#include <lone/definitions.h>
 #include <lone/types.h>
-#include <lone/struct/bytes.h>
 
 /* ╭────────────────────────────────────────────────────────────────────────╮
    │                                                                        │

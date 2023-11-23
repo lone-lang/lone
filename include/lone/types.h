@@ -43,6 +43,11 @@ struct lone_auxiliary_vector {
 	struct lone_auxiliary_value value;
 };
 
+struct lone_bytes {
+	size_t count;
+	unsigned char *pointer;
+};
+
 /* ╭──────────────────────────┨ LONE LISP TYPES ┠───────────────────────────╮
    │                                                                        │
    │    Lone implements dynamic data types as a tagged union.               │

@@ -15,7 +15,6 @@
 
 #include <lone/struct/reader.h>
 #include <lone/struct/value.h>
-#include <lone/struct/bytes.h>
 
 void lone_reader_for_bytes(struct lone_lisp *lone, struct lone_reader *reader, struct lone_bytes bytes)
 {

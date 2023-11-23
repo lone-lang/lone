@@ -3,7 +3,7 @@
 #ifndef LONE_STRUCT_READER_HEADER
 #define LONE_STRUCT_READER_HEADER
 
-#include <lone/struct/bytes.h>
+#include <lone/types.h>
 
 struct lone_reader {
 	int file_descriptor;
