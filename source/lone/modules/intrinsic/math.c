@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later */
 
 #include <lone/modules.h>
-#include <lone/modules/math.h>
+#include <lone/modules/intrinsic/math.h>
 
 #include <lone/value/primitive.h>
 #include <lone/value/list.h>

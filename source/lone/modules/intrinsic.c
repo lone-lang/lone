@@ -3,11 +3,11 @@
 #include <lone/modules.h>
 #include <lone/modules/intrinsic.h>
 
-#include <lone/modules/linux.h>
-#include <lone/modules/lone.h>
-#include <lone/modules/math.h>
-#include <lone/modules/text.h>
-#include <lone/modules/list.h>
+#include <lone/modules/intrinsic/linux.h>
+#include <lone/modules/intrinsic/lone.h>
+#include <lone/modules/intrinsic/math.h>
+#include <lone/modules/intrinsic/text.h>
+#include <lone/modules/intrinsic/list.h>
 
 void lone_modules_intrinsic_initialize(struct lone_lisp *lone, int argc, char **argv, char **envp, struct lone_auxiliary_vector *auxv)
 {

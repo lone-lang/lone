@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later */
 
 #include <lone/modules.h>
-#include <lone/modules/lone.h>
+#include <lone/modules/intrinsic/lone.h>
 
 #include <lone/lisp/evaluator.h>
 #include <lone/lisp/printer.h>

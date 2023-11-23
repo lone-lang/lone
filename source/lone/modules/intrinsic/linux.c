@@ -4,7 +4,7 @@
 #include <lone/types.h>
 
 #include <lone/modules.h>
-#include <lone/modules/linux.h>
+#include <lone/modules/intrinsic/linux.h>
 
 #include <lone/value/primitive.h>
 #include <lone/value/list.h>

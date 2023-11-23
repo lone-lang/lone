@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later */
 
-#ifndef LONE_MODULES_LINUX_HEADER
-#define LONE_MODULES_LINUX_HEADER
+#ifndef LONE_MODULES_INTRINSIC_LINUX_HEADER
+#define LONE_MODULES_INTRINSIC_LINUX_HEADER
 
 #include <lone/definitions.h>
 #include <lone/types.h>
@@ -16,4 +16,4 @@ void lone_module_linux_initialize(struct lone_lisp *lone, int argc, char **argv,
 
 LONE_PRIMITIVE(linux_system_call);
 
-#endif /* LONE_MODULES_LINUX_HEADER */
+#endif /* LONE_MODULES_INTRINSIC_LINUX_HEADER */

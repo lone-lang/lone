@@ -102,12 +102,14 @@ the successful status code `0` is expected.
         │   ├── garbage_collector.h    # The lone garbage collector
         │   └── heap.h                 # The lone value heap
         ├── modules/                   # Intrinsic lone modules
+        │   ├── intrinsic/             # Modules built into the interpreter
+        │   │   ├── linux.h            # Linux system calls and process parameters
+        │   │   ├── list.h             # List manipulation functions
+        │   │   ├── lone.h             # Lone language primitives
+        │   │   ├── math.h             # Mathematical functions
+        │   │   └── text.h             # Text manipulation functions
         │   ├── intrinsic.h            # Bulk initializer for all built-in modules
-        │   ├── linux.h                # Linux system calls and process parameters
-        │   ├── list.h                 # List functions
-        │   ├── lone.h                 # Lone language primitives
-        │   ├── math.h                 # Mathematical functions
-        │   └── text.h                 # Text manipulation functions
+        │   └── embedded.h             # Modules embedded into the interpreter
         ├── value/                     # Functions for each type of value
         │   ├── bytes.h                # Creation and transfer functions
         │   ├── function.h             # Function and closure instantiation

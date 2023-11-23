@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later */
 
 #include <lone/modules.h>
-#include <lone/modules/text.h>
+#include <lone/modules/intrinsic/text.h>
 #include <lone/utilities.h>
 
 #include <lone/value/primitive.h>

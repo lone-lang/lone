@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later */
 
-#ifndef LONE_MODULES_LIST_HEADER
-#define LONE_MODULES_LIST_HEADER
+#ifndef LONE_MODULES_INTRINSIC_LIST_HEADER
+#define LONE_MODULES_INTRINSIC_LIST_HEADER
 
 #include <lone/definitions.h>
 #include <lone/types.h>
@@ -21,4 +21,4 @@ LONE_PRIMITIVE(list_map);
 LONE_PRIMITIVE(list_reduce);
 LONE_PRIMITIVE(list_flatten);
 
-#endif /* LONE_MODULES_LIST_HEADER */
+#endif /* LONE_MODULES_INTRINSIC_LIST_HEADER */

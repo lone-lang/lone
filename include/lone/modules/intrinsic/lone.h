@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later */
 
-#ifndef LONE_MODULES_LONE_HEADER
-#define LONE_MODULES_LONE_HEADER
+#ifndef LONE_MODULES_INTRINSIC_LONE_HEADER
+#define LONE_MODULES_INTRINSIC_LONE_HEADER
 
 #include <lone/definitions.h>
 #include <lone/types.h>
@@ -36,4 +36,4 @@ LONE_PRIMITIVE(lone_is_equivalent);
 LONE_PRIMITIVE(lone_is_equal);
 LONE_PRIMITIVE(lone_print);
 
-#endif /* LONE_MODULES_LONE_HEADER */
+#endif /* LONE_MODULES_INTRINSIC_LONE_HEADER */
