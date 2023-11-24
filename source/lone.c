@@ -47,7 +47,7 @@ long lone(int argc, char **argv, char **envp, struct lone_auxiliary_vector *auxv
 
 	);
 
-	lone_modules_embedded_load(&lone, auxv);
+	lone_modules_embedded_load(&lone, lone_auxiliary_vector_embedded_segment(auxv));
 
 	lone_module_load_null_from_standard_input(&lone);
 

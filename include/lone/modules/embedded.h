@@ -3,6 +3,6 @@
 
 #include <lone/types.h>
 
-void lone_modules_embedded_load(struct lone_lisp *lone, struct lone_auxiliary_vector *values);
+void lone_modules_embedded_load(struct lone_lisp *lone, lone_elf_segment *values);
 
 #endif /* LONE_MODULES_EMBEDDED_HEADER */

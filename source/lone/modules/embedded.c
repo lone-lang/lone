@@ -3,7 +3,7 @@
 
 #include <lone/modules/embedded.h>
 #include <lone/modules.h>
-#include <lone/auxiliary_vector.h>
+#include <lone/segment.h>
 #include <lone/linux.h>
 
 #include <lone/lisp/reader.h>
@@ -46,8 +46,8 @@ static void lone_load_segment(struct lone_lisp *lone, struct lone_bytes bytes)
 	lone_module_load_from_bytes(lone, module, code);
 }
 
-void lone_modules_embedded_load(struct lone_lisp *lone, struct lone_auxiliary_vector *values)
+void lone_modules_embedded_load(struct lone_lisp *lone, lone_elf_segment *segment)
 {
-	struct lone_bytes segment = lone_auxiliary_vector_embedded_bytes(values);
-	lone_load_segment(lone, segment);
+	struct lone_bytes bytes = lone_segment_bytes(segment);
+	lone_load_segment(lone, bytes);
 }

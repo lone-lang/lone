@@ -54,20 +54,3 @@ lone_elf_segment *lone_auxiliary_vector_embedded_segment(struct lone_auxiliary_v
 
 	return 0;
 }
-
-struct lone_bytes lone_auxiliary_vector_embedded_bytes(struct lone_auxiliary_vector *values)
-{
-	lone_elf_segment *segment = lone_auxiliary_vector_embedded_segment(values);
-
-	if (!segment) {
-		return (struct lone_bytes) {
-			.count = 0,
-			.pointer = 0
-		};
-	}
-
-	return (struct lone_bytes) {
-		.count = segment->p_memsz,
-		.pointer = (unsigned char *) segment->p_vaddr
-	};
-}
