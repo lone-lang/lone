@@ -11,24 +11,21 @@
 #include <lone/value/table.h>
 #include <lone/value/symbol.h>
 
-static void lone_load_segment(struct lone_lisp *lone, struct lone_bytes bytes)
+void lone_modules_embedded_load(struct lone_lisp *lone, lone_elf_segment *segment)
 {
-	struct lone_reader reader;
-	struct lone_value *descriptor;
-	struct lone_value *run, *locations, *first, *rest;
-	size_t offset, start, end, size, i;
-	struct lone_bytes code;
+	struct lone_value *descriptor = lone_segment_read_descriptor(lone, segment);
+	struct lone_value *module, *symbol, *data, *locations, *first, *rest;
+	struct lone_bytes bytes, code;
+	size_t start, end;
 
-	if (bytes.count == 0) { /* empty lone segment */ return; }
+	if (!descriptor) { /* nothing to load */ return; }
 
-	lone_reader_for_bytes(lone, &reader, bytes);
-	descriptor = lone_read(lone, &reader);
-	if (!descriptor || !lone_is_table(descriptor)) { /* empty or corrupt segment */ linux_exit(-1); }
+	symbol = lone_intern_c_string(lone, "data");
+	data = lone_table_get(lone, descriptor, symbol);
+	bytes = data->bytes;
 
-	offset = reader.buffer.position.read;
-	run = lone_intern_c_string(lone, "run");
-
-	locations = lone_table_get(lone, descriptor, run);
+	symbol = lone_intern_c_string(lone, "run");
+	locations = lone_table_get(lone, descriptor, symbol);
 	if (!lone_is_list(locations)) { /* unexpected value type */ linux_exit(-1); }
 	first = lone_list_first(locations);
 	if (!lone_is_integer(first)) { /* unexpected value type */ linux_exit(-1); }
@@ -37,17 +34,13 @@ static void lone_load_segment(struct lone_lisp *lone, struct lone_bytes bytes)
 
 	start = first->integer;
 	end = rest->integer;
-	size = end - start;
 
-	if (offset + size > bytes.count) { /* segment overrun */ linux_exit(-1); }
-	code = (struct lone_bytes) { .count = size, .pointer = bytes.pointer + offset };
+	if (start >= bytes.count || end >= bytes.count) {
+		/* segment overrun */ linux_exit(-1);
+	}
 
-	struct lone_value *module = lone_module_for_name(lone, run);
+	code = (struct lone_bytes) { .count = end - start, .pointer = bytes.pointer + start };
+
+	module = lone_module_for_name(lone, symbol);
 	lone_module_load_from_bytes(lone, module, code);
-}
-
-void lone_modules_embedded_load(struct lone_lisp *lone, lone_elf_segment *segment)
-{
-	struct lone_bytes bytes = lone_segment_bytes(segment);
-	lone_load_segment(lone, bytes);
 }
