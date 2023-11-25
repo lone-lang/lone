@@ -51,7 +51,7 @@ void lone_modules_embedded_load(struct lone_lisp *lone, lone_elf_segment *segmen
 	symbol = lone_intern_c_string(lone, "run");
 	locations = lone_table_get(lone, descriptor, symbol);
 
-	code = slice(data->bytes, locations);
+	code = slice(bytes, locations);
 
 	module = lone_module_for_name(lone, symbol);
 	lone_module_load_from_bytes(lone, module, code);
