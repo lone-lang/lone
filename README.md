@@ -14,6 +14,44 @@ Currently in the early stages of development.
 (system-call 'write 1 "Hello, world!" 13)
 ```
 
+## Features and road map
+
+ - [x] Byte buffers
+ - [x] Texts
+ - [x] Symbols
+ - [x] Lists
+ - [x] Vectors
+ - [x] Tables
+   - [x] Prototypal inheritance
+   - Hash functions
+     - FNV-1a
+ - [ ] Numbers
+   - [x] Integers
+     - [x] Signed
+   - [ ] Floating point
+ - [x] Pointers
+ - [x] Modules
+ - [x] Functions
+   - [x] Primitive
+   - [x] Variadic
+   - [x] FEXPR
+ - [ ] Linux
+   - [x] System calls
+   - [ ] Structures
+   - [x] Process parameters
+     - [x] Arguments
+       - [x] Count
+       - [x] Vector
+     - [x] Environment vector
+     - [x] Auxiliary vector
+   - [ ] Loadable embedded ELF segment
+     - [x] Code evaluation
+     - [ ] Module importing
+     - [ ] Interpreter configuration
+     - [x] Tools
+ - [x] Memory allocator
+ - [x] Garbage collector
+
 ## Building
 
 Lone is built by a simple GNU Make file.
