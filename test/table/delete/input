@@ -1,0 +1,12 @@
+(import (lone print set quote) (table get delete))
+
+(set t { first 1 second 2 third 3 fourth 4 fifth 5 })
+
+(delete t 'second)
+(delete t 'fourth)
+
+(print (get t 'first))
+(print (get t 'second))
+(print (get t 'third))
+(print (get t 'fourth))
+(print (get t 'fifth))
