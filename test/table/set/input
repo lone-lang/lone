@@ -1,0 +1,11 @@
+(import (lone print set quote) prefixed (table get set))
+
+(set t {})
+
+(table.set t 'first  1)
+(table.set t 'second 2)
+(table.set t 'third  3)
+
+(print (table.get t 'first))
+(print (table.get t 'second))
+(print (table.get t 'third))
