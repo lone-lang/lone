@@ -182,6 +182,30 @@ struct lone_vector {
 	size_t capacity;
 };
 
+/* ╭────────────────────────────────────────────────────────────────────────╮
+   │                                                                        │
+   │    Lone tables are openly addressed, linearly probed hash tables.      │
+   │                                                                        │
+   │    Entries are stored compactly and maintain insertion order.          │
+   │    Hashes index into a separate sparse array of indexes                │
+   │    meant for the compact entries array.                                │
+   │                                                                        │
+   │    Tables strive to maintain a load factor of at most 0.5:             │
+   │    they will be rehashed once they're above half capacity.             │
+   │                                                                        │
+   │    When deleting keys, entries are shifted backwards.                  │
+   │    Tombstones are not used.                                            │
+   │                                                                        │
+   │    Currently, lone tables use the FNV-1a hashing algorithm.            │
+   │    More algorithms will probably be implemented in the future.         │
+   │                                                                        │
+   │    Tables are able to inherit from another table:                      │
+   │    missing keys are also looked up in the parent table.                │
+   │    This is currently used to implement nested environments             │
+   │    but will also serve as a prototype-based object system              │
+   │    as in Javascript and Self.                                          │
+   │                                                                        │
+   ╰────────────────────────────────────────────────────────────────────────╯ */
 struct lone_table_index {
 	bool used: 1;
 	size_t index;
