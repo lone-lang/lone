@@ -178,14 +178,25 @@ define print-lone-table
   printf "]={\n"
   set var $i = 0
   while $i < $table.capacity
-    set var $entry = &$table.entries[$i]
-    if $entry->key
+    set var $index = &$table.indexes[$i]
+    if $index.used
       printf "\t"
       output $i
       printf "\t=>\t"
-      print-lone-table-entry $entry
+      output $index.index
       printf "\n"
     end
+    set var $i = $i + 1
+  end
+  printf "\n\n"
+  set var $i = 0
+  while $i < $table.count
+    set var $entry = &$table.entries[$i]
+    printf "\t"
+    output $i
+    printf "\t=>\t"
+    print-lone-table-entry $entry
+    printf "\n"
     set var $i = $i + 1
   end
   printf "}"
