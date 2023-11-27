@@ -40,7 +40,7 @@ static void lone_mark_value(struct lone_value *value)
 		break;
 	case LONE_TABLE:
 		lone_mark_value(value->table.prototype);
-		for (size_t i = 0; i < value->table.capacity; ++i) {
+		for (size_t i = 0; i < value->table.count; ++i) {
 			lone_mark_value(value->table.entries[i].key);
 			lone_mark_value(value->table.entries[i].value);
 		}
@@ -144,6 +144,7 @@ static void lone_kill_all_unmarked_values(struct lone_lisp *lone)
 					lone_deallocate(lone, value->vector.values);
 					break;
 				case LONE_TABLE:
+					lone_deallocate(lone, value->table.indexes);
 					lone_deallocate(lone, value->table.entries);
 					break;
 				case LONE_MODULE:

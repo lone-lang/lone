@@ -182,6 +182,11 @@ struct lone_vector {
 	size_t capacity;
 };
 
+struct lone_table_index {
+	bool used: 1;
+	size_t index;
+};
+
 struct lone_table_entry {
 	struct lone_value *key;
 	struct lone_value *value;
@@ -190,6 +195,7 @@ struct lone_table_entry {
 struct lone_table {
 	size_t count;
 	size_t capacity;
+	struct lone_table_index *indexes;
 	struct lone_table_entry *entries;
 	struct lone_value *prototype;
 };
