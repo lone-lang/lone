@@ -33,6 +33,14 @@
 	#define LONE_ALIGNMENT 16
 #endif
 
+#ifndef LONE_TABLE_LOAD_FACTOR
+	#define LONE_TABLE_LOAD_FACTOR 0.5
+#endif
+
+#ifndef LONE_TABLE_GROWTH_FACTOR
+	#define LONE_TABLE_GROWTH_FACTOR 2
+#endif
+
 #define LONE_PRIMITIVE(name)                  \
 struct lone_value *lone_primitive_ ## name    \
 (                                             \

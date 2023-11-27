@@ -3,6 +3,7 @@
 #ifndef LONE_VALUE_TABLE_HEADER
 #define LONE_VALUE_TABLE_HEADER
 
+#include <lone/definitions.h>
 #include <lone/types.h>
 
 /* ╭────────────────────────────────────────────────────────────────────────╮

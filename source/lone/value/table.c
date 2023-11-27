@@ -114,8 +114,8 @@ void lone_table_set(struct lone_lisp *lone, struct lone_value *table, struct lon
 {
 	int is_new_table_entry;
 
-	if (lone_table_load_factor(table) > 0.5) {
-		lone_table_resize(lone, table, table->table.capacity * 2);
+	if (lone_table_load_factor(table) > LONE_TABLE_LOAD_FACTOR) {
+		lone_table_resize(lone, table, table->table.capacity * LONE_TABLE_GROWTH_FACTOR);
 	}
 
 	is_new_table_entry = lone_table_entry_set(
