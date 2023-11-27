@@ -27,6 +27,14 @@ struct lone_value *lone_table_create(struct lone_lisp *lone, size_t capacity, st
 	return value;
 }
 
+static float lone_table_load_factor(struct lone_value *table)
+{
+	float count = table->table.count;
+	float capacity = table->table.capacity;
+
+	return count / capacity;
+}
+
 static unsigned long lone_table_compute_hash_for(struct lone_lisp *lone, struct lone_value *key, size_t capacity)
 {
 	return lone_hash(lone, key) % capacity;
@@ -106,7 +114,7 @@ void lone_table_set(struct lone_lisp *lone, struct lone_value *table, struct lon
 {
 	int is_new_table_entry;
 
-	if (table->table.count >= table->table.capacity / 2) {
+	if (lone_table_load_factor(table) > 0.5) {
 		lone_table_resize(lone, table, table->table.capacity * 2);
 	}
 
