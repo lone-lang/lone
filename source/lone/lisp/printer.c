@@ -116,24 +116,22 @@ static void lone_print_vector(struct lone_lisp *lone, struct lone_value *vector,
 
 static void lone_print_table(struct lone_lisp *lone, struct lone_value *table, int fd)
 {
-	size_t n = table->table.capacity, i;
 	struct lone_table_entry *entries = table->table.entries;
+	size_t count = table->table.count;
+	size_t i;
 
-	if (table->table.count == 0) { linux_write(fd, "{}", 2); return; }
+	if (count == 0) { linux_write(fd, "{}", 2); return; }
 
 	linux_write(fd, "{ ", 2);
 
-	for (i = 0; i < n; ++i) {
+	for (i = 0; i < count; ++i) {
 		struct lone_value *key   = entries[i].key,
 		                  *value = entries[i].value;
 
-
-		if (key) {
-			lone_print(lone, key, fd);
-			linux_write(fd, " ", 1);
-			lone_print(lone, value, fd);
-			linux_write(fd, " ", 1);
-		}
+		lone_print(lone, key, fd);
+		linux_write(fd, " ", 1);
+		lone_print(lone, value, fd);
+		linux_write(fd, " ", 1);
 	}
 
 	linux_write(fd, "}", 1);

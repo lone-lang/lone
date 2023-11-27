@@ -1,0 +1,14 @@
+(import (lone print set quote) prefixed (table set delete))
+
+(set t {})
+
+(table.set t 'first  1)
+(table.set t 'second 2)
+(table.set t 'third  3)
+(table.set t 'fourth 4)
+(table.set t 'fifth  5)
+
+(table.delete t 'second)
+(table.delete t 'fourth)
+
+(print t)
