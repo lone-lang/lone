@@ -72,7 +72,8 @@ if their respective `output` and `error` files are present.
 If the `status` file is omitted,
 the successful status code `0` is expected.
 
-## Project structure
+<details>
+<summary>Project structure</summary>
 
     lone/                 # The lone repository
     ├── build/            # The build tree
@@ -179,3 +180,5 @@ the successful status code `0` is expected.
     │   ├── codeql.yml    # Automated code quality checker
     │   └── lone.yml      # Automated building and testing
     └── FUNDING.yml       # Funding information
+
+</details>
