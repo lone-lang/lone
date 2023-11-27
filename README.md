@@ -72,8 +72,10 @@ if their respective `output` and `error` files are present.
 If the `status` file is omitted,
 the successful status code `0` is expected.
 
+## Project structure
+
 <details>
-<summary>Project structure</summary>
+<summary>Description of the structure of the repository</summary>
 
     lone/                 # The lone repository
     ├── build/            # The build tree
