@@ -34,7 +34,7 @@
 #endif
 
 #ifndef LONE_TABLE_LOAD_FACTOR
-	#define LONE_TABLE_LOAD_FACTOR 0.5
+	#define LONE_TABLE_LOAD_FACTOR 0.7
 #endif
 
 #ifndef LONE_TABLE_GROWTH_FACTOR

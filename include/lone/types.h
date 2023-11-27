@@ -190,8 +190,8 @@ struct lone_vector {
    │    Hashes index into a separate sparse array of indexes                │
    │    meant for the compact entries array.                                │
    │                                                                        │
-   │    Tables strive to maintain a load factor of at most 0.5:             │
-   │    they will be rehashed once they're above half capacity.             │
+   │    Tables strive to maintain a load factor of at most 0.7:             │
+   │    they will be rehashed once they're above 70% capacity.              │
    │                                                                        │
    │    When deleting keys, entries are shifted backwards.                  │
    │    Tombstones are not used.                                            │
