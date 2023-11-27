@@ -47,6 +47,11 @@ Any of the following commands can be used to run it:
     make clean test
     scripts/test.bash [lone-executable [test-suite-directory]]
 
+### Adding new test cases
+
+<details>
+<summary>How the test cases are organized and run</summary>
+
 New tests are added by creating directories inside `test/`,
 forming an arbitrary directory tree which determines the test name.
 Leaf directories contain the test files used to exercise lone.
@@ -71,6 +76,8 @@ The actual output and error data are only compared
 if their respective `output` and `error` files are present.
 If the `status` file is omitted,
 the successful status code `0` is expected.
+
+</details>
 
 ## Project structure
 
