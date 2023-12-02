@@ -17,5 +17,6 @@ void lone_modules_intrinsic_table_initialize(struct lone_lisp *lone);
 LONE_PRIMITIVE(table_get);
 LONE_PRIMITIVE(table_set);
 LONE_PRIMITIVE(table_delete);
+LONE_PRIMITIVE(table_each);
 
 #endif /* LONE_MODULES_INTRINSIC_TABLE_HEADER */

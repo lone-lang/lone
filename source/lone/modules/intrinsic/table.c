@@ -7,6 +7,7 @@
 #include <lone/value/list.h>
 #include <lone/value/symbol.h>
 #include <lone/lisp/constants.h>
+#include <lone/lisp/evaluator.h>
 #include <lone/linux.h>
 
 void lone_modules_intrinsic_table_initialize(struct lone_lisp *lone)
@@ -25,6 +26,9 @@ void lone_modules_intrinsic_table_initialize(struct lone_lisp *lone)
 
 	primitive = lone_primitive_create(lone, "table_delete", lone_primitive_table_delete, module, flags);
 	lone_set_and_export(lone, module, lone_intern_c_string(lone, "delete"), primitive);
+
+	primitive = lone_primitive_create(lone, "table_each", lone_primitive_table_each, module, flags);
+	lone_set_and_export(lone, module, lone_intern_c_string(lone, "each"), primitive);
 
 	lone_table_set(lone, lone->modules.loaded, name, module);
 
@@ -88,4 +92,30 @@ LONE_PRIMITIVE(table_delete)
 
 	lone_table_delete(lone, table, key);
 	return lone_nil(lone);
+}
+
+LONE_PRIMITIVE(table_each)
+{
+	struct lone_value *result, *table, *f;
+	struct lone_table_entry *entry;
+	size_t i;
+
+	if (lone_is_nil(arguments)) { /* arguments not given: (each) */ linux_exit(-1); }
+
+	table = lone_list_first(arguments);
+	arguments = lone_list_rest(arguments);
+	if (!lone_is_table(table)) { /* table not given: (each []) */ linux_exit(-1); }
+	if (lone_is_nil(arguments)) { /* function not given: (each table) */ linux_exit(-1); }
+
+	f = lone_list_first(arguments);
+	arguments = lone_list_rest(arguments);
+	if (!lone_is_applicable(f)) { /* applicable not given: (each table []) */ linux_exit(-1); }
+	if (!lone_is_nil(arguments)) { /* too many arguments given: (each table applicable extra) */ linux_exit(-1); }
+
+	LONE_TABLE_FOR_EACH(entry, table, i) {
+		arguments = lone_list_build(lone, 2, entry->key, entry->value);
+		result = lone_apply(lone, module, environment, f, arguments);
+	}
+
+	return result;
 }
