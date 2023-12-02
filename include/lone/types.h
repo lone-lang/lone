@@ -71,6 +71,7 @@ struct lone_lisp {
 	} constants;
 	struct {
 		struct lone_value *loaded;
+		struct lone_value *embedded;
 		struct lone_value *null;
 		struct lone_value *top_level_environment;
 		struct lone_value *path;

@@ -31,6 +31,7 @@ void lone_lisp_initialize(struct lone_lisp *lone, struct lone_bytes memory, size
 	lone->constants.truth = lone_intern_c_string(lone, "true");
 
 	lone->modules.loaded = lone_table_create(lone, 32, 0);
+	lone->modules.embedded = lone_nil(lone);
 	lone->modules.top_level_environment = lone_table_create(lone, 8, 0);
 	lone->modules.path = lone_vector_create(lone, 8);
 
