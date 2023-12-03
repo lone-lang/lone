@@ -18,7 +18,6 @@ struct lone_value *lone_primitive_create(
 	value->primitive.function = function;
 	value->primitive.closure = closure;
 	value->primitive.flags = flags;
-	value->primitive.flags.variable_arguments = 1;
 	return value;
 }
 

@@ -18,7 +18,7 @@ void lone_module_list_initialize(struct lone_lisp *lone)
 	                  *module = lone_module_for_name(lone, name),
 	                  *primitive;
 
-	struct lone_function_flags flags = { .evaluate_arguments = true, .evaluate_result = false, .variable_arguments = true };
+	struct lone_function_flags flags = { .evaluate_arguments = true, .evaluate_result = false };
 
 	primitive = lone_primitive_create(lone, "construct", lone_primitive_list_construct, module, flags);
 	lone_set_and_export(lone, module, lone_intern_c_string(lone, "construct"), primitive);

@@ -120,20 +120,30 @@ static struct lone_value *lone_apply_function(struct lone_lisp *lone, struct lon
 {
 	struct lone_value *new_environment = lone_table_create(lone, 16, function->function.environment),
 	                  *names = function->function.arguments, *code = function->function.code,
-	                  *value = lone_nil(lone);
+	                  *value = lone_nil(lone), *current_name;
 
 	/* evaluate each argument if function is configured to do so */
 	if (function->function.flags.evaluate_arguments) { arguments = lone_evaluate_all(lone, module, environment, arguments); }
 
-	if (function->function.flags.variable_arguments) {
-		if (lone_is_nil(names) || !lone_is_nil(lone_list_rest(names))) {
-			/* must have exactly one argument: the list of arguments */
-			linux_exit(-1);
-		}
+	while (1) {
+		current_name = lone_list_first(names);
 
-		lone_table_set(lone, new_environment, lone_list_first(names), arguments);
-	} else {
-		while (1) {
+		if (!lone_is_nil(names) && lone_is_list(current_name)) {
+			/* variadic argument passing: (lambda ((arguments))) (lambda (x y (rest))) */
+
+			if (lone_is_nil(current_name)) {
+				/* no name given: (lambda (x y ())) */ linux_exit(-1);
+			} else if (!lone_is_nil(lone_list_rest(current_name))) {
+				/* too many names given: (lambda (x y (rest extra))) */ linux_exit(-1);
+			} else {
+				/* valid, set name to the list of remaining arguments */
+				lone_table_set(lone, new_environment, lone_list_first(current_name), arguments);
+				break;
+			}
+
+		} else {
+			/* normal argument passing: (lambda (x y)) */
+
 			if (lone_is_nil(names) != lone_is_nil(arguments)) {
 				/* argument number mismatch: ((lambda (x) x) 10 20), ((lambda (x y) y) 10) */ linux_exit(-1);
 			} else if (lone_is_nil(names) && lone_is_nil(arguments)) {
@@ -142,8 +152,7 @@ static struct lone_value *lone_apply_function(struct lone_lisp *lone, struct lon
 			}
 
 			/* valid binding, set name in environment and move on */
-
-			lone_table_set(lone, new_environment, lone_list_first(names), lone_list_first(arguments));
+			lone_table_set(lone, new_environment, current_name, lone_list_first(arguments));
 
 			names = lone_list_rest(names);
 			arguments = lone_list_rest(arguments);

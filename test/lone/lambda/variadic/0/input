@@ -1,0 +1,11 @@
+(import (lone lambda set print))
+
+(set variadic (lambda ((arguments)) (print arguments)))
+
+(variadic)
+(variadic 1)
+(variadic 1 2)
+(variadic 1 2 3)
+(variadic 1 2 3 4)
+(variadic 1 2 3 4 5)
+(variadic 1 2 3 4 5 6)

@@ -22,7 +22,7 @@ void lone_module_lone_initialize(struct lone_lisp *lone)
 	                  *module = lone_module_for_name(lone, name),
 	                  *primitive;
 
-	struct lone_function_flags flags = { .evaluate_arguments = false, .evaluate_result = false, .variable_arguments = true };
+	struct lone_function_flags flags = { .evaluate_arguments = false, .evaluate_result = false };
 
 	primitive = lone_primitive_create(lone, "begin", lone_primitive_lone_begin, module, flags);
 	lone_set_and_export(lone, module, lone_intern_c_string(lone, "begin"), primitive);
@@ -54,10 +54,7 @@ void lone_module_lone_initialize(struct lone_lisp *lone)
 	primitive = lone_primitive_create(lone, "lambda_bang", lone_primitive_lone_lambda_bang, module, flags);
 	lone_set_and_export(lone, module, lone_intern_c_string(lone, "lambda!"), primitive);
 
-	primitive = lone_primitive_create(lone, "lambda_star", lone_primitive_lone_lambda_star, module, flags);
-	lone_set_and_export(lone, module, lone_intern_c_string(lone, "lambda*"), primitive);
-
-	flags = (struct lone_function_flags) { .evaluate_arguments = true, .evaluate_result = false, .variable_arguments = true };
+	flags = (struct lone_function_flags) { .evaluate_arguments = true, .evaluate_result = false };
 
 	primitive = lone_primitive_create(lone, "print", lone_primitive_lone_print, module, flags);
 	lone_set_and_export(lone, module, lone_intern_c_string(lone, "print"), primitive);
@@ -312,7 +309,6 @@ LONE_PRIMITIVE(lone_lambda)
 	struct lone_function_flags flags = {
 		.evaluate_arguments = 1,
 		.evaluate_result = 0,
-		.variable_arguments = 0,
 	};
 
 	return lone_primitive_lambda_with_flags(lone, environment, arguments, flags);
@@ -323,18 +319,6 @@ LONE_PRIMITIVE(lone_lambda_bang)
 	struct lone_function_flags flags = {
 		.evaluate_arguments = 0,
 		.evaluate_result = 0,
-		.variable_arguments = 0,
-	};
-
-	return lone_primitive_lambda_with_flags(lone, environment, arguments, flags);
-}
-
-LONE_PRIMITIVE(lone_lambda_star)
-{
-	struct lone_function_flags flags = {
-		.evaluate_arguments = 1,
-		.evaluate_result = 0,
-		.variable_arguments = 1,
 	};
 
 	return lone_primitive_lambda_with_flags(lone, environment, arguments, flags);

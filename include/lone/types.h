@@ -149,7 +149,6 @@ struct lone_module {
 struct lone_function_flags {
 	bool evaluate_arguments: 1;
 	bool evaluate_result: 1;
-	bool variable_arguments: 1;
 };
 
 struct lone_function {
@@ -169,7 +168,7 @@ struct lone_primitive {
 	struct lone_value *name;
 	lone_primitive function;
 	struct lone_value *closure;
-	struct lone_function_flags flags;    /* primitives always accept variable arguments */
+	struct lone_function_flags flags;
 };
 
 struct lone_list {
