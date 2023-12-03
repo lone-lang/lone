@@ -8,6 +8,7 @@
 
 #include <lone/value/primitive.h>
 #include <lone/value/list.h>
+#include <lone/value/vector.h>
 #include <lone/value/table.h>
 #include <lone/value/bytes.h>
 #include <lone/value/text.h>
@@ -251,13 +252,16 @@ static struct lone_value *lone_environment_to_table(struct lone_lisp *lone, char
 	return table;
 }
 
-static struct lone_value *lone_arguments_to_list(struct lone_lisp *lone, int count, char **c_strings)
+static struct lone_value *lone_arguments_to_vector(struct lone_lisp *lone, int count, char **c_strings)
 {
-	struct lone_value *arguments = lone_list_create_nil(lone), *head;
+	struct lone_value *arguments = lone_vector_create(lone, count);
 	int i;
 
-	for (i = 0, head = arguments; i < count; ++i) {
-		head = lone_list_append(lone, head, lone_text_create_from_c_string(lone, c_strings[i]));
+	for (i = 0; i < count; ++i) {
+		lone_vector_set(lone,
+		                arguments,
+		                lone_integer_create(lone, i),
+		                lone_text_create_from_c_string(lone, c_strings[i]));
 	}
 
 	return arguments;
@@ -301,7 +305,7 @@ void lone_module_linux_initialize(struct lone_lisp *lone, int argc, char **argv,
 	lone_fill_linux_system_call_table(lone, linux_system_call_table);
 
 	count = lone_integer_create(lone, argc);
-	arguments = lone_arguments_to_list(lone, argc, argv);
+	arguments = lone_arguments_to_vector(lone, argc, argv);
 	environment = lone_environment_to_table(lone, envp);
 	auxiliary_vector = lone_auxiliary_vector_to_table(lone, auxv);
 
