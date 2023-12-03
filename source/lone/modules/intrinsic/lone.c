@@ -16,7 +16,7 @@
 
 #include <lone/linux.h>
 
-void lone_module_lone_initialize(struct lone_lisp *lone)
+void lone_modules_intrinsic_lone_initialize(struct lone_lisp *lone)
 {
 	struct lone_value *name = lone_intern_c_string(lone, "lone"),
 	                  *module = lone_module_for_name(lone, name),

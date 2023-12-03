@@ -12,7 +12,7 @@
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
 
-void lone_module_list_initialize(struct lone_lisp *lone);
+void lone_modules_intrinsic_list_initialize(struct lone_lisp *lone);
 
 LONE_PRIMITIVE(list_construct);
 LONE_PRIMITIVE(list_first);

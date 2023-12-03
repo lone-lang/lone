@@ -288,7 +288,7 @@ static void lone_fill_linux_system_call_table(struct lone_lisp *lone, struct lon
 	}
 }
 
-void lone_module_linux_initialize(struct lone_lisp *lone, int argc, char **argv, char **envp, struct lone_auxiliary_vector *auxv)
+void lone_modules_intrinsic_linux_initialize(struct lone_lisp *lone, int argc, char **argv, char **envp, struct lone_auxiliary_vector *auxv)
 {
 	struct lone_value *name = lone_intern_c_string(lone, "linux"),
 	                  *module = lone_module_for_name(lone, name),

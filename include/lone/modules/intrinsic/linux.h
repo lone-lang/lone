@@ -12,7 +12,7 @@
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
 
-void lone_module_linux_initialize(struct lone_lisp *lone, int argc, char **argv, char **envp, struct lone_auxiliary_vector *auxv);
+void lone_modules_intrinsic_linux_initialize(struct lone_lisp *lone, int argc, char **argv, char **envp, struct lone_auxiliary_vector *auxv);
 
 LONE_PRIMITIVE(linux_system_call);
 

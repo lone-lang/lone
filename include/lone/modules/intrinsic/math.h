@@ -12,7 +12,7 @@
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
 
-void lone_module_math_initialize(struct lone_lisp *lone);
+void lone_modules_intrinsic_math_initialize(struct lone_lisp *lone);
 
 LONE_PRIMITIVE(math_add);
 LONE_PRIMITIVE(math_subtract);

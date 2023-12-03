@@ -12,7 +12,7 @@
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
 
-void lone_module_text_initialize(struct lone_lisp *lone);
+void lone_modules_intrinsic_text_initialize(struct lone_lisp *lone);
 
 LONE_PRIMITIVE(text_join);
 LONE_PRIMITIVE(text_concatenate);
