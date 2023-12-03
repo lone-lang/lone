@@ -38,4 +38,9 @@ void lone_vector_push_all(struct lone_lisp *lone, struct lone_value *vector, siz
 struct lone_value *lone_vector_build(struct lone_lisp *lone, size_t count, ...);
 bool lone_vector_contains(struct lone_value *vector, struct lone_value *value);
 
+#define LONE_VECTOR_FOR_EACH(entry, vector, i)                         \
+	for ((i) = 0, (entry) = (vector)->vector.values[0];            \
+	     (i) < (vector)->vector.count;                             \
+	     ++(i), (entry) = (vector)->vector.values[i])
+
 #endif /* LONE_VALUE_VECTOR_HEADER */
