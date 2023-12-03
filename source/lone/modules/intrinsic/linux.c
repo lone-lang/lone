@@ -22,100 +22,168 @@ static void lone_auxiliary_value_to_table(struct lone_lisp *lone, struct lone_va
 	struct lone_value *key, *value;
 
 	switch (auxiliary->type) {
+
+#ifdef AT_BASE_PLATFORM
 	case AT_BASE_PLATFORM:
 		key = lone_intern_c_string(lone, "base-platform");
 		value = lone_text_create_from_c_string(lone, auxiliary->value.as.c_string);
 		break;
+#endif
+
+#ifdef AT_PLATFORM
 	case AT_PLATFORM:
 		key = lone_intern_c_string(lone, "platform");
 		value = lone_text_create_from_c_string(lone, auxiliary->value.as.c_string);
 		break;
+#endif
+
+#ifdef AT_HWCAP
 	case AT_HWCAP:
 		key = lone_intern_c_string(lone, "hardware-capabilities");
 		value = lone_integer_create(lone, auxiliary->value.as.integer);
 		break;
+#endif
+
+#ifdef AT_HWCAP2
 	case AT_HWCAP2:
 		key = lone_intern_c_string(lone, "hardware-capabilities-2");
 		value = lone_integer_create(lone, auxiliary->value.as.integer);
 		break;
+#endif
+
+#ifdef AT_FLAGS
 	case AT_FLAGS:
 		key = lone_intern_c_string(lone, "flags");
 		value = lone_integer_create(lone, auxiliary->value.as.integer);
 		break;
+#endif
+
+#ifdef AT_NOTELF
 	case AT_NOTELF:
 		key = lone_intern_c_string(lone, "not-ELF");
 		value = lone_integer_create(lone, auxiliary->value.as.integer);
 		break;
+#endif
+
+#ifdef AT_BASE
 	case AT_BASE:
 		key = lone_intern_c_string(lone, "interpreter-base-address");
 		value = lone_pointer_create(lone, auxiliary->value.as.pointer, LONE_TO_UNKNOWN);
 		break;
+#endif
+
+#ifdef AT_ENTRY
 	case AT_ENTRY:
 		key = lone_intern_c_string(lone, "entry-point");
 		value = lone_pointer_create(lone, auxiliary->value.as.pointer, LONE_TO_UNKNOWN);
 		break;
+#endif
+
+#ifdef AT_SYSINFO_EHDR
 	case AT_SYSINFO_EHDR:
 		key = lone_intern_c_string(lone, "vDSO");
 		value = lone_pointer_create(lone, auxiliary->value.as.pointer, LONE_TO_UNKNOWN);
 		break;
+#endif
+
+#ifdef AT_PHDR
 	case AT_PHDR:
 		key = lone_intern_c_string(lone, "program-header-table-address");
 		value = lone_pointer_create(lone, auxiliary->value.as.pointer, LONE_TO_UNKNOWN);
 		break;
+#endif
+
+#ifdef AT_PHENT
 	case AT_PHENT:
 		key = lone_intern_c_string(lone, "program-header-table-entry-size");
 		value = lone_integer_create(lone, auxiliary->value.as.integer);
 		break;
+#endif
+
+#ifdef AT_PHNUM
 	case AT_PHNUM:
 		key = lone_intern_c_string(lone, "program-header-table-entry-count");
 		value = lone_integer_create(lone, auxiliary->value.as.integer);
 		break;
+#endif
+
+#ifdef AT_EXECFN
 	case AT_EXECFN:
 		key = lone_intern_c_string(lone, "executable-file-name");
 		value = lone_text_create_from_c_string(lone, auxiliary->value.as.c_string);
 		break;
+#endif
+
+#ifdef AT_EXECFD
 	case AT_EXECFD:
 		key = lone_intern_c_string(lone, "executable-file-descriptor");
 		value = lone_integer_create(lone, auxiliary->value.as.integer);
 		break;
+#endif
+
+#ifdef AT_UID
 	case AT_UID:
 		key = lone_intern_c_string(lone, "user-id");
 		value = lone_integer_create(lone, auxiliary->value.as.integer);
 		break;
+#endif
+
+#ifdef AT_EUID
 	case AT_EUID:
 		key = lone_intern_c_string(lone, "effective-user-id");
 		value = lone_integer_create(lone, auxiliary->value.as.integer);
 		break;
+#endif
+
+#ifdef AT_GID
 	case AT_GID:
 		key = lone_intern_c_string(lone, "group-id");
 		value = lone_integer_create(lone, auxiliary->value.as.integer);
 		break;
+#endif
+
+#ifdef AT_EGID
 	case AT_EGID:
 		key = lone_intern_c_string(lone, "effective-group-id");
 		value = lone_integer_create(lone, auxiliary->value.as.integer);
 		break;
+#endif
+
+#ifdef AT_PAGESZ
 	case AT_PAGESZ:
 		key = lone_intern_c_string(lone, "page-size");
 		value = lone_integer_create(lone, auxiliary->value.as.integer);
 		break;
+#endif
+
 #ifdef AT_MINSIGSTKSZ
 	case AT_MINSIGSTKSZ:
 		key = lone_intern_c_string(lone, "minimum-signal-delivery-stack-size");
 		value = lone_integer_create(lone, auxiliary->value.as.integer);
 		break;
 #endif
+
+#ifdef AT_CLKTCK
 	case AT_CLKTCK:
 		key = lone_intern_c_string(lone, "clock-tick");
 		value = lone_integer_create(lone, auxiliary->value.as.integer);
 		break;
+#endif
+
+#ifdef AT_RANDOM
 	case AT_RANDOM:
 		key = lone_intern_c_string(lone, "random");
 		value = lone_bytes_create(lone, auxiliary->value.as.pointer, 16);
 		break;
+#endif
+
+#ifdef AT_SECURE
 	case AT_SECURE:
 		key = lone_intern_c_string(lone, "secure");
 		value = lone_integer_create(lone, auxiliary->value.as.integer);
 		break;
+#endif
+
 	default:
 		key = lone_integer_create(lone, auxiliary->type);
 		value = lone_integer_create(lone, auxiliary->value.as.integer);
