@@ -8,6 +8,7 @@
 #include <lone/modules/intrinsic/math.h>
 #include <lone/modules/intrinsic/text.h>
 #include <lone/modules/intrinsic/list.h>
+#include <lone/modules/intrinsic/vector.h>
 #include <lone/modules/intrinsic/table.h>
 
 void lone_modules_intrinsic_initialize(struct lone_lisp *lone, int argc, char **argv, char **envp, struct lone_auxiliary_vector *auxv)
@@ -17,5 +18,6 @@ void lone_modules_intrinsic_initialize(struct lone_lisp *lone, int argc, char **
 	lone_module_math_initialize(lone);
 	lone_module_text_initialize(lone);
 	lone_module_list_initialize(lone);
+	lone_modules_intrinsic_vector_initialize(lone);
 	lone_modules_intrinsic_table_initialize(lone);
 }
