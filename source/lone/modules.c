@@ -46,9 +46,25 @@ static struct lone_value *lone_module_name_to_key(struct lone_lisp *lone, struct
 	}
 }
 
+static bool lone_module_try_to_load_embedded(struct lone_lisp *lone, struct lone_value *module, struct lone_value *name)
+{
+	struct lone_value *embedded_module;
+
+	if (lone_is_nil(lone->modules.embedded)) { /* no embedded modules */ return false; }
+
+	embedded_module = lone_table_get(lone, lone->modules.embedded, name);
+	if (lone_is_nil(embedded_module)) { /* embedded module not found */ return false; }
+	if (!lone_has_bytes(embedded_module)) { /* invalid embedded module */ linux_exit(-1); }
+
+	lone_module_load_from_bytes(lone, module, embedded_module->bytes);
+	lone_table_delete(lone, lone->modules.embedded, name);
+	return true;
+}
+
 static struct lone_value *lone_module_get_or_create(struct lone_lisp *lone, struct lone_value *name, bool *not_found)
 {
 	struct lone_value *module;
+	bool loaded;
 
 	name = lone_module_name_to_key(lone, name);
 	module = lone_table_get(lone, lone->modules.loaded, name);
@@ -59,8 +75,11 @@ static struct lone_value *lone_module_get_or_create(struct lone_lisp *lone, stru
 	if (lone_is_nil(module)) {
 		module = lone_module_create(lone, name);
 		lone_table_set(lone, lone->modules.loaded, name, module);
+
+		loaded = lone_module_try_to_load_embedded(lone, module, name);
+
 		if (not_found) {
-			*not_found = true;
+			*not_found = !loaded;
 		}
 	}
 
