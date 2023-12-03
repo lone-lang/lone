@@ -156,27 +156,6 @@ static void lone_auxiliary_value_to_table(struct lone_lisp *lone, struct lone_va
 		break;
 #endif
 
-#ifdef AT_MINSIGSTKSZ
-	case AT_MINSIGSTKSZ:
-		key = lone_intern_c_string(lone, "minimum-signal-delivery-stack-size");
-		value = lone_integer_create(lone, auxiliary->value.as.integer);
-		break;
-#endif
-
-#ifdef AT_RSEQ_FEATURE_SIZE
-	case AT_RSEQ_FEATURE_SIZE:
-		key = lone_intern_c_string(lone, "restartable-sequences-supported-feature-size");
-		value = lone_integer_create(lone, auxiliary->value.as.integer);
-		break;
-#endif
-
-#ifdef AT_RSEQ_ALIGN
-	case AT_RSEQ_ALIGN:
-		key = lone_intern_c_string(lone, "restartable-sequences-allocation-alignment");
-		value = lone_integer_create(lone, auxiliary->value.as.integer);
-		break;
-#endif
-
 #ifdef AT_CLKTCK
 	case AT_CLKTCK:
 		key = lone_intern_c_string(lone, "clock-tick");
@@ -194,6 +173,27 @@ static void lone_auxiliary_value_to_table(struct lone_lisp *lone, struct lone_va
 #ifdef AT_SECURE
 	case AT_SECURE:
 		key = lone_intern_c_string(lone, "secure");
+		value = lone_integer_create(lone, auxiliary->value.as.integer);
+		break;
+#endif
+
+#ifdef AT_MINSIGSTKSZ
+	case AT_MINSIGSTKSZ:
+		key = lone_intern_c_string(lone, "minimum-signal-delivery-stack-size");
+		value = lone_integer_create(lone, auxiliary->value.as.integer);
+		break;
+#endif
+
+#ifdef AT_RSEQ_FEATURE_SIZE
+	case AT_RSEQ_FEATURE_SIZE:
+		key = lone_intern_c_string(lone, "restartable-sequences-supported-feature-size");
+		value = lone_integer_create(lone, auxiliary->value.as.integer);
+		break;
+#endif
+
+#ifdef AT_RSEQ_ALIGN
+	case AT_RSEQ_ALIGN:
+		key = lone_intern_c_string(lone, "restartable-sequences-allocation-alignment");
 		value = lone_integer_create(lone, auxiliary->value.as.integer);
 		break;
 #endif
