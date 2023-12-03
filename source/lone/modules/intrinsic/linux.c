@@ -17,7 +17,7 @@
 
 #include <lone/linux.h>
 
-static void lone_auxiliary_value_to_table(struct lone_lisp *lone, struct lone_value *table, struct lone_auxiliary_vector *auxiliary)
+static void lone_auxiliary_value_to_table(struct lone_lisp *lone, struct lone_value *table, struct lone_value *unknowns, struct lone_auxiliary_vector *auxiliary)
 {
 	struct lone_value *key, *value;
 
@@ -117,10 +117,10 @@ static void lone_auxiliary_value_to_table(struct lone_lisp *lone, struct lone_va
 		value = lone_integer_create(lone, auxiliary->value.as.integer);
 		break;
 	default:
-		key = lone_intern_c_string(lone, "unknown");
-		value = lone_list_create(lone,
-		                         lone_integer_create(lone, auxiliary->type),
-		                         lone_integer_create(lone, auxiliary->value.as.integer));
+		key = lone_integer_create(lone, auxiliary->type);
+		value = lone_integer_create(lone, auxiliary->value.as.integer);
+		lone_table_set(lone, unknowns, key, value);
+		return;
 	}
 
 	lone_table_set(lone, table, key, value);
@@ -129,10 +129,15 @@ static void lone_auxiliary_value_to_table(struct lone_lisp *lone, struct lone_va
 static struct lone_value *lone_auxiliary_vector_to_table(struct lone_lisp *lone, struct lone_auxiliary_vector *auxiliary_vector)
 {
 	struct lone_value *table = lone_table_create(lone, 32, 0);
+	struct lone_value *unknowns = lone_table_create(lone, 2, 0);
 	size_t i;
 
 	for (i = 0; auxiliary_vector[i].type != AT_NULL; ++i) {
-		lone_auxiliary_value_to_table(lone, table, &auxiliary_vector[i]);
+		lone_auxiliary_value_to_table(lone, table, unknowns, &auxiliary_vector[i]);
+	}
+
+	if (unknowns->table.count) {
+		lone_table_set(lone, table, lone_intern_c_string(lone, "unknown"), unknowns);
 	}
 
 	return table;
