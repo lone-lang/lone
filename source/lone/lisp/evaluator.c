@@ -122,6 +122,7 @@ static struct lone_value *lone_apply_function(struct lone_lisp *lone, struct lon
 	                  *names = function->function.arguments, *code = function->function.code,
 	                  *value = lone_nil(lone);
 
+	/* evaluate each argument if function is configured to do so */
 	if (function->function.flags.evaluate_arguments) { arguments = lone_evaluate_all(lone, module, environment, arguments); }
 
 	if (function->function.flags.variable_arguments) {
@@ -134,11 +135,13 @@ static struct lone_value *lone_apply_function(struct lone_lisp *lone, struct lon
 	} else {
 		while (1) {
 			if (lone_is_nil(names) != lone_is_nil(arguments)) {
-				/* argument number mismatch: ((lambda (x) x) 10 20), ((lambda (x y) y) 10) */
-				linux_exit(-1);
+				/* argument number mismatch: ((lambda (x) x) 10 20), ((lambda (x y) y) 10) */ linux_exit(-1);
 			} else if (lone_is_nil(names) && lone_is_nil(arguments)) {
+				/* end of function application with matching arguments */
 				break;
 			}
+
+			/* valid binding, set name in environment and move on */
 
 			lone_table_set(lone, new_environment, lone_list_first(names), lone_list_first(arguments));
 
@@ -147,6 +150,9 @@ static struct lone_value *lone_apply_function(struct lone_lisp *lone, struct lon
 		}
 	}
 
+	/* arguments have been bound to names in new environment */
+
+	/* evaluate each lisp expression in function body */
 	while (1) {
 		if (lone_is_nil(code)) { break; }
 		value = lone_list_first(code);
@@ -154,6 +160,7 @@ static struct lone_value *lone_apply_function(struct lone_lisp *lone, struct lon
 		code = lone_list_rest(code);
 	}
 
+	/* evaluate result if function is configured to do so */
 	if (function->function.flags.evaluate_result) { value = lone_evaluate(lone, module, environment, value); }
 
 	return value;
