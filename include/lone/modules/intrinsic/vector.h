@@ -16,6 +16,7 @@ void lone_modules_intrinsic_vector_initialize(struct lone_lisp *lone);
 
 LONE_PRIMITIVE(vector_get);
 LONE_PRIMITIVE(vector_set);
+LONE_PRIMITIVE(vector_slice);
 LONE_PRIMITIVE(vector_each);
 
 #endif /* LONE_MODULES_INTRINSIC_VECTOR_HEADER */

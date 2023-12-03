@@ -24,6 +24,9 @@ void lone_modules_intrinsic_vector_initialize(struct lone_lisp *lone)
 	primitive = lone_primitive_create(lone, "vector_set", lone_primitive_vector_set, module, flags);
 	lone_set_and_export(lone, module, lone_intern_c_string(lone, "set"), primitive);
 
+	primitive = lone_primitive_create(lone, "vector_slice", lone_primitive_vector_slice, module, flags);
+	lone_set_and_export(lone, module, lone_intern_c_string(lone, "slice"), primitive);
+
 	primitive = lone_primitive_create(lone, "vector_each", lone_primitive_vector_each, module, flags);
 	lone_set_and_export(lone, module, lone_intern_c_string(lone, "each"), primitive);
 
@@ -69,6 +72,44 @@ LONE_PRIMITIVE(vector_set)
 
 	lone_vector_set(lone, vector, index, value);
 	return lone_nil(lone);
+}
+
+LONE_PRIMITIVE(vector_slice)
+{
+	struct lone_value *vector, *start, *end, *slice;
+	size_t i, j, k;
+
+	if (lone_is_nil(arguments)) { /* arguments not given: (slice) */ linux_exit(-1); }
+
+	vector = lone_list_first(arguments);
+	arguments = lone_list_rest(arguments);
+	if (!lone_is_vector(vector)) { /* vector not given: (slice {}) */ linux_exit(-1); }
+	if (lone_is_nil(arguments)) { /* start index not given: (slice vector) */ linux_exit(-1); }
+
+	start = lone_list_first(arguments);
+	arguments = lone_list_rest(arguments);
+	if (!lone_is_integer(start)) { /* start is not an integer: (slice vector "error") */ linux_exit(-1); }
+
+	i = start->integer;
+
+	if (lone_is_nil(arguments)) {
+		end = 0;
+	} else {
+		end = lone_list_first(arguments);
+		arguments = lone_list_rest(arguments);
+		if (!lone_is_nil(arguments)) { /* too many arguments given: (slice vector start end extra) */ linux_exit(-1); }
+		if (!lone_is_integer(end)) { /* end is not an integer: (slice vector 10 "error") */ linux_exit(-1); }
+	}
+
+	j = end? end->integer : vector->vector.count;
+
+	slice = lone_vector_create(lone, j - i);
+
+	for (k = 0; i < j; ++i, ++k) {
+		lone_vector_set_value_at(lone, slice, k, lone_vector_get_value_at(lone, vector, i));
+	}
+
+	return slice;
 }
 
 LONE_PRIMITIVE(vector_each)
