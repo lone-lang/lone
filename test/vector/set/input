@@ -1,0 +1,11 @@
+(import (lone print set) prefixed (vector get set))
+
+(set v [])
+
+(vector.set v 0 1)
+(vector.set v 1 2)
+(vector.set v 2 3)
+
+(print (vector.get v 0))
+(print (vector.get v 1))
+(print (vector.get v 2))

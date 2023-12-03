@@ -1,0 +1,5 @@
+(import (lone lambda print) (vector each))
+
+(each [10 20 30]
+  (lambda (value)
+    (print value)))

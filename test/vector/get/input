@@ -1,0 +1,6 @@
+(import (lone print set) (vector get))
+
+(set v [1 2 3])
+(print (get v 0))
+(print (get v 1))
+(print (get v 2))
