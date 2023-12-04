@@ -167,7 +167,7 @@ static void lone_auxiliary_value_to_table(struct lone_lisp *lone, struct lone_va
 #ifdef AT_RANDOM
 	case AT_RANDOM:
 		key = lone_intern_c_string(lone, "random");
-		value = lone_bytes_create(lone, auxiliary->value.as.pointer, 16);
+		value = lone_bytes_transfer(lone, auxiliary->value.as.pointer, 16, false);
 		break;
 #endif
 
