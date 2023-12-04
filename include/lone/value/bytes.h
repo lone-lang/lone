@@ -26,6 +26,6 @@
 
 struct lone_value *lone_bytes_transfer(struct lone_lisp *lone, unsigned char *pointer, size_t count, bool should_deallocate);
 struct lone_value *lone_bytes_transfer_bytes(struct lone_lisp *lone, struct lone_bytes bytes, bool should_deallocate);
-struct lone_value *lone_bytes_create(struct lone_lisp *lone, unsigned char *pointer, size_t count);
+struct lone_value *lone_bytes_copy(struct lone_lisp *lone, unsigned char *pointer, size_t count);
 
 #endif /* LONE_VALUE_BYTES_HEADER */

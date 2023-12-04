@@ -18,7 +18,7 @@ struct lone_value *lone_symbol_transfer_bytes(struct lone_lisp *lone, struct lon
 
 struct lone_value *lone_symbol_create(struct lone_lisp *lone, unsigned char *text, size_t length)
 {
-	struct lone_value *value = lone_bytes_create(lone, text, length);
+	struct lone_value *value = lone_bytes_copy(lone, text, length);
 	value->type = LONE_SYMBOL;
 	return value;
 }
