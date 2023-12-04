@@ -27,3 +27,10 @@ struct lone_value *lone_bytes_copy(struct lone_lisp *lone, unsigned char *pointe
 	copy[count] = '\0';
 	return lone_bytes_transfer(lone, copy, count, true);
 }
+
+struct lone_value *lone_bytes_create(struct lone_lisp *lone, size_t count)
+{
+	unsigned char *pointer = lone_allocate(lone, count + 1);
+	lone_memory_zero(pointer, count + 1);
+	return lone_bytes_transfer(lone, pointer, count, true);
+}
