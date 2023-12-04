@@ -7,14 +7,20 @@
 
 /* ╭────────────────────────────────────────────────────────────────────────╮
    │                                                                        │
-   │    Lone bytes values are initialized with a pointer to a memory        │
-   │    block of known size. It can take ownership of the block             │
-   │    through the transfer functions or it can make a copy of it          │
-   │    via the create functions.                                           │
+   │    Lone bytes values can be created zero-filled for a given size       │
+   │    or they can be initialized with a pointer to a memory block         │
+   │    of known size.                                                      │
+   │                                                                        │
+   │    They can take ownership of arbitrary memory blocks via transfers    │
+   │    or make copies of their input data.                                 │
    │                                                                        │
    │    Transferring memory blocks allows control over deallocation.        │
    │    Disabling deallocation on garbage collection allows pointing to     │
    │    data such as statically allocated buffers and C string literals.    │
+   │    Enabling deallocation will cause the pointer to be deallocated      │
+   │    when the bytes object is garbage collected. Two bytes objects       │
+   │    cannot own the same memory block; it would lead to double free.     │
+   │    This mode of operation is suitable for memory allocated by lone.    │
    │                                                                        │
    │    Copies will automatically include a hidden trailing null            │
    │    byte to ease compatibility with code expecting C strings.           │
