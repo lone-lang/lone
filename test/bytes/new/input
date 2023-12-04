@@ -1,0 +1,4 @@
+(import (lone print) (bytes new))
+
+(print (new 16))
+(print (new 128))
