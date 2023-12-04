@@ -40,5 +40,5 @@ LONE_PRIMITIVE(bytes_new)
 
 	allocation = (size_t) count->integer;
 
-	return lone_bytes_transfer(lone, lone_allocate(lone, allocation), allocation, true);
+	return lone_bytes_create(lone, allocation);
 }
