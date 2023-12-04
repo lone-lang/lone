@@ -13,6 +13,15 @@ typedef __kernel_size_t size_t;
 typedef __kernel_ssize_t ssize_t;
 typedef __kernel_off_t off_t;
 
+typedef __u8  lone_u8;
+typedef __s8  lone_s8;
+typedef __u16 lone_u16;
+typedef __s16 lone_s16;
+typedef __u32 lone_u32;
+typedef __s32 lone_s32;
+typedef __u64 lone_u64;
+typedef __s64 lone_s64;
+
 #if __BITS_PER_LONG == 64
 typedef Elf64_Ehdr lone_elf_header;
 typedef Elf64_Phdr lone_elf_segment;
