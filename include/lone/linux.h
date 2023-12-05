@@ -49,6 +49,6 @@ linux_mmap(void *address, size_t length, int protections, int flags, int file_de
 
 int
 __attribute__((tainted_args))
-limux_munmap(void *address, size_t length);
+linux_munmap(void *address, size_t length);
 
 #endif /* LONE_LINUX_HEADER */
