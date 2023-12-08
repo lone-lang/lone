@@ -111,10 +111,10 @@ enum lone_heap_value_type {
 enum lone_pointer_type {
 	LONE_TO_UNKNOWN,
 
-	LONE_TO_U8,  LONE_TO_I8,
-	LONE_TO_U16, LONE_TO_I16,
-	LONE_TO_U32, LONE_TO_I32,
-	LONE_TO_U64, LONE_TO_I64,
+	LONE_TO_U8,  LONE_TO_S8,
+	LONE_TO_U16, LONE_TO_S16,
+	LONE_TO_U32, LONE_TO_S32,
+	LONE_TO_U64, LONE_TO_S64,
 };
 
 union lone_pointer {
