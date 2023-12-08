@@ -22,6 +22,6 @@
    │    contains code read in from standard input.                          │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
-struct lone_value *lone_module_create(struct lone_lisp *lone, struct lone_value *name);
+struct lone_value lone_module_create(struct lone_lisp *lone, struct lone_value name);
 
 #endif /* LONE_VALUE_MODULE_HEADER */
