@@ -11,19 +11,44 @@ void lone_hash_initialize(struct lone_lisp *lone, struct lone_bytes random)
 	lone_hash_fnv_1a_initialize(lone, random);
 }
 
-static size_t lone_hash_recursively(struct lone_value *key, unsigned long hash)
+static size_t lone_hash_heap_value_recursively(struct lone_heap_value *value, unsigned long hash);
+
+static size_t lone_hash_value_recursively(struct lone_value value, unsigned long hash)
 {
 	struct lone_bytes bytes;
 
-	if (!key) { /* a null key is probably a bug */ linux_exit(-1); }
-
-	bytes.pointer = (unsigned char *) &key->type;
-	bytes.count = sizeof(key->type);
+	bytes.pointer = (unsigned char *) &value.type;
+	bytes.count = sizeof(value.type);
 	hash = lone_hash_fnv_1a(bytes, hash);
 
-	if (lone_is_nil(key)) { return hash; }
+	switch (value.type) {
+	case LONE_NIL:
+		return hash;
+	case LONE_INTEGER:
+		bytes.pointer = (unsigned char *) &value.as.signed_integer;
+		bytes.count = sizeof(value.as.signed_integer);
+		break;
+	case LONE_POINTER:
+		bytes.pointer = (unsigned char *) &value.as.pointer;
+		bytes.count = sizeof(value.as.pointer);
+		break;
+	case LONE_HEAP_VALUE:
+		return lone_hash_heap_value_recursively(value.as.heap_value, hash);
+	}
 
-	switch (key->type) {
+	hash = lone_hash_fnv_1a(bytes, hash);
+	return hash;
+}
+
+static size_t lone_hash_heap_value_recursively(struct lone_heap_value *value, unsigned long hash)
+{
+	struct lone_bytes bytes;
+
+	bytes.pointer = (unsigned char *) &value->type;
+	bytes.count = sizeof(value->type);
+	hash = lone_hash_fnv_1a(bytes, hash);
+
+	switch (value->type) {
 	case LONE_MODULE:
 	case LONE_FUNCTION:
 	case LONE_PRIMITIVE:
@@ -31,30 +56,22 @@ static size_t lone_hash_recursively(struct lone_value *key, unsigned long hash)
 	case LONE_TABLE:
 		linux_exit(-1);
 	case LONE_LIST:
-		hash = lone_hash_recursively(key->list.first, hash);
-		hash = lone_hash_recursively(key->list.rest, hash);
+		hash = lone_hash_value_recursively(value->as.list.first, hash);
+		hash = lone_hash_value_recursively(value->as.list.rest, hash);
 		return hash;
 	case LONE_SYMBOL:
 	case LONE_TEXT:
 	case LONE_BYTES:
-		bytes = key->bytes;
-		break;
-	case LONE_INTEGER:
-		bytes.pointer = (unsigned char *) &key->integer;
-		bytes.count = sizeof(key->integer);
-		break;
-	case LONE_POINTER:
-		bytes.pointer = (unsigned char *) &key->pointer;
-		bytes.count = sizeof(key->pointer);
+		bytes = value->as.bytes;
 		break;
 	}
 
 	hash = lone_hash_fnv_1a(bytes, hash);
-
 	return hash;
 }
 
-size_t lone_hash(struct lone_lisp *lone, struct lone_value *value)
+
+size_t lone_hash(struct lone_lisp *lone, struct lone_value value)
 {
-	return lone_hash_recursively(value, lone->hash.fnv_1a.offset_basis);
+	return lone_hash_value_recursively(value, lone->hash.fnv_1a.offset_basis);
 }
