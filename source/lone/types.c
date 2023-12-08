@@ -9,79 +9,116 @@ struct lone_value lone_nil(void)
 	return (struct lone_value) { .type = LONE_NIL };
 }
 
-bool lone_has_same_type(struct lone_value *x, struct lone_value *y)
+bool lone_has_same_type(struct lone_value x, struct lone_value y)
 {
-	return x->type == y->type;
+	if (x.type == y.type) {
+		if (lone_is_heap_value(x) && lone_is_heap_value(y)) {
+			if (x.as.heap_value->type == y.as.heap_value->type) {
+				return true;
+			} else {
+				return false;
+			}
+		} else {
+			return true;
+		}
+	} else {
+		return false;
+	}
 }
 
-bool lone_is_module(struct lone_value *value)
+bool lone_is_register_value(struct lone_value value)
 {
-	return value->type == LONE_MODULE;
+	return value.type != LONE_HEAP_VALUE;
 }
 
-bool lone_is_function(struct lone_value *value)
+bool lone_is_register_value_of_type(struct lone_value value, enum lone_value_type register_value_type)
 {
-	return value->type == LONE_FUNCTION;
+	return lone_is_register_value(value) && value.type == register_value_type;
 }
 
-bool lone_is_primitive(struct lone_value *value)
+bool lone_is_heap_value(struct lone_value value)
 {
-	return value->type == LONE_PRIMITIVE;
+	return value.type == LONE_HEAP_VALUE;
 }
 
-bool lone_is_applicable(struct lone_value *value)
+bool lone_is_heap_value_of_type(struct lone_value value, enum lone_heap_value_type heap_value_type)
+{
+	return lone_is_heap_value(value) && value.as.heap_value->type == heap_value_type;
+}
+
+bool lone_is_module(struct lone_value value)
+{
+	return lone_is_heap_value_of_type(value, LONE_MODULE);
+}
+
+bool lone_is_function(struct lone_value value)
+{
+	return lone_is_heap_value_of_type(value, LONE_FUNCTION);
+}
+
+bool lone_is_primitive(struct lone_value value)
+{
+	return lone_is_heap_value_of_type(value, LONE_PRIMITIVE);
+}
+
+bool lone_is_applicable(struct lone_value value)
 {
 	return lone_is_function(value) || lone_is_primitive(value);
 }
 
-bool lone_is_list(struct lone_value *value)
+bool lone_is_list(struct lone_value value)
 {
-	return value->type == LONE_LIST;
+	return lone_is_heap_value_of_type(value, LONE_LIST);
 }
 
-bool lone_is_vector(struct lone_value *value)
+bool lone_is_list_or_nil(struct lone_value value)
 {
-	return value->type == LONE_VECTOR;
+	return lone_is_nil(value) || lone_is_list(value);
 }
 
-bool lone_is_table(struct lone_value *value)
+bool lone_is_vector(struct lone_value value)
 {
-	return value->type == LONE_TABLE;
+	return lone_is_heap_value_of_type(value, LONE_VECTOR);
 }
 
-bool lone_is_nil(struct lone_value *value)
+bool lone_is_table(struct lone_value value)
 {
-	return lone_is_list(value) && value->list.first == 0 && value->list.rest == 0;
+	return lone_is_heap_value_of_type(value, LONE_TABLE);
 }
 
-bool lone_has_bytes(struct lone_value *value)
+bool lone_has_bytes(struct lone_value value)
 {
-	return value->type == LONE_TEXT || value->type == LONE_SYMBOL || value->type == LONE_BYTES;
+	return lone_is_bytes(value) || lone_is_text(value) || lone_is_symbol(value);
 }
 
-bool lone_is_bytes(struct lone_value *value)
+bool lone_is_bytes(struct lone_value value)
 {
-	return value->type == LONE_BYTES;
+	return lone_is_heap_value_of_type(value, LONE_BYTES);
 }
 
-bool lone_is_text(struct lone_value *value)
+bool lone_is_text(struct lone_value value)
 {
-	return value->type == LONE_TEXT;
+	return lone_is_heap_value_of_type(value, LONE_TEXT);
 }
 
-bool lone_is_symbol(struct lone_value *value)
+bool lone_is_symbol(struct lone_value value)
 {
-	return value->type == LONE_SYMBOL;
+	return lone_is_heap_value_of_type(value, LONE_SYMBOL);
 }
 
-bool lone_is_integer(struct lone_value *value)
+bool lone_is_nil(struct lone_value value)
 {
-	return value->type == LONE_INTEGER;
+	return lone_is_register_value_of_type(value, LONE_NIL);
 }
 
-bool lone_is_pointer(struct lone_value *value)
+bool lone_is_integer(struct lone_value value)
 {
-	return value->type == LONE_POINTER;
+	return lone_is_register_value_of_type(value, LONE_INTEGER);
+}
+
+bool lone_is_pointer(struct lone_value value)
+{
+	return lone_is_register_value_of_type(value, LONE_POINTER);
 }
 
 bool lone_is_identical(struct lone_value *x, struct lone_value *y)

@@ -287,21 +287,27 @@ struct lone_value lone_nil(void);
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
 
-bool lone_has_same_type(struct lone_value *x, struct lone_value *y);
-bool lone_is_module(struct lone_value *value);
-bool lone_is_function(struct lone_value *value);
-bool lone_is_primitive(struct lone_value *value);
-bool lone_is_applicable(struct lone_value *value);
-bool lone_is_list(struct lone_value *value);
-bool lone_is_vector(struct lone_value *value);
-bool lone_is_table(struct lone_value *value);
-bool lone_is_nil(struct lone_value *value);
-bool lone_has_bytes(struct lone_value *value);
-bool lone_is_bytes(struct lone_value *value);
-bool lone_is_text(struct lone_value *value);
-bool lone_is_symbol(struct lone_value *value);
-bool lone_is_integer(struct lone_value *value);
-bool lone_is_pointer(struct lone_value *value);
+bool lone_is_register_value(struct lone_value value);
+bool lone_is_heap_value(struct lone_value value);
+bool lone_is_register_value_of_type(struct lone_value value, enum lone_value_type register_value_type);
+bool lone_is_heap_value_of_type(struct lone_value value, enum lone_heap_value_type heap_value_type);
+
+bool lone_is_module(struct lone_value value);
+bool lone_is_function(struct lone_value value);
+bool lone_is_primitive(struct lone_value value);
+bool lone_is_applicable(struct lone_value value);
+bool lone_is_list(struct lone_value value);
+bool lone_is_list_or_nil(struct lone_value value);
+bool lone_is_vector(struct lone_value value);
+bool lone_is_table(struct lone_value value);
+bool lone_has_bytes(struct lone_value value);
+bool lone_is_bytes(struct lone_value value);
+bool lone_is_text(struct lone_value value);
+bool lone_is_symbol(struct lone_value value);
+
+bool lone_is_nil(struct lone_value value);
+bool lone_is_integer(struct lone_value value);
+bool lone_is_pointer(struct lone_value value);
 
 /* ╭────────────────────────────────────────────────────────────────────────╮
    │                                                                        │
