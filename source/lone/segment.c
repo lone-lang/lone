@@ -20,18 +20,20 @@ struct lone_bytes lone_segment_bytes(lone_elf_segment *segment)
 	};
 }
 
-struct lone_value *lone_segment_read_descriptor(struct lone_lisp *lone, lone_elf_segment *segment)
+struct lone_value lone_segment_read_descriptor(struct lone_lisp *lone, lone_elf_segment *segment)
 {
 	struct lone_bytes bytes = lone_segment_bytes(segment);
-	struct lone_value *descriptor, *symbol, *data;
+	struct lone_value descriptor, symbol, data;
 	struct lone_reader reader;
 	size_t offset;
 
-	if (bytes.count == 0) { /* empty lone segment */ return 0; }
+	if (bytes.count == 0) { /* empty lone segment */ return lone_nil(); }
 
 	lone_reader_for_bytes(lone, &reader, bytes);
 	descriptor = lone_read(lone, &reader);
-	if (!descriptor || !lone_is_table(descriptor)) { /* corrupt or invalid segment */ linux_exit(-1); }
+	if (reader.status.error || !lone_is_table(descriptor)) {
+		/* corrupt or invalid segment */ linux_exit(-1);
+	}
 
 	offset = reader.buffer.position.read;
 	symbol = lone_intern_c_string(lone, "data");
