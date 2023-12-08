@@ -6,7 +6,7 @@
 #include <lone/definitions.h>
 #include <lone/types.h>
 
-struct lone_auxiliary_value lone_auxiliary_vector_value(struct lone_auxiliary_vector *values, long type);
+struct lone_auxiliary_value lone_auxiliary_vector_value(struct lone_auxiliary_vector *values, unsigned long type);
 size_t lone_auxiliary_vector_page_size(struct lone_auxiliary_vector *values);
 struct lone_bytes lone_auxiliary_vector_random(struct lone_auxiliary_vector *values);
 struct lone_elf_segments lone_auxiliary_vector_elf_segments(struct lone_auxiliary_vector *values);

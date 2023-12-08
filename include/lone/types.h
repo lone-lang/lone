@@ -49,7 +49,7 @@ struct lone_auxiliary_value {
 };
 
 struct lone_auxiliary_vector {
-	long type;
+	unsigned long type;
 	struct lone_auxiliary_value value;
 };
 

@@ -2,7 +2,7 @@
 
 #include <lone/auxiliary_vector.h>
 
-struct lone_auxiliary_value lone_auxiliary_vector_value(struct lone_auxiliary_vector *auxiliary, long type)
+struct lone_auxiliary_value lone_auxiliary_vector_value(struct lone_auxiliary_vector *auxiliary, unsigned long type)
 {
 	for (/* auxiliary */; auxiliary->type != AT_NULL; ++auxiliary) {
 		if (auxiliary->type == type) {
