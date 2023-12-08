@@ -43,7 +43,7 @@ struct lone_auxiliary_value {
 		void *pointer;
 		char *c_string;
 		unsigned char *bytes;
-		long integer;
+		long signed_integer;
 		unsigned long unsigned_integer;
 	} as;
 };
