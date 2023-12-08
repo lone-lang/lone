@@ -25,11 +25,11 @@
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
 
-struct lone_value *lone_function_create(
+struct lone_value lone_function_create(
 	struct lone_lisp *lone,
-	struct lone_value *arguments,
-	struct lone_value *code,
-	struct lone_value *environment,
+	struct lone_value arguments,
+	struct lone_value code,
+	struct lone_value environment,
 	struct lone_function_flags flags
 );
 
