@@ -5,7 +5,6 @@
 
 #include <lone/types.h>
 
-struct lone_value *lone_nil(struct lone_lisp *lone);
 struct lone_value *lone_true(struct lone_lisp *lone);
 
 #endif /* LONE_LISP_CONSTANTS_HEADER */

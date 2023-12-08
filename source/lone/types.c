@@ -4,6 +4,11 @@
 #include <lone/linux.h>
 #include <lone/memory/functions.h>
 
+struct lone_value lone_nil(void)
+{
+	return (struct lone_value) { .type = LONE_NIL };
+}
+
 bool lone_has_same_type(struct lone_value *x, struct lone_value *y)
 {
 	return x->type == y->type;

@@ -58,7 +58,6 @@ static void lone_mark_value(struct lone_value *value)
 static void lone_mark_known_roots(struct lone_lisp *lone)
 {
 	lone_mark_value(lone->symbol_table);
-	lone_mark_value(lone->constants.nil);
 	lone_mark_value(lone->constants.truth);
 	lone_mark_value(lone->modules.loaded);
 	lone_mark_value(lone->modules.embedded);
