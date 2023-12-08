@@ -270,8 +270,8 @@ struct lone_heap_value {
 	} as;
 };
 
-typedef bool (*lone_predicate)(struct lone_value *);
-typedef bool (*lone_comparator)(struct lone_value *, struct lone_value *);
+typedef bool (*lone_predicate)(struct lone_value value);
+typedef bool (*lone_comparator)(struct lone_value x, struct lone_value y);
 
 /* ╭────────────────────────────────────────────────────────────────────────╮
    │                                                                        │
