@@ -314,16 +314,14 @@ bool lone_is_pointer(struct lone_value value);
    │    Comparison and equality functions.                                  │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
-bool lone_is_identical(struct lone_value *x, struct lone_value *y);
-bool lone_is_equivalent(struct lone_value *x, struct lone_value *y);
-bool lone_is_equal(struct lone_value *x, struct lone_value *y);
-bool lone_list_is_equal(struct lone_value *x, struct lone_value *y);
-bool lone_vector_is_equal(struct lone_value *x, struct lone_value *y);
-bool lone_table_is_equal(struct lone_value *x, struct lone_value *y);
-bool lone_integer_is_less_than(struct lone_value *x, struct lone_value *y);
-bool lone_integer_is_less_than_or_equal_to(struct lone_value *x, struct lone_value *y);
-bool lone_integer_is_greater_than(struct lone_value *x, struct lone_value *y);
-bool lone_integer_is_greater_than_or_equal_to(struct lone_value *x, struct lone_value *y);
+bool lone_has_same_type(struct lone_value x, struct lone_value y);
+bool lone_is_identical(struct lone_value x, struct lone_value y);
+bool lone_is_equivalent(struct lone_value x, struct lone_value y);
+bool lone_is_equal(struct lone_value x, struct lone_value y);
+bool lone_integer_is_less_than(struct lone_value x, struct lone_value y);
+bool lone_integer_is_less_than_or_equal_to(struct lone_value x, struct lone_value y);
+bool lone_integer_is_greater_than(struct lone_value x, struct lone_value y);
+bool lone_integer_is_greater_than_or_equal_to(struct lone_value x, struct lone_value y);
 bool lone_bytes_equals(struct lone_bytes x, struct lone_bytes y);
 bool lone_bytes_equals_c_string(struct lone_bytes bytes, char *c_string);
 

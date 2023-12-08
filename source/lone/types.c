@@ -121,45 +121,70 @@ bool lone_is_pointer(struct lone_value value)
 	return lone_is_register_value_of_type(value, LONE_POINTER);
 }
 
-bool lone_is_identical(struct lone_value *x, struct lone_value *y)
+bool lone_is_identical(struct lone_value x, struct lone_value y)
 {
-	return x == y;
+	if (lone_has_same_type(x, y)) {
+		switch (x.type) {
+		case LONE_NIL:
+			return true;
+		case LONE_HEAP_VALUE:
+			return x.as.heap_value == y.as.heap_value;
+		case LONE_INTEGER:
+			return x.as.signed_integer == y.as.signed_integer;
+		case LONE_POINTER:
+			return x.as.pointer.to_void == y.as.pointer.to_void;
+		}
+	} else {
+		return false;
+	}
 }
 
-bool lone_is_equivalent(struct lone_value *x, struct lone_value *y)
+bool lone_is_equivalent(struct lone_value x, struct lone_value y)
 {
-	if (lone_is_identical(x, y)) { return true; }
 	if (!lone_has_same_type(x, y)) { return false; }
 
-	switch (x->type) {
+	switch (x.type) {
+	case LONE_NIL:
+	case LONE_INTEGER:
+	case LONE_POINTER:
+		return lone_is_identical(x, y);
+	case LONE_HEAP_VALUE:
+		break;
+	}
+
+	switch (x.as.heap_value->type) {
 	case LONE_SYMBOL:
 	case LONE_TEXT:
 	case LONE_BYTES:
-		return lone_bytes_equals(x->bytes, y->bytes);
-	case LONE_INTEGER:
-		return x->integer == y->integer;
-	case LONE_POINTER:
-		return x->pointer.address == y->pointer.address;
-
-	case LONE_MODULE: case LONE_FUNCTION: case LONE_PRIMITIVE:
-	case LONE_LIST: case LONE_VECTOR: case LONE_TABLE:
+		return lone_bytes_equals(x.as.heap_value->as.bytes, y.as.heap_value->as.bytes);
+	case LONE_MODULE:
+	case LONE_FUNCTION:
+	case LONE_PRIMITIVE:
+	case LONE_LIST:
+	case LONE_VECTOR:
+	case LONE_TABLE:
 		return lone_is_identical(x, y);
 	}
 }
 
-bool lone_list_is_equal(struct lone_value *x, struct lone_value *y)
+static bool lone_list_is_equal(struct lone_value x, struct lone_value y)
 {
-	return lone_is_equal(x->list.first, y->list.first) && lone_is_equal(x->list.rest, y->list.rest);
+	return lone_is_equal(x.as.heap_value->as.list.first, y.as.heap_value->as.list.first) &&
+	       lone_is_equal(x.as.heap_value->as.list.rest,  y.as.heap_value->as.list.rest);
 }
 
-bool lone_vector_is_equal(struct lone_value *x, struct lone_value *y)
+static bool lone_vector_is_equal(struct lone_value x, struct lone_value y)
 {
+	struct lone_heap_value *actual_x, *actual_y;
 	size_t i;
 
-	if (x->vector.count != y->vector.count) return false;
+	actual_x = x.as.heap_value;
+	actual_y = y.as.heap_value;
 
-	for (i = 0; i < x->vector.count; ++i) {
-		if (!lone_is_equal(x->vector.values[i], y->vector.values[i])) {
+	if (actual_x->as.vector.count != actual_y->as.vector.count) return false;
+
+	for (i = 0; i < actual_x->as.vector.count; ++i) {
+		if (!lone_is_equal(actual_x->as.vector.values[i], actual_y->as.vector.values[i])) {
 			return false;
 		}
 	}
@@ -167,17 +192,25 @@ bool lone_vector_is_equal(struct lone_value *x, struct lone_value *y)
 	return true;
 }
 
-bool lone_table_is_equal(struct lone_value *x, struct lone_value *y)
+static bool lone_table_is_equal(struct lone_value x, struct lone_value y)
 {
 	return lone_is_identical(x, y);
 }
 
-bool lone_is_equal(struct lone_value *x, struct lone_value *y)
+bool lone_is_equal(struct lone_value x, struct lone_value y)
 {
-	if (lone_is_identical(x, y)) { return true; }
 	if (!lone_has_same_type(x, y)) { return false; }
 
-	switch (x->type) {
+	switch (x.type) {
+	case LONE_NIL:
+	case LONE_INTEGER:
+	case LONE_POINTER:
+		return lone_is_identical(x, y);
+	case LONE_HEAP_VALUE:
+		break;
+	}
+
+	switch (x.as.heap_value->type) {
 	case LONE_LIST:
 		return lone_list_is_equal(x, y);
 	case LONE_VECTOR:
@@ -185,50 +218,61 @@ bool lone_is_equal(struct lone_value *x, struct lone_value *y)
 	case LONE_TABLE:
 		return lone_table_is_equal(x, y);
 
-	case LONE_MODULE: case LONE_FUNCTION: case LONE_PRIMITIVE:
-	case LONE_SYMBOL: case LONE_TEXT: case LONE_BYTES:
-	case LONE_INTEGER: case LONE_POINTER:
+	case LONE_MODULE:
+	case LONE_FUNCTION:
+	case LONE_PRIMITIVE:
+	case LONE_SYMBOL:
+	case LONE_TEXT:
+	case LONE_BYTES:
 		return lone_is_equivalent(x, y);
 	}
 }
 
-bool lone_integer_is_less_than(struct lone_value *x, struct lone_value *y)
+static bool integers(struct lone_value x, struct lone_value y)
 {
-	if (!(lone_is_integer(x) && lone_is_integer(y))) { /* can't compare non-integers */ linux_exit(-1); }
-
-	if (x->integer < y->integer) { return true; }
-	else { return false; }
+	return lone_is_integer(x) && lone_is_integer(y);
 }
 
-bool lone_integer_is_less_than_or_equal_to(struct lone_value *x, struct lone_value *y)
+bool lone_integer_is_less_than(struct lone_value x, struct lone_value y)
 {
-	if (!(lone_is_integer(x) && lone_is_integer(y))) { /* can't compare non-integers */ linux_exit(-1); }
-
-	if (x->integer <= y->integer) { return true; }
-	else { return false; }
+	if (integers(x, y)) {
+		return x.as.signed_integer < y.as.signed_integer;
+	} else {
+		/* can't compare incompatible or non-integers integers */ linux_exit(-1);
+	}
 }
 
-bool lone_integer_is_greater_than(struct lone_value *x, struct lone_value *y)
+bool lone_integer_is_less_than_or_equal_to(struct lone_value x, struct lone_value y)
 {
-	if (!(lone_is_integer(x) && lone_is_integer(y))) { /* can't compare non-integers */ linux_exit(-1); }
-
-	if (x->integer > y->integer) { return true; }
-	else { return false; }
+	if (integers(x, y)) {
+		return x.as.signed_integer <= y.as.signed_integer;
+	} else {
+		/* can't compare incompatible or non-integers integers */ linux_exit(-1);
+	}
 }
 
-bool lone_integer_is_greater_than_or_equal_to(struct lone_value *x, struct lone_value *y)
+bool lone_integer_is_greater_than(struct lone_value x, struct lone_value y)
 {
-	if (!(lone_is_integer(x) && lone_is_integer(y))) { /* can't compare non-integers */ linux_exit(-1); }
+	if (integers(x, y)) {
+		return x.as.signed_integer > y.as.signed_integer;
+	} else {
+		/* can't compare incompatible or non-integers integers */ linux_exit(-1);
+	}
+}
 
-	if (x->integer >= y->integer) { return true; }
-	else { return false; }
+bool lone_integer_is_greater_than_or_equal_to(struct lone_value x, struct lone_value y)
+{
+	if (integers(x, y)) {
+		return x.as.signed_integer >= y.as.signed_integer;
+	} else {
+		/* can't compare incompatible or non-integers integers */ linux_exit(-1);
+	}
 }
 
 bool lone_bytes_equals(struct lone_bytes x, struct lone_bytes y)
 {
 	if (x.count != y.count) return false;
-	for (size_t i = 0; i < x.count; ++i) if (x.pointer[i] != y.pointer[i]) return false;
-	return true;
+	return lone_memory_compare(x.pointer, y.pointer, x.count) == 0;
 }
 
 bool lone_bytes_equals_c_string(struct lone_bytes bytes, char *c_string)
