@@ -14,10 +14,8 @@
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
 
-struct lone_value *lone_symbol_transfer(struct lone_lisp *lone, unsigned char *text, size_t length, bool should_deallocate);
-struct lone_value *lone_symbol_transfer_bytes(struct lone_lisp *lone, struct lone_bytes bytes, bool should_deallocate);
-struct lone_value *lone_symbol_create(struct lone_lisp *lone, unsigned char *text, size_t length);
-struct lone_value *lone_intern(struct lone_lisp *lone, unsigned char *bytes, size_t count, bool should_deallocate);
-struct lone_value *lone_intern_c_string(struct lone_lisp *lone, char *c_string);
+struct lone_value lone_intern(struct lone_lisp *lone, unsigned char *bytes, size_t count, bool should_deallocate);
+struct lone_value lone_intern_bytes(struct lone_lisp *lone, struct lone_bytes bytes, bool should_deallocate);
+struct lone_value lone_intern_c_string(struct lone_lisp *lone, char *c_string);
 
 #endif /* LONE_VALUE_SYMBOL_HEADER */
