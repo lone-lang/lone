@@ -11,7 +11,7 @@
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
 
-struct lone_value *lone_pointer_create(struct lone_lisp *lone, void *pointer, enum lone_pointer_type type);
+struct lone_value lone_pointer_create(void *pointer, enum lone_pointer_type type);
 
 /* ╭────────────────────────────────────────────────────────────────────────╮
    │                                                                        │

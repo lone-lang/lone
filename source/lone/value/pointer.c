@@ -1,18 +1,16 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later */
 
-#include <lone/types.h>
-#include <lone/linux.h>
-#include <lone/value.h>
 #include <lone/value/pointer.h>
 #include <lone/value/integer.h>
+#include <lone/linux.h>
 
-struct lone_value *lone_pointer_create(struct lone_lisp *lone, void *pointer, enum lone_pointer_type type)
+struct lone_value lone_pointer_create(void *pointer, enum lone_pointer_type pointer_type)
 {
-	struct lone_value *value = lone_value_create(lone);
-	value->type = LONE_POINTER;
-	value->pointer.type = type;
-	value->pointer.address = pointer;
-	return value;
+	return (struct lone_value) {
+		.type = LONE_POINTER,
+		.pointer_type = pointer_type,
+		.as.pointer.to_void = pointer
+	};
 }
 
 struct lone_value *lone_pointer_dereference(struct lone_lisp *lone, struct lone_value *pointer)
