@@ -45,5 +45,6 @@ struct lone_bytes lone_join(struct lone_lisp *lone, struct lone_value separator,
 struct lone_bytes lone_concatenate(struct lone_lisp *lone, struct lone_value arguments, lone_predicate is_valid);
 
 bool lone_list_has_rest(struct lone_value value);
+bool lone_list_destructure(struct lone_value list, size_t count, ...);
 
 #endif /* LONE_VALUE_LIST_HEADER */

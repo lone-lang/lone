@@ -141,3 +141,35 @@ bool lone_list_has_rest(struct lone_value value)
 		return !lone_is_nil(value.as.heap_value->as.list.rest);
 	}
 }
+
+bool lone_list_destructure(struct lone_value list, size_t count, ...)
+{
+	struct lone_value *current;
+	va_list arguments;
+	size_t i;
+
+	va_start(arguments, count);
+
+	if (lone_is_nil(list)) { /* empty list, no values to extract */ return false; }
+	if (!lone_is_list(list)) { /* expected a list */ linux_exit(-1); }
+
+	i = 0;
+	while (!lone_is_nil(list)) {
+		*va_arg(arguments, struct lone_value *) = lone_list_first(list);
+		++i;
+
+		if (i < count) {
+			/* expect more values */
+			if (!lone_list_has_rest(list)) { /* less values than expected */ return true; }
+		} else {
+			/* expect end of list */
+			if (lone_list_has_rest(list)) { /* more values than expected */ return true; }
+		}
+
+		list = lone_list_rest(list);
+	}
+
+	va_end(arguments);
+
+	return false;
+}
