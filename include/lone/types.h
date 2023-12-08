@@ -40,8 +40,9 @@ struct lone_elf_segments {
 
 struct lone_auxiliary_value {
 	union {
-		char *c_string;
 		void *pointer;
+		char *c_string;
+		unsigned char *bytes;
 		long integer;
 		unsigned long unsigned_integer;
 	} as;
