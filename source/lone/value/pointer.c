@@ -13,33 +13,27 @@ struct lone_value lone_pointer_create(void *pointer, enum lone_pointer_type poin
 	};
 }
 
-struct lone_value *lone_pointer_dereference(struct lone_lisp *lone, struct lone_value *pointer)
+struct lone_value lone_pointer_dereference(struct lone_value pointer)
 {
-	enum lone_pointer_type type;
-	void *address;
-
 	if (!lone_is_pointer(pointer)) { /* can't dereference this value */ linux_exit(-1); }
 
-	type = pointer->pointer.type;
-	address = pointer->pointer.address;
-
-	switch (type) {
+	switch (pointer.pointer_type) {
 	case LONE_TO_U8:
-		return lone_integer_create(lone, *((uint8_t *) address));
-	case LONE_TO_I8:
-		return lone_integer_create(lone, *((int8_t *) address));
+		return lone_integer_create(*pointer.as.pointer.to_u8);
+	case LONE_TO_S8:
+		return lone_integer_create(*pointer.as.pointer.to_s8);
 	case LONE_TO_U16:
-		return lone_integer_create(lone, *((uint16_t *) address));
-	case LONE_TO_I16:
-		return lone_integer_create(lone, *((int16_t *) address));
+		return lone_integer_create(*pointer.as.pointer.to_u16);
+	case LONE_TO_S16:
+		return lone_integer_create(*pointer.as.pointer.to_s16);
 	case LONE_TO_U32:
-		return lone_integer_create(lone, *((uint32_t *) address));
-	case LONE_TO_I32:
-		return lone_integer_create(lone, *((int32_t *) address));
+		return lone_integer_create(*pointer.as.pointer.to_u32);
+	case LONE_TO_S32:
+		return lone_integer_create(*pointer.as.pointer.to_s32);
 	case LONE_TO_U64:
-		return lone_integer_create(lone, (long) *((uint64_t *) address));
-	case LONE_TO_I64:
-		return lone_integer_create(lone, *((int64_t *) address));
+		return lone_integer_create(*pointer.as.pointer.to_u64);
+	case LONE_TO_S64:
+		return lone_integer_create(*pointer.as.pointer.to_s64);
 	case LONE_TO_UNKNOWN:
 		/* cannot dereference pointer to unknown type */ linux_exit(-1);
 	}
