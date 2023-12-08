@@ -130,3 +130,14 @@ struct lone_value lone_list_flatten(struct lone_lisp *lone, struct lone_value li
 
 	return flattened;
 }
+
+bool lone_list_has_rest(struct lone_value value)
+{
+	if (lone_is_nil(value)) {
+		return false;
+	} else if (!lone_is_list(value)) {
+		/* expected a list value */ linux_exit(-1);
+	} else {
+		return !lone_is_nil(value.as.heap_value->as.list.rest);
+	}
+}

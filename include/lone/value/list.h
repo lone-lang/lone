@@ -44,4 +44,6 @@ struct lone_value lone_list_flatten(struct lone_lisp *lone, struct lone_value li
 struct lone_bytes lone_join(struct lone_lisp *lone, struct lone_value separator, struct lone_value arguments, lone_predicate is_valid);
 struct lone_bytes lone_concatenate(struct lone_lisp *lone, struct lone_value arguments, lone_predicate is_valid);
 
+bool lone_list_has_rest(struct lone_value value);
+
 #endif /* LONE_VALUE_LIST_HEADER */
