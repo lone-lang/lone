@@ -67,7 +67,10 @@ struct lone_reader {
 			size_t write;
 		} position;
 	} buffer;
-	int error;
+	struct {
+		bool end_of_input: 1;
+		bool error: 1;
+	} status;
 };
 
 /* ╭──────────────────────────┨ LONE LISP TYPES ┠───────────────────────────╮
