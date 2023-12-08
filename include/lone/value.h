@@ -7,11 +7,10 @@
 
 /* ╭────────────────────────────────────────────────────────────────────────╮
    │                                                                        │
-   │    Constructor for a general lone value.                               │
-   │    Completely uninitialized.                                           │
+   │    General constructor for lone heap values.                           │
    │    Meant for other constructors to use.                                │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
-struct lone_value *lone_value_create(struct lone_lisp *lone);
+struct lone_value lone_value_from_heap_value(struct lone_heap_value *heap_value);
 
 #endif /* LONE_VALUE_HEADER */
