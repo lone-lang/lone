@@ -10,12 +10,12 @@ struct lone_auxiliary_value lone_auxiliary_vector_value(struct lone_auxiliary_ve
 		}
 	}
 
-	return (struct lone_auxiliary_value) { .as.integer = 0 };
+	return (struct lone_auxiliary_value) { .as.unsigned_integer = 0 };
 }
 
 size_t lone_auxiliary_vector_page_size(struct lone_auxiliary_vector *auxiliary)
 {
-	return lone_auxiliary_vector_value(auxiliary, AT_PAGESZ).as.integer;
+	return lone_auxiliary_vector_value(auxiliary, AT_PAGESZ).as.unsigned_integer;
 }
 
 struct lone_bytes lone_auxiliary_vector_random(struct lone_auxiliary_vector *auxiliary)
