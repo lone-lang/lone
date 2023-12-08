@@ -4,21 +4,22 @@
 #include <lone/value.h>
 #include <lone/value/list.h>
 #include <lone/value/vector.h>
+#include <lone/memory/heap.h>
 #include <lone/memory/allocator.h>
 #include <lone/memory/functions.h>
 
-struct lone_value *lone_list_create(struct lone_lisp *lone, struct lone_value *first, struct lone_value *rest)
+struct lone_value lone_list_create(struct lone_lisp *lone, struct lone_value first, struct lone_value rest)
 {
-	struct lone_value *value = lone_value_create(lone);
-	value->type = LONE_LIST;
-	value->list.first = first;
-	value->list.rest = rest;
-	return value;
+	struct lone_heap_value *actual = lone_heap_allocate_value(lone);
+	actual->type = LONE_LIST;
+	actual->as.list.first = first;
+	actual->as.list.rest = rest;
+	return lone_value_from_heap_value(actual);
 }
 
-struct lone_value *lone_list_create_nil(struct lone_lisp *lone)
+struct lone_value lone_list_create_nil(struct lone_lisp *lone)
 {
-	return lone_list_create(lone, 0, 0);
+	return lone_list_create(lone, lone_nil(), lone_nil());
 }
 
 struct lone_value *lone_list_first(struct lone_value *value)
