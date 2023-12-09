@@ -43,12 +43,12 @@ static double lone_table_load_factor(struct lone_value table, unsigned char adde
 	return count / capacity;
 }
 
-static unsigned long lone_table_compute_hash_for(struct lone_lisp *lone, struct lone_value *key, size_t capacity)
+static unsigned long lone_table_compute_hash_for(struct lone_lisp *lone, struct lone_value key, size_t capacity)
 {
 	return lone_hash(lone, key) % capacity;
 }
 
-static size_t lone_table_entry_find_index_for(struct lone_lisp *lone, struct lone_value *key, struct lone_table_index *indexes, struct lone_table_entry *entries, size_t capacity)
+static size_t lone_table_entry_find_index_for(struct lone_lisp *lone, struct lone_value key, struct lone_table_index *indexes, struct lone_table_entry *entries, size_t capacity)
 {
 	size_t i = lone_table_compute_hash_for(lone, key, capacity);
 
@@ -59,7 +59,7 @@ static size_t lone_table_entry_find_index_for(struct lone_lisp *lone, struct lon
 	return i;
 }
 
-static int lone_table_entry_set(struct lone_lisp *lone, struct lone_table_index *indexes, struct lone_table_entry *entries, size_t capacity, size_t index_if_new_entry, struct lone_value *key, struct lone_value *value)
+static int lone_table_entry_set(struct lone_lisp *lone, struct lone_table_index *indexes, struct lone_table_entry *entries, size_t capacity, size_t index_if_new_entry, struct lone_value key, struct lone_value value)
 {
 	size_t i = lone_table_entry_find_index_for(lone, key, indexes, entries, capacity);
 
@@ -75,27 +75,24 @@ static int lone_table_entry_set(struct lone_lisp *lone, struct lone_table_index 
 	}
 }
 
-static void lone_table_resize(struct lone_lisp *lone, struct lone_value *table, size_t new_capacity)
+static void lone_table_resize(struct lone_lisp *lone, struct lone_value table, size_t new_capacity)
 {
+	struct lone_heap_value *actual;
 	struct lone_table_index *old_indexes, *new_indexes;
 	struct lone_table_entry *old_entries, *new_entries;
 	size_t old_capacity;
 	size_t i;
 
-	old_indexes = table->table.indexes;
+	actual = table.as.heap_value;
+	old_indexes = actual->as.table.indexes;
 	new_indexes = lone_allocate(lone, new_capacity * sizeof(*new_indexes));
 
-	old_entries = table->table.entries;
+	old_entries = actual->as.table.entries;
 	new_entries = lone_allocate(lone, new_capacity * sizeof(*new_entries));
 
-	old_capacity = table->table.capacity;
+	old_capacity = actual->as.table.capacity;
 
-	for (i = 0; i < new_capacity; ++i) {
-		new_indexes[i].used = false;
-		new_indexes[i].index = 0;
-		new_entries[i].key = 0;
-		new_entries[i].value = 0;
-	}
+	lone_table_zero(new_capacity, new_entries, new_indexes);
 
 	for (i = 0; i < old_capacity; ++i) {
 		if (old_indexes[i].used) {
@@ -113,58 +110,73 @@ static void lone_table_resize(struct lone_lisp *lone, struct lone_value *table, 
 
 	lone_deallocate(lone, old_indexes);
 	lone_deallocate(lone, old_entries);
-	table->table.indexes = new_indexes;
-	table->table.entries = new_entries;
-	table->table.capacity = new_capacity;
+	actual->as.table.indexes = new_indexes;
+	actual->as.table.entries = new_entries;
+	actual->as.table.capacity = new_capacity;
 }
 
-void lone_table_set(struct lone_lisp *lone, struct lone_value *table, struct lone_value *key, struct lone_value *value)
+void lone_table_set(struct lone_lisp *lone, struct lone_value table, struct lone_value key, struct lone_value value)
 {
+	struct lone_heap_value *actual;
 	int is_new_table_entry;
 
+	actual = table.as.heap_value;
+
 	if (lone_table_load_factor(table, 1) > LONE_TABLE_LOAD_FACTOR) {
-		lone_table_resize(lone, table, table->table.capacity * LONE_TABLE_GROWTH_FACTOR);
+		lone_table_resize(lone, table, actual->as.table.capacity * LONE_TABLE_GROWTH_FACTOR);
 	}
 
 	is_new_table_entry = lone_table_entry_set(
 		lone,
-		table->table.indexes,
-		table->table.entries,
-		table->table.capacity,
-		table->table.count,
+		actual->as.table.indexes,
+		actual->as.table.entries,
+		actual->as.table.capacity,
+		actual->as.table.count,
 		key,
 		value
 	);
 
 	if (is_new_table_entry) {
-		++table->table.count;
+		++actual->as.table.count;
 	}
 }
 
-struct lone_value *lone_table_get(struct lone_lisp *lone, struct lone_value *table, struct lone_value *key)
+struct lone_value lone_table_get(struct lone_lisp *lone, struct lone_value table, struct lone_value key)
 {
-	struct lone_table_index *indexes = table->table.indexes;
-	struct lone_table_entry *entries = table->table.entries, *entry;
-	struct lone_value *prototype = table->table.prototype;
-	size_t capacity = table->table.capacity, i;
+	struct lone_heap_value *actual;
+	struct lone_table_index *indexes;
+	struct lone_table_entry *entries;
+	size_t capacity, i;
+
+	actual = table.as.heap_value;
+	indexes = actual->as.table.indexes;
+	entries = actual->as.table.entries;
+	capacity = actual->as.table.capacity;
 
 	i = lone_table_entry_find_index_for(lone, key, indexes, entries, capacity);
 
 	if (indexes[i].used) {
 		return entries[indexes[i].index].value;
-	} else if (prototype && !lone_is_nil(prototype)) {
-		return lone_table_get(lone, prototype, key);
+	} else if (!lone_is_nil(actual->as.table.prototype)) {
+		return lone_table_get(lone, actual->as.table.prototype, key);
 	} else {
-		return lone_nil(lone);
+		return lone_nil();
 	}
 }
 
-void lone_table_delete(struct lone_lisp *lone, struct lone_value *table, struct lone_value *key)
+void lone_table_delete(struct lone_lisp *lone, struct lone_value table, struct lone_value key)
 {
-	struct lone_table_index *indexes = table->table.indexes;
-	struct lone_table_entry *entries = table->table.entries;
-	size_t capacity = table->table.capacity, count = table->table.count;
+	struct lone_heap_value *actual;
+	struct lone_table_index *indexes;
+	struct lone_table_entry *entries;
+	size_t capacity, count;
 	size_t i, j, k, l;
+
+	actual = table.as.heap_value;
+	indexes = actual->as.table.indexes;
+	entries = actual->as.table.entries;
+	capacity = actual->as.table.capacity;
+	count = actual->as.table.count;
 
 	i = lone_table_entry_find_index_for(lone, key, indexes, entries, capacity);
 
@@ -199,8 +211,8 @@ void lone_table_delete(struct lone_lisp *lone, struct lone_value *table, struct 
 		}
 	}
 
-	entries[count].key = 0;
-	entries[count].value = 0;
+	entries[count].key = lone_nil();
+	entries[count].value = lone_nil();
 
-	--table->table.count;
+	--actual->as.table.count;
 }
