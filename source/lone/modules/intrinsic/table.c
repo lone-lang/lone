@@ -12,11 +12,13 @@
 
 void lone_modules_intrinsic_table_initialize(struct lone_lisp *lone)
 {
-	struct lone_value *name = lone_intern_c_string(lone, "table"),
-	                  *module = lone_module_for_name(lone, name),
-	                  *primitive;
+	struct lone_value name, module, primitive;
+	struct lone_function_flags flags;
 
-	struct lone_function_flags flags = { .evaluate_arguments = true, .evaluate_result = false };
+	name = lone_intern_c_string(lone, "table");
+	module = lone_module_for_name(lone, name);
+	flags.evaluate_arguments = true;
+	flags.evaluate_result = false;
 
 	primitive = lone_primitive_create(lone, "table_get", lone_primitive_table_get, module, flags);
 	lone_set_and_export(lone, module, lone_intern_c_string(lone, "get"), primitive);
@@ -36,84 +38,62 @@ void lone_modules_intrinsic_table_initialize(struct lone_lisp *lone)
 
 LONE_PRIMITIVE(table_get)
 {
-	struct lone_value *table, *key;
+	struct lone_value table, key;
 
-	if (lone_is_nil(arguments)) { /* arguments not given: (get) */ linux_exit(-1); }
+	if (lone_list_destructure(arguments, 2, &table, &key)) {
+		/* wrong number of arguments */ linux_exit(-1);
+	}
 
-	table = lone_list_first(arguments);
-	arguments = lone_list_rest(arguments);
 	if (!lone_is_table(table)) { /* table not given: (get []) */ linux_exit(-1); }
-	if (lone_is_nil(arguments)) { /* key not given: (get table) */ linux_exit(-1); }
-
-	key = lone_list_first(arguments);
-	arguments = lone_list_rest(arguments);
-	if (!lone_is_nil(arguments)) { /* too many arguments given: (get table key extra) */ linux_exit(-1); }
 
 	return lone_table_get(lone, table, key);
 }
 
 LONE_PRIMITIVE(table_set)
 {
-	struct lone_value *table, *key, *value;
+	struct lone_value table, key, value;
 
-	if (lone_is_nil(arguments)) { /* arguments not given: (set) */ linux_exit(-1); }
+	if (lone_list_destructure(arguments, 3, &table, &key, &value)) {
+		/* wrong number of arguments */ linux_exit(-1);
+	}
 
-	table = lone_list_first(arguments);
-	arguments = lone_list_rest(arguments);
 	if (!lone_is_table(table)) { /* table not given: (set []) */ linux_exit(-1); }
-	if (lone_is_nil(arguments)) { /* key not given: (set table) */ linux_exit(-1); }
-
-	key = lone_list_first(arguments);
-	arguments = lone_list_rest(arguments);
-	if (lone_is_nil(arguments)) { /* value not given: (set table key) */ linux_exit(-1); }
-
-	value = lone_list_first(arguments);
-	arguments = lone_list_rest(arguments);
-	if (!lone_is_nil(arguments)) { /* too many arguments given: (set table key value extra) */ linux_exit(-1); }
 
 	lone_table_set(lone, table, key, value);
-	return lone_nil(lone);
+	return lone_nil();
 }
 
 LONE_PRIMITIVE(table_delete)
 {
-	struct lone_value *table, *key;
+	struct lone_value table, key;
 
-	if (lone_is_nil(arguments)) { /* arguments not given: (delete) */ linux_exit(-1); }
+	if (lone_list_destructure(arguments, 2, &table, &key)) {
+		/* wrong number of arguments */ linux_exit(-1);
+	}
 
-	table = lone_list_first(arguments);
-	arguments = lone_list_rest(arguments);
 	if (!lone_is_table(table)) { /* table not given: (delete []) */ linux_exit(-1); }
-	if (lone_is_nil(arguments)) { /* key not given: (delete table) */ linux_exit(-1); }
-
-	key = lone_list_first(arguments);
-	arguments = lone_list_rest(arguments);
-	if (!lone_is_nil(arguments)) { /* too many arguments given: (delete table key extra) */ linux_exit(-1); }
 
 	lone_table_delete(lone, table, key);
-	return lone_nil(lone);
+	return lone_nil();
 }
 
 LONE_PRIMITIVE(table_each)
 {
-	struct lone_value *result, *table, *f;
+	struct lone_value result, table, f;
 	struct lone_table_entry *entry;
 	size_t i;
 
-	if (lone_is_nil(arguments)) { /* arguments not given: (each) */ linux_exit(-1); }
+	if (lone_list_destructure(arguments, 2, &table, &f)) {
+		/* wrong number of arguments */ linux_exit(-1);
+	}
 
-	table = lone_list_first(arguments);
-	arguments = lone_list_rest(arguments);
 	if (!lone_is_table(table)) { /* table not given: (each []) */ linux_exit(-1); }
-	if (lone_is_nil(arguments)) { /* function not given: (each table) */ linux_exit(-1); }
-
-	f = lone_list_first(arguments);
-	arguments = lone_list_rest(arguments);
 	if (!lone_is_applicable(f)) { /* applicable not given: (each table []) */ linux_exit(-1); }
-	if (!lone_is_nil(arguments)) { /* too many arguments given: (each table applicable extra) */ linux_exit(-1); }
+
+	result = lone_nil();
 
 	LONE_TABLE_FOR_EACH(entry, table, i) {
-		arguments = lone_list_build(lone, 2, entry->key, entry->value);
+		arguments = lone_list_build(lone, 2, &entry->key, &entry->value);
 		result = lone_apply(lone, module, environment, f, arguments);
 	}
 

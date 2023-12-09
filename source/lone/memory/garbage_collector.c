@@ -1,14 +1,33 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later */
 
-#include <lone/types.h>
-
 #include <lone/memory/garbage_collector.h>
 #include <lone/memory/allocator.h>
 #include <lone/memory/heap.h>
 
 #include <lone/architecture/garbage_collector.c>
 
-static void lone_mark_value(struct lone_value *value)
+static void lone_mark_heap_value(struct lone_heap_value *);
+
+static void lone_mark_value(struct lone_value value)
+{
+	struct lone_heap_value *actual;
+
+	switch (value.type) {
+	case LONE_NIL:
+	case LONE_INTEGER:
+	case LONE_POINTER:
+		/* value types need not be marked */
+		return;
+	case LONE_HEAP_VALUE:
+		break;
+	}
+
+	actual = value.as.heap_value;
+
+	lone_mark_heap_value(actual);
+}
+
+static void lone_mark_heap_value(struct lone_heap_value *value)
 {
 	if (!value || !value->live || value->marked) { return; }
 
@@ -16,40 +35,38 @@ static void lone_mark_value(struct lone_value *value)
 
 	switch (value->type) {
 	case LONE_MODULE:
-		lone_mark_value(value->module.name);
-		lone_mark_value(value->module.environment);
-		lone_mark_value(value->module.exports);
+		lone_mark_value(value->as.module.name);
+		lone_mark_value(value->as.module.environment);
+		lone_mark_value(value->as.module.exports);
 		break;
 	case LONE_FUNCTION:
-		lone_mark_value(value->function.arguments);
-		lone_mark_value(value->function.code);
-		lone_mark_value(value->function.environment);
+		lone_mark_value(value->as.function.arguments);
+		lone_mark_value(value->as.function.code);
+		lone_mark_value(value->as.function.environment);
 		break;
 	case LONE_PRIMITIVE:
-		lone_mark_value(value->primitive.name);
-		lone_mark_value(value->primitive.closure);
+		lone_mark_value(value->as.primitive.name);
+		lone_mark_value(value->as.primitive.closure);
 		break;
 	case LONE_LIST:
-		lone_mark_value(value->list.first);
-		lone_mark_value(value->list.rest);
+		lone_mark_value(value->as.list.first);
+		lone_mark_value(value->as.list.rest);
 		break;
 	case LONE_VECTOR:
-		for (size_t i = 0; i < value->vector.count; ++i) {
-			lone_mark_value(value->vector.values[i]);
+		for (size_t i = 0; i < value->as.vector.count; ++i) {
+			lone_mark_value(value->as.vector.values[i]);
 		}
 		break;
 	case LONE_TABLE:
-		lone_mark_value(value->table.prototype);
-		for (size_t i = 0; i < value->table.count; ++i) {
-			lone_mark_value(value->table.entries[i].key);
-			lone_mark_value(value->table.entries[i].value);
+		lone_mark_value(value->as.table.prototype);
+		for (size_t i = 0; i < value->as.table.count; ++i) {
+			lone_mark_value(value->as.table.entries[i].key);
+			lone_mark_value(value->as.table.entries[i].value);
 		}
 		break;
 	case LONE_SYMBOL:
 	case LONE_TEXT:
 	case LONE_BYTES:
-	case LONE_POINTER:
-	case LONE_INTEGER:
 		/* these types do not contain any other values to mark */
 		break;
 	}
@@ -58,7 +75,6 @@ static void lone_mark_value(struct lone_value *value)
 static void lone_mark_known_roots(struct lone_lisp *lone)
 {
 	lone_mark_value(lone->symbol_table);
-	lone_mark_value(lone->constants.nil);
 	lone_mark_value(lone->constants.truth);
 	lone_mark_value(lone->modules.loaded);
 	lone_mark_value(lone->modules.embedded);
@@ -106,7 +122,7 @@ static void lone_find_and_mark_stack_roots(struct lone_lisp *lone)
 
 	while (pointer++ < top) {
 		if (lone_points_to_heap(lone, *pointer)) {
-			lone_mark_value(*pointer);
+			lone_mark_heap_value(*pointer);
 		}
 	}
 }
@@ -122,7 +138,7 @@ static void lone_mark_all_reachable_values(struct lone_lisp *lone)
 
 static void lone_kill_all_unmarked_values(struct lone_lisp *lone)
 {
-	struct lone_value *value;
+	struct lone_heap_value *value;
 	struct lone_heap *heap;
 	size_t i;
 
@@ -138,22 +154,20 @@ static void lone_kill_all_unmarked_values(struct lone_lisp *lone)
 				case LONE_TEXT:
 				case LONE_SYMBOL:
 					if (value->should_deallocate_bytes) {
-						lone_deallocate(lone, value->bytes.pointer);
+						lone_deallocate(lone, value->as.bytes.pointer);
 					}
 					break;
 				case LONE_VECTOR:
-					lone_deallocate(lone, value->vector.values);
+					lone_deallocate(lone, value->as.vector.values);
 					break;
 				case LONE_TABLE:
-					lone_deallocate(lone, value->table.indexes);
-					lone_deallocate(lone, value->table.entries);
+					lone_deallocate(lone, value->as.table.indexes);
+					lone_deallocate(lone, value->as.table.entries);
 					break;
 				case LONE_MODULE:
 				case LONE_FUNCTION:
 				case LONE_PRIMITIVE:
 				case LONE_LIST:
-				case LONE_INTEGER:
-				case LONE_POINTER:
 					/* these types do not own any additional memory */
 					break;
 				}

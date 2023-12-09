@@ -29,32 +29,32 @@
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
 
-struct lone_value *lone_evaluate(
+struct lone_value lone_evaluate(
 	struct lone_lisp *lone,
-	struct lone_value *module,
-	struct lone_value *environment,
-	struct lone_value *value
+	struct lone_value module,
+	struct lone_value environment,
+	struct lone_value value
 );
 
-struct lone_value *lone_evaluate_all(
+struct lone_value lone_evaluate_all(
 	struct lone_lisp *lone,
-	struct lone_value *module,
-	struct lone_value *environment,
-	struct lone_value *list
+	struct lone_value module,
+	struct lone_value environment,
+	struct lone_value list
 );
 
-struct lone_value *lone_evaluate_module(
+struct lone_value lone_evaluate_in_module(
 	struct lone_lisp *lone,
-	struct lone_value *module,
-	struct lone_value *value
+	struct lone_value module,
+	struct lone_value value
 );
 
-struct lone_value *lone_apply(
+struct lone_value lone_apply(
 	struct lone_lisp *lone,
-	struct lone_value *module,
-	struct lone_value *environment,
-	struct lone_value *applicable,
-	struct lone_value *arguments
+	struct lone_value module,
+	struct lone_value environment,
+	struct lone_value applicable,
+	struct lone_value arguments
 );
 
 #endif /* LONE_LISP_EVALUATOR_HEADER */

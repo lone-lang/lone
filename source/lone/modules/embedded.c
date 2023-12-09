@@ -1,6 +1,3 @@
-#include <lone/definitions.h>
-#include <lone/types.h>
-
 #include <lone/modules/embedded.h>
 #include <lone/modules.h>
 #include <lone/segment.h>
@@ -11,9 +8,9 @@
 #include <lone/value/table.h>
 #include <lone/value/symbol.h>
 
-static struct lone_bytes slice(struct lone_bytes bytes, struct lone_value *pair)
+static struct lone_bytes slice(struct lone_bytes bytes, struct lone_value pair)
 {
-	struct lone_value *first, *second;
+	struct lone_value first, second;
 	size_t start, end, size;
 
 	if (!lone_is_list(pair)) { /* unexpected value type */ linux_exit(-1); }
@@ -22,8 +19,8 @@ static struct lone_bytes slice(struct lone_bytes bytes, struct lone_value *pair)
 	second = lone_list_rest(pair);
 	if (!lone_is_integer(second)) { /* unexpected value type */ linux_exit(-1); }
 
-	start = first->integer;
-	size = second->integer;
+	start = first.as.unsigned_integer;
+	size = second.as.unsigned_integer;
 	end = start + size;
 
 	if (start >= bytes.count || end >= bytes.count) {
@@ -38,15 +35,15 @@ static struct lone_bytes slice(struct lone_bytes bytes, struct lone_value *pair)
 
 void lone_modules_embedded_load(struct lone_lisp *lone, lone_elf_segment *segment)
 {
-	struct lone_value *descriptor = lone_segment_read_descriptor(lone, segment);
-	struct lone_value *module, *symbol, *data, *locations;
+	struct lone_value descriptor = lone_segment_read_descriptor(lone, segment);
+	struct lone_value symbol, data, module, locations;
 	struct lone_bytes bytes, code;
 
-	if (!descriptor) { /* nothing to load */ return; }
+	if (lone_is_nil(descriptor)) { /* nothing to load */ return; }
 
 	symbol = lone_intern_c_string(lone, "data");
 	data = lone_table_get(lone, descriptor, symbol);
-	bytes = data->bytes;
+	bytes = data.as.heap_value->as.bytes;
 
 	symbol = lone_intern_c_string(lone, "modules");
 	lone->modules.embedded = lone_table_get(lone, descriptor, symbol);

@@ -31,6 +31,6 @@
 void lone_reader_for_bytes(struct lone_lisp *lone, struct lone_reader *reader, struct lone_bytes bytes);
 void lone_reader_for_file_descriptor(struct lone_lisp *lone, struct lone_reader *reader, size_t buffer_size, int file_descriptor);
 void lone_reader_finalize(struct lone_lisp *lone, struct lone_reader *reader);
-struct lone_value *lone_read(struct lone_lisp *lone, struct lone_reader *reader);
+struct lone_value lone_read(struct lone_lisp *lone, struct lone_reader *reader);
 
 #endif /* LONE_LISP_READER_HEADER */

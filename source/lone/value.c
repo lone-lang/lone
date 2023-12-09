@@ -3,7 +3,10 @@
 #include <lone/value.h>
 #include <lone/memory/heap.h>
 
-struct lone_value *lone_value_create(struct lone_lisp *lone)
+struct lone_value lone_value_from_heap_value(struct lone_heap_value *heap_value)
 {
-	return lone_heap_allocate_value(lone);
+	return (struct lone_value) {
+		.type = LONE_HEAP_VALUE,
+		.as.heap_value = heap_value
+	};
 }

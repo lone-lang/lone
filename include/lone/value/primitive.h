@@ -14,11 +14,11 @@
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
 
-struct lone_value *lone_primitive_create(
+struct lone_value lone_primitive_create(
 	struct lone_lisp *lone,
 	char *name,
 	lone_primitive function,
-	struct lone_value *closure,
+	struct lone_value closure,
 	struct lone_function_flags flags
 );
 

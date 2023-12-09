@@ -5,7 +5,7 @@
 
 static struct lone_heap *lone_allocate_heap(struct lone_lisp *lone, size_t count)
 {
-	size_t i, size = sizeof(struct lone_heap) + (sizeof(struct lone_value) * count);
+	size_t i, size = sizeof(struct lone_heap) + (sizeof(struct lone_heap_value) * count);
 	struct lone_heap *heap = lone_allocate(lone, size);
 	heap->next = 0;
 	heap->count = count;
@@ -16,9 +16,9 @@ static struct lone_heap *lone_allocate_heap(struct lone_lisp *lone, size_t count
 	return heap;
 }
 
-static struct lone_value *lone_allocate_from_heap(struct lone_lisp *lone)
+static struct lone_heap_value *lone_allocate_from_heap(struct lone_lisp *lone)
 {
-	struct lone_value *element;
+	struct lone_heap_value *element;
 	struct lone_heap *heap, *prev;
 	size_t i;
 
@@ -62,7 +62,7 @@ next_heap:
 	}
 }
 
-struct lone_value *lone_heap_allocate_value(struct lone_lisp *lone)
+struct lone_heap_value *lone_heap_allocate_value(struct lone_lisp *lone)
 {
 	return lone_allocate_from_heap(lone);
 }

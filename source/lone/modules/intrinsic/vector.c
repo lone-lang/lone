@@ -12,11 +12,13 @@
 
 void lone_modules_intrinsic_vector_initialize(struct lone_lisp *lone)
 {
-	struct lone_value *name = lone_intern_c_string(lone, "vector"),
-	                  *module = lone_module_for_name(lone, name),
-	                  *primitive;
+	struct lone_value name, module, primitive;
+	struct lone_function_flags flags;
 
-	struct lone_function_flags flags = { .evaluate_arguments = true, .evaluate_result = false };
+	name = lone_intern_c_string(lone, "vector");
+	module = lone_module_for_name(lone, name);
+	flags.evaluate_arguments = true;
+	flags.evaluate_result = false;
 
 	primitive = lone_primitive_create(lone, "vector_get", lone_primitive_vector_get, module, flags);
 	lone_set_and_export(lone, module, lone_intern_c_string(lone, "get"), primitive);
@@ -35,48 +37,37 @@ void lone_modules_intrinsic_vector_initialize(struct lone_lisp *lone)
 
 LONE_PRIMITIVE(vector_get)
 {
-	struct lone_value *vector, *index;
+	struct lone_value vector, index;
 
-	if (lone_is_nil(arguments)) { /* arguments not given: (get) */ linux_exit(-1); }
+	if (lone_list_destructure(arguments, 2, &vector, &index)) {
+		/* wrong number of arguments */ linux_exit(-1);
+	}
 
-	vector = lone_list_first(arguments);
-	arguments = lone_list_rest(arguments);
 	if (!lone_is_vector(vector)) { /* vector not given: (get {}) */ linux_exit(-1); }
-	if (lone_is_nil(arguments)) { /* index not given: (get vector) */ linux_exit(-1); }
-
-	index = lone_list_first(arguments);
-	arguments = lone_list_rest(arguments);
-	if (!lone_is_nil(arguments)) { /* too many arguments given: (get vector index extra) */ linux_exit(-1); }
+	if (!lone_is_integer(index)) { /* integer index not given: (get [1 2 3] "invalid") */ linux_exit(-1); }
 
 	return lone_vector_get(lone, vector, index);
 }
 
 LONE_PRIMITIVE(vector_set)
 {
-	struct lone_value *vector, *index, *value;
+	struct lone_value vector, index, value;
 
-	if (lone_is_nil(arguments)) { /* arguments not given: (set) */ linux_exit(-1); }
+	if (lone_list_destructure(arguments, 3, &vector, &index, &value)) {
+		/* wrong number of arguments */ linux_exit(-1);
+	}
 
-	vector = lone_list_first(arguments);
-	arguments = lone_list_rest(arguments);
 	if (!lone_is_vector(vector)) { /* vector not given: (set {}) */ linux_exit(-1); }
-	if (lone_is_nil(arguments)) { /* index not given: (set vector) */ linux_exit(-1); }
-
-	index = lone_list_first(arguments);
-	arguments = lone_list_rest(arguments);
-	if (lone_is_nil(arguments)) { /* value not given: (set vector index) */ linux_exit(-1); }
-
-	value = lone_list_first(arguments);
-	arguments = lone_list_rest(arguments);
-	if (!lone_is_nil(arguments)) { /* too many arguments given: (set vector index value extra) */ linux_exit(-1); }
+	if (!lone_is_integer(index)) { /* integer index not given: (set [1 2 3] "invalid") */ linux_exit(-1); }
 
 	lone_vector_set(lone, vector, index, value);
-	return lone_nil(lone);
+	return lone_nil();
 }
 
 LONE_PRIMITIVE(vector_slice)
 {
-	struct lone_value *vector, *start, *end, *slice;
+	struct lone_value vector, start, end, slice;
+	struct lone_heap_value *actual;
 	size_t i, j, k;
 
 	if (lone_is_nil(arguments)) { /* arguments not given: (slice) */ linux_exit(-1); }
@@ -86,22 +77,24 @@ LONE_PRIMITIVE(vector_slice)
 	if (!lone_is_vector(vector)) { /* vector not given: (slice {}) */ linux_exit(-1); }
 	if (lone_is_nil(arguments)) { /* start index not given: (slice vector) */ linux_exit(-1); }
 
+	actual = vector.as.heap_value;
+
 	start = lone_list_first(arguments);
 	arguments = lone_list_rest(arguments);
 	if (!lone_is_integer(start)) { /* start is not an integer: (slice vector "error") */ linux_exit(-1); }
 
-	i = start->integer;
+	i = start.as.unsigned_integer;
 
 	if (lone_is_nil(arguments)) {
-		end = 0;
+		j = actual->as.vector.count;
 	} else {
 		end = lone_list_first(arguments);
 		arguments = lone_list_rest(arguments);
 		if (!lone_is_nil(arguments)) { /* too many arguments given: (slice vector start end extra) */ linux_exit(-1); }
 		if (!lone_is_integer(end)) { /* end is not an integer: (slice vector 10 "error") */ linux_exit(-1); }
-	}
 
-	j = end? end->integer : vector->vector.count;
+		j = end.as.unsigned_integer;
+	}
 
 	slice = lone_vector_create(lone, j - i);
 
@@ -114,23 +107,20 @@ LONE_PRIMITIVE(vector_slice)
 
 LONE_PRIMITIVE(vector_each)
 {
-	struct lone_value *result, *vector, *f, *entry;
+	struct lone_value result, vector, f, entry;
 	size_t i;
 
-	if (lone_is_nil(arguments)) { /* arguments not given: (each) */ linux_exit(-1); }
+	if (lone_list_destructure(arguments, 2, &vector, &f)) {
+		/* wrong number of arguments */ linux_exit(-1);
+	}
 
-	vector = lone_list_first(arguments);
-	arguments = lone_list_rest(arguments);
 	if (!lone_is_vector(vector)) { /* vector not given: (each {}) */ linux_exit(-1); }
-	if (lone_is_nil(arguments)) { /* function not given: (each vector) */ linux_exit(-1); }
-
-	f = lone_list_first(arguments);
-	arguments = lone_list_rest(arguments);
 	if (!lone_is_applicable(f)) { /* applicable not given: (each vector []) */ linux_exit(-1); }
-	if (!lone_is_nil(arguments)) { /* too many arguments given: (each vector applicable extra) */ linux_exit(-1); }
+
+	result = lone_nil();
 
 	LONE_VECTOR_FOR_EACH(entry, vector, i) {
-		arguments = lone_list_build(lone, 1, entry);
+		arguments = lone_list_build(lone, 1, &entry);
 		result = lone_apply(lone, module, environment, f, arguments);
 	}
 
