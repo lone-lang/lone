@@ -19,7 +19,7 @@
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
 
-struct lone_value *lone_vector_create(struct lone_lisp *lone, size_t capacity);
+struct lone_value lone_vector_create(struct lone_lisp *lone, size_t capacity);
 
 /* ╭────────────────────────────────────────────────────────────────────────╮
    │                                                                        │

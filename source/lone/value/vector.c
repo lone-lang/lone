@@ -4,18 +4,26 @@
 #include <lone/value.h>
 #include <lone/value/vector.h>
 #include <lone/value/list.h>
+#include <lone/memory/heap.h>
 #include <lone/memory/allocator.h>
 
-struct lone_value *lone_vector_create(struct lone_lisp *lone, size_t capacity)
+static void lone_vector_zero(size_t capacity, struct lone_value *values)
 {
-	struct lone_value *value = lone_value_create(lone);
-	value->type = LONE_VECTOR;
-	value->vector.capacity = capacity;
-	value->vector.count = 0;
-	value->vector.values = lone_allocate(lone, capacity * sizeof(*value->vector.values));
-	for (size_t i = 0; i < value->vector.capacity; ++i) { value->vector.values[i] = 0; }
-	return value;
+	size_t i;
+
+	for (i = 0; i < capacity; ++i) {
+		values[i] = lone_nil();
+	}
 }
+struct lone_value lone_vector_create(struct lone_lisp *lone, size_t capacity)
+{
+	struct lone_heap_value *actual = lone_heap_allocate_value(lone);
+	actual->type = LONE_VECTOR;
+	actual->as.vector.capacity = capacity;
+	actual->as.vector.count = 0;
+	actual->as.vector.values = lone_allocate(lone, capacity * sizeof(*actual->as.vector.values));
+
+	lone_vector_zero(actual->as.vector.capacity, actual->as.vector.values);
 
 void lone_vector_resize(struct lone_lisp *lone, struct lone_value *vector, size_t new_capacity)
 {
