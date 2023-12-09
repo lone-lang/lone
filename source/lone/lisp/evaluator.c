@@ -1,6 +1,5 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later */
 
-#include <lone/types.h>
 #include <lone/lisp/evaluator.h>
 
 #include <lone/value/list.h>
@@ -9,13 +8,25 @@
 
 #include <lone/linux.h>
 
-static struct lone_value *lone_evaluate_form_index(struct lone_lisp *lone, struct lone_value *module, struct lone_value *environment, struct lone_value *collection, struct lone_value *arguments)
+static struct lone_value lone_evaluate_form_index(struct lone_lisp *lone, struct lone_value module, struct lone_value environment, struct lone_value collection, struct lone_value arguments)
 {
-	struct lone_value *(*get)(struct lone_lisp *, struct lone_value *, struct lone_value *);
-	void (*set)(struct lone_lisp *, struct lone_value *, struct lone_value *, struct lone_value *);
-	struct lone_value *key, *value;
+	struct lone_value (*get)(struct lone_lisp *, struct lone_value, struct lone_value);
+	void (*set)(struct lone_lisp *, struct lone_value, struct lone_value, struct lone_value);
+	struct lone_value key, value;
+	struct lone_heap_value *actual;
 
-	switch (collection->type) {
+	switch (collection.type) {
+	case LONE_NIL:
+	case LONE_INTEGER:
+	case LONE_POINTER:
+		linux_exit(-1);
+	case LONE_HEAP_VALUE:
+		break;
+	}
+
+	actual = collection.as.heap_value;
+
+	switch (actual->type) {
 	case LONE_VECTOR:
 		get = lone_vector_get;
 		set = lone_vector_set;
@@ -26,7 +37,7 @@ static struct lone_value *lone_evaluate_form_index(struct lone_lisp *lone, struc
 		break;
 	case LONE_MODULE: case LONE_FUNCTION: case LONE_PRIMITIVE:
 	case LONE_BYTES: case LONE_SYMBOL: case LONE_TEXT:
-	case LONE_LIST: case LONE_INTEGER: case LONE_POINTER:
+	case LONE_LIST:
 		linux_exit(-1);
 	}
 
@@ -34,17 +45,18 @@ static struct lone_value *lone_evaluate_form_index(struct lone_lisp *lone, struc
 	key = lone_list_first(arguments);
 	arguments = lone_list_rest(arguments);
 	if (lone_is_nil(arguments)) {
-		/* table get: (collection key) */
-		return get(lone, collection, lone_evaluate(lone, module, environment, key));
+		/* collection get: (collection key) */
+		key = lone_evaluate(lone, module, environment, key);
+		return get(lone, collection, key);
 	} else {
 		/* at least one argument */
 		value = lone_list_first(arguments);
 		arguments = lone_list_rest(arguments);
 		if (lone_is_nil(arguments)) {
-			/* table set: (collection key value) */
-			set(lone, collection,
-			          lone_evaluate(lone, module, environment, key),
-			          lone_evaluate(lone, module, environment, value));
+			/* collection set: (collection key value) */
+			key = lone_evaluate(lone, module, environment, key);
+			value = lone_evaluate(lone, module, environment, value);
+			set(lone, collection, key, value);
 			return value;
 		} else {
 			/* too many arguments given: (collection key value extra) */
@@ -53,13 +65,28 @@ static struct lone_value *lone_evaluate_form_index(struct lone_lisp *lone, struc
 	}
 }
 
-static struct lone_value *lone_evaluate_form(struct lone_lisp *lone, struct lone_value *module, struct lone_value *environment, struct lone_value *list)
+static struct lone_value lone_evaluate_form(struct lone_lisp *lone, struct lone_value module, struct lone_value environment, struct lone_value list)
 {
-	struct lone_value *first = lone_list_first(list), *rest = lone_list_rest(list);
+	struct lone_value first, rest;
+	struct lone_heap_value *actual;
 
-	/* apply arguments to a lone value */
+	first = lone_list_first(list);
 	first = lone_evaluate(lone, module, environment, first);
-	switch (first->type) {
+
+	switch (first.type) {
+	case LONE_NIL:
+	case LONE_INTEGER:
+	case LONE_POINTER:
+		/* first element not applicable */ linux_exit(-1);
+	case LONE_HEAP_VALUE:
+		break;
+	}
+
+	actual = first.as.heap_value;
+	rest = lone_list_rest(list);
+
+	/* apply arguments to the value */
+	switch (actual->type) {
 	case LONE_FUNCTION:
 	case LONE_PRIMITIVE:
 		return lone_apply(lone, module, environment, first, rest);
@@ -71,18 +98,26 @@ static struct lone_value *lone_evaluate_form(struct lone_lisp *lone, struct lone
 	case LONE_SYMBOL:
 	case LONE_TEXT:
 	case LONE_BYTES:
-	case LONE_INTEGER:
-	case LONE_POINTER:
 		/* first element not an applicable type */ linux_exit(-1);
 	}
 }
 
-struct lone_value *lone_evaluate(struct lone_lisp *lone, struct lone_value *module, struct lone_value *environment, struct lone_value *value)
+struct lone_value lone_evaluate(struct lone_lisp *lone, struct lone_value module, struct lone_value environment, struct lone_value value)
 {
-	if (value == 0) { return 0; }
-	if (lone_is_nil(value)) { return value; }
+	struct lone_heap_value *actual;
 
-	switch (value->type) {
+	switch (value.type) {
+	case LONE_NIL:
+	case LONE_INTEGER:
+	case LONE_POINTER:
+		return value;
+	case LONE_HEAP_VALUE:
+		break;
+	}
+
+	actual = value.as.heap_value;
+
+	switch (actual->type) {
 	case LONE_LIST:
 		return lone_evaluate_form(lone, module, environment, value);
 	case LONE_SYMBOL:
@@ -92,73 +127,99 @@ struct lone_value *lone_evaluate(struct lone_lisp *lone, struct lone_value *modu
 	case LONE_PRIMITIVE:
 	case LONE_VECTOR:
 	case LONE_TABLE:
-	case LONE_INTEGER:
-	case LONE_POINTER:
 	case LONE_BYTES:
 	case LONE_TEXT:
 		return value;
 	}
 }
 
-struct lone_value *lone_evaluate_all(struct lone_lisp *lone, struct lone_value *module, struct lone_value *environment, struct lone_value *list)
+struct lone_value lone_evaluate_all(struct lone_lisp *lone, struct lone_value module, struct lone_value environment, struct lone_value list)
 {
-	struct lone_value *evaluated = lone_list_create_nil(lone), *head;
+	struct lone_value evaluated, head;
 
-	for (head = evaluated; !lone_is_nil(list); list = lone_list_rest(list)) {
-		head = lone_list_append(lone, head, lone_evaluate(lone, module, environment, lone_list_first(list)));
+	for (evaluated = head = lone_nil(); !lone_is_nil(list); list = lone_list_rest(list)) {
+		lone_list_append(lone, &evaluated, &head, lone_evaluate(lone, module, environment, lone_list_first(list)));
 	}
 
 	return evaluated;
 }
 
-struct lone_value *lone_evaluate_module(struct lone_lisp *lone, struct lone_value *module, struct lone_value *value)
+struct lone_value lone_evaluate_in_module(struct lone_lisp *lone, struct lone_value module, struct lone_value value)
 {
-	return lone_evaluate(lone, module, module->module.environment, value);
+	return lone_evaluate(lone, module, module.as.heap_value->as.module.environment, value);
 }
 
-static struct lone_value *lone_apply_function(struct lone_lisp *lone, struct lone_value *module, struct lone_value *environment, struct lone_value *function, struct lone_value *arguments)
+static struct lone_value lone_apply_function(struct lone_lisp *lone, struct lone_value module, struct lone_value environment, struct lone_value function, struct lone_value arguments)
 {
-	struct lone_value *new_environment = lone_table_create(lone, 16, function->function.environment),
-	                  *names = function->function.arguments, *code = function->function.code,
-	                  *value = lone_nil(lone), *current_name;
+	struct lone_value new_environment, names, code, value, current;
+	struct lone_heap_value *actual;
+
+	actual = function.as.heap_value;
+	new_environment = lone_table_create(lone, 16, actual->as.function.environment);
+	names = actual->as.function.arguments;
+	code = actual->as.function.code;
+	value = lone_nil();
 
 	/* evaluate each argument if function is configured to do so */
-	if (function->function.flags.evaluate_arguments) { arguments = lone_evaluate_all(lone, module, environment, arguments); }
+	if (actual->as.function.flags.evaluate_arguments) { arguments = lone_evaluate_all(lone, module, environment, arguments); }
 
 	while (1) {
-		current_name = lone_list_first(names);
+		if (!lone_is_nil(names)) {
+			current = lone_list_first(names);
 
-		if (!lone_is_nil(names) && lone_is_list(current_name)) {
-			/* variadic argument passing: (lambda ((arguments))) (lambda (x y (rest))) */
-
-			if (lone_is_nil(current_name)) {
-				/* no name given: (lambda (x y ())) */ linux_exit(-1);
-			} else if (!lone_is_nil(lone_list_rest(current_name))) {
-				/* too many names given: (lambda (x y (rest extra))) */ linux_exit(-1);
-			} else {
-				/* valid, set name to the list of remaining arguments */
-				lone_table_set(lone, new_environment, lone_list_first(current_name), arguments);
+			switch (current.type) {
+			case LONE_HEAP_VALUE:
 				break;
+			case LONE_NIL:
+			case LONE_POINTER:
+			case LONE_INTEGER:
+				/* unexpected value */ linux_exit(-1);
 			}
 
-		} else {
-			/* normal argument passing: (lambda (x y)) */
+			switch (current.as.heap_value->type) {
+			case LONE_SYMBOL:
+				/* normal argument passing: (lambda (x y)) */
 
-			if (lone_is_nil(names) != lone_is_nil(arguments)) {
-				/* argument number mismatch: ((lambda (x) x) 10 20), ((lambda (x y) y) 10) */ linux_exit(-1);
-			} else if (lone_is_nil(names) && lone_is_nil(arguments)) {
-				/* end of function application with matching arguments */
+				if (!lone_is_nil(arguments)) {
+					/* argument matched to name, set name in environment */
+					lone_table_set(lone, new_environment, current, lone_list_first(arguments));
+				} else {
+					/* argument number mismatch: ((lambda (x y) y) 10) */ linux_exit(-1);
+				}
+
 				break;
-			}
+			case LONE_LIST:
+				/* variadic argument passing: (lambda ((arguments))), (lambda (x y (rest))) */
 
-			/* valid binding, set name in environment and move on */
-			lone_table_set(lone, new_environment, current_name, lone_list_first(arguments));
+				if (!lone_is_symbol(lone_list_first(current))) {
+					/* no name given: (lambda (x y ())) */ linux_exit(-1);
+				} else if (lone_list_has_rest(current)) {
+					/* too many names given: (lambda (x y (rest extra))) */ linux_exit(-1);
+				} else {
+					/* match list of remaining arguments to name */
+					lone_table_set(lone, new_environment, lone_list_first(current), arguments);
+					goto names_bound;
+				}
+
+			case LONE_MODULE:
+			case LONE_FUNCTION: case LONE_PRIMITIVE:
+			case LONE_BYTES: case LONE_TEXT:
+			case LONE_VECTOR: case LONE_TABLE:
+				/* unexpected value */ linux_exit(-1);
+			}
 
 			names = lone_list_rest(names);
 			arguments = lone_list_rest(arguments);
+
+		} else if (!lone_is_nil(arguments)) {
+			/* argument number mismatch: ((lambda (x) x) 10 20) */ linux_exit(-1);
+		} else {
+			/* end of function application with matching arguments */
+			break;
 		}
 	}
 
+names_bound:
 	/* arguments have been bound to names in new environment */
 
 	/* evaluate each lisp expression in function body */
@@ -170,21 +231,26 @@ static struct lone_value *lone_apply_function(struct lone_lisp *lone, struct lon
 	}
 
 	/* evaluate result if function is configured to do so */
-	if (function->function.flags.evaluate_result) { value = lone_evaluate(lone, module, environment, value); }
+	if (actual->as.function.flags.evaluate_result) { value = lone_evaluate(lone, module, environment, value); }
 
 	return value;
 }
 
-static struct lone_value *lone_apply_primitive(struct lone_lisp *lone, struct lone_value *module, struct lone_value *environment, struct lone_value *primitive, struct lone_value *arguments)
+static struct lone_value lone_apply_primitive(struct lone_lisp *lone, struct lone_value module, struct lone_value environment, struct lone_value primitive, struct lone_value arguments)
 {
-	struct lone_value *result;
-	if (primitive->primitive.flags.evaluate_arguments) { arguments = lone_evaluate_all(lone, module, environment, arguments); }
-	result = primitive->primitive.function(lone, module, environment, arguments, primitive->primitive.closure);
-	if (primitive->primitive.flags.evaluate_result) { result = lone_evaluate(lone, module, environment, result); }
+	struct lone_heap_value *actual = primitive.as.heap_value;
+	struct lone_value result;
+
+	if (actual->as.primitive.flags.evaluate_arguments) { arguments = lone_evaluate_all(lone, module, environment, arguments); }
+
+	result = actual->as.primitive.function(lone, module, environment, arguments, actual->as.primitive.closure);
+
+	if (actual->as.primitive.flags.evaluate_result) { result = lone_evaluate(lone, module, environment, result); }
+
 	return result;
 }
 
-struct lone_value *lone_apply(struct lone_lisp *lone, struct lone_value *module, struct lone_value *environment, struct lone_value *applicable, struct lone_value *arguments)
+struct lone_value lone_apply(struct lone_lisp *lone, struct lone_value module, struct lone_value environment, struct lone_value applicable, struct lone_value arguments)
 {
 	if (!lone_is_applicable(applicable)) { /* given function is not an applicable type */ linux_exit(-1); }
 
