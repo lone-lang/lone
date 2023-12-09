@@ -12,11 +12,13 @@
 
 void lone_modules_intrinsic_text_initialize(struct lone_lisp *lone)
 {
-	struct lone_value *name = lone_intern_c_string(lone, "text"),
-	                  *module = lone_module_for_name(lone, name),
-	                  *primitive;
+	struct lone_value name, module, primitive;
+	struct lone_function_flags flags;
 
-	struct lone_function_flags flags = { .evaluate_arguments = true, .evaluate_result = false };
+	name = lone_intern_c_string(lone, "text");
+	module = lone_module_for_name(lone, name);
+	flags.evaluate_arguments = true;
+	flags.evaluate_result = false;
 
 	primitive = lone_primitive_create(lone, "join", lone_primitive_text_join, module, flags);
 	lone_set_and_export(lone, module, lone_intern_c_string(lone, "join"), primitive);
