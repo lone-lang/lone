@@ -18,11 +18,13 @@
 
 void lone_modules_intrinsic_lone_initialize(struct lone_lisp *lone)
 {
-	struct lone_value *name = lone_intern_c_string(lone, "lone"),
-	                  *module = lone_module_for_name(lone, name),
-	                  *primitive;
+	struct lone_value name, module, primitive;
+	struct lone_function_flags flags;
 
-	struct lone_function_flags flags = { .evaluate_arguments = false, .evaluate_result = false };
+	name = lone_intern_c_string(lone, "lone");
+	module = lone_module_for_name(lone, name);
+	flags.evaluate_arguments = false;
+	flags.evaluate_result = false;
 
 	primitive = lone_primitive_create(lone, "begin", lone_primitive_lone_begin, module, flags);
 	lone_set_and_export(lone, module, lone_intern_c_string(lone, "begin"), primitive);
@@ -92,9 +94,9 @@ void lone_modules_intrinsic_lone_initialize(struct lone_lisp *lone)
 
 LONE_PRIMITIVE(lone_begin)
 {
-	struct lone_value *value;
+	struct lone_value value;
 
-	for (value = lone_nil(lone); !lone_is_nil(arguments); arguments = lone_list_rest(arguments)) {
+	for (value = lone_nil(); !lone_is_nil(arguments); arguments = lone_list_rest(arguments)) {
 		value = lone_list_first(arguments);
 		value = lone_evaluate(lone, module, environment, value);
 	}
@@ -104,7 +106,7 @@ LONE_PRIMITIVE(lone_begin)
 
 LONE_PRIMITIVE(lone_when)
 {
-	struct lone_value *test;
+	struct lone_value test;
 
 	if (lone_is_nil(arguments)) { /* test not specified: (when) */ linux_exit(-1); }
 	test = lone_list_first(arguments);
@@ -114,12 +116,12 @@ LONE_PRIMITIVE(lone_when)
 		return lone_primitive_lone_begin(lone, module, environment, arguments, closure);
 	}
 
-	return lone_nil(lone);
+	return lone_nil();
 }
 
 LONE_PRIMITIVE(lone_unless)
 {
-	struct lone_value *test;
+	struct lone_value test;
 
 	if (lone_is_nil(arguments)) { /* test not specified: (unless) */ linux_exit(-1); }
 	test = lone_list_first(arguments);
@@ -129,12 +131,12 @@ LONE_PRIMITIVE(lone_unless)
 		return lone_primitive_lone_begin(lone, module, environment, arguments, closure);
 	}
 
-	return lone_nil(lone);
+	return lone_nil();
 }
 
 LONE_PRIMITIVE(lone_if)
 {
-	struct lone_value *value, *consequent, *alternative = 0;
+	struct lone_value value, consequent, alternative;
 
 	if (lone_is_nil(arguments)) { /* test not specified: (if) */ linux_exit(-1); }
 	value = lone_list_first(arguments);
@@ -144,6 +146,8 @@ LONE_PRIMITIVE(lone_if)
 	consequent = lone_list_first(arguments);
 	arguments = lone_list_rest(arguments);
 
+	alternative = lone_nil();
+
 	if (!lone_is_nil(arguments)) {
 		alternative = lone_list_first(arguments);
 		arguments = lone_list_rest(arguments);
@@ -152,16 +156,14 @@ LONE_PRIMITIVE(lone_if)
 
 	if (!lone_is_nil(lone_evaluate(lone, module, environment, value))) {
 		return lone_evaluate(lone, module, environment, consequent);
-	} else if (alternative) {
+	} else {
 		return lone_evaluate(lone, module, environment, alternative);
 	}
-
-	return lone_nil(lone);
 }
 
 LONE_PRIMITIVE(lone_let)
 {
-	struct lone_value *bindings, *first, *second, *rest, *value, *new_environment;
+	struct lone_value bindings, first, second, rest, value, new_environment;
 
 	if (lone_is_nil(arguments)) { /* no variables to bind: (let) */ linux_exit(-1); }
 	bindings = lone_list_first(arguments);
@@ -181,7 +183,7 @@ LONE_PRIMITIVE(lone_let)
 		bindings = lone_list_rest(rest);
 	}
 
-	value = lone_nil(lone);
+	value = lone_nil();
 
 	while (!lone_is_nil(arguments = lone_list_rest(arguments))) {
 		value = lone_evaluate(lone, module, new_environment, lone_list_first(arguments));
@@ -192,7 +194,7 @@ LONE_PRIMITIVE(lone_let)
 
 LONE_PRIMITIVE(lone_set)
 {
-	struct lone_value *variable, *value;
+	struct lone_value variable, value;
 
 	if (lone_is_nil(arguments)) {
 		/* no variable to set: (set) */
@@ -208,7 +210,7 @@ LONE_PRIMITIVE(lone_set)
 	arguments = lone_list_rest(arguments);
 	if (lone_is_nil(arguments)) {
 		/* value not specified: (set variable) */
-		value = lone_nil(lone);
+		value = lone_nil();
 	} else {
 		/* (set variable value) */
 		value = lone_list_first(arguments);
@@ -225,23 +227,29 @@ LONE_PRIMITIVE(lone_set)
 
 LONE_PRIMITIVE(lone_quote)
 {
-	if (!lone_is_nil(lone_list_rest(arguments))) { /* too many arguments: (quote x y) */ linux_exit(-1); }
-	return lone_list_first(arguments);
+	struct lone_value argument;
+
+	if (lone_list_destructure(arguments, 1, &argument)) {
+		/* wrong number of arguments: (quote), (quote x y) */ linux_exit(-1);
+	}
+
+	return argument;
 }
 
 LONE_PRIMITIVE(lone_quasiquote)
 {
-	struct lone_value *list, *head, *current, *element, *result, *first, *rest, *unquote, *splice;
+	struct lone_value form, list, head, current, element, result, first, rest, unquote, splice;
 	bool escaping, splicing;
 
-	if (!lone_is_nil(lone_list_rest(arguments))) { /* too many arguments: (quasiquote x y) */ linux_exit(-1); }
+	if (lone_list_destructure(arguments, 1, &form)) {
+		/* wrong number of arguments: (quasiquote), (quasiquote x y) */ linux_exit(-1);
+	}
 
 	unquote = lone_intern_c_string(lone, "unquote");
 	splice = lone_intern_c_string(lone, "unquote*");
-	head = list = lone_list_create_nil(lone);
-	arguments = lone_list_first(arguments);
+	list = head = lone_nil();
 
-	for (current = arguments; !lone_is_nil(current); current = lone_list_rest(current)) {
+	for (current = form; !lone_is_nil(current); current = lone_list_rest(current)) {
 		element = lone_list_first(current);
 
 		if (lone_is_list(element)) {
@@ -270,34 +278,34 @@ LONE_PRIMITIVE(lone_quasiquote)
 				if (splicing) {
 					if (lone_is_list(result)) {
 						for (/* result */; !lone_is_nil(result); result = lone_list_rest(result)) {
-							head = lone_list_append(lone, head, lone_list_first(result));
+							lone_list_append(lone, &list, &head, lone_list_first(result));
 						}
 					} else {
-						head = lone_list_append(lone, head, result);
+						lone_list_append(lone, &list, &head, result);
 					}
 
 				} else {
-					head = lone_list_append(lone, head, result);
+					lone_list_append(lone, &list, &head, result);
 				}
 
 			} else {
-				head = lone_list_append(lone, head, element);
+				lone_list_append(lone, &list, &head, element);
 			}
 
 		} else {
-			head = lone_list_append(lone, head, element);
+			lone_list_append(lone, &list, &head, element);
 		}
 	}
 
 	return list;
 }
 
-static struct lone_value *lone_primitive_lambda_with_flags(struct lone_lisp *lone, struct lone_value *environment, struct lone_value *arguments, struct lone_function_flags flags)
+static struct lone_value lone_primitive_lambda_with_flags(struct lone_lisp *lone, struct lone_value environment, struct lone_value arguments, struct lone_function_flags flags)
 {
-	struct lone_value *bindings, *code;
+	struct lone_value bindings, code;
 
 	bindings = lone_list_first(arguments);
-	if (!lone_is_list(bindings)) { /* parameters not a list: (lambda 10) */ linux_exit(-1); }
+	if (!lone_is_list_or_nil(bindings)) { /* parameters not a list: (lambda 10) */ linux_exit(-1); }
 
 	code = lone_list_rest(arguments);
 
@@ -377,5 +385,5 @@ LONE_PRIMITIVE(lone_print)
 		arguments = lone_list_rest(arguments);
 	}
 
-	return lone_nil(lone);
+	return lone_nil();
 }
