@@ -14,11 +14,13 @@
 
 void lone_modules_intrinsic_list_initialize(struct lone_lisp *lone)
 {
-	struct lone_value *name = lone_intern_c_string(lone, "list"),
-	                  *module = lone_module_for_name(lone, name),
-	                  *primitive;
+	struct lone_value name, module, primitive;
+	struct lone_function_flags flags;
 
-	struct lone_function_flags flags = { .evaluate_arguments = true, .evaluate_result = false };
+	name = lone_intern_c_string(lone, "list");
+	module = lone_module_for_name(lone, name);
+	flags.evaluate_arguments = true;
+	flags.evaluate_result = false;
 
 	primitive = lone_primitive_create(lone, "construct", lone_primitive_list_construct, module, flags);
 	lone_set_and_export(lone, module, lone_intern_c_string(lone, "construct"), primitive);
@@ -44,61 +46,52 @@ void lone_modules_intrinsic_list_initialize(struct lone_lisp *lone)
 
 LONE_PRIMITIVE(list_construct)
 {
-	struct lone_value *first, *rest;
+	struct lone_value first, rest;
 
-	if (lone_is_nil(arguments)) { /* no arguments given: (construct) */ linux_exit(-1); }
-
-	first = lone_list_first(arguments);
-	arguments = lone_list_rest(arguments);
-	if (lone_is_nil(arguments)) { /* only one argument given: (construct first) */ linux_exit(-1); }
-
-	rest = lone_list_first(arguments);
-	arguments = lone_list_rest(arguments);
-	if (!lone_is_nil(arguments)) { /* more than two arguments given: (construct first rest extra) */ linux_exit(-1); }
+	if (lone_list_destructure(arguments, 2, &first, &rest)) {
+		/* wrong number of arguments */ linux_exit(-1);
+	}
 
 	return lone_list_create(lone, first, rest);
 }
 
 LONE_PRIMITIVE(list_first)
 {
-	struct lone_value *argument;
-	if (lone_is_nil(arguments)) { linux_exit(-1); }
-	argument = lone_list_first(arguments);
-	arguments = lone_list_rest(arguments);
-	if (lone_is_nil(argument)) { linux_exit(-1); }
-	if (!lone_is_nil(arguments)) { linux_exit(-1); }
+	struct lone_value argument;
+
+	if (lone_list_destructure(arguments, 1, &argument)) {
+		/* wrong number of arguments */ linux_exit(-1);
+	}
+
 	return lone_list_first(argument);
 }
 
 LONE_PRIMITIVE(list_rest)
 {
-	struct lone_value *argument;
-	if (lone_is_nil(arguments)) { linux_exit(-1); }
-	argument = lone_list_first(arguments);
-	arguments = lone_list_rest(arguments);
-	if (lone_is_nil(argument)) { linux_exit(-1); }
-	if (!lone_is_nil(arguments)) { linux_exit(-1); }
+	struct lone_value argument;
+
+	if (lone_list_destructure(arguments, 1, &argument)) {
+		/* wrong number of arguments */ linux_exit(-1);
+	}
+
 	return lone_list_rest(argument);
 }
 
 LONE_PRIMITIVE(list_map)
 {
-	struct lone_value *function, *list, *results, *head;
+	struct lone_value function, list, results, head;
 
-	if (lone_is_nil(arguments)) { /* arguments not given */ linux_exit(-1); }
-	function = lone_list_first(arguments);
+	if (lone_list_destructure(arguments, 2, &function, &list)) {
+		/* wrong number of arguments */ linux_exit(-1);
+	}
+
 	if (!lone_is_applicable(function)) { /* not given an applicable value */ linux_exit(-1); }
-	arguments = lone_list_rest(arguments);
-	list = lone_list_first(arguments);
+	if (lone_is_nil(list)) { /* mapping function to empty list */ return lone_nil(); }
 	if (!lone_is_list(list)) { /* can only map functions to lists */ linux_exit(-1); }
-	arguments = lone_list_rest(arguments);
-	if (!lone_is_nil(arguments)) { /* too many arguments given */ linux_exit(-1); }
 
-	results = lone_list_create_nil(lone);
-
-	for (head = results; !lone_is_nil(list); list = lone_list_rest(list)) {
-		arguments = lone_list_create(lone, lone_list_first(list), lone_nil(lone));
-		head = lone_list_append(lone, head, lone_apply(lone, module, environment, function, arguments));
+	for (results = head = lone_nil(); !lone_is_nil(list); list = lone_list_rest(list)) {
+		arguments = lone_list_create(lone, lone_list_first(list), lone_nil());
+		lone_list_append(lone, &results, &head, lone_apply(lone, module, environment, function, arguments));
 	}
 
 	return results;
@@ -106,21 +99,19 @@ LONE_PRIMITIVE(list_map)
 
 LONE_PRIMITIVE(list_reduce)
 {
-	struct lone_value *function, *list, *result;
+	struct lone_value function, initial, list, result, head, current;
 
-	if (lone_is_nil(arguments)) { /* arguments not given */ linux_exit(-1); }
-	function = lone_list_first(arguments);
+	if (lone_list_destructure(arguments, 3, &function, &initial, &list)) {
+		/* wrong number of arguments */ linux_exit(-1);
+	}
+
 	if (!lone_is_applicable(function)) { /* not given an applicable value */ linux_exit(-1); }
-	arguments = lone_list_rest(arguments);
-	result = lone_list_first(arguments);
-	arguments = lone_list_rest(arguments);
-	list = lone_list_first(arguments);
-	if (!lone_is_list(list)) { /* can only map functions to lists */ linux_exit(-1); }
-	arguments = lone_list_rest(arguments);
-	if (!lone_is_nil(arguments)) { /* too many arguments given */ linux_exit(-1); }
+	if (lone_is_nil(list)) { /* mapping function to empty list */ return initial; }
+	if (!lone_is_list(list)) { /* can only reduce lists */ linux_exit(-1); }
 
-	for (/* list */; !lone_is_nil(list); list = lone_list_rest(list)) {
-		arguments = lone_list_build(lone, 2, result, lone_list_first(list));
+	for (result = initial, head = list; !lone_is_nil(head); head = lone_list_rest(head)) {
+		current = lone_list_first(head);
+		arguments = lone_list_build(lone, 2, &result, &current);
 		result = lone_apply(lone, module, environment, function, arguments);
 	}
 
