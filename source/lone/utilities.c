@@ -12,33 +12,35 @@
 
 #include <lone/linux.h>
 
-struct lone_value *lone_apply_predicate(struct lone_lisp *lone, struct lone_value *arguments, lone_predicate function)
+struct lone_value lone_apply_predicate(struct lone_lisp *lone, struct lone_value arguments, lone_predicate function)
 {
 	if (lone_is_nil(arguments) || !lone_is_nil(lone_list_rest(arguments))) { /* predicates accept exactly one argument */ linux_exit(-1); }
-	return function(lone_list_first(arguments)) ? lone_true(lone) : lone_nil(lone);
+	return function(lone_list_first(arguments)) ? lone_true(lone) : lone_nil();
 }
 
-struct lone_value *lone_apply_comparator(struct lone_lisp *lone, struct lone_value *arguments, lone_comparator function)
+struct lone_value lone_apply_comparator(struct lone_lisp *lone, struct lone_value arguments, lone_comparator function)
 {
-	struct lone_value *argument, *next;
+	struct lone_value current, next;
+
+	if (lone_is_nil(arguments)) { return lone_true(lone); }
 
 	while (1) {
-		if (lone_is_nil(arguments)) { break; }
-		argument = lone_list_first(arguments);
+		if (!lone_list_has_rest(arguments)) { break; }
+		current = lone_list_first(arguments);
 		arguments = lone_list_rest(arguments);
 		next = lone_list_first(arguments);
 
-		if (next && !function(argument, next)) { return lone_nil(lone); }
+		if (!function(current, next)) { return lone_nil(); }
 	}
 
 	return lone_true(lone);
 }
 
-struct lone_bytes lone_join(struct lone_lisp *lone, struct lone_value *separator, struct lone_value *arguments, lone_predicate is_valid)
+struct lone_bytes lone_join(struct lone_lisp *lone, struct lone_value separator, struct lone_value arguments, lone_predicate is_valid)
 {
-	struct lone_value *head, *argument;
-	unsigned char *joined;
-	size_t total = 0, position = 0;
+	struct lone_value head, argument;
+	unsigned char *joined, *from, *to;
+	size_t total, position, count;
 
 	if (!is_valid) { is_valid = lone_has_bytes; }
 	if (is_valid != lone_has_bytes && is_valid != lone_is_bytes &&
@@ -46,33 +48,42 @@ struct lone_bytes lone_join(struct lone_lisp *lone, struct lone_value *separator
 		/* invalid predicate function */ linux_exit(-1);
 	}
 
-	if (separator && !lone_is_nil(separator)) {
+	if (!lone_is_nil(separator)) {
 		if (!is_valid(separator)) { linux_exit(-1); }
 	}
 
-	for (head = arguments; head && !lone_is_nil(head); head = lone_list_rest(head)) {
+	total = 0;
+	position = 0;
+
+	for (head = arguments; !lone_is_nil(head); head = lone_list_rest(head)) {
 		argument = lone_list_first(head);
+
 		if (!is_valid(argument)) { linux_exit(-1); }
 
-		total += argument->bytes.count;
-		if (separator && !lone_is_nil(separator)) {
-			if (!lone_is_nil(lone_list_rest(head))) { total += separator->bytes.count; }
+		total += argument.as.heap_value->as.bytes.count;
+
+		if (!lone_is_nil(separator) && !lone_is_nil(lone_list_rest(head))) {
+			total += separator.as.heap_value->as.bytes.count;
 		}
 	}
 
 	joined = lone_allocate(lone, total + 1);
 
-	for (head = arguments; head && !lone_is_nil(head); head = lone_list_rest(head)) {
+	for (head = arguments; !lone_is_nil(head); head = lone_list_rest(head)) {
 		argument = lone_list_first(head);
 
-		lone_memory_move(argument->bytes.pointer, joined + position, argument->bytes.count);
-		position += argument->bytes.count;
+		count = argument.as.heap_value->as.bytes.count;
+		from = argument.as.heap_value->as.bytes.pointer;
+		to = joined + position;
+		lone_memory_move(from, to, count);
+		position += count;
 
-		if (separator && !lone_is_nil(separator)) {
-			if (!lone_is_nil(lone_list_rest(head))) {
-				lone_memory_move(separator->bytes.pointer, joined + position, separator->bytes.count);
-				position += separator->bytes.count;
-			}
+		if (!lone_is_nil(separator) && !lone_is_nil(lone_list_rest(head))) {
+			count = separator.as.heap_value->as.bytes.count;
+			from = separator.as.heap_value->as.bytes.pointer;
+			to = joined + position;
+			lone_memory_move(from, to, count);
+			position += count;
 		}
 	}
 
@@ -81,7 +92,7 @@ struct lone_bytes lone_join(struct lone_lisp *lone, struct lone_value *separator
 	return (struct lone_bytes) { .count = total, .pointer = joined };
 }
 
-struct lone_bytes lone_concatenate(struct lone_lisp *lone, struct lone_value *arguments, lone_predicate is_valid)
+struct lone_bytes lone_concatenate(struct lone_lisp *lone, struct lone_value arguments, lone_predicate is_valid)
 {
-	return lone_join(lone, 0, arguments, is_valid);
+	return lone_join(lone, lone_nil(), arguments, is_valid);
 }
