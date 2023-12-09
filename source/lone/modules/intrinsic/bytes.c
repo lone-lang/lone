@@ -13,9 +13,9 @@
 
 void lone_modules_intrinsic_bytes_initialize(struct lone_lisp *lone)
 {
-	struct lone_value *name = lone_intern_c_string(lone, "bytes"),
-	                  *module = lone_module_for_name(lone, name),
-	                  *primitive;
+	struct lone_value name = lone_intern_c_string(lone, "bytes"),
+	                  module = lone_module_for_name(lone, name),
+	                  primitive;
 
 	struct lone_function_flags flags = { .evaluate_arguments = true, .evaluate_result = false };
 
@@ -27,18 +27,26 @@ void lone_modules_intrinsic_bytes_initialize(struct lone_lisp *lone)
 
 LONE_PRIMITIVE(bytes_new)
 {
-	struct lone_value *count;
+	struct lone_value count;
 	size_t allocation;
 
-	if (lone_is_nil(arguments)) { /* arguments not given: (new) */ linux_exit(-1); }
+	if (lone_list_destructure(arguments, 1, &count)) {
+		/* wrong number of arguments */ linux_exit(-1);
+	}
 
-	count = lone_list_first(arguments);
-	arguments = lone_list_rest(arguments);
-	if (!lone_is_integer(count)) { /* count not an integer: (new {}) */ linux_exit(-1); }
-	if (!lone_is_nil(arguments)) { /* too many arguments given: (new 64 extra) */ linux_exit(-1); }
-	if (count->integer < 0) { /* negative allocation: (new -64) */ linux_exit(-1); }
+	switch (count.type) {
+	case LONE_INTEGER:
+		if (count.as.signed_integer <= 0) {
+			/* zero or negative allocation, likely a mistake: (new 0), (new -64) */ linux_exit(-1);
+		}
 
-	allocation = (size_t) count->integer;
+		allocation = count.as.unsigned_integer;
+		break;
+	case LONE_NIL:
+	case LONE_POINTER:
+	case LONE_HEAP_VALUE:
+		/* count not an integer: (new {}) */ linux_exit(-1);
+	}
 
 	return lone_bytes_create(lone, allocation);
 }
