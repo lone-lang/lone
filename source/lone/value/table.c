@@ -5,26 +5,34 @@
 #include <lone/value.h>
 #include <lone/value/table.h>
 
+#include <lone/memory/heap.h>
 #include <lone/memory/allocator.h>
 
-struct lone_value *lone_table_create(struct lone_lisp *lone, size_t capacity, struct lone_value *prototype)
+static void lone_table_zero(size_t capacity, struct lone_table_entry *entries, struct lone_table_index *indexes)
 {
-	struct lone_value *value = lone_value_create(lone);
-	value->type = LONE_TABLE;
-	value->table.prototype = prototype;
-	value->table.capacity = capacity;
-	value->table.count = 0;
-	value->table.indexes = lone_allocate(lone, capacity * sizeof(*value->table.indexes));
-	value->table.entries = lone_allocate(lone, capacity * sizeof(*value->table.entries));
+	size_t i;
 
-	for (size_t i = 0; i < capacity; ++i) {
-		value->table.indexes[i].used = false;
-		value->table.indexes[i].index = 0;
-		value->table.entries[i].key = 0;
-		value->table.entries[i].value = 0;
+	for (i = 0; i < capacity; ++i) {
+		indexes[i].used = false;
+		indexes[i].index = 0;
+		entries[i].key = lone_nil();
+		entries[i].value = lone_nil();
 	}
+}
 
-	return value;
+struct lone_value lone_table_create(struct lone_lisp *lone, size_t capacity, struct lone_value prototype)
+{
+	struct lone_heap_value *actual = lone_heap_allocate_value(lone);
+	actual->type = LONE_TABLE;
+	actual->as.table.prototype = prototype;
+	actual->as.table.capacity = capacity;
+	actual->as.table.count = 0;
+	actual->as.table.indexes = lone_allocate(lone, capacity * sizeof(*actual->as.table.indexes));
+	actual->as.table.entries = lone_allocate(lone, capacity * sizeof(*actual->as.table.entries));
+
+	lone_table_zero(actual->as.table.capacity, actual->as.table.entries, actual->as.table.indexes);
+
+	return lone_value_from_heap_value(actual);
 }
 
 static float lone_table_load_factor(struct lone_value *table, int added)
