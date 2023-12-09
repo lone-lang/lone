@@ -366,12 +366,10 @@ void lone_module_path_push_c_string(struct lone_lisp *lone, char *directory)
 
 void lone_module_path_push_va_list(struct lone_lisp *lone, size_t count, va_list directories)
 {
-	struct lone_value directory;
 	size_t i;
 
 	for (i = 0; i < count; ++i) {
-		directory = va_arg(directories, struct lone_value);
-		lone_module_path_push(lone, directory);
+		lone_module_path_push_c_string(lone, va_arg(directories, char *));
 	}
 }
 
