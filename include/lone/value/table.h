@@ -18,9 +18,9 @@ struct lone_value *lone_table_get(struct lone_lisp *lone, struct lone_value *tab
 void lone_table_set(struct lone_lisp *lone, struct lone_value *table, struct lone_value *key, struct lone_value *value);
 void lone_table_delete(struct lone_lisp *lone, struct lone_value *table, struct lone_value *key);
 
-#define LONE_TABLE_FOR_EACH(entry, table, i)                           \
-	for ((i) = 0, (entry) = &(table)->table.entries[0];            \
-	     (i) < (table)->table.count;                               \
-	     ++(i), (entry) = &(table)->table.entries[i])
+#define LONE_TABLE_FOR_EACH(entry, table, i)                                    \
+	for ((i) = 0, (entry) = &(table).as.heap_value->as.table.entries[0];    \
+	     (i) < (table).as.heap_value->as.table.count;                       \
+	     ++(i), (entry) = &(table).as.heap_value->as.table.entries[i])
 
 #endif /* LONE_VALUE_TABLE_HEADER */
