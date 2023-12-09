@@ -40,32 +40,37 @@ static void lone_print_integer(int fd, long n)
 	linux_write(fd, digit, count);
 }
 
-static void lone_print_pointer(struct lone_lisp *lone, struct lone_value *pointer, int fd)
+static void lone_print_pointer(struct lone_lisp *lone, struct lone_value pointer, int fd)
 {
-	if (pointer->pointer.type == LONE_TO_UNKNOWN) {
-		lone_print_integer(fd, (intptr_t) pointer->pointer.address);
+	if (pointer.pointer_type == LONE_TO_UNKNOWN) {
+		lone_print_integer(fd, (intptr_t) pointer.as.pointer.to_void);
 	} else {
-		lone_print(lone, lone_pointer_dereference(lone, pointer), fd);
+		lone_print(lone, lone_pointer_dereference(pointer), fd);
 	}
 }
 
-static void lone_print_bytes(struct lone_lisp *lone, struct lone_value *bytes, int fd)
+static void lone_print_bytes(struct lone_lisp *lone, struct lone_value bytes, int fd)
 {
-	size_t count = bytes->bytes.count;
+	static unsigned char hexadecimal[] = "0123456789ABCDEF";
+	unsigned char *text, *byte, low, high;
+	struct lone_heap_value *actual;
+	size_t size, count, i;
+
+	actual = bytes.as.heap_value;
+	count = actual->as.bytes.count;
+
 	if (count == 0) { linux_write(fd, "bytes[]", 7); return; }
 
-	static unsigned char hexadecimal[] = "0123456789ABCDEF";
-	size_t size = 2 + count * 2; // size required: "0x" + 2 characters per input byte
-	unsigned char *text = lone_allocate(lone, size);
-	unsigned char *byte = bytes->bytes.pointer;
-	size_t i;
+	size = 2 + count * 2; /* "0x" + 2 characters per input byte */
+	text = lone_allocate(lone, size);
+	byte = actual->as.bytes.pointer;
 
 	text[0] = '0';
 	text[1] = 'x';
 
 	for (i = 0; i < count; ++i) {
-		unsigned char low  = (byte[i] & 0x0F) >> 0;
-		unsigned char high = (byte[i] & 0xF0) >> 4;
+		low  = (byte[i] & 0x0F) >> 0;
+		high = (byte[i] & 0xF0) >> 4;
 		text[2 + (2 * i + 0)] = hexadecimal[high];
 		text[2 + (2 * i + 1)] = hexadecimal[low];
 	}
@@ -77,36 +82,41 @@ static void lone_print_bytes(struct lone_lisp *lone, struct lone_value *bytes, i
 	lone_deallocate(lone, text);
 }
 
-static void lone_print_list(struct lone_lisp *lone, struct lone_value *list, int fd)
+static void lone_print_list(struct lone_lisp *lone, struct lone_value list, int fd)
 {
-	if (list == 0 || lone_is_nil(list)) { return; }
+	struct lone_value first, rest;
+	struct lone_heap_value *actual;
 
-	struct lone_value *first = list->list.first,
-	                  *rest  = list->list.rest;
+	first = lone_list_first(list);
+	rest = lone_list_rest(list);
 
 	lone_print(lone, first, fd);
 
 	if (lone_is_list(rest)) {
-		if (!lone_is_nil(rest)) {
-			linux_write(fd, " ", 1);
-			lone_print_list(lone, rest, fd);
-		}
-	} else {
+		linux_write(fd, " ", 1);
+		lone_print_list(lone, rest, fd);
+	} else if (!lone_is_nil(rest)) {
 		linux_write(fd, " . ", 3);
 		lone_print(lone, rest, fd);
 	}
 }
 
-static void lone_print_vector(struct lone_lisp *lone, struct lone_value *vector, int fd)
+static void lone_print_vector(struct lone_lisp *lone, struct lone_value vector, int fd)
 {
-	size_t n = vector->vector.count, i;
-	struct lone_value **values = vector->vector.values;
+	struct lone_heap_value *actual;
+	struct lone_value *values;
+	size_t count, i;
 
-	if (vector->vector.count == 0) { linux_write(fd, "[]", 2); return; }
+	actual = vector.as.heap_value;
+	count = actual->as.vector.count;
+
+	if (count == 0) { linux_write(fd, "[]", 2); return; }
+
+	values = actual->as.vector.values;
 
 	linux_write(fd, "[ ", 2);
 
-	for (i = 0; i < n; ++i) {
+	for (i = 0; i < count; ++i) {
 		lone_print(lone, values[i], fd);
 		linux_write(fd, " ", 1);
 	}
@@ -114,33 +124,39 @@ static void lone_print_vector(struct lone_lisp *lone, struct lone_value *vector,
 	linux_write(fd, "]", 1);
 }
 
-static void lone_print_table(struct lone_lisp *lone, struct lone_value *table, int fd)
+static void lone_print_table(struct lone_lisp *lone, struct lone_value table, int fd)
 {
-	struct lone_table_entry *entries = table->table.entries;
-	size_t count = table->table.count;
-	size_t i;
+	struct lone_heap_value *actual;
+	struct lone_table_entry *entries;
+	size_t count, i;
+
+	actual = table.as.heap_value;
+	count = actual->as.table.count;
 
 	if (count == 0) { linux_write(fd, "{}", 2); return; }
+
+	entries = actual->as.table.entries;
 
 	linux_write(fd, "{ ", 2);
 
 	for (i = 0; i < count; ++i) {
-		struct lone_value *key   = entries[i].key,
-		                  *value = entries[i].value;
-
-		lone_print(lone, key, fd);
+		lone_print(lone, entries[i].key, fd);
 		linux_write(fd, " ", 1);
-		lone_print(lone, value, fd);
+		lone_print(lone, entries[i].value, fd);
 		linux_write(fd, " ", 1);
 	}
 
 	linux_write(fd, "}", 1);
 }
 
-static void lone_print_function(struct lone_lisp *lone, struct lone_value *function, int fd)
+static void lone_print_function(struct lone_lisp *lone, struct lone_value function, int fd)
 {
-	struct lone_value *arguments = function->function.arguments,
-	                  *code = function->function.code;
+	struct lone_heap_value *actual;
+	struct lone_value arguments, code;
+
+	actual = function.as.heap_value;
+	arguments = actual->as.function.arguments;
+	code = actual->as.function.code;
 
 	linux_write(fd, "(𝛌 ", 6);
 	lone_print(lone, arguments, fd);
@@ -154,7 +170,7 @@ static void lone_print_function(struct lone_lisp *lone, struct lone_value *funct
 	linux_write(fd, ")", 1);
 }
 
-static void lone_print_hash_notation(struct lone_lisp *lone, char *descriptor, struct lone_value *value, int fd)
+static void lone_print_hash_notation(struct lone_lisp *lone, char *descriptor, struct lone_value value, int fd)
 {
 	linux_write(fd, "#<", 2);
 	linux_write(fd, descriptor, lone_c_string_length(descriptor));
@@ -163,17 +179,32 @@ static void lone_print_hash_notation(struct lone_lisp *lone, char *descriptor, s
 	linux_write(fd, ">", 1);
 }
 
-void lone_print(struct lone_lisp *lone, struct lone_value *value, int fd)
+void lone_print(struct lone_lisp *lone, struct lone_value value, int fd)
 {
-	if (value == 0) { return; }
-	if (lone_is_nil(value)) { linux_write(fd, "nil", 3); return; }
+	struct lone_heap_value *actual;
 
-	switch (value->type) {
+	switch (value.type) {
+	case LONE_NIL:
+		linux_write(fd, "nil", 3);
+		return;
+	case LONE_INTEGER:
+		lone_print_integer(fd, value.as.signed_integer);
+		return;
+	case LONE_POINTER:
+		lone_print_pointer(lone, value, fd);
+		return;
+	case LONE_HEAP_VALUE:
+		break;
+	}
+
+	actual = value.as.heap_value;
+
+	switch (actual->type) {
 	case LONE_MODULE:
-		lone_print_hash_notation(lone, "module", value->module.name, fd);
+		lone_print_hash_notation(lone, "module", actual->as.module.name, fd);
 		break;
 	case LONE_PRIMITIVE:
-		lone_print_hash_notation(lone, "primitive", value->primitive.name, fd);
+		lone_print_hash_notation(lone, "primitive", actual->as.primitive.name, fd);
 		break;
 	case LONE_FUNCTION:
 		lone_print_function(lone, value, fd);
@@ -193,18 +224,12 @@ void lone_print(struct lone_lisp *lone, struct lone_value *value, int fd)
 		lone_print_bytes(lone, value, fd);
 		break;
 	case LONE_SYMBOL:
-		linux_write(fd, value->bytes.pointer, value->bytes.count);
+		linux_write(fd, actual->as.bytes.pointer, actual->as.bytes.count);
 		break;
 	case LONE_TEXT:
 		linux_write(fd, "\"", 1);
-		linux_write(fd, value->bytes.pointer, value->bytes.count);
+		linux_write(fd, actual->as.bytes.pointer, actual->as.bytes.count);
 		linux_write(fd, "\"", 1);
-		break;
-	case LONE_INTEGER:
-		lone_print_integer(fd, value->integer);
-		break;
-	case LONE_POINTER:
-		lone_print_pointer(lone, value, fd);
 		break;
 	}
 }

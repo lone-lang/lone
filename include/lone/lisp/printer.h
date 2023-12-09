@@ -11,6 +11,6 @@
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
 
-void lone_print(struct lone_lisp *lone, struct lone_value *value, int file_descriptor);
+void lone_print(struct lone_lisp *lone, struct lone_value value, int file_descriptor);
 
 #endif /* LONE_LISP_PRINTER_HEADER */
