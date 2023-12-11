@@ -60,6 +60,9 @@ static size_t lone_hash_heap_value_recursively(struct lone_heap_value *value, un
 		hash = lone_hash_value_recursively(value->as.list.rest, hash);
 		return hash;
 	case LONE_SYMBOL:
+		bytes.pointer = (unsigned char *) &value;
+		bytes.count = sizeof(value);
+		break;
 	case LONE_TEXT:
 	case LONE_BYTES:
 		bytes = value->as.bytes;

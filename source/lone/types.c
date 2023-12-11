@@ -153,16 +153,17 @@ bool lone_is_equivalent(struct lone_value x, struct lone_value y)
 	}
 
 	switch (x.as.heap_value->type) {
-	case LONE_SYMBOL:
 	case LONE_TEXT:
 	case LONE_BYTES:
 		return lone_bytes_equals(x.as.heap_value->as.bytes, y.as.heap_value->as.bytes);
+
 	case LONE_MODULE:
 	case LONE_FUNCTION:
 	case LONE_PRIMITIVE:
 	case LONE_LIST:
 	case LONE_VECTOR:
 	case LONE_TABLE:
+	case LONE_SYMBOL:
 		return lone_is_identical(x, y);
 	}
 }
@@ -218,10 +219,12 @@ bool lone_is_equal(struct lone_value x, struct lone_value y)
 	case LONE_TABLE:
 		return lone_table_is_equal(x, y);
 
+	case LONE_SYMBOL:
+		return lone_is_identical(x, y);
+
 	case LONE_MODULE:
 	case LONE_FUNCTION:
 	case LONE_PRIMITIVE:
-	case LONE_SYMBOL:
 	case LONE_TEXT:
 	case LONE_BYTES:
 		return lone_is_equivalent(x, y);

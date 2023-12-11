@@ -28,11 +28,11 @@ struct lone_value lone_intern(struct lone_lisp *lone, unsigned char *bytes, size
 {
 	struct lone_value key, value;
 
-	key = should_deallocate? lone_symbol_copy(lone, bytes, count) : lone_symbol_transfer(lone, bytes, count, should_deallocate);
+	key = should_deallocate? lone_bytes_copy(lone, bytes, count) : lone_bytes_transfer(lone, bytes, count, should_deallocate);
 	value = lone_table_get(lone, lone->symbol_table, key);
 
 	if (lone_is_nil(value)) {
-		value = key;
+		value = should_deallocate? lone_symbol_copy(lone, bytes, count) : lone_symbol_transfer(lone, bytes, count, should_deallocate);
 		lone_table_set(lone, lone->symbol_table, key, value);
 	}
 
