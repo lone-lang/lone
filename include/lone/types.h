@@ -55,8 +55,8 @@ struct lone_auxiliary_vector {
 };
 
 struct lone_bytes {
-	size_t count;
-	unsigned char *pointer;
+	size_t count;              /* size of memory block in bytes */
+	unsigned char *pointer;    /* address of memory block */
 };
 
 struct lone_reader {
