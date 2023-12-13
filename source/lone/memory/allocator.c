@@ -78,6 +78,7 @@ static struct lone_memory * lone_memory_find_free_block(struct lone_lisp *lone, 
 void * lone_allocate_aligned(struct lone_lisp *lone, size_t requested_size, size_t alignment)
 {
 	struct lone_memory *block = lone_memory_find_free_block(lone, requested_size, alignment);
+	lone_memory_zero(block->pointer, block->size);
 	return block->pointer;
 }
 
