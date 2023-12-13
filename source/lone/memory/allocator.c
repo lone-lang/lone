@@ -5,6 +5,7 @@
 #include <lone/linux.h>
 #include <lone/memory/allocator.h>
 #include <lone/memory/functions.h>
+#include <lone/utilities.h>
 
 static size_t __attribute__((const)) lone_next_power_of_2(size_t n)
 {
@@ -85,7 +86,7 @@ void * lone_reallocate(struct lone_lisp *lone, void *pointer, size_t size)
 	                   *new = ((struct lone_memory *) lone_allocate(lone, size)) - 1;
 
 	if (pointer) {
-		lone_memory_move(old->pointer, new->pointer, new->size < old->size ? new->size : old->size);
+		lone_memory_move(old->pointer, new->pointer, lone_min(old->size, new->size));
 		lone_deallocate(lone, pointer);
 	}
 
