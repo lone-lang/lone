@@ -96,3 +96,13 @@ struct lone_bytes lone_concatenate(struct lone_lisp *lone, struct lone_value arg
 {
 	return lone_join(lone, lone_nil(), arguments, is_valid);
 }
+
+long lone_min(long x, long y)
+{
+	if (x <= y) { return x; } else { return y; }
+}
+
+long lone_max(long x, long y)
+{
+	if (x >= y) { return x; } else { return y; }
+}
