@@ -9,10 +9,6 @@ static struct lone_heap *lone_allocate_heap(struct lone_lisp *lone, size_t count
 	struct lone_heap *heap = lone_allocate(lone, size);
 	heap->next = 0;
 	heap->count = count;
-	for (i = 0; i < count; ++i) {
-		heap->values[i].live = false;
-		heap->values[i].marked = false;
-	}
 	return heap;
 }
 
