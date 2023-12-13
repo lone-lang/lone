@@ -67,7 +67,7 @@ struct lone_bytes lone_join(struct lone_lisp *lone, struct lone_value separator,
 		}
 	}
 
-	joined = lone_allocate(lone, total + 1);
+	joined = lone_allocate_uninitialized(lone, total + 1);
 
 	for (head = arguments; !lone_is_nil(head); head = lone_list_rest(head)) {
 		argument = lone_list_first(head);
