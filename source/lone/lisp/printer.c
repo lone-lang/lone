@@ -62,7 +62,7 @@ static void lone_print_bytes(struct lone_lisp *lone, struct lone_value bytes, in
 	if (count == 0) { linux_write(fd, "bytes[]", 7); return; }
 
 	size = 2 + count * 2; /* "0x" + 2 characters per input byte */
-	text = lone_allocate(lone, size);
+	text = lone_allocate_uninitialized(lone, size);
 	byte = actual->as.bytes.pointer;
 
 	text[0] = '0';
