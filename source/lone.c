@@ -35,7 +35,7 @@ long lone(int argc, char **argv, char **envp, struct lone_auxiliary_vector *auxv
 	struct lone_bytes memory = { sizeof(bytes), bytes }, random = lone_auxiliary_vector_random(auxv);
 	struct lone_lisp lone;
 
-	lone_lisp_initialize(&lone, memory, 1024, stack, random);
+	lone_lisp_initialize(&lone, memory, stack, random);
 	lone_modules_intrinsic_initialize(&lone, argc, argv, envp, auxv);
 	lone_module_path_push_all(&lone, 4,
 

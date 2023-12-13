@@ -10,6 +10,8 @@
 #include <linux/types.h>
 #include <linux/elf.h>
 
+#include <lone/definitions.h>
+
 typedef __kernel_size_t size_t;
 typedef __kernel_ssize_t ssize_t;
 typedef __kernel_off_t off_t;
@@ -410,8 +412,7 @@ struct lone_memory {
 
 struct lone_heap {
 	struct lone_heap *next;
-	size_t count;
-	struct lone_heap_value values[];
+	struct lone_heap_value values[LONE_MEMORY_HEAP_VALUE_COUNT];
 };
 
 #endif /* LONE_TYPES_HEADER */

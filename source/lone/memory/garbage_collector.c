@@ -101,7 +101,7 @@ static bool lone_points_to_heap(struct lone_lisp *lone, void *pointer)
 	if (!lone_points_to_general_memory(lone, pointer)) { return false; }
 
 	for (heap = lone->memory.heaps; heap; heap = heap->next) {
-		if (lone_points_within_range(pointer, heap->values, heap->values + heap->count)) { return true; }
+		if (lone_points_within_range(pointer, heap->values, heap->values + LONE_MEMORY_HEAP_VALUE_COUNT)) { return true; }
 	}
 
 	return false;
@@ -143,7 +143,7 @@ static void lone_kill_all_unmarked_values(struct lone_lisp *lone)
 	size_t i;
 
 	for (heap = lone->memory.heaps; heap; heap = heap->next) {
-		for (i = 0; i < heap->count; ++i) {
+		for (i = 0; i < LONE_MEMORY_HEAP_VALUE_COUNT; ++i) {
 			value = &heap->values[i];
 
 			if (!value->live) { continue; }

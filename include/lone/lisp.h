@@ -14,6 +14,6 @@
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
 
-void lone_lisp_initialize(struct lone_lisp *lone, struct lone_bytes memory, size_t heap_size, void *stack, struct lone_bytes random);
+void lone_lisp_initialize(struct lone_lisp *lone, struct lone_bytes memory, void *stack, struct lone_bytes random);
 
 #endif /* LONE_LISP_HEADER */

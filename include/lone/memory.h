@@ -8,7 +8,6 @@
 void lone_memory_initialize(
 	struct lone_lisp *lone,
 	struct lone_bytes memory,
-	size_t heap_size,
 	void *stack
 );
 

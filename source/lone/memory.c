@@ -3,7 +3,7 @@
 #include <lone/memory.h>
 #include <lone/memory/heap.h>
 
-void lone_memory_initialize(struct lone_lisp *lone, struct lone_bytes memory, size_t heap_size, void *stack)
+void lone_memory_initialize(struct lone_lisp *lone, struct lone_bytes memory, void *stack)
 {
 	lone->memory.stack = stack;
 
@@ -12,5 +12,5 @@ void lone_memory_initialize(struct lone_lisp *lone, struct lone_bytes memory, si
 	lone->memory.general->free = 1;
 	lone->memory.general->size = memory.count - sizeof(struct lone_memory);
 
-	lone_heap_initialize(lone, heap_size);
+	lone_heap_initialize(lone);
 }

@@ -29,6 +29,10 @@
 	#define LONE_MEMORY_SIZE (1024 * 1024)
 #endif
 
+#ifndef LONE_MEMORY_HEAP_VALUE_COUNT
+	#define LONE_MEMORY_HEAP_VALUE_COUNT 512
+#endif
+
 #ifndef LONE_ALIGNMENT
 	#define LONE_ALIGNMENT 16
 #endif
