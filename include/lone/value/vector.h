@@ -11,9 +11,7 @@
    │    They grow automatically as elements are added.                      │
    │    Any index may be used regardless of current length:                 │
    │    all the elements remain unset as the array grows.                   │
-   │    Unset elements are null pointers which are currently                │
-   │    converted to nil automatically but might one day serve              │
-   │    as an undefined value like in other languages.                      │
+   │    The array is zero filled which makes unset elements nil.            │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
 
