@@ -82,9 +82,22 @@ void * lone_allocate_aligned(struct lone_lisp *lone, size_t requested_size, size
 	return block->pointer;
 }
 
+void * lone_allocate_aligned_uninitialized(struct lone_lisp *lone, size_t requested_size, size_t alignment)
+{
+	struct lone_memory *block = lone_memory_find_free_block(lone, requested_size, alignment);
+	/* zero fill any extra memory allocated due to alignment requirements */
+	lone_memory_zero(block->pointer + requested_size, block->size - requested_size);
+	return block->pointer;
+}
+
 void * lone_allocate(struct lone_lisp *lone, size_t requested_size)
 {
 	return lone_allocate_aligned(lone, requested_size, LONE_ALIGNMENT);
+}
+
+void * lone_allocate_uninitialized(struct lone_lisp *lone, size_t requested_size)
+{
+	return lone_allocate_aligned_uninitialized(lone, requested_size, LONE_ALIGNMENT);
 }
 
 void * lone_reallocate(struct lone_lisp *lone, void *pointer, size_t size)
