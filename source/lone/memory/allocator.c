@@ -55,7 +55,7 @@ static void lone_memory_coalesce(struct lone_memory *block)
 	}
 }
 
-void * lone_allocate_aligned(struct lone_lisp *lone, size_t requested_size, size_t alignment)
+static struct lone_memory * lone_memory_find_free_block(struct lone_lisp *lone, size_t requested_size, size_t alignment)
 {
 	size_t needed_size = requested_size + sizeof(struct lone_memory);
 	struct lone_memory *block;
@@ -72,6 +72,12 @@ void * lone_allocate_aligned(struct lone_lisp *lone, size_t requested_size, size
 	block->free = 0;
 	lone_memory_split(block, needed_size);
 
+	return block;
+}
+
+void * lone_allocate_aligned(struct lone_lisp *lone, size_t requested_size, size_t alignment)
+{
+	struct lone_memory *block = lone_memory_find_free_block(lone, requested_size, alignment);
 	return block->pointer;
 }
 
