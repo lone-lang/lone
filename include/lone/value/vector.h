@@ -3,8 +3,6 @@
 #ifndef LONE_VALUE_VECTOR_HEADER
 #define LONE_VALUE_VECTOR_HEADER
 
-#include <stdarg.h>
-
 #include <lone/types.h>
 
 /* ╭────────────────────────────────────────────────────────────────────────╮
