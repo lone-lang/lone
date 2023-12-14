@@ -23,8 +23,6 @@ struct lone_value lone_vector_create(struct lone_lisp *lone, size_t capacity)
 	actual->as.vector.count = 0;
 	actual->as.vector.values = lone_allocate(lone, capacity * sizeof(*actual->as.vector.values));
 
-	lone_vector_zero(actual->as.vector.capacity, actual->as.vector.values);
-
 	return lone_value_from_heap_value(actual);
 }
 
