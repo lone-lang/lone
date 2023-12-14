@@ -32,7 +32,7 @@ void lone_vector_resize(struct lone_lisp *lone, struct lone_value vector, size_t
 	struct lone_value *new;
 	size_t i;
 
-	new = lone_allocate(lone, new_capacity * sizeof(*new));
+	new = lone_allocate_uninitialized(lone, new_capacity * sizeof(*new));
 
 	actual = vector.as.heap_value;
 	for (i = 0; i < new_capacity; ++i) {
