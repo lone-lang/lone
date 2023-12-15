@@ -45,19 +45,19 @@ static size_t lone_table_entry_find_index_for(struct lone_lisp *lone, struct lon
 	return i;
 }
 
-static int lone_table_entry_set(struct lone_lisp *lone, struct lone_table_index *indexes, struct lone_table_entry *entries, size_t capacity, size_t index_if_new_entry, struct lone_value key, struct lone_value value)
+static bool lone_table_entry_set(struct lone_lisp *lone, struct lone_table_index *indexes, struct lone_table_entry *entries, size_t capacity, size_t index_if_new_entry, struct lone_value key, struct lone_value value)
 {
 	size_t i = lone_table_entry_find_index_for(lone, key, indexes, entries, capacity);
 
 	if (indexes[i].used) {
 		entries[indexes[i].index].value = value;
-		return 0;
+		return false;
 	} else {
 		indexes[i].used = true;
 		indexes[i].index = index_if_new_entry;
 		entries[indexes[i].index].key = key;
 		entries[indexes[i].index].value = value;
-		return 1;
+		return true;
 	}
 }
 
@@ -102,7 +102,7 @@ static void lone_table_resize(struct lone_lisp *lone, struct lone_value table, s
 void lone_table_set(struct lone_lisp *lone, struct lone_value table, struct lone_value key, struct lone_value value)
 {
 	struct lone_heap_value *actual;
-	int is_new_table_entry;
+	bool is_new_table_entry;
 
 	actual = table.as.heap_value;
 
