@@ -23,8 +23,10 @@ struct lone_value lone_table_create(struct lone_lisp *lone, size_t capacity, str
 
 static double lone_table_load_factor(struct lone_value table, unsigned char added)
 {
-	double count = (double) (table.as.heap_value->as.table.count + added);
-	double capacity = (double) table.as.heap_value->as.table.capacity;
+	struct lone_table *actual = &table.as.heap_value->as.table;
+
+	double count = (double) (actual->count + added);
+	double capacity = (double) actual->capacity;
 
 	return count / capacity;
 }
