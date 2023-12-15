@@ -7,14 +7,6 @@
 #include <lone/memory/heap.h>
 #include <lone/memory/allocator.h>
 
-static void lone_vector_zero(size_t capacity, struct lone_value *values)
-{
-	size_t i;
-
-	for (i = 0; i < capacity; ++i) {
-		values[i] = lone_nil();
-	}
-}
 struct lone_value lone_vector_create(struct lone_lisp *lone, size_t capacity)
 {
 	struct lone_heap_value *actual = lone_heap_allocate_value(lone);
