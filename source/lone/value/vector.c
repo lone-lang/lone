@@ -103,13 +103,13 @@ struct lone_value lone_vector_build(struct lone_lisp *lone, size_t count, ...)
 
 bool lone_vector_contains(struct lone_value vector, struct lone_value value)
 {
-	struct lone_heap_value *actual;
+	struct lone_vector *actual;
 	size_t i;
 
-	actual = vector.as.heap_value;
+	actual = &vector.as.heap_value->as.vector;
 
-	for (i = 0; i < actual->as.vector.count; ++i) {
-		if (lone_is_equal(value, actual->as.vector.values[i])) {
+	for (i = 0; i < actual->count; ++i) {
+		if (lone_is_equal(value, actual->values[i])) {
 			return true;
 		}
 	}
