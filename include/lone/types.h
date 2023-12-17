@@ -16,6 +16,8 @@ typedef __kernel_size_t size_t;
 typedef __kernel_ssize_t ssize_t;
 typedef __kernel_off_t off_t;
 
+typedef __kernel_size_t lone_size;
+
 typedef __u8  lone_u8;
 typedef __s8  lone_s8;
 typedef __u16 lone_u16;
