@@ -235,9 +235,7 @@ struct lone_list {
 };
 
 struct lone_vector {
-	struct lone_value *values;
-	size_t count;
-	size_t capacity;
+	struct lone_memory_layout values;
 };
 
 /* ╭────────────────────────────────────────────────────────────────────────╮

@@ -5,7 +5,7 @@
 #include <lone/value/vector.h>
 #include <lone/value/list.h>
 #include <lone/memory/heap.h>
-#include <lone/memory/array.h>
+#include <lone/memory/layout.h>
 
 struct lone_value lone_vector_create(struct lone_lisp *lone, size_t capacity)
 {
@@ -13,29 +13,20 @@ struct lone_value lone_vector_create(struct lone_lisp *lone, size_t capacity)
 	struct lone_vector *actual = &heap_value->as.vector;
 
 	heap_value->type = LONE_VECTOR;
-	actual->count = 0;
-	actual->capacity = capacity;
-	actual->values = lone_memory_array(lone, 0, actual->capacity, sizeof(*actual->values));
+	actual->values = lone_memory_layout_create(lone, capacity);
 
 	return lone_value_from_heap_value(heap_value);
 }
 
 size_t lone_vector_count(struct lone_value vector)
 {
-	return vector.as.heap_value->as.vector.count;
+	return vector.as.heap_value->as.vector.values.count;
 }
 
 void lone_vector_resize(struct lone_lisp *lone, struct lone_value vector, size_t new_capacity)
 {
 	struct lone_vector *actual = &vector.as.heap_value->as.vector;
-
-	actual->capacity = new_capacity;
-	actual->values = lone_memory_array(lone, actual->values, actual->capacity, sizeof(*actual->values));
-
-	if (actual->count > new_capacity) {
-		/* vector has shrunk, truncate count */
-		actual->count = new_capacity;
-	}
+	lone_memory_layout_resize(lone, &actual->values, new_capacity);
 }
 
 struct lone_value lone_vector_get_value_at(struct lone_value vector, size_t i)
@@ -44,8 +35,8 @@ struct lone_value lone_vector_get_value_at(struct lone_value vector, size_t i)
 
 	actual = &vector.as.heap_value->as.vector;
 
-	if (lone_memory_array_is_bounded(i, actual->capacity, sizeof(*actual->values))) {
-		return actual->values[i];
+	if (lone_memory_layout_is_bounded(actual->values, i)) {
+		return lone_memory_layout_get(&actual->values, i);
 	} else {
 		return lone_nil();
 	}
@@ -63,12 +54,11 @@ void lone_vector_set_value_at(struct lone_lisp *lone, struct lone_value vector, 
 
 	actual = &vector.as.heap_value->as.vector;
 
-	if (!lone_memory_array_is_bounded(i, actual->capacity, sizeof(*actual->values))) {
+	if (!lone_memory_layout_is_bounded(actual->values, i)) {
 		lone_vector_resize(lone, vector, 2 * (i + 1));
 	}
 
-	actual->values[i] = value;
-	if (++i > actual->count) { actual->count = i; }
+	lone_memory_layout_set(lone, &actual->values, i, value);
 }
 
 void lone_vector_set(struct lone_lisp *lone, struct lone_value vector, struct lone_value index, struct lone_value value)
