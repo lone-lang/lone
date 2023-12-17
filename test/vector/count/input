@@ -1,0 +1,6 @@
+(import (lone print) (vector count))
+
+(print (count []))
+(print (count [1]))
+(print (count [1 2]))
+(print (count [1 2 3]))
