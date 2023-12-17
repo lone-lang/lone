@@ -86,7 +86,7 @@ LONE_PRIMITIVE(vector_slice)
 	i = start.as.unsigned_integer;
 
 	if (lone_is_nil(arguments)) {
-		j = actual->as.vector.count;
+		j = lone_vector_count(vector);
 	} else {
 		end = lone_list_first(arguments);
 		arguments = lone_list_rest(arguments);

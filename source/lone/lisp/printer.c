@@ -107,7 +107,7 @@ static void lone_print_vector(struct lone_lisp *lone, struct lone_value vector, 
 	size_t count, i;
 
 	actual = vector.as.heap_value;
-	count = actual->as.vector.count;
+	count = lone_vector_count(vector);
 
 	if (count == 0) { linux_write(fd, "[]", 2); return; }
 
