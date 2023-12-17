@@ -85,7 +85,6 @@ static void lone_print_bytes(struct lone_lisp *lone, struct lone_value bytes, in
 static void lone_print_list(struct lone_lisp *lone, struct lone_value list, int fd)
 {
 	struct lone_value first, rest;
-	struct lone_heap_value *actual;
 
 	first = lone_list_first(list);
 	rest = lone_list_rest(list);
