@@ -119,8 +119,7 @@ static int lone_module_search(struct lone_lisp *lone, struct lone_value symbols)
 
 	actual = lone->modules.path.as.heap_value;
 
-	for (i = 0; i < actual->as.vector.count; ++i) {
-		search_path = actual->as.vector.values[i];
+	LONE_VECTOR_FOR_EACH(search_path, lone->modules.path, i) {
 		arguments = lone_list_build(lone, 3, &search_path, &package, &symbols);
 		arguments = lone_list_flatten(lone, arguments);
 		arguments = lone_text_transfer_bytes(lone, lone_join(lone, slash, arguments, lone_has_bytes), true);
@@ -264,8 +263,7 @@ static void lone_import_specification(struct lone_lisp *lone, struct lone_import
 	exports = module.as.heap_value->as.module.exports;
 
 	/* bind either the exported or the specified symbols: (import (module)), (import (module x f)) */
-	for (i = 0; i < symbols.as.heap_value->as.vector.count; ++i) {
-		symbol = lone_vector_get_value_at(symbols, i);
+	LONE_VECTOR_FOR_EACH(symbol, symbols, i) {
 		if (!lone_is_symbol(symbol)) { /* name not a symbol: (import (module 10)) */ linux_exit(-1); }
 
 		if (!lone_vector_contains(exports, symbol)) {

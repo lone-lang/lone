@@ -4,6 +4,8 @@
 #include <lone/linux.h>
 #include <lone/memory/functions.h>
 
+#include <lone/value/vector.h>
+
 struct lone_value lone_nil(void)
 {
 	return (struct lone_value) { .type = LONE_NIL };
@@ -176,16 +178,13 @@ static bool lone_list_is_equal(struct lone_value x, struct lone_value y)
 
 static bool lone_vector_is_equal(struct lone_value x, struct lone_value y)
 {
-	struct lone_heap_value *actual_x, *actual_y;
+	struct lone_value current;
 	size_t i;
 
-	actual_x = x.as.heap_value;
-	actual_y = y.as.heap_value;
+	if (lone_vector_count(x) != lone_vector_count(y)) return false;
 
-	if (actual_x->as.vector.count != actual_y->as.vector.count) return false;
-
-	for (i = 0; i < actual_x->as.vector.count; ++i) {
-		if (!lone_is_equal(actual_x->as.vector.values[i], actual_y->as.vector.values[i])) {
+	LONE_VECTOR_FOR_EACH(current, x, i) {
+		if (!lone_is_equal(current, lone_vector_get_value_at(y, i))) {
 			return false;
 		}
 	}

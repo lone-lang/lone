@@ -36,8 +36,8 @@ struct lone_value lone_vector_build(struct lone_lisp *lone, size_t count, ...);
 bool lone_vector_contains(struct lone_value vector, struct lone_value value);
 
 #define LONE_VECTOR_FOR_EACH(entry, vector, i)                                  \
-	for ((i) = 0, (entry) = (vector).as.heap_value->as.vector.values[0];    \
-	     (i) < (vector).as.heap_value->as.vector.count;                     \
-	     ++(i), (entry) = (vector).as.heap_value->as.vector.values[i])
+	for ((i) = 0, (entry) = lone_vector_get_value_at((vector), 0);          \
+	     (i) < lone_vector_count((vector));                                 \
+	     ++(i), (entry) = lone_vector_get_value_at((vector), i))
 
 #endif /* LONE_VALUE_VECTOR_HEADER */

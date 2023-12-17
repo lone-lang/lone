@@ -102,21 +102,17 @@ static void lone_print_list(struct lone_lisp *lone, struct lone_value list, int 
 
 static void lone_print_vector(struct lone_lisp *lone, struct lone_value vector, int fd)
 {
-	struct lone_heap_value *actual;
-	struct lone_value *values;
+	struct lone_value element;
 	size_t count, i;
 
-	actual = vector.as.heap_value;
 	count = lone_vector_count(vector);
 
 	if (count == 0) { linux_write(fd, "[]", 2); return; }
 
-	values = actual->as.vector.values;
-
 	linux_write(fd, "[ ", 2);
 
-	for (i = 0; i < count; ++i) {
-		lone_print(lone, values[i], fd);
+	LONE_VECTOR_FOR_EACH(element, vector, i) {
+		lone_print(lone, element, fd);
 		linux_write(fd, " ", 1);
 	}
 
