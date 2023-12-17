@@ -64,4 +64,6 @@ struct lone_value lone_primitive_ ## name     \
 	#warning "PT_LONE outside reserved operating system specific range"
 #endif
 
+#define LONE_SIZE_OF_MEMBER(type, member) sizeof(((type) { 0 }).member)
+
 #endif /* LONE_DEFINITIONS_HEADER */
