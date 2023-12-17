@@ -25,6 +25,10 @@ typedef __s32 lone_s32;
 typedef __u64 lone_u64;
 typedef __s64 lone_s64;
 
+typedef long lone_signed_integer;
+typedef unsigned long lone_unsigned_integer;
+typedef lone_signed_integer lone_integer;
+
 #if __BITS_PER_LONG == 64
 typedef Elf64_Ehdr lone_elf_header;
 typedef Elf64_Phdr lone_elf_segment;
