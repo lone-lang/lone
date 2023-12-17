@@ -99,7 +99,7 @@ LONE_PRIMITIVE(vector_slice)
 	slice = lone_vector_create(lone, j - i);
 
 	for (k = 0; i < j; ++i, ++k) {
-		lone_vector_set_value_at(lone, slice, k, lone_vector_get_value_at(lone, vector, i));
+		lone_vector_set_value_at(lone, slice, k, lone_vector_get_value_at(vector, i));
 	}
 
 	return slice;

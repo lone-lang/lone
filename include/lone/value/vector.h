@@ -25,7 +25,7 @@ struct lone_value lone_vector_create(struct lone_lisp *lone, size_t capacity);
 
 size_t lone_vector_count(struct lone_value vector);
 void lone_vector_resize(struct lone_lisp *lone, struct lone_value vector, size_t new_capacity);
-struct lone_value lone_vector_get_value_at(struct lone_lisp *lone, struct lone_value vector, size_t i);
+struct lone_value lone_vector_get_value_at(struct lone_value vector, size_t i);
 struct lone_value lone_vector_get(struct lone_lisp *lone, struct lone_value vector, struct lone_value index);
 void lone_vector_set_value_at(struct lone_lisp *lone, struct lone_value vector, size_t i, struct lone_value value);
 void lone_vector_set(struct lone_lisp *lone, struct lone_value vector, struct lone_value index, struct lone_value value);

@@ -38,7 +38,7 @@ void lone_vector_resize(struct lone_lisp *lone, struct lone_value vector, size_t
 	}
 }
 
-struct lone_value lone_vector_get_value_at(struct lone_lisp *lone, struct lone_value vector, size_t i)
+struct lone_value lone_vector_get_value_at(struct lone_value vector, size_t i)
 {
 	struct lone_vector *actual;
 
@@ -54,7 +54,7 @@ struct lone_value lone_vector_get_value_at(struct lone_lisp *lone, struct lone_v
 struct lone_value lone_vector_get(struct lone_lisp *lone, struct lone_value vector, struct lone_value index)
 {
 	if (!lone_is_integer(index)) { /* only integer indexes supported */ linux_exit(-1); }
-	return lone_vector_get_value_at(lone, vector, index.as.unsigned_integer);
+	return lone_vector_get_value_at(vector, index.as.unsigned_integer);
 }
 
 void lone_vector_set_value_at(struct lone_lisp *lone, struct lone_value vector, size_t i, struct lone_value value)
