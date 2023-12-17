@@ -166,8 +166,9 @@ struct lone_value {
 	union {
 		struct lone_heap_value *heap_value;
 		union lone_pointer pointer;
-		signed long signed_integer;
-		unsigned long unsigned_integer;
+		lone_signed_integer signed_integer;
+		lone_unsigned_integer unsigned_integer;
+		lone_integer integer;
 	} as;
 
 	struct {
