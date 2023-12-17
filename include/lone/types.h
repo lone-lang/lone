@@ -129,6 +129,21 @@ enum lone_pointer_type {
 	LONE_TO_U64, LONE_TO_S64,
 };
 
+enum lone_memory_layout_state {
+	LONE_MEMORY_LAYOUT_STATE_EMPTY = 0,
+	LONE_MEMORY_LAYOUT_STATE_HOMOGENEOUS,
+	LONE_MEMORY_LAYOUT_STATE_HETEROGENEOUS,
+};
+
+struct lone_memory_layout {
+	enum lone_memory_layout_state state;
+	enum lone_value_type register_value_type;
+	enum lone_heap_value_type heap_value_type;
+	enum lone_pointer_type pointer_type;
+	size_t count;
+	struct lone_bytes bytes;
+};
+
 union lone_pointer {
 	void *to_void;
 	char *to_char;
