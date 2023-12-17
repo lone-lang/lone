@@ -3,6 +3,7 @@
 #include <lone/memory/garbage_collector.h>
 #include <lone/memory/allocator.h>
 #include <lone/memory/heap.h>
+#include <lone/memory/layout.h>
 
 #include <lone/architecture/garbage_collector.c>
 
@@ -53,8 +54,8 @@ static void lone_mark_heap_value(struct lone_heap_value *value)
 		lone_mark_value(value->as.list.rest);
 		break;
 	case LONE_VECTOR:
-		for (size_t i = 0; i < value->as.vector.count; ++i) {
-			lone_mark_value(value->as.vector.values[i]);
+		for (size_t i = 0; i < value->as.vector.values.count; ++i) {
+			lone_mark_value(lone_memory_layout_get(&value->as.vector.values, i));
 		}
 		break;
 	case LONE_TABLE:
@@ -158,7 +159,7 @@ static void lone_kill_all_unmarked_values(struct lone_lisp *lone)
 					}
 					break;
 				case LONE_VECTOR:
-					lone_deallocate(lone, value->as.vector.values);
+					lone_deallocate(lone, value->as.vector.values.bytes.pointer);
 					break;
 				case LONE_TABLE:
 					lone_deallocate(lone, value->as.table.indexes);
