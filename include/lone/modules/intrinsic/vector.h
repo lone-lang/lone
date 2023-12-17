@@ -18,5 +18,6 @@ LONE_PRIMITIVE(vector_get);
 LONE_PRIMITIVE(vector_set);
 LONE_PRIMITIVE(vector_slice);
 LONE_PRIMITIVE(vector_each);
+LONE_PRIMITIVE(vector_count);
 
 #endif /* LONE_MODULES_INTRINSIC_VECTOR_HEADER */

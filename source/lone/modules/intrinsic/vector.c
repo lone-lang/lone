@@ -7,6 +7,7 @@
 #include <lone/value/list.h>
 #include <lone/value/vector.h>
 #include <lone/value/symbol.h>
+#include <lone/value/integer.h>
 #include <lone/lisp/evaluator.h>
 #include <lone/linux.h>
 
@@ -31,6 +32,9 @@ void lone_modules_intrinsic_vector_initialize(struct lone_lisp *lone)
 
 	primitive = lone_primitive_create(lone, "vector_each", lone_primitive_vector_each, module, flags);
 	lone_set_and_export(lone, module, lone_intern_c_string(lone, "each"), primitive);
+
+	primitive = lone_primitive_create(lone, "vector_count", lone_primitive_vector_count, module, flags);
+	lone_set_and_export(lone, module, lone_intern_c_string(lone, "count"), primitive);
 
 	lone_table_set(lone, lone->modules.loaded, name, module);
 }
@@ -125,4 +129,17 @@ LONE_PRIMITIVE(vector_each)
 	}
 
 	return result;
+}
+
+LONE_PRIMITIVE(vector_count)
+{
+	struct lone_value vector;
+
+	if (lone_list_destructure(arguments, 1, &vector)) {
+		/* wrong number of arguments */ linux_exit(-1);
+	}
+
+	if (!lone_is_vector(vector)) { /* vector not given: (count {}) */ linux_exit(-1); }
+
+	return lone_integer_create(lone_vector_count(vector));
 }
