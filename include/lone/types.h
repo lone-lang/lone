@@ -155,6 +155,10 @@ union lone_pointer {
 	lone_u16 *to_u16;
 	lone_u32 *to_u32;
 	lone_u64 *to_u64;
+
+	lone_signed_integer *to_signed_integer;
+	lone_unsigned_integer *to_unsigned_integer;
+	lone_integer *to_integer;
 };
 
 struct lone_heap_value;
