@@ -22,9 +22,13 @@ size_t lone_table_count(struct lone_value table);
 struct lone_value lone_table_key_at(struct lone_value table, lone_size i);
 struct lone_value lone_table_value_at(struct lone_value table, lone_size i);
 
-#define LONE_TABLE_FOR_EACH(entry, table, i)                                    \
-	for ((i) = 0, (entry) = &(table).as.heap_value->as.table.entries[0];    \
-	     (i) < (table).as.heap_value->as.table.count;                       \
-	     ++(i), (entry) = &(table).as.heap_value->as.table.entries[i])
+#define LONE_TABLE_FOR_EACH(key, value, table, i)                               \
+	for ((i) = 0,                                                           \
+	     (key) = lone_table_key_at((table), 0),                             \
+	     (value) = lone_table_value_at((table), 0);                         \
+	     (i) < lone_table_count((table));                                   \
+	     ++(i),                                                             \
+	     (key) = lone_table_key_at((table), i),                             \
+	     (value) = lone_table_value_at((table), i))
 
 #endif /* LONE_VALUE_TABLE_HEADER */

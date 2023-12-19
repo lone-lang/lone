@@ -83,8 +83,7 @@ LONE_PRIMITIVE(table_delete)
 
 LONE_PRIMITIVE(table_each)
 {
-	struct lone_value result, table, f;
-	struct lone_table_entry *entry;
+	struct lone_value result, table, f, key, value;
 	size_t i;
 
 	if (lone_list_destructure(arguments, 2, &table, &f)) {
@@ -96,8 +95,8 @@ LONE_PRIMITIVE(table_each)
 
 	result = lone_nil();
 
-	LONE_TABLE_FOR_EACH(entry, table, i) {
-		arguments = lone_list_build(lone, 2, &entry->key, &entry->value);
+	LONE_TABLE_FOR_EACH(key, value, table, i) {
+		arguments = lone_list_build(lone, 2, &key, &value);
 		result = lone_apply(lone, module, environment, f, arguments);
 	}
 
