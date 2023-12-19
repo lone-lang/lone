@@ -121,23 +121,18 @@ static void lone_print_vector(struct lone_lisp *lone, struct lone_value vector, 
 
 static void lone_print_table(struct lone_lisp *lone, struct lone_value table, int fd)
 {
-	struct lone_heap_value *actual;
-	struct lone_table_entry *entries;
 	size_t count, i;
 
-	actual = table.as.heap_value;
-	count = actual->as.table.count;
+	count = lone_table_count(table);
 
 	if (count == 0) { linux_write(fd, "{}", 2); return; }
-
-	entries = actual->as.table.entries;
 
 	linux_write(fd, "{ ", 2);
 
 	for (i = 0; i < count; ++i) {
-		lone_print(lone, entries[i].key, fd);
+		lone_print(lone, lone_table_key_at(table, i), fd);
 		linux_write(fd, " ", 1);
-		lone_print(lone, entries[i].value, fd);
+		lone_print(lone, lone_table_value_at(table, i), fd);
 		linux_write(fd, " ", 1);
 	}
 
