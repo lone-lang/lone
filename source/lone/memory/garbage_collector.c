@@ -61,8 +61,8 @@ static void lone_mark_heap_value(struct lone_heap_value *value)
 	case LONE_TABLE:
 		lone_mark_value(value->as.table.prototype);
 		for (size_t i = 0; i < value->as.table.count; ++i) {
-			lone_mark_value(value->as.table.entries[i].key);
-			lone_mark_value(value->as.table.entries[i].value);
+			lone_mark_value(lone_memory_layout_get(&value->as.table.entries.keys, i));
+			lone_mark_value(lone_memory_layout_get(&value->as.table.entries.values, i));
 		}
 		break;
 	case LONE_SYMBOL:
@@ -163,7 +163,8 @@ static void lone_kill_all_unmarked_values(struct lone_lisp *lone)
 					break;
 				case LONE_TABLE:
 					lone_deallocate(lone, value->as.table.indexes);
-					lone_deallocate(lone, value->as.table.entries);
+					lone_deallocate(lone, value->as.table.entries.keys.bytes.pointer);
+					lone_deallocate(lone, value->as.table.entries.values.bytes.pointer);
 					break;
 				case LONE_MODULE:
 				case LONE_FUNCTION:
