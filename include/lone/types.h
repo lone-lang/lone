@@ -267,16 +267,14 @@ struct lone_table_index {
 	size_t index;
 };
 
-struct lone_table_entry {
-	struct lone_value key;
-	struct lone_value value;
-};
-
 struct lone_table {
 	size_t count;
 	size_t capacity;
 	struct lone_table_index *indexes;
-	struct lone_table_entry *entries;
+	struct {
+		struct lone_memory_layout keys;
+		struct lone_memory_layout values;
+	} entries;
 	struct lone_value prototype;
 };
 
