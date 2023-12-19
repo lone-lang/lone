@@ -19,6 +19,8 @@ void lone_table_set(struct lone_lisp *lone, struct lone_value table, struct lone
 void lone_table_delete(struct lone_lisp *lone, struct lone_value table, struct lone_value key);
 
 size_t lone_table_count(struct lone_value table);
+struct lone_value lone_table_key_at(struct lone_value table, lone_size i);
+struct lone_value lone_table_value_at(struct lone_value table, lone_size i);
 
 #define LONE_TABLE_FOR_EACH(entry, table, i)                                    \
 	for ((i) = 0, (entry) = &(table).as.heap_value->as.table.entries[0];    \

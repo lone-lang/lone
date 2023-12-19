@@ -210,3 +210,13 @@ void lone_table_delete(struct lone_lisp *lone, struct lone_value table, struct l
 
 	--actual->count;
 }
+
+struct lone_value lone_table_key_at(struct lone_value table, lone_size i)
+{
+	return table.as.heap_value->as.table.entries[i].key;
+}
+
+struct lone_value lone_table_value_at(struct lone_value table, lone_size i)
+{
+	return table.as.heap_value->as.table.entries[i].value;
+}
