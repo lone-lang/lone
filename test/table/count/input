@@ -1,0 +1,6 @@
+(import (lone print) (table count))
+
+(print (count {}))
+(print (count { 'x 1 }))
+(print (count { 'x 1 'y 2 }))
+(print (count { 'x 1 'y 2 'z 3 }))
