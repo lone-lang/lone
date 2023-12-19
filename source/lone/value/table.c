@@ -24,6 +24,11 @@ struct lone_value lone_table_create(struct lone_lisp *lone, size_t capacity, str
 	return lone_value_from_heap_value(heap_value);
 }
 
+size_t lone_table_count(struct lone_value table)
+{
+	return table.as.heap_value->as.table.count;
+}
+
 static double lone_table_load_factor(struct lone_value table, unsigned char added)
 {
 	struct lone_table *actual = &table.as.heap_value->as.table;
