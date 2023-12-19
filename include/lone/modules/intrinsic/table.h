@@ -18,5 +18,6 @@ LONE_PRIMITIVE(table_get);
 LONE_PRIMITIVE(table_set);
 LONE_PRIMITIVE(table_delete);
 LONE_PRIMITIVE(table_each);
+LONE_PRIMITIVE(table_count);
 
 #endif /* LONE_MODULES_INTRINSIC_TABLE_HEADER */
