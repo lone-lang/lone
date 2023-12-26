@@ -17,8 +17,8 @@ if [[ -t 1 ]]; then
     [test.total]="$(tput setaf 4)"
     [test.invalid]="$(tput setaf 1)"
     [test.PASS]="$(tput setaf 2)"
-    [test.FAIL]="$(tput setaf 1)"
-    [test.SKIP]="$(tput setaf 3)"
+    [test.FAIL]="$(tput rev)$(tput setaf 1)"
+    [test.SKIP]="$(tput rev)$(tput setaf 3)"
   )
 fi
 
