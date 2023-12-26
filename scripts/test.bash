@@ -11,7 +11,8 @@ declare -A style tests
 if [[ -t 1 ]]; then
   style=(
     [reset]="$(tput sgr0)"
-    [test.info]="$(tput setaf 4)"
+    [test.name]="$(tput setaf 4)"
+    [test.total]="$(tput setaf 4)"
     [test.pass]="$(tput setaf 2)"
     [test.fail]="$(tput setaf 1)"
   )
@@ -80,7 +81,7 @@ test-executable() {
                                                                                                              \
        1>&2) 2>&1)
 
-  name="${style[test.info]}${name}${style[reset]}"
+  name="${style[test.name]}${name}${style[reset]}"
   local pass="${style[test.pass]}PASS${style[reset]}"
   local fail="${style[test.fail]}FAIL${style[reset]}"
   local result="${pass}"
@@ -142,9 +143,9 @@ report() {
   pass=$((total - fail))
 
   printf "%s%d%s + %s%d%s = %s%d%s\n" \
-         "${style[test.pass]}" "${pass}"  "${style[reset]}" \
-         "${style[test.fail]}" "${fail}"  "${style[reset]}" \
-         "${style[test.info]}" "${total}" "${style[reset]}"
+         "${style[test.pass]}"  "${pass}"  "${style[reset]}" \
+         "${style[test.fail]}"  "${fail}"  "${style[reset]}" \
+         "${style[test.total]}" "${total}" "${style[reset]}"
 }
 
 run-all-tests "${lone}" "${tests_directory}"
