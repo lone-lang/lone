@@ -34,14 +34,14 @@ remove-prefix() {
 }
 
 compare() {
-  [[ ! -f "${1}" ]] && return 0
+  [[ ! -r "${1}" ]] && return 0
   diff --side-by-side --suppress-common-lines --unidirectional-new-file "${1}" <(echo -E "${2}")
 }
 
 compare-status() {
   local expected=0
 
-  if [[ -f "${1}" ]]; then
+  if [[ -r "${1}" ]]; then
     expected="$(< "${1}")"
   fi
 
@@ -74,17 +74,17 @@ test-executable() {
   fi
 
   local input="${test}"/input
-  if [[ ! -f "${input}" ]]; then
+  if [[ ! -r "${input}" ]]; then
     input=/dev/null
   fi
 
   local -a arguments=()
-  if [[ -f "${test}"/arguments ]]; then
+  if [[ -r "${test}"/arguments ]]; then
     readarray -t arguments < "${test}"/arguments
   fi
 
   local -a environment=()
-  if [[ -f "${test}"/environment ]]; then
+  if [[ -r "${test}"/environment ]]; then
     readarray -t environment < "${test}"/environment
   fi
 
