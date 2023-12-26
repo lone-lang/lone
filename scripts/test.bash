@@ -96,23 +96,19 @@ test-executable() {
                                                                                                              \
        1>&2) 2>&1)
 
-  name="${style[test.name]}${name}${style[reset]}"
-  executable="${style[test.executable]}${executable}${style[reset]}"
-  local pass="${style[test.PASS]}PASS${style[reset]}"
-  local fail="${style[test.FAIL]}FAIL${style[reset]}"
-  local result="${pass}"
+  local result=PASS
 
-  compare        "${test}/output" "${output}" || result="${fail}"
-  compare        "${test}/error"  "${error}"  || result="${fail}"
-  compare-status "${test}/status" "${status}" || result="${fail}"
+  compare        "${test}/output" "${output}" || result=FAIL
+  compare        "${test}/error"  "${error}"  || result=FAIL
+  compare-status "${test}/status" "${status}" || result=FAIL
 
-  printf "%s %s %s\n" "${result}" "${executable}" "${name}"
+  report-test-result "${name}" "${executable}" "${result}"
 
-  if [[ "${result}" == "${pass}" ]]; then
-    return 0
-  else
-    return 1
-  fi
+  case "${result}" in
+    PASS) return 0; ;;
+    FAIL) return 1; ;;
+    *)    return 2; ;;
+  esac
 }
 
 run-test() {
@@ -156,6 +152,18 @@ collect-test-results() {
       code="${returned}"
     fi
   done
+}
+
+report-test-result() {
+  local name="${1}"
+  local executable="${2}"
+  local result="${3}"
+
+  local key="test.${result}"
+  printf "%s%s%s %s%s%s %s%s%s\n" \
+         "${style["${key}"]}"        "${result}"     "${style[reset]}" \
+         "${style[test.executable]}" "${executable}" "${style[reset]}" \
+         "${style[test.name]}"       "${name}"       "${style[reset]}"
 }
 
 report() {
