@@ -85,7 +85,7 @@ Any of the following commands can be used to run it:
 
     make test
     make clean test
-    scripts/test.bash [lone-executable [test-suite-directory]]
+    scripts/test.bash $test_suite $lone_executable $compiled_test_case_path
 
 ### Adding new test cases
 
