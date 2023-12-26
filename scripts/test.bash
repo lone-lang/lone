@@ -7,10 +7,10 @@ test_executables_path="${3}"
 
 code=0
 
-declare -A style tests
+declare -A styles tests
 
 if [[ -t 1 ]]; then
-  style=(
+  styles=(
     [reset]="$(tput sgr0)"
     [test.name]="$(tput setaf 4)"
     [test.executable]="$(tput dim)$(tput setaf 7)"
