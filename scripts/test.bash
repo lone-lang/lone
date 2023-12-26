@@ -17,6 +17,7 @@ if [[ -t 1 ]]; then
     [test.total]="$(tput setaf 4)"
     [test.PASS]="$(tput setaf 2)"
     [test.FAIL]="$(tput setaf 1)"
+    [test.SKIP]="$(tput setaf 3)"
   )
 fi
 
@@ -62,7 +63,9 @@ test-executable() {
     executable="${default_executable}"
   fi
 
+  local result=SKIP
   if [[ ! -x "${executable}" ]]; then
+    report-test-result "${name}" "${executable}" "${result}"
     return 2
   fi
 
@@ -96,7 +99,8 @@ test-executable() {
                                                                                                              \
        1>&2) 2>&1)
 
-  local result=PASS
+
+  result=PASS
 
   compare        "${test}/output" "${output}" || result=FAIL
   compare        "${test}/error"  "${error}"  || result=FAIL
@@ -107,7 +111,8 @@ test-executable() {
   case "${result}" in
     PASS) return 0; ;;
     FAIL) return 1; ;;
-    *)    return 2; ;;
+    SKIP) return 2; ;;
+    *)    return 3; ;;
   esac
 }
 
@@ -167,7 +172,7 @@ report-test-result() {
 }
 
 report() {
-  local total=0 pass=0 fail=0
+  local total=0 pass=0 fail=0 skip=0
 
   for name in "${!tests[@]}"; do
     case "${tests[${name}]}" in
@@ -178,15 +183,19 @@ report() {
         fail=$((fail + 1))
         code=1
         ;;
+      2)
+        skip=$((skip + 1))
+        ;;
     esac
   done
 
   total=$((pass + fail))
 
-  printf "%s%d%s + %s%d%s = %s%d%s\n" \
-         "${style[test.PASS]}"  "${pass}"  "${style[reset]}" \
-         "${style[test.FAIL]}"  "${fail}"  "${style[reset]}" \
-         "${style[test.total]}" "${total}" "${style[reset]}"
+  printf "%s%d%s + %s%d%s = %s%d%s | %s%d%s\n" \
+         "${style[test.PASS]}"    "${pass}"    "${style[reset]}" \
+         "${style[test.FAIL]}"    "${fail}"    "${style[reset]}" \
+         "${style[test.total]}"   "${total}"   "${style[reset]}" \
+         "${style[test.SKIP]}"    "${skip}"    "${style[reset]}"
 }
 
 run-all-tests "${test_suite}" "${default_executable}" "${test_executables_path}"
