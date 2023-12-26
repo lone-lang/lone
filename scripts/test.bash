@@ -178,11 +178,11 @@ report-test-result() {
   local executable="${2}"
   local result="${3}"
 
-  local key="test.${result}"
-  printf "%s%s%s %s%s%s %s%s%s\n" \
-         "${style["${key}"]}"        "${result}"     "${style[reset]}" \
-         "${style[test.name]}"       "${name}"       "${style[reset]}" \
-         "${style[test.executable]}" "${executable}" "${style[reset]}"
+  result="$(    stylize "${result}"     test."${result}")"
+  name="$(      stylize "${name}"       test.name)"
+  executable="$(stylize "${executable}" test.executable)"
+
+  printf "%s %s %s\n" "${result}" "${name}" "${executable}"
 }
 
 report() {
@@ -209,12 +209,14 @@ report() {
 
   total=$((pass + fail))
 
-  printf "%s%d%s + %s%d%s = %s%d%s | %s%d%s + %s%d%s\n" \
-         "${style[report.pass]}"    "${pass}"    "${style[reset]}" \
-         "${style[report.fail]}"    "${fail}"    "${style[reset]}" \
-         "${style[report.total]}"   "${total}"   "${style[reset]}" \
-         "${style[report.skip]}"    "${skip}"    "${style[reset]}" \
-         "${style[report.invalid]}" "${invalid}" "${style[reset]}"
+  pass="$(   stylize "${pass}"    report.pass)"
+  fail="$(   stylize "${fail}"    report.fail)"
+  total="$(  stylize "${total}"   report.total)"
+  skip="$(   stylize "${skip}"    report.skip)"
+  invalid="$(stylize "${invalid}" report.invalid)"
+
+  printf "%s + %s = %s | %s + %s\n" \
+         "${pass}" "${fail}" "${total}" "${skip}" "${invalid}"
 }
 
 run-all-tests "${test_suite}" "${default_executable}" "${test_executables_path}"
