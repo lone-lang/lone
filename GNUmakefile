@@ -82,6 +82,10 @@ flags.common := -static -ffreestanding -nostdlib -fno-omit-frame-pointer -fshort
 flags.object = $(flags.system_include_directories) $(flags.include_directories) $(flags.prerequisites_generation) $(flags.definitions) $(flags.common)
 flags.executable = $(flags.common) $(flags.whole_program) $(flags.use_ld) -Wl,-elone_start
 
+# Disable strict aliasing and assume two's complement integers
+# even if CFLAGS contains options that affect this such as -O3
+CFLAGS += -fno-strict-aliasing -fwrapv
+
 $(directories.build.objects)/%.o: $(directories.source)/%.c | directories
 	$(strip $(CC) $(flags.object) $(CFLAGS) -o $@ -c $<)
 
