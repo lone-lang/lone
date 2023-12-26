@@ -168,8 +168,8 @@ report-test-result() {
   local key="test.${result}"
   printf "%s%s%s %s%s%s %s%s%s\n" \
          "${style["${key}"]}"        "${result}"     "${style[reset]}" \
-         "${style[test.executable]}" "${executable}" "${style[reset]}" \
-         "${style[test.name]}"       "${name}"       "${style[reset]}"
+         "${style[test.name]}"       "${name}"       "${style[reset]}" \
+         "${style[test.executable]}" "${executable}" "${style[reset]}"
 }
 
 report() {
