@@ -13,7 +13,7 @@ if [[ -t 1 ]]; then
   style=(
     [reset]="$(tput sgr0)"
     [test.name]="$(tput setaf 4)"
-    [test.executable]="$(tput setaf 6)"
+    [test.executable]="$(tput dim)$(tput setaf 7)"
     [test.total]="$(tput setaf 4)"
     [test.invalid]="$(tput setaf 1)"
     [test.PASS]="$(tput setaf 2)"
