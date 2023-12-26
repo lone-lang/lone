@@ -52,7 +52,6 @@ targets.NR.c := $(directories.build.include)/lone/NR.c
 targets.NR := $(targets.NR.list) $(targets.NR.c)
 targets.objects.lone := $(call source_to_object,$(files.sources.lone))
 targets.objects.lone.entry_point := $(directories.build.objects)/lone.o
-targets.objects.lone.without_entry_point := $(filter-out $(targets.objects.lone.entry_point),$(targets.objects.lone))
 targets.objects.tools := $(call source_to_object,$(files.sources.tools))
 targets.objects.tests := $(call source_to_object,$(files.sources.tests))
 targets.objects.all := $(targets.objects.lone) $(targets.objects.tools) $(targets.objects.tests)
@@ -97,13 +96,13 @@ CFLAGS += -fno-strict-aliasing -fwrapv
 $(directories.build.objects)/%.o: $(directories.source)/%.c | directories
 	$(strip $(CC) $(flags.object) $(CFLAGS) -o $@ -c $<)
 
-$(targets.lone): $(targets.objects.lone) | directories
+$(targets.lone): $(targets.objects.lone.entry_point) $(targets.objects.lone) | directories
 	$(strip $(CC) $(flags.executable) $(CFLAGS) -o $@ $^)
 
-$(directories.build.tools)/%: $(directories.build.objects.tools)/%.o $(targets.objects.lone.without_entry_point) | directories
+$(directories.build.tools)/%: $(directories.build.objects.tools)/%.o $(targets.objects.lone) | directories
 	$(strip $(CC) $(flags.executable) $(CFLAGS) -o $@ $^)
 
-$(directories.build.tests)/%: $(directories.build.objects.tests)/%.o $(targets.objects.lone.without_entry_point) | directories
+$(directories.build.tests)/%: $(directories.build.objects.tests)/%.o $(targets.objects.lone) | directories
 	$(strip $(CC) $(flags.executable) $(CFLAGS) -o $@ $^)
 
 $(call source_to_object,source/lone/modules/intrinsic/linux.c): $(targets.NR.c)
