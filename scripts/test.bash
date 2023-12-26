@@ -15,8 +15,8 @@ if [[ -t 1 ]]; then
     [test.name]="$(tput setaf 4)"
     [test.executable]="$(tput setaf 6)"
     [test.total]="$(tput setaf 4)"
-    [test.pass]="$(tput setaf 2)"
-    [test.fail]="$(tput setaf 1)"
+    [test.PASS]="$(tput setaf 2)"
+    [test.FAIL]="$(tput setaf 1)"
   )
 fi
 
@@ -98,8 +98,8 @@ test-executable() {
 
   name="${style[test.name]}${name}${style[reset]}"
   executable="${style[test.executable]}${executable}${style[reset]}"
-  local pass="${style[test.pass]}PASS${style[reset]}"
-  local fail="${style[test.fail]}FAIL${style[reset]}"
+  local pass="${style[test.PASS]}PASS${style[reset]}"
+  local fail="${style[test.FAIL]}FAIL${style[reset]}"
   local result="${pass}"
 
   compare        "${test}/output" "${output}" || result="${fail}"
@@ -176,8 +176,8 @@ report() {
   total=$((pass + fail))
 
   printf "%s%d%s + %s%d%s = %s%d%s\n" \
-         "${style[test.pass]}"  "${pass}"  "${style[reset]}" \
-         "${style[test.fail]}"  "${fail}"  "${style[reset]}" \
+         "${style[test.PASS]}"  "${pass}"  "${style[reset]}" \
+         "${style[test.FAIL]}"  "${fail}"  "${style[reset]}" \
          "${style[test.total]}" "${total}" "${style[reset]}"
 }
 
