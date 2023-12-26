@@ -162,14 +162,18 @@ report() {
   local total=0 pass=0 fail=0
 
   for name in "${!tests[@]}"; do
-    total=$((total + 1))
-    if [[ "${tests[${name}]}" -ne 0 ]]; then
-      fail=$((fail + 1))
-      code=1
-    fi
+    case "${tests[${name}]}" in
+      0)
+        pass=$((pass + 1))
+        ;;
+      1)
+        fail=$((fail + 1))
+        code=1
+        ;;
+    esac
   done
 
-  pass=$((total - fail))
+  total=$((pass + fail))
 
   printf "%s%d%s + %s%d%s = %s%d%s\n" \
          "${style[test.pass]}"  "${pass}"  "${style[reset]}" \
