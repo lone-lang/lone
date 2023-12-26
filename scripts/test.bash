@@ -14,11 +14,14 @@ if [[ -t 1 ]]; then
     [reset]="$(tput sgr0)"
     [test.name]="$(tput setaf 4)"
     [test.executable]="$(tput dim)$(tput setaf 7)"
-    [test.total]="$(tput setaf 4)"
-    [test.invalid]="$(tput setaf 1)"
     [test.PASS]="$(tput setaf 2)"
     [test.FAIL]="$(tput rev)$(tput setaf 1)"
     [test.SKIP]="$(tput rev)$(tput setaf 3)"
+    [report.pass]="$(tput setaf 2)"
+    [report.fail]="$(tput setaf 1)"
+    [report.skip]="$(tput setaf 3)"
+    [report.total]="$(tput setaf 4)"
+    [report.invalid]="$(tput setaf 1)"
   )
 fi
 
@@ -197,11 +200,11 @@ report() {
   total=$((pass + fail))
 
   printf "%s%d%s + %s%d%s = %s%d%s | %s%d%s + %s%d%s\n" \
-         "${style[test.PASS]}"    "${pass}"    "${style[reset]}" \
-         "${style[test.FAIL]}"    "${fail}"    "${style[reset]}" \
-         "${style[test.total]}"   "${total}"   "${style[reset]}" \
-         "${style[test.SKIP]}"    "${skip}"    "${style[reset]}" \
-         "${style[test.invalid]}" "${invalid}" "${style[reset]}"
+         "${style[report.pass]}"    "${pass}"    "${style[reset]}" \
+         "${style[report.fail]}"    "${fail}"    "${style[reset]}" \
+         "${style[report.total]}"   "${total}"   "${style[reset]}" \
+         "${style[report.skip]}"    "${skip}"    "${style[reset]}" \
+         "${style[report.invalid]}" "${invalid}" "${style[reset]}"
 }
 
 run-all-tests "${test_suite}" "${default_executable}" "${test_executables_path}"
