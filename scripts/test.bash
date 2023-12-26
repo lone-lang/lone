@@ -163,6 +163,16 @@ collect-test-results() {
   done
 }
 
+stylize() {
+  local text="${1}"
+  local style="${2}"
+
+  printf "%s%s%s\n" \
+         "${styles["${style}"]}" \
+         "${text}" \
+         "${styles[reset]}"
+}
+
 report-test-result() {
   local name="${1}"
   local executable="${2}"
