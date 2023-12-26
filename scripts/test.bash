@@ -119,9 +119,11 @@ find-tests() {
 run-all-tests() {
   local default_executable="${1}"
   local test_suite="${2}"
+  local test_name
 
   while IFS= read -r -d '' test_case; do
-    run-test "${default_executable}" "$(remove-prefix "${test_suite}"/ "${test_case}")" "${test_case}"
+    test_name="$(remove-prefix "${test_suite}"/ "${test_case}")"
+    run-test "${default_executable}" "${test_name}" "${test_case}"
   done < <(find-tests "${test_suite}")
 }
 
