@@ -50,8 +50,9 @@ test-executable() {
   local name="${2}"
   local test="${3}"
 
-  if [[ ! -f "${test}"/input ]]; then
-    return 2
+  local input="${test}"/input
+  if [[ ! -f "${input}" ]]; then
+    input=/dev/null
   fi
 
   local -a arguments=()
@@ -74,7 +75,7 @@ test-executable() {
   } < <(                                                                                                     \
                                                                                                              \
          (printf '\0%s\0%d\0'                                                                                \
-                 "$("${command[@]}" < "${test}/input")"                                                      \
+                 "$("${command[@]}" < "${input}")"                                                           \
                  "${?}"                                                                                      \
                                                                                                              \
        1>&2) 2>&1)
