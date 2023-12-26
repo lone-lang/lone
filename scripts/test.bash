@@ -102,18 +102,27 @@ test-executable() {
 }
 
 run-test() {
-  test-executable "${1}" "${2}" "${3}/${2}" &
-  tests["${2}"]="${!}"
+  local default_executable="${1}"
+  local test_name="${2}"
+  local test_path="${3}"
+
+  test-executable "${default_executable}" "${test_name}" "${test_path}" &
+  tests["${test_name}"]="${!}"
 }
 
 find-tests() {
-  find "${1}" -type d -links 2 -print0
+  local test_suite="${1}"
+
+  find "${test_suite}" -type d -links 2 -print0
 }
 
 run-all-tests() {
+  local default_executable="${1}"
+  local test_suite="${2}"
+
   while IFS= read -r -d '' test_case; do
-    run-test "${1}" "$(remove-prefix "${2}/" "${test_case}")" "${2}"
-  done < <(find-tests "${2}")
+    run-test "${default_executable}" "$(remove-prefix "${test_suite}"/ "${test_case}")" "${test_case}"
+  done < <(find-tests "${test_suite}")
 }
 
 collect-test-results() {
