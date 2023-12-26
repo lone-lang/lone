@@ -33,11 +33,12 @@ directories.create :=
 
 directories.include := include architecture/$(ARCH)/include $(directories.build.include)
 directories.source := source
+directories.source.lone := $(directories.source)/lone
 directories.source.tools := $(directories.source)/tools
 
 files.sources.all := $(shell find $(directories.source) -type f)
+files.sources.lone := $(filter $(directories.source.lone)/%,$(files.sources.all))
 files.sources.tools := $(filter $(directories.source.tools)/%,$(files.sources.all))
-files.sources.lone := $(filter-out $(directories.source.tools)/%,$(files.sources.all))
 
 targets.phony :=
 targets.NR.list := $(directories.build)/NR.list
