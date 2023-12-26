@@ -1,8 +1,9 @@
 #!/usr/bin/bash
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-lone=${1:-lone}
-tests_directory=${2:-test}
+test_suite="${1}"
+default_executable="${2}"
+test_executables_path="${3}"
 
 code=0
 
@@ -48,9 +49,22 @@ compare-status() {
 }
 
 test-executable() {
-  local executable="${1}"
-  local name="${2}"
-  local test="${3}"
+  local name="${1}"
+  local test="${2}"
+  local default_executable="${3}"
+  local test_executables_path="${4}"
+
+  local executable="${test}"/executable
+  if [[ -r "${executable}" ]]; then
+    executable="$(< "${executable}")"
+    executable="${test_executables_path}"/"${executable}"
+  else
+    executable="${default_executable}"
+  fi
+
+  if [[ ! -x "${executable}" ]]; then
+    return 2
+  fi
 
   local input="${test}"/input
   if [[ ! -f "${input}" ]]; then
@@ -102,11 +116,12 @@ test-executable() {
 }
 
 run-test() {
-  local default_executable="${1}"
-  local test_name="${2}"
-  local test_path="${3}"
+  local test_name="${1}"
+  local test_case="${2}"
+  local default_executable="${3}"
+  local test_executables_path="${4}"
 
-  test-executable "${default_executable}" "${test_name}" "${test_path}" &
+  test-executable "${test_name}" "${test_case}" "${default_executable}" "${test_executables_path}" &
   tests["${test_name}"]="${!}"
 }
 
@@ -117,13 +132,14 @@ find-tests() {
 }
 
 run-all-tests() {
-  local default_executable="${1}"
-  local test_suite="${2}"
+  local test_suite="${1}"
+  local default_executable="${2}"
+  local test_executables_path="${3}"
   local test_name
 
   while IFS= read -r -d '' test_case; do
     test_name="$(remove-prefix "${test_suite}"/ "${test_case}")"
-    run-test "${default_executable}" "${test_name}" "${test_case}"
+    run-test "${test_name}" "${test_case}" "${default_executable}" "${test_executables_path}"
   done < <(find-tests "${test_suite}")
 }
 
@@ -161,7 +177,7 @@ report() {
          "${style[test.total]}" "${total}" "${style[reset]}"
 }
 
-run-all-tests "${lone}" "${tests_directory}"
+run-all-tests "${test_suite}" "${default_executable}" "${test_executables_path}"
 collect-test-results
 report
 exit "${code}"

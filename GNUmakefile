@@ -20,13 +20,16 @@ endif
 source_to_object = $(patsubst $(directories.source)/%.c,$(directories.build.objects)/%.o,$(1))
 source_to_prerequisite = $(patsubst $(directories.source)/%.c,$(directories.build.prerequisites)/%.d,$(1))
 source_to_tool = $(patsubst $(directories.source.tools)/%.c,$(directories.build.tools)/%,$(1))
+source_to_test = $(patsubst $(directories.source.tests)/%.c,$(directories.build.tests)/%,$(1))
 
 ARCH := $(TARGET)
 
 directories.build := build/$(ARCH)
 directories.build.tools := $(directories.build)/tools
+directories.build.tests := $(directories.build)/test
 directories.build.objects := $(directories.build)/objects
 directories.build.objects.tools := $(directories.build.objects)/tools
+directories.build.objects.tests := $(directories.build.objects)/tests
 directories.build.prerequisites := $(directories.build)/prerequisites
 directories.build.include := $(directories.build)/include
 directories.create :=
@@ -35,10 +38,13 @@ directories.include := include architecture/$(ARCH)/include $(directories.build.
 directories.source := source
 directories.source.lone := $(directories.source)/lone
 directories.source.tools := $(directories.source)/tools
+directories.source.tests := $(directories.source)/tests
+directories.test := test
 
 files.sources.all := $(shell find $(directories.source) -type f)
 files.sources.lone := $(filter $(directories.source.lone)/%,$(files.sources.all))
 files.sources.tools := $(filter $(directories.source.tools)/%,$(files.sources.all))
+files.sources.tests := $(filter $(directories.source.tests)/%,$(files.sources.all))
 
 targets.phony :=
 targets.NR.list := $(directories.build)/NR.list
@@ -48,11 +54,13 @@ targets.objects.lone := $(call source_to_object,$(files.sources.lone))
 targets.objects.lone.entry_point := $(directories.build.objects)/lone.o
 targets.objects.lone.without_entry_point := $(filter-out $(targets.objects.lone.entry_point),$(targets.objects.lone))
 targets.objects.tools := $(call source_to_object,$(files.sources.tools))
-targets.objects.all := $(targets.objects.lone) $(targets.objects.tools)
+targets.objects.tests := $(call source_to_object,$(files.sources.tests))
+targets.objects.all := $(targets.objects.lone) $(targets.objects.tools) $(targets.objects.tests)
 targets.lone := $(directories.build)/lone
 targets.prerequisites := $(call source_to_prerequisite,$(files.sources.all))
 targets.tools := $(call source_to_tool,$(files.sources.tools))
-targets.all := $(targets.lone) $(targets.tools) $(targets.objects.all) $(targets.NR) $(targets.prerequisites)
+targets.tests := $(call source_to_test,$(files.sources.tests))
+targets.all := $(targets.lone) $(targets.tools) $(targets.tests) $(targets.objects.all) $(targets.NR) $(targets.prerequisites)
 
 directories.create += $(dir $(targets.all))
 
@@ -95,6 +103,9 @@ $(targets.lone): $(targets.objects.lone) | directories
 $(directories.build.tools)/%: $(directories.build.objects.tools)/%.o $(targets.objects.lone.without_entry_point) | directories
 	$(strip $(CC) $(flags.executable) $(CFLAGS) -o $@ $^)
 
+$(directories.build.tests)/%: $(directories.build.objects.tests)/%.o $(targets.objects.lone.without_entry_point) | directories
+	$(strip $(CC) $(flags.executable) $(CFLAGS) -o $@ $^)
+
 $(call source_to_object,source/lone/modules/intrinsic/linux.c): $(targets.NR.c)
 
 $(targets.NR.c): $(targets.NR.list) scripts/NR.generate
@@ -114,8 +125,8 @@ clean:
 	rm -rf $(directories.build)
 
 targets.phony += test
-test: $(targets.lone)
-	scripts/test.bash $<
+test: $(targets.lone) $(targets.tests)
+	scripts/test.bash $(directories.test) $(<) $(directories.build.tests)
 
 targets.phony += directories
 directories:
