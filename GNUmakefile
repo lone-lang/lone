@@ -52,8 +52,9 @@ targets.objects.all := $(targets.objects.lone) $(targets.objects.tools)
 targets.lone := $(directories.build)/lone
 targets.prerequisites := $(call source_to_prerequisite,$(files.sources.all))
 targets.tools := $(call source_to_tool,$(files.sources.tools))
+targets.all := $(targets.lone) $(targets.tools) $(targets.objects.all) $(targets.NR) $(targets.prerequisites)
 
-directories.create += $(dir $(targets.lone) $(targets.objects.all) $(targets.prerequisites) $(targets.NR) $(targets.tools))
+directories.create += $(dir $(targets.all))
 
 flags.whole_program.gcc := -fwhole-program
 flags.whole_program := -fvisibility=hidden $(flags.whole_program.$(CC))
