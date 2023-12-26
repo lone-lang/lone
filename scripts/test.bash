@@ -12,6 +12,7 @@ if [[ -t 1 ]]; then
   style=(
     [reset]="$(tput sgr0)"
     [test.name]="$(tput setaf 4)"
+    [test.executable]="$(tput setaf 6)"
     [test.total]="$(tput setaf 4)"
     [test.pass]="$(tput setaf 2)"
     [test.fail]="$(tput setaf 1)"
@@ -82,6 +83,7 @@ test-executable() {
        1>&2) 2>&1)
 
   name="${style[test.name]}${name}${style[reset]}"
+  executable="${style[test.executable]}${executable}${style[reset]}"
   local pass="${style[test.pass]}PASS${style[reset]}"
   local fail="${style[test.fail]}FAIL${style[reset]}"
   local result="${pass}"
@@ -90,7 +92,7 @@ test-executable() {
   compare        "${test}/error"  "${error}"  || result="${fail}"
   compare-status "${test}/status" "${status}" || result="${fail}"
 
-  printf "%s %s\n" "${result}" "${name}"
+  printf "%s %s %s\n" "${result}" "${executable}" "${name}"
 
   if [[ "${result}" == "${pass}" ]]; then
     return 0
