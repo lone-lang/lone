@@ -124,8 +124,8 @@ clean:
 	rm -rf $(directories.build)
 
 targets.phony += test
-test: $(targets.lone) $(targets.tests)
-	scripts/test.bash $(directories.test) $(<) $(directories.build.tests)
+test: $(targets.tests) lone
+	scripts/test.bash $(directories.test) $(targets.lone) $(directories.build.tests)
 
 targets.phony += directories
 directories:
