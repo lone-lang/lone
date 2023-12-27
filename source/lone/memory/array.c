@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
 #include <lone/memory/array.h>
 #include <lone/memory/allocator.h>
 #include <lone/linux.h>

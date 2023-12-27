@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
 #include <lone/segment.h>
 #include <lone/lisp/reader.h>
 #include <lone/value/bytes.h>

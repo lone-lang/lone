@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
 #include <lone/architecture/linux/entry_point.c>
 #include <lone/linux.h>
 

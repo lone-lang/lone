@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
 #include <lone/modules/embedded.h>
 #include <lone/modules.h>
 #include <lone/segment.h>
