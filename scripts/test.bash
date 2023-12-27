@@ -53,6 +53,24 @@ compare-status() {
   fi
 }
 
+test-script() {
+  local name="${1}"
+  local test="${2}"
+  local script="${3}"
+
+  local result code
+  if "${script}"; then
+    result=PASS
+    code=0
+  else
+    result=FAIL
+    code=1
+  fi
+
+  report-test-result "${name}" "${script}" "${result}"
+  return "${code}"
+}
+
 test-executable() {
   local name="${1}"
   local test="${2}"
@@ -126,7 +144,13 @@ run-test() {
   local default_executable="${3}"
   local test_executables_path="${4}"
 
-  test-executable "${test_name}" "${test_case}" "${default_executable}" "${test_executables_path}" &
+  local test_script="${test_case}"/script
+  if [[ -x "${test_script}" ]]; then
+    test-script "${test_name}" "${test_case}" "${test_script}" &
+  else
+    test-executable "${test_name}" "${test_case}" "${default_executable}" "${test_executables_path}" &
+  fi
+
   tests["${test_name}"]="${!}"
 }
 
