@@ -4,7 +4,7 @@ MAKEFLAGS += --no-builtin-variables --no-builtin-rules
 
 CC := cc
 LD := ld
-CFLAGS := -Wall -Wextra -Wpedantic -Wno-unused-function -Wno-unused-parameter -Wno-unknown-attributes -Os -fno-stack-protector
+CFLAGS := -Wall -Wextra -Wpedantic -Wno-unused-function -Wno-unused-parameter -Wno-unknown-attributes -Os
 ifdef TARGET
   ifndef UAPI
     $(error UAPI must be defined when cross compiling)
@@ -90,7 +90,7 @@ flags.executable = $(flags.common) $(flags.whole_program) $(flags.use_ld) -Wl,-e
 
 # Disable strict aliasing and assume two's complement integers
 # even if CFLAGS contains options that affect this such as -O3
-CFLAGS += -fno-strict-aliasing -fwrapv
+CFLAGS += -fno-strict-aliasing -fwrapv -fno-stack-protector
 
 $(directories.build.objects)/%.o: $(directories.source)/%.c | directories
 	$(strip $(CC) $(flags.object) $(CFLAGS) -o $@ -c $<)
