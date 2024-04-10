@@ -106,7 +106,7 @@ test-executable() {
     readarray -t environment < "${test}"/environment
   fi
 
-  local -a command=(env -i "${environment[@]}" "${executable}" "${arguments[@]}")
+  local -a command=(env --ignore-environment "${environment[@]}" "${executable}" "${arguments[@]}")
 
   # https://stackoverflow.com/a/59592881
   {
