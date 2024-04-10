@@ -96,6 +96,11 @@ test-executable() {
     input=/dev/null
   fi
 
+  local program_name="$(basename "${executable}")"
+  if [[ -r "${test}"/program-name ]]; then
+    read program_name < "${test}"/program-name
+  fi
+
   local -a arguments=()
   if [[ -r "${test}"/arguments ]]; then
     readarray -t arguments < "${test}"/arguments
@@ -106,7 +111,7 @@ test-executable() {
     readarray -t environment < "${test}"/environment
   fi
 
-  local -a command=(env --ignore-environment "${environment[@]}" "${executable}" "${arguments[@]}")
+  local -a command=(env --argv0 "${program_name}" --ignore-environment "${environment[@]}" "${executable}" "${arguments[@]}")
 
   # https://stackoverflow.com/a/59592881
   {
