@@ -1,0 +1,20 @@
+steps:
+  - name: lone
+    image: archlinux:base-devel
+    pull: true
+    when:
+      - event: [push, pull_request, manual]
+        branch: master
+        path:
+          include:
+            - 'include/**/*'
+            - 'source/**/*'
+            - 'architecture/**/*'
+            - 'scripts/**/*'
+            - 'test/**/*'
+            - 'GNUMakefile'
+            - '.woodpecker.yaml'
+    commands:
+      - make lone
+      - make tools
+      - make test
