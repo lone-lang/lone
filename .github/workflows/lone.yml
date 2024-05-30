@@ -11,6 +11,8 @@ jobs:
     runs-on: ubuntu-latest
     container: archlinux:base-devel
     steps:
+    - name: Update
+      run: pacman -Syu --noconfirm
     - uses: actions/checkout@v3
     - name: Build
       run: make
