@@ -1,0 +1,18 @@
+(import
+  (lone print set)
+  (math /)
+  (bytes
+    new
+    read-u16 write-u16
+    read-s16 write-s16))
+
+(set max-bits 16)
+(set memory (new (/ max-bits 8)))
+
+(print (write-u16 memory 0 +60000))
+(print (read-u16  memory 0))
+(print (read-s16  memory 0))
+
+(print (write-s16 memory 0 -30000))
+(print (read-u16  memory 0))
+(print (read-s16  memory 0))

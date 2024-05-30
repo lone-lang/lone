@@ -1,0 +1,18 @@
+(import
+  (lone print set)
+  (math /)
+  (bytes
+    new
+    read-u8 write-u8
+    read-s8 write-s8))
+
+(set max-bits 8)
+(set memory (new (/ max-bits 8)))
+
+(print (write-u8 memory 0 +250))
+(print (read-u8  memory 0))
+(print (read-s8  memory 0))
+
+(print (write-s8 memory 0 -100))
+(print (read-u8  memory 0))
+(print (read-s8  memory 0))
