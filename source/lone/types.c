@@ -318,6 +318,22 @@ bool lone_bytes_equals_c_string(struct lone_bytes bytes, char *c_string)
 	return lone_bytes_equals(bytes, c_string_bytes);
 }
 
+bool lone_bytes_contains_offset(struct lone_bytes bytes, lone_size offset)
+{
+	return offset >= 0 && offset < bytes.count;
+}
+
+bool lone_bytes_contains_block(struct lone_bytes bytes, lone_size offset, lone_size size)
+{
+	return offset >= 0 && (offset + size) <= bytes.count;
+}
+
+bool lone_bytes_contains_address(struct lone_bytes bytes, void *pointer)
+{
+	void *start = bytes.pointer, *end = bytes.pointer + bytes.count;
+	return pointer >= start && pointer < end;
+}
+
 #define LONE_BYTES_READER(type) \
 lone_##type lone_bytes_read_##type(struct lone_bytes bytes, lone_size offset) \
 { \
