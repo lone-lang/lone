@@ -3,7 +3,6 @@
 #ifndef LONE_MODULES_INTRINSIC_BYTES_HEADER
 #define LONE_MODULES_INTRINSIC_BYTES_HEADER
 
-#include <lone/definitions.h>
 #include <lone/types.h>
 
 /* ╭────────────────────────────────────────────────────────────────────────╮
