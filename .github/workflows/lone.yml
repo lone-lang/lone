@@ -9,6 +9,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    container: archlinux:base-devel
     steps:
     - uses: actions/checkout@v3
     - name: Build
