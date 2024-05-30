@@ -363,8 +363,31 @@ void lone_s32_write(void *address, lone_s32 s32);
 void lone_u64_write(void *address, lone_u64 u64);
 void lone_s64_write(void *address, lone_s64 s64);
 
+/* ╭────────────────────────────────────────────────────────────────────────╮
+   │                                                                        │
+   │    Lone bytes structure operations.                                    │
+   │                                                                        │
+   ╰────────────────────────────────────────────────────────────────────────╯ */
 bool lone_bytes_equals(struct lone_bytes x, struct lone_bytes y);
 bool lone_bytes_equals_c_string(struct lone_bytes bytes, char *c_string);
+
+lone_u8  lone_bytes_read_u8 (struct lone_bytes bytes, lone_size offset);
+lone_s8  lone_bytes_read_s8 (struct lone_bytes bytes, lone_size offset);
+lone_u16 lone_bytes_read_u16(struct lone_bytes bytes, lone_size offset);
+lone_s16 lone_bytes_read_s16(struct lone_bytes bytes, lone_size offset);
+lone_u32 lone_bytes_read_u32(struct lone_bytes bytes, lone_size offset);
+lone_s32 lone_bytes_read_s32(struct lone_bytes bytes, lone_size offset);
+lone_u64 lone_bytes_read_u64(struct lone_bytes bytes, lone_size offset);
+lone_s64 lone_bytes_read_s64(struct lone_bytes bytes, lone_size offset);
+
+void lone_bytes_write_u8 (struct lone_bytes bytes, lone_size offset, lone_u8  u8);
+void lone_bytes_write_s8 (struct lone_bytes bytes, lone_size offset, lone_s8  s8);
+void lone_bytes_write_u16(struct lone_bytes bytes, lone_size offset, lone_u16 u16);
+void lone_bytes_write_s16(struct lone_bytes bytes, lone_size offset, lone_s16 s16);
+void lone_bytes_write_u32(struct lone_bytes bytes, lone_size offset, lone_u32 u32);
+void lone_bytes_write_s32(struct lone_bytes bytes, lone_size offset, lone_s32 s32);
+void lone_bytes_write_u64(struct lone_bytes bytes, lone_size offset, lone_u64 u64);
+void lone_bytes_write_s64(struct lone_bytes bytes, lone_size offset, lone_s64 s64);
 
 /* ╭───────────────────────┨ LONE LISP INTERPRETER ┠────────────────────────╮
    │                                                                        │

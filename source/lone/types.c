@@ -317,3 +317,37 @@ bool lone_bytes_equals_c_string(struct lone_bytes bytes, char *c_string)
 	struct lone_bytes c_string_bytes = { lone_c_string_length(c_string), (unsigned char *) c_string };
 	return lone_bytes_equals(bytes, c_string_bytes);
 }
+
+#define LONE_BYTES_READER(type) \
+lone_##type lone_bytes_read_##type(struct lone_bytes bytes, lone_size offset) \
+{ \
+	return lone_##type##_read(bytes.pointer + offset); \
+}
+
+#define LONE_BYTES_WRITER(type) \
+void lone_bytes_write_##type(struct lone_bytes bytes, lone_size offset, lone_##type type) \
+{ \
+	lone_##type##_write(bytes.pointer + offset, type); \
+}
+
+LONE_BYTES_READER(u8)
+LONE_BYTES_READER(s8)
+LONE_BYTES_READER(u16)
+LONE_BYTES_READER(s16)
+LONE_BYTES_READER(u32)
+LONE_BYTES_READER(s32)
+LONE_BYTES_READER(u64)
+LONE_BYTES_READER(s64)
+
+LONE_BYTES_WRITER(u8)
+LONE_BYTES_WRITER(s8)
+LONE_BYTES_WRITER(u16)
+LONE_BYTES_WRITER(s16)
+LONE_BYTES_WRITER(u32)
+LONE_BYTES_WRITER(s32)
+LONE_BYTES_WRITER(u64)
+LONE_BYTES_WRITER(s64)
+
+#undef LONE_BYTES_READER
+#undef LONE_BYTES_WRITER
+
