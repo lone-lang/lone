@@ -392,6 +392,24 @@ void lone_bytes_write_s32(struct lone_bytes bytes, lone_size offset, lone_s32 s3
 void lone_bytes_write_u64(struct lone_bytes bytes, lone_size offset, lone_u64 u64);
 void lone_bytes_write_s64(struct lone_bytes bytes, lone_size offset, lone_s64 s64);
 
+bool lone_bytes_checked_read_u8 (struct lone_bytes bytes, lone_size offset, lone_u8  *u8);
+bool lone_bytes_checked_read_s8 (struct lone_bytes bytes, lone_size offset, lone_s8  *s8);
+bool lone_bytes_checked_read_u16(struct lone_bytes bytes, lone_size offset, lone_u16 *u16);
+bool lone_bytes_checked_read_s16(struct lone_bytes bytes, lone_size offset, lone_s16 *s16);
+bool lone_bytes_checked_read_u32(struct lone_bytes bytes, lone_size offset, lone_u32 *u32);
+bool lone_bytes_checked_read_s32(struct lone_bytes bytes, lone_size offset, lone_s32 *s32);
+bool lone_bytes_checked_read_u64(struct lone_bytes bytes, lone_size offset, lone_u64 *u64);
+bool lone_bytes_checked_read_s64(struct lone_bytes bytes, lone_size offset, lone_s64 *s64);
+
+bool lone_bytes_checked_write_u8 (struct lone_bytes bytes, lone_size offset, lone_u8  value);
+bool lone_bytes_checked_write_s8 (struct lone_bytes bytes, lone_size offset, lone_s8  value);
+bool lone_bytes_checked_write_u16(struct lone_bytes bytes, lone_size offset, lone_u16 value);
+bool lone_bytes_checked_write_s16(struct lone_bytes bytes, lone_size offset, lone_s16 value);
+bool lone_bytes_checked_write_u32(struct lone_bytes bytes, lone_size offset, lone_u32 value);
+bool lone_bytes_checked_write_s32(struct lone_bytes bytes, lone_size offset, lone_s32 value);
+bool lone_bytes_checked_write_u64(struct lone_bytes bytes, lone_size offset, lone_u64 value);
+bool lone_bytes_checked_write_s64(struct lone_bytes bytes, lone_size offset, lone_s64 value);
+
 /* ╭───────────────────────┨ LONE LISP INTERPRETER ┠────────────────────────╮
    │                                                                        │
    │    The lone lisp interpreter is composed of all internal state         │
