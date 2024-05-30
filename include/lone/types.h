@@ -339,6 +339,30 @@ bool lone_integer_is_less_than(struct lone_value x, struct lone_value y);
 bool lone_integer_is_less_than_or_equal_to(struct lone_value x, struct lone_value y);
 bool lone_integer_is_greater_than(struct lone_value x, struct lone_value y);
 bool lone_integer_is_greater_than_or_equal_to(struct lone_value x, struct lone_value y);
+
+/* ╭────────────────────────────────────────────────────────────────────────╮
+   │                                                                        │
+   │    Lone primitive type operations.                                     │
+   │                                                                        │
+   ╰────────────────────────────────────────────────────────────────────────╯ */
+lone_u8  lone_u8_read (void *address);
+lone_s8  lone_s8_read (void *address);
+lone_u16 lone_u16_read(void *address);
+lone_s16 lone_s16_read(void *address);
+lone_u32 lone_u32_read(void *address);
+lone_s32 lone_s32_read(void *address);
+lone_u64 lone_u64_read(void *address);
+lone_s64 lone_s64_read(void *address);
+
+void lone_u8_write (void *address, lone_u8  u8);
+void lone_s8_write (void *address, lone_s8  s8);
+void lone_u16_write(void *address, lone_u16 u16);
+void lone_s16_write(void *address, lone_s16 s16);
+void lone_u32_write(void *address, lone_u32 u32);
+void lone_s32_write(void *address, lone_s32 s32);
+void lone_u64_write(void *address, lone_u64 u64);
+void lone_s64_write(void *address, lone_s64 s64);
+
 bool lone_bytes_equals(struct lone_bytes x, struct lone_bytes y);
 bool lone_bytes_equals_c_string(struct lone_bytes bytes, char *c_string);
 
