@@ -25,7 +25,7 @@ ARCH := $(TARGET)
 
 directories.build := build/$(ARCH)
 directories.build.tools := $(directories.build)/tools
-directories.build.tests := $(directories.build)/test
+directories.build.tests := $(directories.build)/tests
 directories.build.objects := $(directories.build)/objects
 directories.build.objects.tools := $(directories.build.objects)/tools
 directories.build.objects.tests := $(directories.build.objects)/tests
