@@ -94,7 +94,7 @@ test-executable() {
   local name="${1}"
   local test="${2}"
 
-  local executable
+  local executable program_name input
   local result=SKIP
 
   executable="$(find-executable "${test}")"
@@ -103,12 +103,12 @@ test-executable() {
     return 2
   fi
 
-  local input="${test}"/input
+  input="${test}"/input
   if [[ ! -r "${input}" ]]; then
     input=/dev/null
   fi
 
-  local program_name="$(basename "${executable}")"
+  program_name="$(basename "${executable}")"
   if [[ -r "${test}"/program-name ]]; then
     read program_name < "${test}"/program-name
   fi
