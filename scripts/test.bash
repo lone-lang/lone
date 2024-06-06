@@ -2,8 +2,6 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 test_suite="${1}"
-default_executable="${2}"
-test_executables_path="${3}"
 
 code=0
 
@@ -71,22 +69,36 @@ test-script() {
   return "${code}"
 }
 
+find-executable() {
+  local test_case="${1}"
+
+  while [[ "${test_case}" != "." ]]; do
+
+    local executable="${test_case}"/executable
+
+    if [[ -r "${executable}" && ! -x "${executable}" ]]; then
+      executable="$(< "${executable}")"
+      executable="$(type -P "${executable}")"
+      echo "${executable}"
+      return 0
+    else
+      test_case="$(dirname "${test_case}")"
+    fi
+
+  done
+
+  return 1
+}
+
 test-executable() {
   local name="${1}"
   local test="${2}"
-  local default_executable="${3}"
-  local test_executables_path="${4}"
 
-  local executable="${test}"/executable
-  if [[ -r "${executable}" ]]; then
-    executable="$(< "${executable}")"
-    executable="${test_executables_path}"/"${executable}"
-  else
-    executable="${default_executable}"
-  fi
-
+  local executable
   local result=SKIP
-  if [[ ! -x "${executable}" ]]; then
+
+  executable="$(find-executable "${test}")"
+  if [[ "${?}" -ne 0 ]]; then
     report-test-result "${name}" "${executable}" "${result}"
     return 2
   fi
@@ -146,14 +158,12 @@ test-executable() {
 run-test() {
   local test_name="${1}"
   local test_case="${2}"
-  local default_executable="${3}"
-  local test_executables_path="${4}"
 
   local test_script="${test_case}"/script
   if [[ -x "${test_script}" ]]; then
     test-script "${test_name}" "${test_case}" "${test_script}" &
   else
-    test-executable "${test_name}" "${test_case}" "${default_executable}" "${test_executables_path}" &
+    test-executable "${test_name}" "${test_case}" &
   fi
 
   tests["${test_name}"]="${!}"
@@ -167,13 +177,11 @@ find-tests() {
 
 run-all-tests() {
   local test_suite="${1}"
-  local default_executable="${2}"
-  local test_executables_path="${3}"
   local test_name
 
   while IFS= read -r -d '' test_case; do
     test_name="$(remove-prefix "${test_suite}"/ "${test_case}")"
-    run-test "${test_name}" "${test_case}" "${default_executable}" "${test_executables_path}"
+    run-test "${test_name}" "${test_case}"
   done < <(find-tests "${test_suite}")
 }
 
@@ -248,7 +256,7 @@ report() {
          "${pass}" "${fail}" "${total}" "${skip}" "${invalid}"
 }
 
-run-all-tests "${test_suite}" "${default_executable}" "${test_executables_path}"
+run-all-tests "${test_suite}"
 collect-test-results
 report
 exit "${code}"

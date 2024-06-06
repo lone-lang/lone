@@ -126,7 +126,7 @@ clean:
 
 targets.phony += test
 test: $(targets.tests) lone
-	scripts/test.bash $(directories.test) $(targets.lone) $(directories.build.tests)
+	scripts/test.bash $(directories.test)
 
 targets.phony += directories
 directories:
