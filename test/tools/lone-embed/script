@@ -1,0 +1,42 @@
+#!/usr/bin/bash
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+exe="$(type -P lone)"
+patched="${exe}".patched
+segment="$(dirname ${0})"/segment
+
+cp -f "${exe}" "${patched}"
+code="${?}"
+
+if [[ "${code}" != 0 ]]; then
+  printf 'Error copying lone executable for patching
+From: %s
+To:   %s
+Code: %s
+' "${exe}" "${patched}" "${code}"
+  exit 1
+fi
+
+lone-embed "${patched}" "${segment}"
+code="${?}"
+
+if [[ "${code}" != 0 ]]; then
+  printf 'Error patching lone segment into interpreter
+Segment:     %s
+Interpreter: %s
+Code:        %s
+' "${segment}" "${patched}" "${code}"
+  exit 2
+fi
+
+"${patched}" < /dev/null
+code="${?}"
+
+if [[ "${code}" != 42 ]]; then
+  printf 'Interpreter did not correctly run the code in the embedded lone segment
+Segment:     %s
+Interpreter: %s
+Code:        %s
+' "${segment}" "${patched}" "${code}"
+  exit 3
+fi
