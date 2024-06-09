@@ -348,6 +348,7 @@ static void set_lone_segments(struct elf *elf)
 					break;
 				}
 
+			__attribute__((fallthrough));
 			default:
 				continue;
 			}
@@ -391,6 +392,7 @@ static void set_lone_segments(struct elf *elf)
 					break;
 				}
 
+			__attribute__((fallthrough));
 			default:
 				continue;
 			}
