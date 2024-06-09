@@ -255,10 +255,10 @@ static void analyze(struct elf *elf)
 				start.file = min(phdr64->p_offset, start.file);
 				end.file = max(phdr64->p_offset + phdr64->p_filesz, end.file);
 
-				start.virtual = min(phdr64->p_vaddr - phdr64->p_offset, start.virtual);
+				start.virtual = min(phdr64->p_vaddr, start.virtual);
 				end.virtual = max(phdr64->p_vaddr + phdr64->p_memsz, end.virtual);
 
-				start.physical = min(phdr64->p_paddr - phdr64->p_offset, start.physical);
+				start.physical = min(phdr64->p_paddr, start.physical);
 				end.physical = max(phdr64->p_paddr + phdr64->p_memsz, end.physical);
 
 			} else if (phdr64->p_type == PT_NULL) {
@@ -275,10 +275,10 @@ static void analyze(struct elf *elf)
 				start.file = min(phdr32->p_offset, start.file);
 				end.file = max(phdr32->p_offset + phdr32->p_filesz, end.file);
 
-				start.virtual = min(phdr32->p_vaddr - phdr32->p_offset, start.virtual);
+				start.virtual = min(phdr32->p_vaddr, start.virtual);
 				end.virtual = max(phdr32->p_vaddr + phdr32->p_memsz, end.virtual);
 
-				start.physical = min(phdr32->p_paddr - phdr32->p_offset, start.physical);
+				start.physical = min(phdr32->p_paddr, start.physical);
 				end.physical = max(phdr32->p_paddr + phdr32->p_memsz, end.physical);
 
 			} else if (phdr32->p_type == PT_NULL) {
