@@ -241,13 +241,14 @@ static void load_program_header_table(struct elf *elf)
 		/* Invalid ELF class but somehow made it here? */ linux_exit(8);
 	}
 
-	size = entry_size * entry_count;
-	address = map(size);
-
 	elf->program_header_table.offset = offset;
 	elf->program_header_table.entry_size = entry_size;
 	elf->program_header_table.entry_count = entry_count;
 	elf->program_header_table.nulls_count = 0;
+
+	size = pht_size_for(elf, entry_count + REQUIRED_PT_NULLS + 1);
+	address = map(size);
+
 	elf->program_header_table.memory.count = size;
 	elf->program_header_table.memory.pointer = address;
 
