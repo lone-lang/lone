@@ -1,4 +1,4 @@
-name: Lone Lisp CI
+name: lone
 
 on:
   push:
