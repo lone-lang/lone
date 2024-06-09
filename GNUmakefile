@@ -12,7 +12,7 @@ CC := $(CC)
 LD ?= ld
 LD := $(LD)
 
-CFLAGS ?= -Wall -Wextra -Wpedantic -Wno-unused-function -Wno-unused-parameter -Wno-unknown-attributes -Os
+CFLAGS ?= -Wall -Wextra -Wpedantic -Wno-unused-function -Wno-unused-parameter -Wno-unknown-attributes
 CFLAGS := $(CFLAGS)
 
 LDFLAGS ?=
