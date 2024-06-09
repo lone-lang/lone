@@ -154,3 +154,6 @@ directories:
 .DEFAULT_GOAL := lone
 
 sinclude $(targets.prerequisites)
+
+$(call variables.log,TARGET TARGET.triple UAPI CC LD CFLAGS LDFLAGS LTO)
+$(call newline)
