@@ -378,7 +378,7 @@ static void set_lone_segments(struct elf *elf)
 					set_load_segment = true;
 
 				} else if (!set_lone_segment) {
-					phdr64->p_type = PT_LONE;
+					phdr32->p_type = PT_LONE;
 
 					phdr32->p_offset = elf->data.offset;
 					phdr32->p_vaddr = phdr32->p_paddr = align_to_page(elf, elf->limits.end.virtual);
