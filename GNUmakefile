@@ -163,5 +163,5 @@ directories:
 
 sinclude $(targets.prerequisites)
 
-$(call variables.log,TARGET TARGET.triple UAPI CC LD CFLAGS LDFLAGS LTO)
+$(call variables.log,TARGET TARGET.triple UAPI CC LD CFLAGS LDFLAGS LTO PATH.additions)
 $(call newline)
