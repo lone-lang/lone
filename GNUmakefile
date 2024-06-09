@@ -7,6 +7,7 @@ space := $(nil) $(nil)
 $(space) := $(space)
 
 variables.log = $(foreach variable,$(1),$(if $($(variable)),$(info $(variable) $($(variable)))))
+newline = $(info $(nil))
 
 CC ?= cc
 CC := $(CC)
