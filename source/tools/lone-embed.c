@@ -51,6 +51,11 @@ struct elf {
 	} data;
 };
 
+static bool has_required_null_segments(struct elf *elf)
+{
+	return elf->program_header_table.nulls_count >= REQUIRED_PT_NULLS;
+}
+
 static size_t align(size_t n, size_t a) { return ((size_t) ((n + (a - 1)) / a)) * a; }
 static size_t align_to_page(struct elf *elf, size_t n) { return align(n, elf->page_size); }
 static size_t min(size_t x, size_t y) { return x < y? x : y; }
@@ -291,10 +296,6 @@ static void analyze(struct elf *elf)
 		/* Invalid ELF class but somehow made it here? */ linux_exit(8);
 	}
 
-	if (elf->program_header_table.nulls_count < REQUIRED_PT_NULLS) {
-		/* Not enough null segments to patch this ELF */ linux_exit(9);
-	}
-
 	elf->limits.start.file = start.file;
 	elf->limits.start.virtual = start.virtual;
 	elf->limits.start.physical = start.physical;
@@ -313,6 +314,10 @@ static void set_lone_segments(struct elf *elf)
 	Elf32_Phdr *phdr32;
 	Elf64_Phdr *phdr64;
 	size_t i;
+
+	if (!has_required_null_segments(elf)) {
+		/* Not enough null segments to patch this ELF */ linux_exit(9);
+	}
 
 	switch (elf->class) {
 	case ELFCLASS64:
