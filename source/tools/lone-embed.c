@@ -244,6 +244,8 @@ static void analyze(struct elf *elf)
 	Elf64_Phdr *phdr64;
 	size_t i;
 
+	elf->program_header_table.nulls_count = 0;
+
 	switch (elf->class) {
 	case ELFCLASS64:
 		for (i = 0; i < entry_count; ++i) {
