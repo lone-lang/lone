@@ -12,17 +12,44 @@ jobs:
       fail-fast: false
       matrix:
         compiler:
-          - gcc
-          - clang
+          - name: cc
+            env:
+              CC: cc
+          - name: gcc
+            env:
+              CC: gcc
+          - name: clang
+            env:
+              CC: clang
+        linker:
+          - name: ld
+            env:
+              LD: ld
+          - name: lld
+            env:
+              LD: lld
+          - name: mold
+            env:
+              LD: mold
+          - name: mold+spare-segments
+            env:
+              LD: mold
+              LDFLAGS: -Wl,--spare-program-headers,2
     runs-on: ubuntu-latest
     container: archlinux:base-devel
+    name: ${{ matrix.compiler.name }} ${{ matrix.linker.name }}
     steps:
     - name: Set up pacman keys
       run: pacman-key --init
     - name: Update and install packages
-      run: pacman -Syu --noconfirm clang
+      run: pacman -Syu --noconfirm clang lld llvm mold
     - uses: actions/checkout@v4
     - name: Build
-      run: make CC=${{ matrix.compiler }}
+      run: make
+      env:
+        CC: ${{ matrix.compiler.env.CC }}
+        LD: ${{ matrix.linker.env.LD }}
+        CFLAGS: ${{ matrix.compiler.env.CFLAGS }}
+        LDFLAGS: ${{ matrix.linker.env.LDFLAGS }}
     - name: Test
       run: make test
