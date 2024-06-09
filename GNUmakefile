@@ -141,8 +141,11 @@ targets.phony += clean
 clean:
 	rm -rf $(directories.build)
 
+targets.phony += tests
+tests: $(targets.tests)
+
 targets.phony += test
-test: $(targets.tests) lone tools
+test: tests lone tools
 	scripts/test.bash $(directories.test)
 
 targets.phony += directories
