@@ -79,7 +79,8 @@ targets.all := $(targets.lone) $(targets.tools) $(targets.tests) $(targets.objec
 
 directories.create += $(dir $(targets.all))
 
-export PATH := $(directories.build):$(directories.build.tools):$(directories.build.tests):$(PATH)
+PATH.additions := $(directories.build) $(directories.build.tools) $(directories.build.tests)
+export PATH := $(call PATH.join,$(PATH.additions) $(PATH))
 
 flags.whole_program.gcc := -fwhole-program
 flags.whole_program := -fvisibility=hidden $(flags.whole_program.$(CC))
