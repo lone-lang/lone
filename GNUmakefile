@@ -105,19 +105,20 @@ flags.executable := $(flags.common) $(flags.whole_program) $(flags.use_ld) -Wl,-
 
 # Disable strict aliasing and assume two's complement integers
 # even if CFLAGS contains options that affect this such as -O3
-CFLAGS += -fno-strict-aliasing -fwrapv -fno-stack-protector
+CFLAGS.overrides := -fno-strict-aliasing -fwrapv -fno-stack-protector
+CFLAGS.with_overrides := $(CFLAGS) $(CFLAGS.overrides)
 
 $(directories.build.objects)/%.o: $(directories.source)/%.c | directories
-	$(strip $(CC) $(flags.object) $(CFLAGS) -o $@ -c $<)
+	$(strip $(CC) $(flags.object) $(CFLAGS.with_overrides) -o $@ -c $<)
 
 $(targets.lone): $(targets.objects.lone.entry_point) $(targets.objects.lone) | directories
-	$(strip $(CC) $(flags.executable) $(CFLAGS) $(LDFLAGS) -o $@ $^)
+	$(strip $(CC) $(flags.executable) $(CFLAGS.with_overrides) $(LDFLAGS) -o $@ $^)
 
 $(directories.build.tools)/%: $(directories.build.objects.tools)/%.o $(targets.objects.lone) | directories
-	$(strip $(CC) $(flags.executable) $(CFLAGS) $(LDFLAGS) -o $@ $^)
+	$(strip $(CC) $(flags.executable) $(CFLAGS.with_overrides) $(LDFLAGS) -o $@ $^)
 
 $(directories.build.tests)/%: $(directories.build.objects.tests)/%.o $(targets.objects.lone) | directories
-	$(strip $(CC) $(flags.executable) $(CFLAGS) $(LDFLAGS) -o $@ $^)
+	$(strip $(CC) $(flags.executable) $(CFLAGS.with_overrides) $(LDFLAGS) -o $@ $^)
 
 $(call source_to_object,source/lone/modules/intrinsic/linux.c): $(targets.NR.c)
 
