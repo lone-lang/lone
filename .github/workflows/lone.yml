@@ -8,15 +8,20 @@ on:
 
 jobs:
   build-and-test:
+    strategy:
+      matrix:
+        compiler:
+          - gcc
+          - clang
     runs-on: ubuntu-latest
     container: archlinux:base-devel
     steps:
     - name: Set up pacman keys
       run: pacman-key --init
-    - name: Update
-      run: pacman -Syu --noconfirm
+    - name: Update and install packages
+      run: pacman -Syu --noconfirm clang
     - uses: actions/checkout@v3
     - name: Build
-      run: make
+      run: make CC=${{ matrix.compiler }}
     - name: Test
       run: make test
