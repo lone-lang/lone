@@ -21,7 +21,7 @@ jobs:
       run: pacman-key --init
     - name: Update and install packages
       run: pacman -Syu --noconfirm clang
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Build
       run: make CC=${{ matrix.compiler }}
     - name: Test
