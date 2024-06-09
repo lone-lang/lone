@@ -137,6 +137,9 @@ lone: $(targets.lone)
 targets.phony += tools
 tools: $(targets.tools)
 
+targets.phony += all
+all: lone tools
+
 targets.phony += clean
 clean:
 	rm -rf $(directories.build)
