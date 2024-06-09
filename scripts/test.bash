@@ -1,7 +1,8 @@
 #!/usr/bin/bash
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-test_suite="${1}"
+suite="${1}"
+name="${2}"
 
 code=0
 
@@ -272,7 +273,18 @@ report() {
          "${pass}" "${fail}" "${total}" "${skip}" "${invalid}"
 }
 
-run-all-tests "${test_suite}"
+test-suite() {
+  local root="${1}"
+  local name="${2}"
+
+  if [[ -n "${name}" ]]; then
+    run-test "${name}" "${root}"/"${name}"
+  else
+    run-all-tests "${root}"
+  fi
+}
+
+test-suite "${suite}" "${name}"
 collect-test-results
 report
 exit "${code}"
