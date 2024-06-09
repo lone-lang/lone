@@ -239,7 +239,7 @@ static void analyze(struct elf *elf)
 {
 	size_t entry_count = elf->program_header_table.entry_count;
 	void *table = elf->program_header_table.memory.pointer;
-	struct { size_t file, virtual, physical; } start = {0}, end = {-1};
+	struct { size_t file, virtual, physical; } start = {-1, -1, -1}, end = {0, 0, 0};
 	Elf32_Phdr *phdr32;
 	Elf64_Phdr *phdr64;
 	size_t i;
