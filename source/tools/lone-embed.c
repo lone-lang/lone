@@ -308,7 +308,6 @@ static void analyze(struct elf *elf)
 static void set_lone_segments(struct elf *elf)
 {
 	size_t entry_count = elf->program_header_table.entry_count;
-	size_t table_size = elf->program_header_table.memory.count;
 	void *table = elf->program_header_table.memory.pointer;
 	bool set_load_segment = false, set_lone_segment = false;
 	Elf32_Phdr *phdr32;
@@ -434,7 +433,6 @@ static void append_data(struct elf *elf)
 {
 	static unsigned char io_buffer[IO_BUFFER_SIZE];
 	static struct lone_bytes input_buffer = { sizeof(io_buffer), io_buffer }, output_buffer = { 0, io_buffer };
-	size_t total;
 
 	seek_to_start(elf->data.file_descriptor);
 	seek_to(elf->file.descriptor, elf->data.offset);
