@@ -11,6 +11,9 @@ LD := $(LD)
 CFLAGS ?= -Wall -Wextra -Wpedantic -Wno-unused-function -Wno-unused-parameter -Wno-unknown-attributes -Os
 CFLAGS := $(CFLAGS)
 
+LDFLAGS ?=
+LDFLAGS := $(LDFLAGS)
+
 ifdef TARGET
   ifndef UAPI
     $(error UAPI must be defined when cross compiling)
@@ -104,13 +107,13 @@ $(directories.build.objects)/%.o: $(directories.source)/%.c | directories
 	$(strip $(CC) $(flags.object) $(CFLAGS) -o $@ -c $<)
 
 $(targets.lone): $(targets.objects.lone.entry_point) $(targets.objects.lone) | directories
-	$(strip $(CC) $(flags.executable) $(CFLAGS) -o $@ $^)
+	$(strip $(CC) $(flags.executable) $(CFLAGS) $(LDFLAGS) -o $@ $^)
 
 $(directories.build.tools)/%: $(directories.build.objects.tools)/%.o $(targets.objects.lone) | directories
-	$(strip $(CC) $(flags.executable) $(CFLAGS) -o $@ $^)
+	$(strip $(CC) $(flags.executable) $(CFLAGS) $(LDFLAGS) -o $@ $^)
 
 $(directories.build.tests)/%: $(directories.build.objects.tests)/%.o $(targets.objects.lone) | directories
-	$(strip $(CC) $(flags.executable) $(CFLAGS) -o $@ $^)
+	$(strip $(CC) $(flags.executable) $(CFLAGS) $(LDFLAGS) -o $@ $^)
 
 $(call source_to_object,source/lone/modules/intrinsic/linux.c): $(targets.NR.c)
 
