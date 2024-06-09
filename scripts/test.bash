@@ -33,7 +33,7 @@ remove-prefix() {
 
 compare() {
   [[ ! -r "${1}" ]] && return 0
-  diff --side-by-side --suppress-common-lines --unidirectional-new-file "${1}" <(echo -E "${2}")
+  diff --color --side-by-side --suppress-common-lines --unidirectional-new-file "${1}" <(echo -E "${2}")
 }
 
 compare-status() {
