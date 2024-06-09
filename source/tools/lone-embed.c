@@ -322,6 +322,119 @@ static void analyze(struct elf *elf)
 	elf->data.offset = align_to_page(elf, elf->file.size);
 }
 
+static void adjust_phdr_entry(struct elf *elf)
+{
+	size_t entry_count = elf->program_header_table.entry_count;
+	void *table = elf->program_header_table.memory.pointer;
+	Elf32_Phdr *phdr32, *phdr32_entry, *phdr32_load;
+	Elf64_Phdr *phdr64, *phdr64_entry, *phdr64_load;
+	size_t i;
+
+	switch (elf->class) {
+	case ELFCLASS64:
+		phdr64_entry = 0;
+		phdr64_load = 0;
+
+		for (i = 0; i < entry_count; ++i) {
+			phdr64 = ((Elf64_Phdr *) table) + i;
+
+			if (phdr64->p_type == PT_PHDR) {
+				if (phdr64_entry) {
+					/* Multiple PT_PHDR entries, invalid */ linux_exit(10);
+				} else {
+					phdr64_entry = phdr64;
+				}
+			} else if (phdr64->p_type == PT_NULL) {
+				phdr64_load = phdr64;
+				break;
+			}
+		}
+
+		if (!phdr64_entry) {
+			/* Missing PT_PHDR entry */ linux_exit(11);
+		}
+
+		if (!phdr64_load) {
+			/* Missing required PT_NULL entry */ linux_exit(9);
+		}
+
+		phdr64_entry->p_offset = elf->program_header_table.offset;
+		phdr64_entry->p_vaddr = align_to_page(elf, elf->limits.end.virtual);
+		phdr64_entry->p_paddr = align_to_page(elf, elf->limits.end.physical);
+		phdr64_entry->p_filesz = phdr64_entry->p_memsz = pht_size(elf);
+
+		phdr64_load->p_type = PT_LOAD;
+		phdr64_load->p_offset = elf->program_header_table.offset;
+		phdr64_load->p_vaddr = phdr64_entry->p_vaddr;
+		phdr64_load->p_paddr = phdr64_entry->p_paddr;
+		phdr64_load->p_filesz = phdr64_load->p_memsz = align_to_page(elf, pht_size(elf));
+		phdr64_load->p_align = elf->page_size;
+		phdr64_load->p_flags = PF_R;
+
+		break;
+	case ELFCLASS32:
+		phdr32_entry = 0;
+		phdr32_load = 0;
+
+		for (i = 0; i < entry_count; ++i) {
+			phdr32 = ((Elf32_Phdr *) table) + i;
+
+			if (phdr32->p_type == PT_PHDR) {
+				if (phdr32_entry) {
+					/* Multiple PT_PHDR entries, invalid */ linux_exit(10);
+				} else {
+					phdr32_entry = phdr32;
+				}
+			} else if (phdr32->p_type == PT_NULL) {
+				phdr32_load = phdr32;
+				break;
+			}
+		}
+
+		if (!phdr32_entry) {
+			/* Missing PT_PHDR entry */ linux_exit(11);
+		}
+
+		if (!phdr32_load) {
+			/* Missing required PT_NULL entry */ linux_exit(9);
+		}
+
+		phdr32_entry->p_offset = elf->program_header_table.offset;
+		phdr32_entry->p_vaddr = align_to_page(elf, elf->limits.end.virtual);
+		phdr32_entry->p_paddr = align_to_page(elf, elf->limits.end.physical);
+		phdr32_entry->p_filesz = phdr32_entry->p_memsz = pht_size(elf);
+
+		phdr32_load->p_type = PT_LOAD;
+		phdr32_load->p_offset = elf->program_header_table.offset;
+		phdr32_load->p_vaddr = phdr32_entry->p_vaddr;
+		phdr32_load->p_paddr = phdr32_entry->p_paddr;
+		phdr32_load->p_filesz = phdr32_load->p_memsz = align_to_page(elf, pht_size(elf));
+		phdr32_load->p_align = elf->page_size;
+		phdr32_load->p_flags = PF_R;
+
+		break;
+	default:
+		/* Invalid ELF class but somehow made it here? */ linux_exit(8);
+	}
+}
+
+static void move_and_expand_pht_if_needed(struct elf *elf)
+{
+	void *new_nulls;
+
+	if (has_required_null_segments(elf)) { return; }
+
+	new_nulls = pht_end(elf);
+
+	elf->program_header_table.offset = elf->data.offset;
+	elf->program_header_table.entry_count += REQUIRED_PT_NULLS + 1;
+	elf->file.size = elf->program_header_table.offset + pht_size(elf);
+
+	lone_memory_zero(new_nulls, pht_size_for(elf, REQUIRED_PT_NULLS + 1));
+	adjust_phdr_entry(elf);
+	analyze(elf);
+}
+
 static void set_lone_segments(struct elf *elf)
 {
 	size_t entry_count = elf->program_header_table.entry_count;
@@ -465,10 +578,50 @@ static void append_data(struct elf *elf)
 	}
 }
 
+static void patch_ehdr_if_needed(struct elf *elf)
+{
+	bool patching_required;
+	Elf32_Ehdr *elf32;
+	Elf64_Ehdr *elf64;
+
+	patching_required = false;
+
+	switch (elf->class) {
+	case ELFCLASS64:
+		elf64 = (Elf64_Ehdr *) elf->header.pointer;
+
+		if (elf64->e_phoff != elf->program_header_table.offset) {
+			elf64->e_phoff = elf->program_header_table.offset;
+			elf64->e_phnum = elf->program_header_table.entry_count;
+			patching_required = true;
+		}
+
+		break;
+	case ELFCLASS32:
+		elf32 = (Elf32_Ehdr *) elf->header.pointer;
+
+		if (elf32->e_phoff != elf->program_header_table.offset) {
+			elf32->e_phoff = elf->program_header_table.offset;
+			elf32->e_phnum = elf->program_header_table.entry_count;
+			patching_required = true;
+		}
+
+		break;
+	default:
+		/* Invalid ELF class but somehow made it here? */ linux_exit(8);
+	}
+
+	if (patching_required) {
+		seek_to_start(elf->file.descriptor);
+		write_bytes(elf->file.descriptor, elf->header);
+	}
+}
+
 static void patch(struct elf *elf)
 {
 	patch_program_header_table(elf);
 	append_data(elf);
+	patch_ehdr_if_needed(elf);
 }
 
 long lone(int argc, char **argv, char **envp, struct lone_auxiliary_vector *auxvec)
@@ -486,6 +639,7 @@ long lone(int argc, char **argv, char **envp, struct lone_auxiliary_vector *auxv
 	load_program_header_table(&elf);
 	analyze(&elf);
 
+	move_and_expand_pht_if_needed(&elf);
 	set_lone_segments(&elf);
 
 	patch(&elf);
