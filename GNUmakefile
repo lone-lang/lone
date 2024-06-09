@@ -2,6 +2,10 @@
 
 MAKEFLAGS += --no-builtin-variables --no-builtin-rules
 
+nil :=
+space := $(nil) $(nil)
+$(space) := $(space)
+
 CC ?= cc
 CC := $(CC)
 
