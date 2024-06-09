@@ -2,9 +2,15 @@
 
 MAKEFLAGS += --no-builtin-variables --no-builtin-rules
 
-CC := cc
-LD := ld
-CFLAGS := -Wall -Wextra -Wpedantic -Wno-unused-function -Wno-unused-parameter -Wno-unknown-attributes -Os
+CC ?= cc
+CC := $(CC)
+
+LD ?= ld
+LD := $(LD)
+
+CFLAGS ?= -Wall -Wextra -Wpedantic -Wno-unused-function -Wno-unused-parameter -Wno-unknown-attributes -Os
+CFLAGS := $(CFLAGS)
+
 ifdef TARGET
   ifndef UAPI
     $(error UAPI must be defined when cross compiling)
