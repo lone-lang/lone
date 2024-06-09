@@ -6,6 +6,7 @@ nil :=
 space := $(nil) $(nil)
 $(space) := $(space)
 
+PATH.join = $(subst $(space),:,$(1))
 variables.log = $(foreach variable,$(1),$(if $($(variable)),$(info $(variable) $($(variable)))))
 newline = $(info $(nil))
 
