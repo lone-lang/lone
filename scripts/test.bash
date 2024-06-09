@@ -69,17 +69,16 @@ test-script() {
   return "${code}"
 }
 
-find-executable() {
+find-file-in-hierarchy() {
   local test_case="${1}"
+  local file="${2}"
 
   while [[ "${test_case}" != "." ]]; do
 
-    local executable="${test_case}"/executable
+    local entry="${test_case}"/"${file}"
 
-    if [[ -r "${executable}" && ! -x "${executable}" ]]; then
-      executable="$(< "${executable}")"
-      executable="$(type -P "${executable}")"
-      echo "${executable}"
+    if [[ -r "${entry}" && ! -x "${entry}" ]]; then
+      echo "${entry}"
       return 0
     else
       test_case="$(dirname "${test_case}")"
@@ -88,6 +87,19 @@ find-executable() {
   done
 
   return 1
+}
+
+read-file-in-hierarchy() {
+  local file="$(find-file-in-hierarchy "${@}")"
+  if [[ "${?}" -eq 0 ]]; then
+    echo -E "$(< "${file}")"
+  else
+    return 1
+  fi
+}
+
+find-executable() {
+  type -P "$(read-file-in-hierarchy "${1}" executable)"
 }
 
 test-executable() {
