@@ -51,6 +51,21 @@ struct elf {
 	} data;
 };
 
+static size_t pht_size_for(struct elf *elf, size_t entry_count)
+{
+	return elf->program_header_table.entry_size * entry_count;
+}
+
+static size_t pht_size(struct elf *elf)
+{
+	return pht_size_for(elf, elf->program_header_table.entry_count);
+}
+
+static void *pht_end(struct elf *elf)
+{
+	return elf->program_header_table.memory.pointer + pht_size(elf);
+}
+
 static bool has_required_null_segments(struct elf *elf)
 {
 	return elf->program_header_table.nulls_count >= REQUIRED_PT_NULLS;
