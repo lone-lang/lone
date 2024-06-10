@@ -45,7 +45,7 @@ jobs:
       run: pacman -Syu --noconfirm clang lld llvm mold
     - uses: actions/checkout@v4
     - name: Build
-      run: make
+      run: make --jobs --output-sync
       env:
         CC: ${{ matrix.compiler.env.CC }}
         LD: ${{ matrix.linker.env.LD }}
