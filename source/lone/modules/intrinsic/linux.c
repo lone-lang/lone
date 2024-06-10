@@ -325,9 +325,9 @@ static inline long lone_value_to_linux_system_call_number(struct lone_lisp *lone
 	struct lone_heap_value *actual;
 
 	switch (value.type) {
-	case LONE_NIL:
 	case LONE_INTEGER:
 		return value.as.signed_integer;
+	case LONE_NIL:
 	case LONE_POINTER:
 		linux_exit(-1);
 	case LONE_HEAP_VALUE:
