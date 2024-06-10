@@ -8,7 +8,7 @@
 static struct lone_value lone_symbol_transfer(struct lone_lisp *lone, unsigned char *text, size_t length, bool should_deallocate)
 {
 	struct lone_value value = lone_bytes_transfer(lone, text, length, should_deallocate);
-	value.as.heap_value->type = LONE_SYMBOL;
+	value.as.heap_value->type = LONE_TYPE_SYMBOL;
 	return value;
 }
 
@@ -20,7 +20,7 @@ static struct lone_value lone_symbol_transfer_bytes(struct lone_lisp *lone, stru
 static struct lone_value lone_symbol_copy(struct lone_lisp *lone, unsigned char *text, size_t length)
 {
 	struct lone_value value = lone_bytes_copy(lone, text, length);
-	value.as.heap_value->type = LONE_SYMBOL;
+	value.as.heap_value->type = LONE_TYPE_SYMBOL;
 	return value;
 }
 

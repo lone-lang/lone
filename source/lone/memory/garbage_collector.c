@@ -13,12 +13,12 @@ static void lone_mark_value(struct lone_value value)
 	struct lone_heap_value *actual;
 
 	switch (value.type) {
-	case LONE_NIL:
-	case LONE_INTEGER:
-	case LONE_POINTER:
+	case LONE_TYPE_NIL:
+	case LONE_TYPE_INTEGER:
+	case LONE_TYPE_POINTER:
 		/* value types need not be marked */
 		return;
-	case LONE_HEAP_VALUE:
+	case LONE_TYPE_HEAP_VALUE:
 		break;
 	}
 
@@ -34,39 +34,39 @@ static void lone_mark_heap_value(struct lone_heap_value *value)
 	value->marked = true;
 
 	switch (value->type) {
-	case LONE_MODULE:
+	case LONE_TYPE_MODULE:
 		lone_mark_value(value->as.module.name);
 		lone_mark_value(value->as.module.environment);
 		lone_mark_value(value->as.module.exports);
 		break;
-	case LONE_FUNCTION:
+	case LONE_TYPE_FUNCTION:
 		lone_mark_value(value->as.function.arguments);
 		lone_mark_value(value->as.function.code);
 		lone_mark_value(value->as.function.environment);
 		break;
-	case LONE_PRIMITIVE:
+	case LONE_TYPE_PRIMITIVE:
 		lone_mark_value(value->as.primitive.name);
 		lone_mark_value(value->as.primitive.closure);
 		break;
-	case LONE_LIST:
+	case LONE_TYPE_LIST:
 		lone_mark_value(value->as.list.first);
 		lone_mark_value(value->as.list.rest);
 		break;
-	case LONE_VECTOR:
+	case LONE_TYPE_VECTOR:
 		for (size_t i = 0; i < value->as.vector.count; ++i) {
 			lone_mark_value(value->as.vector.values[i]);
 		}
 		break;
-	case LONE_TABLE:
+	case LONE_TYPE_TABLE:
 		lone_mark_value(value->as.table.prototype);
 		for (size_t i = 0; i < value->as.table.count; ++i) {
 			lone_mark_value(value->as.table.entries[i].key);
 			lone_mark_value(value->as.table.entries[i].value);
 		}
 		break;
-	case LONE_SYMBOL:
-	case LONE_TEXT:
-	case LONE_BYTES:
+	case LONE_TYPE_SYMBOL:
+	case LONE_TYPE_TEXT:
+	case LONE_TYPE_BYTES:
 		/* these types do not contain any other values to mark */
 		break;
 	}
@@ -150,24 +150,24 @@ static void lone_kill_all_unmarked_values(struct lone_lisp *lone)
 
 			if (!value->marked) {
 				switch (value->type) {
-				case LONE_BYTES:
-				case LONE_TEXT:
-				case LONE_SYMBOL:
+				case LONE_TYPE_BYTES:
+				case LONE_TYPE_TEXT:
+				case LONE_TYPE_SYMBOL:
 					if (value->should_deallocate_bytes) {
 						lone_deallocate(lone, value->as.bytes.pointer);
 					}
 					break;
-				case LONE_VECTOR:
+				case LONE_TYPE_VECTOR:
 					lone_deallocate(lone, value->as.vector.values);
 					break;
-				case LONE_TABLE:
+				case LONE_TYPE_TABLE:
 					lone_deallocate(lone, value->as.table.indexes);
 					lone_deallocate(lone, value->as.table.entries);
 					break;
-				case LONE_MODULE:
-				case LONE_FUNCTION:
-				case LONE_PRIMITIVE:
-				case LONE_LIST:
+				case LONE_TYPE_MODULE:
+				case LONE_TYPE_FUNCTION:
+				case LONE_TYPE_PRIMITIVE:
+				case LONE_TYPE_LIST:
 					/* these types do not own any additional memory */
 					break;
 				}

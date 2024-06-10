@@ -22,17 +22,17 @@ static size_t lone_hash_value_recursively(struct lone_value value, unsigned long
 	hash = lone_hash_fnv_1a(bytes, hash);
 
 	switch (value.type) {
-	case LONE_NIL:
+	case LONE_TYPE_NIL:
 		return hash;
-	case LONE_INTEGER:
+	case LONE_TYPE_INTEGER:
 		bytes.pointer = (unsigned char *) &value.as.signed_integer;
 		bytes.count = sizeof(value.as.signed_integer);
 		break;
-	case LONE_POINTER:
+	case LONE_TYPE_POINTER:
 		bytes.pointer = (unsigned char *) &value.as.pointer;
 		bytes.count = sizeof(value.as.pointer);
 		break;
-	case LONE_HEAP_VALUE:
+	case LONE_TYPE_HEAP_VALUE:
 		return lone_hash_heap_value_recursively(value.as.heap_value, hash);
 	}
 
@@ -49,22 +49,22 @@ static size_t lone_hash_heap_value_recursively(struct lone_heap_value *value, un
 	hash = lone_hash_fnv_1a(bytes, hash);
 
 	switch (value->type) {
-	case LONE_MODULE:
-	case LONE_FUNCTION:
-	case LONE_PRIMITIVE:
-	case LONE_VECTOR:
-	case LONE_TABLE:
+	case LONE_TYPE_MODULE:
+	case LONE_TYPE_FUNCTION:
+	case LONE_TYPE_PRIMITIVE:
+	case LONE_TYPE_VECTOR:
+	case LONE_TYPE_TABLE:
 		linux_exit(-1);
-	case LONE_LIST:
+	case LONE_TYPE_LIST:
 		hash = lone_hash_value_recursively(value->as.list.first, hash);
 		hash = lone_hash_value_recursively(value->as.list.rest, hash);
 		return hash;
-	case LONE_SYMBOL:
+	case LONE_TYPE_SYMBOL:
 		bytes.pointer = (unsigned char *) &value;
 		bytes.count = sizeof(value);
 		break;
-	case LONE_TEXT:
-	case LONE_BYTES:
+	case LONE_TYPE_TEXT:
+	case LONE_TYPE_BYTES:
 		bytes = value->as.bytes;
 		break;
 	}

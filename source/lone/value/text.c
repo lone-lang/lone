@@ -9,7 +9,7 @@
 struct lone_value lone_text_transfer(struct lone_lisp *lone, unsigned char *text, size_t length, bool should_deallocate)
 {
 	struct lone_value value = lone_bytes_transfer(lone, text, length, should_deallocate);
-	value.as.heap_value->type = LONE_TEXT;
+	value.as.heap_value->type = LONE_TYPE_TEXT;
 	return value;
 }
 
@@ -21,7 +21,7 @@ struct lone_value lone_text_transfer_bytes(struct lone_lisp *lone, struct lone_b
 struct lone_value lone_text_copy(struct lone_lisp *lone, unsigned char *text, size_t length)
 {
 	struct lone_value value = lone_bytes_copy(lone, text, length);
-	value.as.heap_value->type = LONE_TEXT;
+	value.as.heap_value->type = LONE_TYPE_TEXT;
 	return value;
 }
 

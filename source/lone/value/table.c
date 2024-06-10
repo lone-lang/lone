@@ -14,7 +14,7 @@ struct lone_value lone_table_create(struct lone_lisp *lone, size_t capacity, str
 	struct lone_heap_value *heap_value = lone_heap_allocate_value(lone);
 	struct lone_table *actual = &heap_value->as.table;
 
-	heap_value->type = LONE_TABLE;
+	heap_value->type = LONE_TYPE_TABLE;
 	actual->prototype = prototype;
 	actual->count = 0;
 	actual->capacity = capacity;

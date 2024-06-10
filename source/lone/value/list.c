@@ -11,7 +11,7 @@
 struct lone_value lone_list_create(struct lone_lisp *lone, struct lone_value first, struct lone_value rest)
 {
 	struct lone_heap_value *actual = lone_heap_allocate_value(lone);
-	actual->type = LONE_LIST;
+	actual->type = LONE_TYPE_LIST;
 	actual->as.list.first = first;
 	actual->as.list.rest = rest;
 	return lone_value_from_heap_value(actual);

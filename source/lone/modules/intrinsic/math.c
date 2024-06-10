@@ -74,9 +74,9 @@ static struct lone_value lone_primitive_integer_operation(struct lone_lisp *lone
 		argument = lone_list_first(arguments);
 
 		switch (argument.type) {
-		case LONE_INTEGER:
+		case LONE_TYPE_INTEGER:
 			switch (accumulator.type) {
-			case LONE_INTEGER:
+			case LONE_TYPE_INTEGER:
 				switch (operation) {
 				case '+':
 					accumulator.as.signed_integer += argument.as.signed_integer;
@@ -91,15 +91,15 @@ static struct lone_value lone_primitive_integer_operation(struct lone_lisp *lone
 					/* invalid primitive integer operation */ linux_exit(-1);
 				}
 				break;
-			case LONE_NIL:
-			case LONE_HEAP_VALUE:
-			case LONE_POINTER:
+			case LONE_TYPE_NIL:
+			case LONE_TYPE_HEAP_VALUE:
+			case LONE_TYPE_POINTER:
 				/* accumulator is not a number */ linux_exit(-1);
 			}
 			break;
-		case LONE_NIL:
-		case LONE_HEAP_VALUE:
-		case LONE_POINTER:
+		case LONE_TYPE_NIL:
+		case LONE_TYPE_HEAP_VALUE:
+		case LONE_TYPE_POINTER:
 			/* argument is not a number */ linux_exit(-1);
 		}
 
@@ -146,7 +146,7 @@ LONE_PRIMITIVE(math_divide)
 	arguments = lone_list_rest(arguments);
 
 	switch (dividend.type) {
-	case LONE_INTEGER:
+	case LONE_TYPE_INTEGER:
 		if (lone_is_nil(arguments)) {
 			/* not given a divisor, return 1/x instead: (/ 2) = 1/2 */
 			return lone_integer_create(1 / dividend.as.signed_integer);
@@ -155,9 +155,9 @@ LONE_PRIMITIVE(math_divide)
 			divisor = lone_primitive_integer_operation(lone, arguments, '*', lone_one());
 			return lone_integer_create(dividend.as.signed_integer / divisor.as.signed_integer);
 		}
-	case LONE_NIL:
-	case LONE_POINTER:
-	case LONE_HEAP_VALUE:
+	case LONE_TYPE_NIL:
+	case LONE_TYPE_POINTER:
+	case LONE_TYPE_HEAP_VALUE:
 		/* can't divide non-numbers: (/ "not a number") */ linux_exit(-1);
 	}
 }
@@ -191,13 +191,13 @@ LONE_PRIMITIVE(math_sign)
 	}
 
 	switch (value.type) {
-	case LONE_INTEGER:
+	case LONE_TYPE_INTEGER:
 		if (value.as.signed_integer > 0) { return lone_one(); }
 		else if (value.as.signed_integer < 0) { return lone_minus_one(); }
 		else { return lone_zero(); }
-	case LONE_NIL:
-	case LONE_POINTER:
-	case LONE_HEAP_VALUE:
+	case LONE_TYPE_NIL:
+	case LONE_TYPE_POINTER:
+	case LONE_TYPE_HEAP_VALUE:
 		/* value is not a number */ linux_exit(-1);
 	}
 }

@@ -16,28 +16,32 @@ static struct lone_value lone_evaluate_form_index(struct lone_lisp *lone, struct
 	struct lone_heap_value *actual;
 
 	switch (collection.type) {
-	case LONE_NIL:
-	case LONE_INTEGER:
-	case LONE_POINTER:
+	case LONE_TYPE_NIL:
+	case LONE_TYPE_INTEGER:
+	case LONE_TYPE_POINTER:
 		linux_exit(-1);
-	case LONE_HEAP_VALUE:
+	case LONE_TYPE_HEAP_VALUE:
 		break;
 	}
 
 	actual = collection.as.heap_value;
 
 	switch (actual->type) {
-	case LONE_VECTOR:
+	case LONE_TYPE_VECTOR:
 		get = lone_vector_get;
 		set = lone_vector_set;
 		break;
-	case LONE_TABLE:
+	case LONE_TYPE_TABLE:
 		get = lone_table_get;
 		set = lone_table_set;
 		break;
-	case LONE_MODULE: case LONE_FUNCTION: case LONE_PRIMITIVE:
-	case LONE_BYTES: case LONE_SYMBOL: case LONE_TEXT:
-	case LONE_LIST:
+	case LONE_TYPE_MODULE:
+	case LONE_TYPE_FUNCTION:
+	case LONE_TYPE_PRIMITIVE:
+	case LONE_TYPE_BYTES:
+	case LONE_TYPE_SYMBOL:
+	case LONE_TYPE_TEXT:
+	case LONE_TYPE_LIST:
 		linux_exit(-1);
 	}
 
@@ -74,11 +78,11 @@ static struct lone_value lone_evaluate_form(struct lone_lisp *lone, struct lone_
 	first = lone_evaluate(lone, module, environment, first);
 
 	switch (first.type) {
-	case LONE_NIL:
-	case LONE_INTEGER:
-	case LONE_POINTER:
+	case LONE_TYPE_NIL:
+	case LONE_TYPE_INTEGER:
+	case LONE_TYPE_POINTER:
 		/* first element not applicable */ linux_exit(-1);
-	case LONE_HEAP_VALUE:
+	case LONE_TYPE_HEAP_VALUE:
 		break;
 	}
 
@@ -87,17 +91,17 @@ static struct lone_value lone_evaluate_form(struct lone_lisp *lone, struct lone_
 
 	/* apply arguments to the value */
 	switch (actual->type) {
-	case LONE_FUNCTION:
-	case LONE_PRIMITIVE:
+	case LONE_TYPE_FUNCTION:
+	case LONE_TYPE_PRIMITIVE:
 		return lone_apply(lone, module, environment, first, rest);
-	case LONE_VECTOR:
-	case LONE_TABLE:
+	case LONE_TYPE_VECTOR:
+	case LONE_TYPE_TABLE:
 		return lone_evaluate_form_index(lone, module, environment, first, rest);
-	case LONE_MODULE:
-	case LONE_LIST:
-	case LONE_SYMBOL:
-	case LONE_TEXT:
-	case LONE_BYTES:
+	case LONE_TYPE_MODULE:
+	case LONE_TYPE_LIST:
+	case LONE_TYPE_SYMBOL:
+	case LONE_TYPE_TEXT:
+	case LONE_TYPE_BYTES:
 		/* first element not an applicable type */ linux_exit(-1);
 	}
 }
@@ -107,28 +111,28 @@ struct lone_value lone_evaluate(struct lone_lisp *lone, struct lone_value module
 	struct lone_heap_value *actual;
 
 	switch (value.type) {
-	case LONE_NIL:
-	case LONE_INTEGER:
-	case LONE_POINTER:
+	case LONE_TYPE_NIL:
+	case LONE_TYPE_INTEGER:
+	case LONE_TYPE_POINTER:
 		return value;
-	case LONE_HEAP_VALUE:
+	case LONE_TYPE_HEAP_VALUE:
 		break;
 	}
 
 	actual = value.as.heap_value;
 
 	switch (actual->type) {
-	case LONE_LIST:
+	case LONE_TYPE_LIST:
 		return lone_evaluate_form(lone, module, environment, value);
-	case LONE_SYMBOL:
+	case LONE_TYPE_SYMBOL:
 		return lone_table_get(lone, environment, value);
-	case LONE_MODULE:
-	case LONE_FUNCTION:
-	case LONE_PRIMITIVE:
-	case LONE_VECTOR:
-	case LONE_TABLE:
-	case LONE_BYTES:
-	case LONE_TEXT:
+	case LONE_TYPE_MODULE:
+	case LONE_TYPE_FUNCTION:
+	case LONE_TYPE_PRIMITIVE:
+	case LONE_TYPE_VECTOR:
+	case LONE_TYPE_TABLE:
+	case LONE_TYPE_BYTES:
+	case LONE_TYPE_TEXT:
 		return value;
 	}
 }
@@ -168,16 +172,16 @@ static struct lone_value lone_apply_function(struct lone_lisp *lone, struct lone
 			current = lone_list_first(names);
 
 			switch (current.type) {
-			case LONE_HEAP_VALUE:
+			case LONE_TYPE_HEAP_VALUE:
 				break;
-			case LONE_NIL:
-			case LONE_POINTER:
-			case LONE_INTEGER:
+			case LONE_TYPE_NIL:
+			case LONE_TYPE_POINTER:
+			case LONE_TYPE_INTEGER:
 				/* unexpected value */ linux_exit(-1);
 			}
 
 			switch (current.as.heap_value->type) {
-			case LONE_SYMBOL:
+			case LONE_TYPE_SYMBOL:
 				/* normal argument passing: (lambda (x y)) */
 
 				if (!lone_is_nil(arguments)) {
@@ -188,7 +192,7 @@ static struct lone_value lone_apply_function(struct lone_lisp *lone, struct lone
 				}
 
 				break;
-			case LONE_LIST:
+			case LONE_TYPE_LIST:
 				/* variadic argument passing: (lambda ((arguments))), (lambda (x y (rest))) */
 
 				if (!lone_is_symbol(lone_list_first(current))) {
@@ -201,10 +205,13 @@ static struct lone_value lone_apply_function(struct lone_lisp *lone, struct lone
 					goto names_bound;
 				}
 
-			case LONE_MODULE:
-			case LONE_FUNCTION: case LONE_PRIMITIVE:
-			case LONE_BYTES: case LONE_TEXT:
-			case LONE_VECTOR: case LONE_TABLE:
+			case LONE_TYPE_MODULE:
+			case LONE_TYPE_FUNCTION:
+			case LONE_TYPE_PRIMITIVE:
+			case LONE_TYPE_BYTES:
+			case LONE_TYPE_TEXT:
+			case LONE_TYPE_VECTOR:
+			case LONE_TYPE_TABLE:
 				/* unexpected value */ linux_exit(-1);
 			}
 

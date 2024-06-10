@@ -9,7 +9,7 @@
 struct lone_value lone_module_create(struct lone_lisp *lone, struct lone_value name)
 {
 	struct lone_heap_value *actual = lone_heap_allocate_value(lone);
-	actual->type = LONE_MODULE;
+	actual->type = LONE_TYPE_MODULE;
 	actual->as.module.name = name;
 	actual->as.module.environment = lone_table_create(lone, 64, lone->modules.top_level_environment);
 	actual->as.module.exports = lone_vector_create(lone, 16);

@@ -12,7 +12,7 @@ struct lone_value lone_function_create(
 	struct lone_function_flags flags)
 {
 	struct lone_heap_value *actual = lone_heap_allocate_value(lone);
-	actual->type = LONE_FUNCTION;
+	actual->type = LONE_TYPE_FUNCTION;
 	actual->as.function.arguments = arguments;
 	actual->as.function.code = code;
 	actual->as.function.environment = environment;

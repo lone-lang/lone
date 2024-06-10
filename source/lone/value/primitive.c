@@ -13,7 +13,7 @@ struct lone_value lone_primitive_create(
 	struct lone_function_flags flags)
 {
 	struct lone_heap_value *actual = lone_heap_allocate_value(lone);
-	actual->type = LONE_PRIMITIVE;
+	actual->type = LONE_TYPE_PRIMITIVE;
 	actual->as.primitive.name = lone_intern_c_string(lone, name);
 	actual->as.primitive.function = function;
 	actual->as.primitive.closure = closure;

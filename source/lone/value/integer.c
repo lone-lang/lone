@@ -5,7 +5,7 @@
 struct lone_value lone_integer_create(long integer)
 {
 	return (struct lone_value) {
-		.type = LONE_INTEGER,
+		.type = LONE_TYPE_INTEGER,
 		.as.signed_integer = integer
 	};
 }

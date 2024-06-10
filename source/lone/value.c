@@ -6,7 +6,7 @@
 struct lone_value lone_value_from_heap_value(struct lone_heap_value *heap_value)
 {
 	return (struct lone_value) {
-		.type = LONE_HEAP_VALUE,
+		.type = LONE_TYPE_HEAP_VALUE,
 		.as.heap_value = heap_value
 	};
 }

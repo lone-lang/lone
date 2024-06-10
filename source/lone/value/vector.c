@@ -12,7 +12,7 @@ struct lone_value lone_vector_create(struct lone_lisp *lone, size_t capacity)
 	struct lone_heap_value *heap_value = lone_heap_allocate_value(lone);
 	struct lone_vector *actual = &heap_value->as.vector;
 
-	heap_value->type = LONE_VECTOR;
+	heap_value->type = LONE_TYPE_VECTOR;
 	actual->count = 0;
 	actual->capacity = capacity;
 	actual->values = lone_memory_array(lone, 0, actual->capacity, sizeof(*actual->values));

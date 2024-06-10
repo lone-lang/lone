@@ -569,11 +569,11 @@ static struct lone_value lone_parse(struct lone_lisp *lone, struct lone_reader *
 
 	/* lexer has already parsed atoms */
 	switch (token.type) {
-	case LONE_NIL:
-	case LONE_INTEGER:
-	case LONE_POINTER:
+	case LONE_TYPE_NIL:
+	case LONE_TYPE_INTEGER:
+	case LONE_TYPE_POINTER:
 		return token;
-	case LONE_HEAP_VALUE:
+	case LONE_TYPE_HEAP_VALUE:
 		break;
 	}
 
@@ -581,10 +581,10 @@ static struct lone_value lone_parse(struct lone_lisp *lone, struct lone_reader *
 
 	/* parser deals with nested structures */
 	switch (actual->type) {
-	case LONE_BYTES:
-	case LONE_TEXT:
+	case LONE_TYPE_BYTES:
+	case LONE_TYPE_TEXT:
 		return token;
-	case LONE_SYMBOL:
+	case LONE_TYPE_SYMBOL:
 
 		if (actual->as.bytes.count > 1) { return token; }
 		character = *actual->as.bytes.pointer;
@@ -605,12 +605,12 @@ static struct lone_value lone_parse(struct lone_lisp *lone, struct lone_reader *
 			goto error;
 		}
 
-	case LONE_MODULE:
-	case LONE_FUNCTION:
-	case LONE_PRIMITIVE:
-	case LONE_LIST:
-	case LONE_VECTOR:
-	case LONE_TABLE:
+	case LONE_TYPE_MODULE:
+	case LONE_TYPE_FUNCTION:
+	case LONE_TYPE_PRIMITIVE:
+	case LONE_TYPE_LIST:
+	case LONE_TYPE_VECTOR:
+	case LONE_TYPE_TABLE:
 		/* unexpected value type from lexer */
 		goto error;
 	}

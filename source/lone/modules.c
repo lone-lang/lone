@@ -28,31 +28,34 @@ static struct lone_value lone_module_name_to_key(struct lone_lisp *lone, struct 
 	struct lone_value head;
 
 	switch (name.type) {
-	case LONE_NIL:
-	case LONE_INTEGER:
-	case LONE_POINTER:
+	case LONE_TYPE_NIL:
+	case LONE_TYPE_INTEGER:
+	case LONE_TYPE_POINTER:
 		/* invalid module name component */ linux_exit(-1);
-	case LONE_HEAP_VALUE:
+	case LONE_TYPE_HEAP_VALUE:
 		break;
 	}
 
 	actual = name.as.heap_value;
 
 	switch (actual->type) {
-	case LONE_SYMBOL:
+	case LONE_TYPE_SYMBOL:
 		return lone_list_create(lone, name, lone_nil());
-	case LONE_LIST:
+	case LONE_TYPE_LIST:
 		for (head = name; !lone_is_nil(head); head = lone_list_rest(head)) {
 			if (!lone_is_symbol(lone_list_first(head))) {
 				linux_exit(-1);
 			}
 		}
 		return name;
-	case LONE_MODULE:
+	case LONE_TYPE_MODULE:
 		return lone_module_name_to_key(lone, actual->as.module.name);
-	case LONE_TEXT: case LONE_BYTES:
-	case LONE_FUNCTION: case LONE_PRIMITIVE:
-	case LONE_VECTOR: case LONE_TABLE:
+	case LONE_TYPE_FUNCTION:
+	case LONE_TYPE_PRIMITIVE:
+	case LONE_TYPE_TEXT:
+	case LONE_TYPE_BYTES:
+	case LONE_TYPE_VECTOR:
+	case LONE_TYPE_TABLE:
 		/* invalid module name component */ linux_exit(-1);
 	}
 }
@@ -288,32 +291,35 @@ static void lone_primitive_import_form(struct lone_lisp *lone, struct lone_impor
 	if (lone_is_nil(argument)) {  }
 
 	switch (argument.type) {
-	case LONE_NIL:
+	case LONE_TYPE_NIL:
 		/* nothing to import: (import ()) */ linux_exit(-1);
-	case LONE_INTEGER:
-	case LONE_POINTER:
+	case LONE_TYPE_INTEGER:
+	case LONE_TYPE_POINTER:
 		/* not a supported import argument type */ linux_exit(-1);
-	case LONE_HEAP_VALUE:
+	case LONE_TYPE_HEAP_VALUE:
 		break;
 	}
 
 	actual = argument.as.heap_value;
 
 	switch (actual->type) {
-	case LONE_SYMBOL:
+	case LONE_TYPE_SYMBOL:
 		/* (import module) */
 		name = argument;
 		argument = lone_nil();
 		break;
-	case LONE_LIST:
+	case LONE_TYPE_LIST:
 		/* (import (module)), (import (module symbol)) */
 		name = lone_list_first(argument);
 		argument = lone_list_rest(argument);
 		break;
-	case LONE_MODULE:
-	case LONE_FUNCTION: case LONE_PRIMITIVE:
-	case LONE_TEXT: case LONE_BYTES:
-	case LONE_VECTOR: case LONE_TABLE:
+	case LONE_TYPE_MODULE:
+	case LONE_TYPE_FUNCTION:
+	case LONE_TYPE_PRIMITIVE:
+	case LONE_TYPE_TEXT:
+	case LONE_TYPE_BYTES:
+	case LONE_TYPE_VECTOR:
+	case LONE_TYPE_TABLE:
 		/* not a supported import argument type */ linux_exit(-1);
 	}
 

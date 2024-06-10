@@ -325,30 +325,30 @@ static inline long lone_value_to_linux_system_call_number(struct lone_lisp *lone
 	struct lone_heap_value *actual;
 
 	switch (value.type) {
-	case LONE_INTEGER:
+	case LONE_TYPE_INTEGER:
 		return value.as.signed_integer;
-	case LONE_NIL:
-	case LONE_POINTER:
+	case LONE_TYPE_NIL:
+	case LONE_TYPE_POINTER:
 		linux_exit(-1);
-	case LONE_HEAP_VALUE:
+	case LONE_TYPE_HEAP_VALUE:
 		break;
 	}
 
 	actual = value.as.heap_value;
 
 	switch (actual->type) {
-	case LONE_TEXT:
+	case LONE_TYPE_TEXT:
 		value = lone_text_to_symbol(lone, value);
 		__attribute__((fallthrough));
-	case LONE_SYMBOL:
+	case LONE_TYPE_SYMBOL:
 		return lone_table_get(lone, linux_system_call_table, value).as.signed_integer;
-	case LONE_BYTES:
-	case LONE_MODULE:
-	case LONE_FUNCTION:
-	case LONE_PRIMITIVE:
-	case LONE_LIST:
-	case LONE_VECTOR:
-	case LONE_TABLE:
+	case LONE_TYPE_BYTES:
+	case LONE_TYPE_MODULE:
+	case LONE_TYPE_FUNCTION:
+	case LONE_TYPE_PRIMITIVE:
+	case LONE_TYPE_LIST:
+	case LONE_TYPE_VECTOR:
+	case LONE_TYPE_TABLE:
 		linux_exit(-1);
 	}
 }
@@ -358,30 +358,30 @@ static inline long lone_value_to_linux_system_call_argument(struct lone_value va
 	struct lone_heap_value *actual;
 
 	switch (value.type) {
-	case LONE_NIL:
+	case LONE_TYPE_NIL:
 		return 0;
-	case LONE_POINTER:
+	case LONE_TYPE_POINTER:
 		return (long) value.as.pointer.to_void;
-	case LONE_INTEGER:
+	case LONE_TYPE_INTEGER:
 		return (long) value.as.signed_integer;
-	case LONE_HEAP_VALUE:
+	case LONE_TYPE_HEAP_VALUE:
 		break;
 	}
 
 	actual = value.as.heap_value;
 
 	switch (actual->type) {
-	case LONE_BYTES:
-	case LONE_TEXT:
-	case LONE_SYMBOL:
+	case LONE_TYPE_BYTES:
+	case LONE_TYPE_TEXT:
+	case LONE_TYPE_SYMBOL:
 		return (long) actual->as.bytes.pointer;
-	case LONE_PRIMITIVE:
+	case LONE_TYPE_PRIMITIVE:
 		return (long) actual->as.primitive.function;
-	case LONE_FUNCTION:
-	case LONE_LIST:
-	case LONE_VECTOR:
-	case LONE_TABLE:
-	case LONE_MODULE:
+	case LONE_TYPE_FUNCTION:
+	case LONE_TYPE_LIST:
+	case LONE_TYPE_VECTOR:
+	case LONE_TYPE_TABLE:
+	case LONE_TYPE_MODULE:
 		linux_exit(-1);
 	}
 }

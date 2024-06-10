@@ -9,7 +9,7 @@
 struct lone_value lone_bytes_transfer(struct lone_lisp *lone, unsigned char *pointer, size_t count, bool should_deallocate)
 {
 	struct lone_heap_value *actual = lone_heap_allocate_value(lone);
-	actual->type = LONE_BYTES;
+	actual->type = LONE_TYPE_BYTES;
 	actual->as.bytes.count = count;
 	actual->as.bytes.pointer = pointer;
 	actual->should_deallocate_bytes = should_deallocate;

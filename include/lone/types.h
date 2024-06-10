@@ -102,22 +102,22 @@ struct lone_reader {
    ╰────────────────────────────────────────────────────────────────────────╯ */
 
 enum lone_value_type {
-	LONE_NIL = 0,
-	LONE_HEAP_VALUE,
-	LONE_INTEGER,
-	LONE_POINTER,
+	LONE_TYPE_NIL = 0,
+	LONE_TYPE_HEAP_VALUE,
+	LONE_TYPE_INTEGER,
+	LONE_TYPE_POINTER,
 };
 
 enum lone_heap_value_type {
-	LONE_MODULE,
-	LONE_FUNCTION,
-	LONE_PRIMITIVE,
-	LONE_LIST,
-	LONE_VECTOR,
-	LONE_TABLE,
-	LONE_SYMBOL,
-	LONE_TEXT,
-	LONE_BYTES,
+	LONE_TYPE_MODULE,
+	LONE_TYPE_FUNCTION,
+	LONE_TYPE_PRIMITIVE,
+	LONE_TYPE_LIST,
+	LONE_TYPE_VECTOR,
+	LONE_TYPE_TABLE,
+	LONE_TYPE_SYMBOL,
+	LONE_TYPE_TEXT,
+	LONE_TYPE_BYTES,
 };
 
 enum lone_pointer_type {

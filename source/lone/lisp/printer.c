@@ -179,49 +179,49 @@ void lone_print(struct lone_lisp *lone, struct lone_value value, int fd)
 	struct lone_heap_value *actual;
 
 	switch (value.type) {
-	case LONE_NIL:
+	case LONE_TYPE_NIL:
 		linux_write(fd, "nil", 3);
 		return;
-	case LONE_INTEGER:
+	case LONE_TYPE_INTEGER:
 		lone_print_integer(fd, value.as.signed_integer);
 		return;
-	case LONE_POINTER:
+	case LONE_TYPE_POINTER:
 		lone_print_pointer(lone, value, fd);
 		return;
-	case LONE_HEAP_VALUE:
+	case LONE_TYPE_HEAP_VALUE:
 		break;
 	}
 
 	actual = value.as.heap_value;
 
 	switch (actual->type) {
-	case LONE_MODULE:
+	case LONE_TYPE_MODULE:
 		lone_print_hash_notation(lone, "module", actual->as.module.name, fd);
 		break;
-	case LONE_PRIMITIVE:
+	case LONE_TYPE_PRIMITIVE:
 		lone_print_hash_notation(lone, "primitive", actual->as.primitive.name, fd);
 		break;
-	case LONE_FUNCTION:
+	case LONE_TYPE_FUNCTION:
 		lone_print_function(lone, value, fd);
 		break;
-	case LONE_LIST:
+	case LONE_TYPE_LIST:
 		linux_write(fd, "(", 1);
 		lone_print_list(lone, value, fd);
 		linux_write(fd, ")", 1);
 		break;
-	case LONE_VECTOR:
+	case LONE_TYPE_VECTOR:
 		lone_print_vector(lone, value, fd);
 		break;
-	case LONE_TABLE:
+	case LONE_TYPE_TABLE:
 		lone_print_table(lone, value, fd);
 		break;
-	case LONE_BYTES:
+	case LONE_TYPE_BYTES:
 		lone_print_bytes(lone, value, fd);
 		break;
-	case LONE_SYMBOL:
+	case LONE_TYPE_SYMBOL:
 		linux_write(fd, actual->as.bytes.pointer, actual->as.bytes.count);
 		break;
-	case LONE_TEXT:
+	case LONE_TYPE_TEXT:
 		linux_write(fd, "\"", 1);
 		linux_write(fd, actual->as.bytes.pointer, actual->as.bytes.count);
 		linux_write(fd, "\"", 1);

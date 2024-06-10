@@ -41,7 +41,7 @@ LONE_PRIMITIVE(text_to_symbol)
 		/* wrong number of arguments */ linux_exit(-1);
 	}
 
-	if (text.type != LONE_HEAP_VALUE || text.as.heap_value->type != LONE_TEXT) {
+	if (text.type != LONE_TYPE_HEAP_VALUE || text.as.heap_value->type != LONE_TYPE_TEXT) {
 		/* argument not a text value: (to-symbol 123) */ linux_exit(-1);
 	}
 

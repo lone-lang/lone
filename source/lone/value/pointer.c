@@ -7,7 +7,7 @@
 struct lone_value lone_pointer_create(void *pointer, enum lone_pointer_type pointer_type)
 {
 	return (struct lone_value) {
-		.type = LONE_POINTER,
+		.type = LONE_TYPE_POINTER,
 		.pointer_type = pointer_type,
 		.as.pointer.to_void = pointer
 	};

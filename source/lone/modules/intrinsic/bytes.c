@@ -61,16 +61,16 @@ LONE_PRIMITIVE(bytes_new)
 	}
 
 	switch (count.type) {
-	case LONE_INTEGER:
+	case LONE_TYPE_INTEGER:
 		if (count.as.signed_integer <= 0) {
 			/* zero or negative allocation, likely a mistake: (new 0), (new -64) */ linux_exit(-1);
 		}
 
 		allocation = count.as.unsigned_integer;
 		break;
-	case LONE_NIL:
-	case LONE_POINTER:
-	case LONE_HEAP_VALUE:
+	case LONE_TYPE_NIL:
+	case LONE_TYPE_POINTER:
+	case LONE_TYPE_HEAP_VALUE:
 		/* count not an integer: (new {}) */ linux_exit(-1);
 	}
 
