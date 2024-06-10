@@ -1,0 +1,3 @@
+(import (lone print) (text to-symbol))
+
+(print (to-symbol "test"))

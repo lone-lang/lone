@@ -17,5 +17,6 @@
 struct lone_value lone_intern(struct lone_lisp *lone, unsigned char *bytes, size_t count, bool should_deallocate);
 struct lone_value lone_intern_bytes(struct lone_lisp *lone, struct lone_bytes bytes, bool should_deallocate);
 struct lone_value lone_intern_c_string(struct lone_lisp *lone, char *c_string);
+struct lone_value lone_intern_text(struct lone_lisp *lone, struct lone_value text);
 
 #endif /* LONE_VALUE_SYMBOL_HEADER */

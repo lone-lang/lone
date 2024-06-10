@@ -3,6 +3,7 @@
 #include <lone/modules.h>
 #include <lone/modules/intrinsic/text.h>
 #include <lone/utilities.h>
+#include <lone/linux.h>
 
 #include <lone/value/primitive.h>
 #include <lone/value/list.h>
@@ -20,6 +21,9 @@ void lone_modules_intrinsic_text_initialize(struct lone_lisp *lone)
 	flags.evaluate_arguments = true;
 	flags.evaluate_result = false;
 
+	primitive = lone_primitive_create(lone, "text_to_symbol", lone_primitive_text_to_symbol, module, flags);
+	lone_set_and_export(lone, module, lone_intern_c_string(lone, "to-symbol"), primitive);
+
 	primitive = lone_primitive_create(lone, "join", lone_primitive_text_join, module, flags);
 	lone_set_and_export(lone, module, lone_intern_c_string(lone, "join"), primitive);
 
@@ -27,6 +31,21 @@ void lone_modules_intrinsic_text_initialize(struct lone_lisp *lone)
 	lone_set_and_export(lone, module, lone_intern_c_string(lone, "concatenate"), primitive);
 
 	lone_table_set(lone, lone->modules.loaded, name, module);
+}
+
+LONE_PRIMITIVE(text_to_symbol)
+{
+	struct lone_value text;
+
+	if (lone_list_destructure(arguments, 1, &text)) {
+		/* wrong number of arguments */ linux_exit(-1);
+	}
+
+	if (text.type != LONE_HEAP_VALUE || text.as.heap_value->type != LONE_TEXT) {
+		/* argument not a text value: (to-symbol 123) */ linux_exit(-1);
+	}
+
+	return lone_text_to_symbol(lone, text);
 }
 
 LONE_PRIMITIVE(text_join)

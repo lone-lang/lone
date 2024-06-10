@@ -48,3 +48,8 @@ struct lone_value lone_intern_c_string(struct lone_lisp *lone, char *c_string)
 {
 	return lone_intern(lone, (unsigned char *) c_string, lone_c_string_length(c_string), false);
 }
+
+struct lone_value lone_intern_text(struct lone_lisp *lone, struct lone_value text)
+{
+	return lone_intern_bytes(lone, text.as.heap_value->as.bytes, true);
+}

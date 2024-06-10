@@ -3,6 +3,7 @@
 #include <lone/value.h>
 #include <lone/value/text.h>
 #include <lone/value/bytes.h>
+#include <lone/value/symbol.h>
 #include <lone/memory/functions.h>
 
 struct lone_value lone_text_transfer(struct lone_lisp *lone, unsigned char *text, size_t length, bool should_deallocate)
@@ -27,4 +28,9 @@ struct lone_value lone_text_copy(struct lone_lisp *lone, unsigned char *text, si
 struct lone_value lone_text_from_c_string(struct lone_lisp *lone, char *c_string)
 {
 	return lone_text_transfer(lone, (unsigned char *) c_string, lone_c_string_length(c_string), false);
+}
+
+struct lone_value lone_text_to_symbol(struct lone_lisp *lone, struct lone_value text)
+{
+	return lone_intern_text(lone, text);
 }
