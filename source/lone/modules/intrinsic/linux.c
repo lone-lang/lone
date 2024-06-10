@@ -337,12 +337,12 @@ static inline long lone_value_to_linux_system_call_number(struct lone_lisp *lone
 	actual = value.as.heap_value;
 
 	switch (actual->type) {
-	case LONE_BYTES:
 	case LONE_TEXT:
 		value = lone_text_to_symbol(lone, value);
 		__attribute__((fallthrough));
 	case LONE_SYMBOL:
 		return lone_table_get(lone, linux_system_call_table, value).as.signed_integer;
+	case LONE_BYTES:
 	case LONE_MODULE:
 	case LONE_FUNCTION:
 	case LONE_PRIMITIVE:
