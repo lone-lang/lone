@@ -55,14 +55,14 @@ static void lone_memory_coalesce(struct lone_memory *block)
 	}
 }
 
-static struct lone_memory * lone_memory_find_free_block(struct lone_lisp *lone, size_t requested_size, size_t alignment)
+static struct lone_memory * lone_memory_find_free_block(struct lone_system *system, size_t requested_size, size_t alignment)
 {
 	size_t needed_size = requested_size + sizeof(struct lone_memory);
 	struct lone_memory *block;
 
 	needed_size = lone_align(needed_size, alignment);
 
-	for (block = lone->memory.general; block; block = block->next) {
+	for (block = system->memory; block; block = block->next) {
 		if (block->free && block->size >= needed_size)
 			break;
 	}
@@ -75,45 +75,45 @@ static struct lone_memory * lone_memory_find_free_block(struct lone_lisp *lone, 
 	return block;
 }
 
-void * lone_allocate_aligned(struct lone_lisp *lone, size_t requested_size, size_t alignment)
+void * lone_allocate_aligned(struct lone_system *system, size_t requested_size, size_t alignment)
 {
-	struct lone_memory *block = lone_memory_find_free_block(lone, requested_size, alignment);
+	struct lone_memory *block = lone_memory_find_free_block(system, requested_size, alignment);
 	lone_memory_zero(block->pointer, block->size);
 	return block->pointer;
 }
 
-void * lone_allocate_aligned_uninitialized(struct lone_lisp *lone, size_t requested_size, size_t alignment)
+void * lone_allocate_aligned_uninitialized(struct lone_system *system, size_t requested_size, size_t alignment)
 {
-	struct lone_memory *block = lone_memory_find_free_block(lone, requested_size, alignment);
+	struct lone_memory *block = lone_memory_find_free_block(system, requested_size, alignment);
 	/* zero fill any extra memory allocated due to alignment requirements */
 	lone_memory_zero(block->pointer + requested_size, block->size - requested_size);
 	return block->pointer;
 }
 
-void * lone_allocate(struct lone_lisp *lone, size_t requested_size)
+void * lone_allocate(struct lone_system *system, size_t requested_size)
 {
-	return lone_allocate_aligned(lone, requested_size, LONE_ALIGNMENT);
+	return lone_allocate_aligned(system, requested_size, LONE_ALIGNMENT);
 }
 
-void * lone_allocate_uninitialized(struct lone_lisp *lone, size_t requested_size)
+void * lone_allocate_uninitialized(struct lone_system *system, size_t requested_size)
 {
-	return lone_allocate_aligned_uninitialized(lone, requested_size, LONE_ALIGNMENT);
+	return lone_allocate_aligned_uninitialized(system, requested_size, LONE_ALIGNMENT);
 }
 
-void * lone_reallocate(struct lone_lisp *lone, void *pointer, size_t size)
+void * lone_reallocate(struct lone_system *system, void *pointer, size_t size)
 {
 	struct lone_memory *old = ((struct lone_memory *) pointer) - 1,
-	                   *new = ((struct lone_memory *) lone_allocate(lone, size)) - 1;
+	                   *new = ((struct lone_memory *) lone_allocate(system, size)) - 1;
 
 	if (pointer) {
 		lone_memory_move(old->pointer, new->pointer, lone_min(old->size, new->size));
-		lone_deallocate(lone, pointer);
+		lone_deallocate(system, pointer);
 	}
 
 	return new->pointer;
 }
 
-void lone_deallocate(struct lone_lisp *lone, void *pointer)
+void lone_deallocate(struct lone_system *system, void *pointer)
 {
 	struct lone_memory *block = ((struct lone_memory *) pointer) - 1;
 	block->free = 1;

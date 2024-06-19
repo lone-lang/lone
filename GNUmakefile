@@ -64,7 +64,7 @@ files.sources.tests := $(filter $(directories.source.tests)/%,$(files.sources.al
 
 targets.phony :=
 targets.NR.list := $(directories.build)/NR.list
-targets.NR.c := $(directories.build.include)/lone/NR.c
+targets.NR.c := $(directories.build.include)/lone/lisp/modules/intrinsic/linux/NR.c
 targets.NR := $(targets.NR.list) $(targets.NR.c)
 targets.objects.lone := $(call source_to_object,$(files.sources.lone))
 targets.objects.lone.entry_point := $(directories.build.objects)/lone.o
@@ -125,7 +125,7 @@ $(directories.build.tools)/%: $(directories.build.objects.tools)/%.o $(targets.o
 $(directories.build.tests)/%: $(directories.build.objects.tests)/%.o $(targets.objects.lone) | directories
 	$(strip $(CC) $(flags.executable) $(CFLAGS.with_overrides) $(LDFLAGS) -o $@ $^)
 
-$(call source_to_object,source/lone/modules/intrinsic/linux.c): $(targets.NR.c)
+$(call source_to_object,source/lone/lisp/modules/intrinsic/linux.c): $(targets.NR.c)
 
 $(targets.NR.c): $(targets.NR.list) scripts/NR.generate
 	scripts/NR.generate < $< > $@

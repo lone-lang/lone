@@ -12,24 +12,24 @@ lone_align(size_t size, size_t alignment);
 
 void *
 __attribute__((malloc, alloc_size(2), alloc_align(3)))
-lone_allocate_aligned(struct lone_lisp *lone, size_t requested_size, size_t alignment);
+lone_allocate_aligned(struct lone_system *system, size_t requested_size, size_t alignment);
 
 void *
 __attribute__((malloc, alloc_size(2), alloc_align(3)))
-lone_allocate_aligned_uninitialized(struct lone_lisp *lone, size_t requested_size, size_t alignment);
+lone_allocate_aligned_uninitialized(struct lone_system *system, size_t requested_size, size_t alignment);
 
 void *
 __attribute__((malloc, alloc_size(2), assume_aligned(LONE_ALIGNMENT)))
-lone_allocate(struct lone_lisp *lone, size_t requested_size);
+lone_allocate(struct lone_system *system, size_t requested_size);
 
 void *
 __attribute__((malloc, alloc_size(2), assume_aligned(LONE_ALIGNMENT)))
-lone_allocate_uninitialized(struct lone_lisp *lone, size_t requested_size);
+lone_allocate_uninitialized(struct lone_system *system, size_t requested_size);
 
 void *
 __attribute__((alloc_size(3)))
-lone_reallocate(struct lone_lisp *lone, void *pointer, size_t size);
+lone_reallocate(struct lone_system *system, void *pointer, size_t size);
 
-void lone_deallocate(struct lone_lisp *lone, void *pointer);
+void lone_deallocate(struct lone_system *system, void *pointer);
 
 #endif /* LONE_MEMORY_ALLOCATOR_HEADER */

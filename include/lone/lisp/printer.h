@@ -3,7 +3,7 @@
 #ifndef LONE_LISP_PRINTER_HEADER
 #define LONE_LISP_PRINTER_HEADER
 
-#include <lone/types.h>
+#include <lone/lisp/types.h>
 
 /* ╭─────────────────────────┨ LONE LISP PRINTER ┠──────────────────────────╮
    │                                                                        │
@@ -11,6 +11,6 @@
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
 
-void lone_print(struct lone_lisp *lone, struct lone_value value, int file_descriptor);
+void lone_lisp_print(struct lone_lisp *lone, struct lone_lisp_value value, int file_descriptor);
 
 #endif /* LONE_LISP_PRINTER_HEADER */

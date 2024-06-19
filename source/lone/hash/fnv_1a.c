@@ -16,7 +16,7 @@ unsigned long __attribute__((pure)) lone_hash_fnv_1a(struct lone_bytes data, uns
 	return hash;
 }
 
-void lone_hash_fnv_1a_initialize(struct lone_lisp *lone, struct lone_bytes random)
+void lone_hash_fnv_1a_initialize(struct lone_system *system, struct lone_bytes random)
 {
-	lone->hash.fnv_1a.offset_basis = lone_hash_fnv_1a(random, FNV_OFFSET_BASIS);
+	system->hash.fnv_1a.offset_basis = lone_hash_fnv_1a(random, FNV_OFFSET_BASIS);
 }

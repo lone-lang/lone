@@ -3,7 +3,7 @@
 #ifndef LONE_LISP_EVALUATOR_HEADER
 #define LONE_LISP_EVALUATOR_HEADER
 
-#include <lone/types.h>
+#include <lone/lisp/types.h>
 
 /* ╭────────────────────────┨ LONE LISP EVALUATOR ┠─────────────────────────╮
    │                                                                        │
@@ -29,32 +29,32 @@
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
 
-struct lone_value lone_evaluate(
+struct lone_lisp_value lone_lisp_evaluate(
 	struct lone_lisp *lone,
-	struct lone_value module,
-	struct lone_value environment,
-	struct lone_value value
+	struct lone_lisp_value module,
+	struct lone_lisp_value environment,
+	struct lone_lisp_value value
 );
 
-struct lone_value lone_evaluate_all(
+struct lone_lisp_value lone_lisp_evaluate_all(
 	struct lone_lisp *lone,
-	struct lone_value module,
-	struct lone_value environment,
-	struct lone_value list
+	struct lone_lisp_value module,
+	struct lone_lisp_value environment,
+	struct lone_lisp_value list
 );
 
-struct lone_value lone_evaluate_in_module(
+struct lone_lisp_value lone_lisp_evaluate_in_module(
 	struct lone_lisp *lone,
-	struct lone_value module,
-	struct lone_value value
+	struct lone_lisp_value module,
+	struct lone_lisp_value value
 );
 
-struct lone_value lone_apply(
+struct lone_lisp_value lone_lisp_apply(
 	struct lone_lisp *lone,
-	struct lone_value module,
-	struct lone_value environment,
-	struct lone_value applicable,
-	struct lone_value arguments
+	struct lone_lisp_value module,
+	struct lone_lisp_value environment,
+	struct lone_lisp_value applicable,
+	struct lone_lisp_value arguments
 );
 
 #endif /* LONE_LISP_EVALUATOR_HEADER */

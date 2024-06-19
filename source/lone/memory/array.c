@@ -30,7 +30,7 @@ bool lone_memory_array_is_bounded(size_t element_index, size_t element_capacity,
 	}
 }
 
-void * lone_memory_array(struct lone_lisp *lone, void *buffer_or_null, size_t element_count, size_t element_size)
+void * lone_memory_array(struct lone_system *system, void *buffer_or_null, size_t element_count, size_t element_size)
 {
-	return lone_reallocate(lone, buffer_or_null, lone_memory_array_size_in_bytes(element_count, element_size));
+	return lone_reallocate(system, buffer_or_null, lone_memory_array_size_in_bytes(element_count, element_size));
 }

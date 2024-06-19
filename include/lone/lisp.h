@@ -4,16 +4,16 @@
 #define LONE_LISP_HEADER
 
 #include <lone/types.h>
+#include <lone/lisp/types.h>
 
 /* ╭────────────────────────────────────────────────────────────────────────╮
    │                                                                        │
    │    The lone lisp structure represents the lone lisp interpreter.       │
    │    A pointer to this structure is passed to nearly every function.     │
-   │    It must be initialized before everything else since the memory      │
-   │    allocation system is not functional without it.                     │
+   │    It must be initialized before running lone lisp programs.           │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
 
-void lone_lisp_initialize(struct lone_lisp *lone, struct lone_bytes memory, void *stack, struct lone_bytes random);
+void lone_lisp_initialize(struct lone_lisp *lone, struct lone_system *system, void *native_stack);
 
 #endif /* LONE_LISP_HEADER */

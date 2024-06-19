@@ -5,10 +5,6 @@
 
 #include <lone/types.h>
 
-void lone_memory_initialize(
-	struct lone_lisp *lone,
-	struct lone_bytes memory,
-	void *stack
-);
+void lone_memory_initialize(struct lone_system *system, struct lone_bytes initial_static_memory);
 
 #endif /* LONE_MEMORY_HEADER */

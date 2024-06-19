@@ -14,46 +14,16 @@
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
 #if __BITS_PER_LONG == 64
-	#define DECIMAL_DIGITS_PER_LONG 20
+	#define LONE_DECIMAL_DIGITS_PER_LONG 20
 #elif __BITS_PER_LONG == 32
-	#define DECIMAL_DIGITS_PER_LONG 10
+	#define LONE_DECIMAL_DIGITS_PER_LONG 10
 #else
 	#error "Unsupported architecture"
-#endif
-
-#ifndef LONE_BUFFER_SIZE
-	#define LONE_BUFFER_SIZE 4096
-#endif
-
-#ifndef LONE_MEMORY_SIZE
-	#define LONE_MEMORY_SIZE (1024 * 1024)
-#endif
-
-#ifndef LONE_MEMORY_HEAP_VALUE_COUNT
-	#define LONE_MEMORY_HEAP_VALUE_COUNT 512
 #endif
 
 #ifndef LONE_ALIGNMENT
 	#define LONE_ALIGNMENT 16
 #endif
-
-#ifndef LONE_TABLE_LOAD_FACTOR
-	#define LONE_TABLE_LOAD_FACTOR 0.7
-#endif
-
-#ifndef LONE_TABLE_GROWTH_FACTOR
-	#define LONE_TABLE_GROWTH_FACTOR 2
-#endif
-
-#define LONE_PRIMITIVE(name)                  \
-struct lone_value lone_primitive_ ## name     \
-(                                             \
-	struct lone_lisp *lone,               \
-	struct lone_value module,             \
-	struct lone_value environment,        \
-	struct lone_value arguments,          \
-	struct lone_value closure             \
-)
 
 #ifndef PT_LONE
 //      PT_LONE   l o n e

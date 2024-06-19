@@ -22,7 +22,7 @@
 	#error "Unsupported architecture"
 #endif
 
-void lone_hash_fnv_1a_initialize(struct lone_lisp *lone, struct lone_bytes random);
+void lone_hash_fnv_1a_initialize(struct lone_system *system, struct lone_bytes random);
 
 unsigned long
 __attribute__((pure))

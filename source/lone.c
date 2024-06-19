@@ -5,13 +5,19 @@
    │                       The standalone Linux Lisp                        │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
-#include <lone/definitions.h>
-#include <lone/types.h>
-#include <lone/lisp.h>
-#include <lone/modules.h>
-#include <lone/modules/intrinsic.h>
-#include <lone/modules/embedded.h>
+
+#include <lone.h>
+
+#include <lone/system.h>
 #include <lone/auxiliary_vector.h>
+
+#include <lone/lisp.h>
+#include <lone/lisp/definitions.h>
+#include <lone/lisp/types.h>
+
+#include <lone/lisp/module.h>
+#include <lone/lisp/modules/intrinsic.h>
+#include <lone/lisp/modules/embedded.h>
 
 /* ╭───────────────────────┨ LONE LISP ENTRY POINT ┠────────────────────────╮
    │                                                                        │
@@ -31,13 +37,17 @@
 long lone(int argc, char **argv, char **envp, struct lone_auxiliary_vector *auxv)
 {
 	void *stack = __builtin_frame_address(0);
-	static unsigned char __attribute__((aligned(LONE_ALIGNMENT))) bytes[LONE_MEMORY_SIZE];
+	static unsigned char __attribute__((aligned(LONE_ALIGNMENT))) bytes[LONE_LISP_MEMORY_SIZE];
 	struct lone_bytes memory = { sizeof(bytes), bytes }, random = lone_auxiliary_vector_random(auxv);
+	struct lone_system system;
 	struct lone_lisp lone;
 
-	lone_lisp_initialize(&lone, memory, stack, random);
-	lone_modules_intrinsic_initialize(&lone, argc, argv, envp, auxv);
-	lone_module_path_push_all(&lone, 4,
+	lone_system_initialize(&system, memory, random);
+	lone_lisp_initialize(&lone, &system, stack);
+
+	lone_lisp_modules_intrinsic_initialize(&lone, argc, argv, envp, auxv);
+
+	lone_lisp_module_path_push_all(&lone, 4,
 
 		".",
 		"~/.lone/modules",
@@ -46,9 +56,9 @@ long lone(int argc, char **argv, char **envp, struct lone_auxiliary_vector *auxv
 
 	);
 
-	lone_modules_embedded_load(&lone, lone_auxiliary_vector_embedded_segment(auxv));
+	lone_lisp_modules_embedded_load(&lone, lone_auxiliary_vector_embedded_segment(auxv));
 
-	lone_module_load_null_from_standard_input(&lone);
+	lone_lisp_module_load_null_from_standard_input(&lone);
 
 	return 0;
 }

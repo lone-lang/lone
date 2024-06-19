@@ -2,7 +2,7 @@
 
 #include <lone/lisp/constants.h>
 
-struct lone_value lone_true(struct lone_lisp *lone)
+struct lone_lisp_value lone_lisp_true(struct lone_lisp *lone)
 {
 	return lone->constants.truth;
 }

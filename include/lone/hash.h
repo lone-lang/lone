@@ -5,7 +5,6 @@
 
 #include <lone/types.h>
 
-void lone_hash_initialize(struct lone_lisp *lone, struct lone_bytes random);
-size_t lone_hash(struct lone_lisp *lone, struct lone_value value);
+void lone_hash_initialize(struct lone_system *system, struct lone_bytes random);
 
 #endif /* LONE_HASH_HEADER */
