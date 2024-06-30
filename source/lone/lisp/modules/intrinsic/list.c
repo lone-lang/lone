@@ -39,8 +39,6 @@ void lone_lisp_modules_intrinsic_list_initialize(struct lone_lisp *lone)
 
 	primitive = lone_lisp_primitive_create(lone, "flatten", lone_lisp_primitive_list_flatten, module, flags);
 	lone_lisp_module_set_and_export_c_string(lone, module, "flatten", primitive);
-
-	lone_lisp_table_set(lone, lone->modules.loaded, name, module);
 }
 
 

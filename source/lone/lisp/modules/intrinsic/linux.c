@@ -318,8 +318,6 @@ void lone_lisp_modules_intrinsic_linux_initialize(struct lone_lisp *lone,
 
 	lone_lisp_module_set_and_export_c_string(lone, module, "system-call-table", linux_system_call_table);
 	lone_lisp_module_set_and_export_c_string(lone, module, "system-call", primitive);
-
-	lone_lisp_table_set(lone, lone->modules.loaded, name, module);
 }
 
 static inline long lone_lisp_value_to_linux_system_call_number(struct lone_lisp *lone,

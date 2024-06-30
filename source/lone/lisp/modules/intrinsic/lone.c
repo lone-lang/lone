@@ -87,8 +87,6 @@ void lone_lisp_modules_intrinsic_lone_initialize(struct lone_lisp *lone)
 
 	primitive = lone_lisp_primitive_create(lone, "is_equal", lone_lisp_primitive_lone_is_equal, module, flags);
 	lone_lisp_module_set_and_export_c_string(lone, module, "equal?", primitive);
-
-	lone_lisp_table_set(lone, lone->modules.loaded, name, module);
 }
 
 

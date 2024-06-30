@@ -58,8 +58,6 @@ void lone_lisp_modules_intrinsic_math_initialize(struct lone_lisp *lone)
 
 	primitive = lone_lisp_primitive_create(lone, "is_negative", lone_lisp_primitive_math_is_negative, module, flags);
 	lone_lisp_module_set_and_export_c_string(lone, module, "negative?", primitive);
-
-	lone_lisp_table_set(lone, lone->modules.loaded, name, module);
 }
 
 static struct lone_lisp_value lone_lisp_primitive_integer_operation(struct lone_lisp *lone, struct lone_lisp_value arguments, char operation, struct lone_lisp_value accumulator)

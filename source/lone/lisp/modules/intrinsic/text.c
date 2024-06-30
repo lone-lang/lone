@@ -31,8 +31,6 @@ void lone_lisp_modules_intrinsic_text_initialize(struct lone_lisp *lone)
 
 	primitive = lone_lisp_primitive_create(lone, "concatenate", lone_lisp_primitive_text_concatenate, module, flags);
 	lone_lisp_module_set_and_export_c_string(lone, module, "concatenate", primitive);
-
-	lone_lisp_table_set(lone, lone->modules.loaded, name, module);
 }
 
 LONE_LISP_PRIMITIVE(text_to_symbol)

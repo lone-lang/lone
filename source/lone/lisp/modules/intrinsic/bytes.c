@@ -50,8 +50,6 @@ void lone_lisp_modules_intrinsic_bytes_initialize(struct lone_lisp *lone)
 
 #undef LONE_LISP_REGISTER_BYTES_READER_PRIMITIVE
 #undef LONE_LISP_REGISTER_BYTES_WRITER_PRIMITIVE
-
-	lone_lisp_table_set(lone, lone->modules.loaded, name, module);
 }
 
 LONE_LISP_PRIMITIVE(bytes_new)
