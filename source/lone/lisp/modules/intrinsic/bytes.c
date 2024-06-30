@@ -30,11 +30,11 @@ void lone_lisp_modules_intrinsic_bytes_initialize(struct lone_lisp *lone)
 
 #define LONE_LISP_EXPORT_BYTES_READER_PRIMITIVE(type) \
 	lone_lisp_module_export_primitive(lone, module, "read-" #type, \
-			"bytes_read_" #type, lone_lisp_primitive_bytes_read_##type, module, flags);
+			"bytes_read_" #type, lone_lisp_primitive_bytes_read_##type, module, flags)
 
 #define LONE_LISP_EXPORT_BYTES_WRITER_PRIMITIVE(type) \
 	lone_lisp_module_export_primitive(lone, module, "write-" #type, \
-			"bytes_write_" #type, lone_lisp_primitive_bytes_write_##type, module, flags);
+			"bytes_write_" #type, lone_lisp_primitive_bytes_write_##type, module, flags)
 
 	LONE_LISP_EXPORT_BYTES_READER_PRIMITIVE(u8);
 	LONE_LISP_EXPORT_BYTES_READER_PRIMITIVE(s8);
