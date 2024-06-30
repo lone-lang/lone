@@ -16,7 +16,7 @@
 
 void lone_lisp_modules_intrinsic_table_initialize(struct lone_lisp *lone)
 {
-	struct lone_lisp_value name, module, primitive;
+	struct lone_lisp_value name, module;
 	struct lone_lisp_function_flags flags;
 
 	name = lone_lisp_intern_c_string(lone, "table");
@@ -24,20 +24,20 @@ void lone_lisp_modules_intrinsic_table_initialize(struct lone_lisp *lone)
 	flags.evaluate_arguments = true;
 	flags.evaluate_result = false;
 
-	primitive = lone_lisp_primitive_create(lone, "table_get", lone_lisp_primitive_table_get, module, flags);
-	lone_lisp_module_set_and_export_c_string(lone, module, "get", primitive);
+	lone_lisp_module_export_primitive(lone, module, "get",
+			"table_get", lone_lisp_primitive_table_get, module, flags);
 
-	primitive = lone_lisp_primitive_create(lone, "table_set", lone_lisp_primitive_table_set, module, flags);
-	lone_lisp_module_set_and_export_c_string(lone, module, "set", primitive);
+	lone_lisp_module_export_primitive(lone, module, "set",
+			"table_set", lone_lisp_primitive_table_set, module, flags);
 
-	primitive = lone_lisp_primitive_create(lone, "table_delete", lone_lisp_primitive_table_delete, module, flags);
-	lone_lisp_module_set_and_export_c_string(lone, module, "delete", primitive);
+	lone_lisp_module_export_primitive(lone, module, "delete",
+			"table_delete", lone_lisp_primitive_table_delete, module, flags);
 
-	primitive = lone_lisp_primitive_create(lone, "table_each", lone_lisp_primitive_table_each, module, flags);
-	lone_lisp_module_set_and_export_c_string(lone, module, "each", primitive);
+	lone_lisp_module_export_primitive(lone, module, "each",
+			"table_each", lone_lisp_primitive_table_each, module, flags);
 
-	primitive = lone_lisp_primitive_create(lone, "table_count", lone_lisp_primitive_table_count, module, flags);
-	lone_lisp_module_set_and_export_c_string(lone, module, "count", primitive);
+	lone_lisp_module_export_primitive(lone, module, "count",
+			"table_count", lone_lisp_primitive_table_count, module, flags);
 }
 
 LONE_LISP_PRIMITIVE(table_get)

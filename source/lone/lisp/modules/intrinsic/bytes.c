@@ -17,39 +17,41 @@
 
 void lone_lisp_modules_intrinsic_bytes_initialize(struct lone_lisp *lone)
 {
-	struct lone_lisp_value name = lone_lisp_intern_c_string(lone, "bytes"),
-	                  module = lone_lisp_module_for_name(lone, name),
-	                  primitive;
+	struct lone_lisp_function_flags flags;
+	struct lone_lisp_value name, module;
 
-	struct lone_lisp_function_flags flags = { .evaluate_arguments = true, .evaluate_result = false };
+	name = lone_lisp_intern_c_string(lone, "bytes");
+	module = lone_lisp_module_for_name(lone, name);
 
-	primitive = lone_lisp_primitive_create(lone, "bytes_new", lone_lisp_primitive_bytes_new, module, flags);
-	lone_lisp_module_set_and_export_c_string(lone, module, "new", primitive);
+	flags = (struct lone_lisp_function_flags) { .evaluate_arguments = true, .evaluate_result = false };
 
-#define LONE_LISP_REGISTER_BYTES_READER_PRIMITIVE(type) \
-	primitive = lone_lisp_primitive_create(lone, "bytes_read_" #type, lone_lisp_primitive_bytes_read_##type, module, flags); \
-	lone_lisp_module_set_and_export_c_string(lone, module, "read-" #type, primitive)
+	lone_lisp_module_export_primitive(lone, module, "new",
+			"bytes_new", lone_lisp_primitive_bytes_new, module, flags);
 
-#define LONE_LISP_REGISTER_BYTES_WRITER_PRIMITIVE(type) \
-	primitive = lone_lisp_primitive_create(lone, "bytes_write_" #type, lone_lisp_primitive_bytes_write_##type, module, flags); \
-	lone_lisp_module_set_and_export_c_string(lone, module, "write-" #type, primitive)
+#define LONE_LISP_EXPORT_BYTES_READER_PRIMITIVE(type) \
+	lone_lisp_module_export_primitive(lone, module, "read-" #type, \
+			"bytes_read_" #type, lone_lisp_primitive_bytes_read_##type, module, flags);
 
-	LONE_LISP_REGISTER_BYTES_READER_PRIMITIVE(u8);
-	LONE_LISP_REGISTER_BYTES_READER_PRIMITIVE(s8);
-	LONE_LISP_REGISTER_BYTES_READER_PRIMITIVE(u16);
-	LONE_LISP_REGISTER_BYTES_READER_PRIMITIVE(s16);
-	LONE_LISP_REGISTER_BYTES_READER_PRIMITIVE(u32);
-	LONE_LISP_REGISTER_BYTES_READER_PRIMITIVE(s32);
+#define LONE_LISP_EXPORT_BYTES_WRITER_PRIMITIVE(type) \
+	lone_lisp_module_export_primitive(lone, module, "write-" #type, \
+			"bytes_write_" #type, lone_lisp_primitive_bytes_write_##type, module, flags);
 
-	LONE_LISP_REGISTER_BYTES_WRITER_PRIMITIVE(u8);
-	LONE_LISP_REGISTER_BYTES_WRITER_PRIMITIVE(s8);
-	LONE_LISP_REGISTER_BYTES_WRITER_PRIMITIVE(u16);
-	LONE_LISP_REGISTER_BYTES_WRITER_PRIMITIVE(s16);
-	LONE_LISP_REGISTER_BYTES_WRITER_PRIMITIVE(u32);
-	LONE_LISP_REGISTER_BYTES_WRITER_PRIMITIVE(s32);
+	LONE_LISP_EXPORT_BYTES_READER_PRIMITIVE(u8);
+	LONE_LISP_EXPORT_BYTES_READER_PRIMITIVE(s8);
+	LONE_LISP_EXPORT_BYTES_READER_PRIMITIVE(u16);
+	LONE_LISP_EXPORT_BYTES_READER_PRIMITIVE(s16);
+	LONE_LISP_EXPORT_BYTES_READER_PRIMITIVE(u32);
+	LONE_LISP_EXPORT_BYTES_READER_PRIMITIVE(s32);
 
-#undef LONE_LISP_REGISTER_BYTES_READER_PRIMITIVE
-#undef LONE_LISP_REGISTER_BYTES_WRITER_PRIMITIVE
+	LONE_LISP_EXPORT_BYTES_WRITER_PRIMITIVE(u8);
+	LONE_LISP_EXPORT_BYTES_WRITER_PRIMITIVE(s8);
+	LONE_LISP_EXPORT_BYTES_WRITER_PRIMITIVE(u16);
+	LONE_LISP_EXPORT_BYTES_WRITER_PRIMITIVE(s16);
+	LONE_LISP_EXPORT_BYTES_WRITER_PRIMITIVE(u32);
+	LONE_LISP_EXPORT_BYTES_WRITER_PRIMITIVE(s32);
+
+#undef LONE_LISP_EXPORT_BYTES_READER_PRIMITIVE
+#undef LONE_LISP_EXPORT_BYTES_WRITER_PRIMITIVE
 }
 
 LONE_LISP_PRIMITIVE(bytes_new)

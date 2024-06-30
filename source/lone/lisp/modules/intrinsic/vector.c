@@ -16,7 +16,7 @@
 
 void lone_lisp_modules_intrinsic_vector_initialize(struct lone_lisp *lone)
 {
-	struct lone_lisp_value name, module, primitive;
+	struct lone_lisp_value name, module;
 	struct lone_lisp_function_flags flags;
 
 	name = lone_lisp_intern_c_string(lone, "vector");
@@ -24,20 +24,20 @@ void lone_lisp_modules_intrinsic_vector_initialize(struct lone_lisp *lone)
 	flags.evaluate_arguments = true;
 	flags.evaluate_result = false;
 
-	primitive = lone_lisp_primitive_create(lone, "vector_get", lone_lisp_primitive_vector_get, module, flags);
-	lone_lisp_module_set_and_export_c_string(lone, module, "get", primitive);
+	lone_lisp_module_export_primitive(lone, module, "get",
+			"vector_get", lone_lisp_primitive_vector_get, module, flags);
 
-	primitive = lone_lisp_primitive_create(lone, "vector_set", lone_lisp_primitive_vector_set, module, flags);
-	lone_lisp_module_set_and_export_c_string(lone, module, "set", primitive);
+	lone_lisp_module_export_primitive(lone, module, "set",
+			"vector_set", lone_lisp_primitive_vector_set, module, flags);
 
-	primitive = lone_lisp_primitive_create(lone, "vector_slice", lone_lisp_primitive_vector_slice, module, flags);
-	lone_lisp_module_set_and_export_c_string(lone, module, "slice", primitive);
+	lone_lisp_module_export_primitive(lone, module, "slice",
+			"vector_slice", lone_lisp_primitive_vector_slice, module, flags);
 
-	primitive = lone_lisp_primitive_create(lone, "vector_each", lone_lisp_primitive_vector_each, module, flags);
-	lone_lisp_module_set_and_export_c_string(lone, module, "each", primitive);
+	lone_lisp_module_export_primitive(lone, module, "each",
+			"vector_each", lone_lisp_primitive_vector_each, module, flags);
 
-	primitive = lone_lisp_primitive_create(lone, "vector_count", lone_lisp_primitive_vector_count, module, flags);
-	lone_lisp_module_set_and_export_c_string(lone, module, "count", primitive);
+	lone_lisp_module_export_primitive(lone, module, "count",
+			"vector_count", lone_lisp_primitive_vector_count, module, flags);
 }
 
 LONE_LISP_PRIMITIVE(vector_get)

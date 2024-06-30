@@ -18,7 +18,7 @@
 
 void lone_lisp_modules_intrinsic_lone_initialize(struct lone_lisp *lone)
 {
-	struct lone_lisp_value name, module, primitive;
+	struct lone_lisp_value name, module;
 	struct lone_lisp_function_flags flags;
 
 	name = lone_lisp_intern_c_string(lone, "lone");
@@ -26,67 +26,67 @@ void lone_lisp_modules_intrinsic_lone_initialize(struct lone_lisp *lone)
 	flags.evaluate_arguments = false;
 	flags.evaluate_result = false;
 
-	primitive = lone_lisp_primitive_create(lone, "begin", lone_lisp_primitive_lone_begin, module, flags);
-	lone_lisp_module_set_and_export_c_string(lone, module, "begin", primitive);
+	lone_lisp_module_export_primitive(lone, module, "begin",
+			"begin", lone_lisp_primitive_lone_begin, module, flags);
 
-	primitive = lone_lisp_primitive_create(lone, "when", lone_lisp_primitive_lone_when, module, flags);
-	lone_lisp_module_set_and_export_c_string(lone, module, "when", primitive);
+	lone_lisp_module_export_primitive(lone, module, "when",
+			"when", lone_lisp_primitive_lone_when, module, flags);
 
-	primitive = lone_lisp_primitive_create(lone, "unless", lone_lisp_primitive_lone_unless, module, flags);
-	lone_lisp_module_set_and_export_c_string(lone, module, "unless", primitive);
+	lone_lisp_module_export_primitive(lone, module, "unless",
+			"unless", lone_lisp_primitive_lone_unless, module, flags);
 
-	primitive = lone_lisp_primitive_create(lone, "if", lone_lisp_primitive_lone_if, module, flags);
-	lone_lisp_module_set_and_export_c_string(lone, module, "if", primitive);
+	lone_lisp_module_export_primitive(lone, module, "if",
+			"if", lone_lisp_primitive_lone_if, module, flags);
 
-	primitive = lone_lisp_primitive_create(lone, "let", lone_lisp_primitive_lone_let, module, flags);
-	lone_lisp_module_set_and_export_c_string(lone, module, "let", primitive);
+	lone_lisp_module_export_primitive(lone, module, "let",
+			"let", lone_lisp_primitive_lone_let, module, flags);
 
-	primitive = lone_lisp_primitive_create(lone, "set", lone_lisp_primitive_lone_set, module, flags);
-	lone_lisp_module_set_and_export_c_string(lone, module, "set", primitive);
+	lone_lisp_module_export_primitive(lone, module, "set",
+			"set", lone_lisp_primitive_lone_set, module, flags);
 
-	primitive = lone_lisp_primitive_create(lone, "quote", lone_lisp_primitive_lone_quote, module, flags);
-	lone_lisp_module_set_and_export_c_string(lone, module, "quote", primitive);
+	lone_lisp_module_export_primitive(lone, module, "quote",
+			"quote", lone_lisp_primitive_lone_quote, module, flags);
 
-	primitive = lone_lisp_primitive_create(lone, "quasiquote", lone_lisp_primitive_lone_quasiquote, module, flags);
-	lone_lisp_module_set_and_export_c_string(lone, module, "quasiquote", primitive);
+	lone_lisp_module_export_primitive(lone, module, "quasiquote",
+			"quasiquote", lone_lisp_primitive_lone_quasiquote, module, flags);
 
-	primitive = lone_lisp_primitive_create(lone, "lambda", lone_lisp_primitive_lone_lambda, module, flags);
-	lone_lisp_module_set_and_export_c_string(lone, module, "lambda", primitive);
+	lone_lisp_module_export_primitive(lone, module, "lambda",
+			"lambda", lone_lisp_primitive_lone_lambda, module, flags);
 
-	primitive = lone_lisp_primitive_create(lone, "lambda_bang", lone_lisp_primitive_lone_lambda_bang, module, flags);
-	lone_lisp_module_set_and_export_c_string(lone, module, "lambda!", primitive);
+	lone_lisp_module_export_primitive(lone, module, "lambda!",
+			"lambda_bang", lone_lisp_primitive_lone_lambda_bang, module, flags);
 
 	flags = (struct lone_lisp_function_flags) { .evaluate_arguments = true, .evaluate_result = false };
 
-	primitive = lone_lisp_primitive_create(lone, "print", lone_lisp_primitive_lone_print, module, flags);
-	lone_lisp_module_set_and_export_c_string(lone, module, "print", primitive);
+	lone_lisp_module_export_primitive(lone, module, "print",
+			"print", lone_lisp_primitive_lone_print, module, flags);
 
-	primitive = lone_lisp_primitive_create(lone, "is_list", lone_lisp_primitive_lone_is_list, module, flags);
-	lone_lisp_module_set_and_export_c_string(lone, module, "list?", primitive);
+	lone_lisp_module_export_primitive(lone, module, "list?",
+			"is_list", lone_lisp_primitive_lone_is_list, module, flags);
 
-	primitive = lone_lisp_primitive_create(lone, "is_vector", lone_lisp_primitive_lone_is_vector, module, flags);
-	lone_lisp_module_set_and_export_c_string(lone, module, "vector?", primitive);
+	lone_lisp_module_export_primitive(lone, module, "vector?",
+			"is_vector", lone_lisp_primitive_lone_is_vector, module, flags);
 
-	primitive = lone_lisp_primitive_create(lone, "is_table", lone_lisp_primitive_lone_is_table, module, flags);
-	lone_lisp_module_set_and_export_c_string(lone, module, "table?", primitive);
+	lone_lisp_module_export_primitive(lone, module, "table?",
+			"is_table", lone_lisp_primitive_lone_is_table, module, flags);
 
-	primitive = lone_lisp_primitive_create(lone, "is_symbol", lone_lisp_primitive_lone_is_symbol, module, flags);
-	lone_lisp_module_set_and_export_c_string(lone, module, "symbol?", primitive);
+	lone_lisp_module_export_primitive(lone, module, "symbol?",
+			"is_symbol", lone_lisp_primitive_lone_is_symbol, module, flags);
 
-	primitive = lone_lisp_primitive_create(lone, "is_text", lone_lisp_primitive_lone_is_text, module, flags);
-	lone_lisp_module_set_and_export_c_string(lone, module, "text?", primitive);
+	lone_lisp_module_export_primitive(lone, module, "text?",
+			"is_text", lone_lisp_primitive_lone_is_text, module, flags);
 
-	primitive = lone_lisp_primitive_create(lone, "is_integer", lone_lisp_primitive_lone_is_integer, module, flags);
-	lone_lisp_module_set_and_export_c_string(lone, module, "integer?", primitive);
+	lone_lisp_module_export_primitive(lone, module, "integer?",
+			"is_integer", lone_lisp_primitive_lone_is_integer, module, flags);
 
-	primitive = lone_lisp_primitive_create(lone, "is_identical", lone_lisp_primitive_lone_is_identical, module, flags);
-	lone_lisp_module_set_and_export_c_string(lone, module, "identical?", primitive);
+	lone_lisp_module_export_primitive(lone, module, "identical?",
+			"is_identical", lone_lisp_primitive_lone_is_identical, module, flags);
 
-	primitive = lone_lisp_primitive_create(lone, "is_equivalent", lone_lisp_primitive_lone_is_equivalent, module, flags);
-	lone_lisp_module_set_and_export_c_string(lone, module, "equivalent?", primitive);
+	lone_lisp_module_export_primitive(lone, module, "equivalent?",
+			"is_equivalent", lone_lisp_primitive_lone_is_equivalent, module, flags);
 
-	primitive = lone_lisp_primitive_create(lone, "is_equal", lone_lisp_primitive_lone_is_equal, module, flags);
-	lone_lisp_module_set_and_export_c_string(lone, module, "equal?", primitive);
+	lone_lisp_module_export_primitive(lone, module, "equal?",
+			"is_equal", lone_lisp_primitive_lone_is_equal, module, flags);
 }
 
 

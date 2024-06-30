@@ -15,7 +15,7 @@
 
 void lone_lisp_modules_intrinsic_text_initialize(struct lone_lisp *lone)
 {
-	struct lone_lisp_value name, module, primitive;
+	struct lone_lisp_value name, module;
 	struct lone_lisp_function_flags flags;
 
 	name = lone_lisp_intern_c_string(lone, "text");
@@ -23,14 +23,14 @@ void lone_lisp_modules_intrinsic_text_initialize(struct lone_lisp *lone)
 	flags.evaluate_arguments = true;
 	flags.evaluate_result = false;
 
-	primitive = lone_lisp_primitive_create(lone, "text_to_symbol", lone_lisp_primitive_text_to_symbol, module, flags);
-	lone_lisp_module_set_and_export_c_string(lone, module, "to-symbol", primitive);
+	lone_lisp_module_export_primitive(lone, module, "to-symbol",
+			"text_to_symbol", lone_lisp_primitive_text_to_symbol, module, flags);
 
-	primitive = lone_lisp_primitive_create(lone, "join", lone_lisp_primitive_text_join, module, flags);
-	lone_lisp_module_set_and_export_c_string(lone, module, "join", primitive);
+	lone_lisp_module_export_primitive(lone, module, "join",
+			"text_join", lone_lisp_primitive_text_join, module, flags);
 
-	primitive = lone_lisp_primitive_create(lone, "concatenate", lone_lisp_primitive_text_concatenate, module, flags);
-	lone_lisp_module_set_and_export_c_string(lone, module, "concatenate", primitive);
+	lone_lisp_module_export_primitive(lone, module, "concatenate",
+			"text_concatenate", lone_lisp_primitive_text_concatenate, module, flags);
 }
 
 LONE_LISP_PRIMITIVE(text_to_symbol)

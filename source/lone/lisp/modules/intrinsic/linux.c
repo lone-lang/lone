@@ -294,15 +294,12 @@ void lone_lisp_modules_intrinsic_linux_initialize(struct lone_lisp *lone,
 		int argc, char **argv, char **envp,
 		struct lone_auxiliary_vector *auxv)
 {
-	struct lone_lisp_value name, module, linux_system_call_table, count, arguments, environment, auxiliary_vector, primitive;
+	struct lone_lisp_value name, module, linux_system_call_table, count, arguments, environment, auxiliary_vector;
 	struct lone_lisp_function_flags flags;
 
 	name = lone_lisp_intern_c_string(lone, "linux");
 	module = lone_lisp_module_for_name(lone, name);
 	linux_system_call_table = lone_lisp_table_create(lone, 1024, lone_lisp_nil());
-	flags = (struct lone_lisp_function_flags) { .evaluate_arguments = true, .evaluate_result = false };
-
-	primitive = lone_lisp_primitive_create(lone, "linux_system_call", lone_lisp_primitive_linux_system_call, linux_system_call_table, flags);
 
 	lone_lisp_fill_linux_system_call_table(lone, linux_system_call_table);
 
@@ -317,7 +314,10 @@ void lone_lisp_modules_intrinsic_linux_initialize(struct lone_lisp *lone,
 	lone_lisp_module_set_and_export_c_string(lone, module, "auxiliary-vector", auxiliary_vector);
 
 	lone_lisp_module_set_and_export_c_string(lone, module, "system-call-table", linux_system_call_table);
-	lone_lisp_module_set_and_export_c_string(lone, module, "system-call", primitive);
+
+	flags = (struct lone_lisp_function_flags) { .evaluate_arguments = true, .evaluate_result = false };
+	lone_lisp_module_export_primitive(lone, module, "system-call",
+			"linux_system_call", lone_lisp_primitive_linux_system_call, module, flags);
 }
 
 static inline long lone_lisp_value_to_linux_system_call_number(struct lone_lisp *lone,

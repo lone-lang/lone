@@ -39,6 +39,11 @@ void lone_lisp_module_set_and_export(
 void lone_lisp_module_set_and_export_c_string(struct lone_lisp *lone,
 		struct lone_lisp_value module, char *symbol, struct lone_lisp_value value);
 
+void lone_lisp_module_export_primitive(struct lone_lisp *lone,
+		struct lone_lisp_value module, char *symbol, char *name,
+		lone_lisp_primitive_function function, struct lone_lisp_value closure,
+		struct lone_lisp_function_flags flags);
+
 LONE_LISP_PRIMITIVE(module_import);
 LONE_LISP_PRIMITIVE(module_export);
 

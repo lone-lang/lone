@@ -14,7 +14,7 @@
 
 void lone_lisp_modules_intrinsic_list_initialize(struct lone_lisp *lone)
 {
-	struct lone_lisp_value name, module, primitive;
+	struct lone_lisp_value name, module;
 	struct lone_lisp_function_flags flags;
 
 	name = lone_lisp_intern_c_string(lone, "list");
@@ -22,23 +22,23 @@ void lone_lisp_modules_intrinsic_list_initialize(struct lone_lisp *lone)
 	flags.evaluate_arguments = true;
 	flags.evaluate_result = false;
 
-	primitive = lone_lisp_primitive_create(lone, "construct", lone_lisp_primitive_list_construct, module, flags);
-	lone_lisp_module_set_and_export_c_string(lone, module, "construct", primitive);
+	lone_lisp_module_export_primitive(lone, module, "construct",
+			"construct", lone_lisp_primitive_list_construct, module, flags);
 
-	primitive = lone_lisp_primitive_create(lone, "first", lone_lisp_primitive_list_first, module, flags);
-	lone_lisp_module_set_and_export_c_string(lone, module, "first", primitive);
+	lone_lisp_module_export_primitive(lone, module, "first",
+			"first", lone_lisp_primitive_list_first, module, flags);
 
-	primitive = lone_lisp_primitive_create(lone, "rest", lone_lisp_primitive_list_rest, module, flags);
-	lone_lisp_module_set_and_export_c_string(lone, module, "rest", primitive);
+	lone_lisp_module_export_primitive(lone, module, "rest",
+			"rest", lone_lisp_primitive_list_rest, module, flags);
 
-	primitive = lone_lisp_primitive_create(lone, "map", lone_lisp_primitive_list_map, module, flags);
-	lone_lisp_module_set_and_export_c_string(lone, module, "map", primitive);
+	lone_lisp_module_export_primitive(lone, module, "map",
+			"map", lone_lisp_primitive_list_map, module, flags);
 
-	primitive = lone_lisp_primitive_create(lone, "reduce", lone_lisp_primitive_list_reduce, module, flags);
-	lone_lisp_module_set_and_export_c_string(lone, module, "reduce", primitive);
+	lone_lisp_module_export_primitive(lone, module, "reduce",
+			"reduce", lone_lisp_primitive_list_reduce, module, flags);
 
-	primitive = lone_lisp_primitive_create(lone, "flatten", lone_lisp_primitive_list_flatten, module, flags);
-	lone_lisp_module_set_and_export_c_string(lone, module, "flatten", primitive);
+	lone_lisp_module_export_primitive(lone, module, "flatten",
+			"flatten", lone_lisp_primitive_list_flatten, module, flags);
 }
 
 
