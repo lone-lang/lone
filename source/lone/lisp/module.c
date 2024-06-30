@@ -229,6 +229,12 @@ void lone_lisp_module_set_and_export(struct lone_lisp *lone, struct lone_lisp_va
 	lone_lisp_table_set(lone, module.as.heap_value->as.module.environment, symbol, value);
 }
 
+void lone_lisp_module_set_and_export_c_string(struct lone_lisp *lone,
+		struct lone_lisp_value module, char *symbol, struct lone_lisp_value value)
+{
+	lone_lisp_module_set_and_export(lone, module, lone_lisp_intern_c_string(lone, symbol), value);
+}
+
 LONE_LISP_PRIMITIVE(module_export)
 {
 	struct lone_lisp_value head, symbol;

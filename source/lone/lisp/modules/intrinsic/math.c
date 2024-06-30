@@ -24,40 +24,40 @@ void lone_lisp_modules_intrinsic_math_initialize(struct lone_lisp *lone)
 	flags.evaluate_result = false;
 
 	primitive = lone_lisp_primitive_create(lone, "add", lone_lisp_primitive_math_add, module, flags);
-	lone_lisp_module_set_and_export(lone, module, lone_lisp_intern_c_string(lone, "+"), primitive);
+	lone_lisp_module_set_and_export_c_string(lone, module, "+", primitive);
 
 	primitive = lone_lisp_primitive_create(lone, "subtract", lone_lisp_primitive_math_subtract, module, flags);
-	lone_lisp_module_set_and_export(lone, module, lone_lisp_intern_c_string(lone, "-"), primitive);
+	lone_lisp_module_set_and_export_c_string(lone, module, "-", primitive);
 
 	primitive = lone_lisp_primitive_create(lone, "multiply", lone_lisp_primitive_math_multiply, module, flags);
-	lone_lisp_module_set_and_export(lone, module, lone_lisp_intern_c_string(lone, "*"), primitive);
+	lone_lisp_module_set_and_export_c_string(lone, module, "*", primitive);
 
 	primitive = lone_lisp_primitive_create(lone, "divide", lone_lisp_primitive_math_divide, module, flags);
-	lone_lisp_module_set_and_export(lone, module, lone_lisp_intern_c_string(lone, "/"), primitive);
+	lone_lisp_module_set_and_export_c_string(lone, module, "/", primitive);
 
 	primitive = lone_lisp_primitive_create(lone, "is_less_than", lone_lisp_primitive_math_is_less_than, module, flags);
-	lone_lisp_module_set_and_export(lone, module, lone_lisp_intern_c_string(lone, "<"), primitive);
+	lone_lisp_module_set_and_export_c_string(lone, module, "<", primitive);
 
 	primitive = lone_lisp_primitive_create(lone, "is_less_than_or_equal_to", lone_lisp_primitive_math_is_less_than_or_equal_to, module, flags);
-	lone_lisp_module_set_and_export(lone, module, lone_lisp_intern_c_string(lone, "<="), primitive);
+	lone_lisp_module_set_and_export_c_string(lone, module, "<=", primitive);
 
 	primitive = lone_lisp_primitive_create(lone, "is_greater_than", lone_lisp_primitive_math_is_greater_than, module, flags);
-	lone_lisp_module_set_and_export(lone, module, lone_lisp_intern_c_string(lone, ">"), primitive);
+	lone_lisp_module_set_and_export_c_string(lone, module, ">", primitive);
 
 	primitive = lone_lisp_primitive_create(lone, "is_greater_than_or_equal_to", lone_lisp_primitive_math_is_greater_than_or_equal_to, module, flags);
-	lone_lisp_module_set_and_export(lone, module, lone_lisp_intern_c_string(lone, ">="), primitive);
+	lone_lisp_module_set_and_export_c_string(lone, module, ">=", primitive);
 
 	primitive = lone_lisp_primitive_create(lone, "sign", lone_lisp_primitive_math_sign, module, flags);
-	lone_lisp_module_set_and_export(lone, module, lone_lisp_intern_c_string(lone, "sign"), primitive);
+	lone_lisp_module_set_and_export_c_string(lone, module, "sign", primitive);
 
 	primitive = lone_lisp_primitive_create(lone, "is_zero", lone_lisp_primitive_math_is_zero, module, flags);
-	lone_lisp_module_set_and_export(lone, module, lone_lisp_intern_c_string(lone, "zero?"), primitive);
+	lone_lisp_module_set_and_export_c_string(lone, module, "zero?", primitive);
 
 	primitive = lone_lisp_primitive_create(lone, "is_positive", lone_lisp_primitive_math_is_positive, module, flags);
-	lone_lisp_module_set_and_export(lone, module, lone_lisp_intern_c_string(lone, "positive?"), primitive);
+	lone_lisp_module_set_and_export_c_string(lone, module, "positive?", primitive);
 
 	primitive = lone_lisp_primitive_create(lone, "is_negative", lone_lisp_primitive_math_is_negative, module, flags);
-	lone_lisp_module_set_and_export(lone, module, lone_lisp_intern_c_string(lone, "negative?"), primitive);
+	lone_lisp_module_set_and_export_c_string(lone, module, "negative?", primitive);
 
 	lone_lisp_table_set(lone, lone->modules.loaded, name, module);
 }

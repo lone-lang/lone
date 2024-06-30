@@ -25,19 +25,19 @@ void lone_lisp_modules_intrinsic_vector_initialize(struct lone_lisp *lone)
 	flags.evaluate_result = false;
 
 	primitive = lone_lisp_primitive_create(lone, "vector_get", lone_lisp_primitive_vector_get, module, flags);
-	lone_lisp_module_set_and_export(lone, module, lone_lisp_intern_c_string(lone, "get"), primitive);
+	lone_lisp_module_set_and_export_c_string(lone, module, "get", primitive);
 
 	primitive = lone_lisp_primitive_create(lone, "vector_set", lone_lisp_primitive_vector_set, module, flags);
-	lone_lisp_module_set_and_export(lone, module, lone_lisp_intern_c_string(lone, "set"), primitive);
+	lone_lisp_module_set_and_export_c_string(lone, module, "set", primitive);
 
 	primitive = lone_lisp_primitive_create(lone, "vector_slice", lone_lisp_primitive_vector_slice, module, flags);
-	lone_lisp_module_set_and_export(lone, module, lone_lisp_intern_c_string(lone, "slice"), primitive);
+	lone_lisp_module_set_and_export_c_string(lone, module, "slice", primitive);
 
 	primitive = lone_lisp_primitive_create(lone, "vector_each", lone_lisp_primitive_vector_each, module, flags);
-	lone_lisp_module_set_and_export(lone, module, lone_lisp_intern_c_string(lone, "each"), primitive);
+	lone_lisp_module_set_and_export_c_string(lone, module, "each", primitive);
 
 	primitive = lone_lisp_primitive_create(lone, "vector_count", lone_lisp_primitive_vector_count, module, flags);
-	lone_lisp_module_set_and_export(lone, module, lone_lisp_intern_c_string(lone, "count"), primitive);
+	lone_lisp_module_set_and_export_c_string(lone, module, "count", primitive);
 
 	lone_lisp_table_set(lone, lone->modules.loaded, name, module);
 }

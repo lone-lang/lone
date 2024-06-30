@@ -303,9 +303,6 @@ void lone_lisp_modules_intrinsic_linux_initialize(struct lone_lisp *lone,
 	flags = (struct lone_lisp_function_flags) { .evaluate_arguments = true, .evaluate_result = false };
 
 	primitive = lone_lisp_primitive_create(lone, "linux_system_call", lone_lisp_primitive_linux_system_call, linux_system_call_table, flags);
-	lone_lisp_module_set_and_export(lone, module, lone_lisp_intern_c_string(lone, "system-call"), primitive);
-
-	lone_lisp_module_set_and_export(lone, module, lone_lisp_intern_c_string(lone, "system-call-table"), linux_system_call_table);
 
 	lone_lisp_fill_linux_system_call_table(lone, linux_system_call_table);
 
@@ -314,10 +311,13 @@ void lone_lisp_modules_intrinsic_linux_initialize(struct lone_lisp *lone,
 	environment = lone_lisp_environment_to_table(lone, envp);
 	auxiliary_vector = lone_lisp_auxiliary_vector_to_table(lone, auxv);
 
-	lone_lisp_module_set_and_export(lone, module, lone_lisp_intern_c_string(lone, "argument-count"), count);
-	lone_lisp_module_set_and_export(lone, module, lone_lisp_intern_c_string(lone, "arguments"), arguments);
-	lone_lisp_module_set_and_export(lone, module, lone_lisp_intern_c_string(lone, "environment"), environment);
-	lone_lisp_module_set_and_export(lone, module, lone_lisp_intern_c_string(lone, "auxiliary-vector"), auxiliary_vector);
+	lone_lisp_module_set_and_export_c_string(lone, module, "argument-count", count);
+	lone_lisp_module_set_and_export_c_string(lone, module, "arguments", arguments);
+	lone_lisp_module_set_and_export_c_string(lone, module, "environment", environment);
+	lone_lisp_module_set_and_export_c_string(lone, module, "auxiliary-vector", auxiliary_vector);
+
+	lone_lisp_module_set_and_export_c_string(lone, module, "system-call-table", linux_system_call_table);
+	lone_lisp_module_set_and_export_c_string(lone, module, "system-call", primitive);
 
 	lone_lisp_table_set(lone, lone->modules.loaded, name, module);
 }

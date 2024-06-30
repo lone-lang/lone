@@ -24,13 +24,13 @@ void lone_lisp_modules_intrinsic_text_initialize(struct lone_lisp *lone)
 	flags.evaluate_result = false;
 
 	primitive = lone_lisp_primitive_create(lone, "text_to_symbol", lone_lisp_primitive_text_to_symbol, module, flags);
-	lone_lisp_module_set_and_export(lone, module, lone_lisp_intern_c_string(lone, "to-symbol"), primitive);
+	lone_lisp_module_set_and_export_c_string(lone, module, "to-symbol", primitive);
 
 	primitive = lone_lisp_primitive_create(lone, "join", lone_lisp_primitive_text_join, module, flags);
-	lone_lisp_module_set_and_export(lone, module, lone_lisp_intern_c_string(lone, "join"), primitive);
+	lone_lisp_module_set_and_export_c_string(lone, module, "join", primitive);
 
 	primitive = lone_lisp_primitive_create(lone, "concatenate", lone_lisp_primitive_text_concatenate, module, flags);
-	lone_lisp_module_set_and_export(lone, module, lone_lisp_intern_c_string(lone, "concatenate"), primitive);
+	lone_lisp_module_set_and_export_c_string(lone, module, "concatenate", primitive);
 
 	lone_lisp_table_set(lone, lone->modules.loaded, name, module);
 }

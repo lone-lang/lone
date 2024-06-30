@@ -27,66 +27,66 @@ void lone_lisp_modules_intrinsic_lone_initialize(struct lone_lisp *lone)
 	flags.evaluate_result = false;
 
 	primitive = lone_lisp_primitive_create(lone, "begin", lone_lisp_primitive_lone_begin, module, flags);
-	lone_lisp_module_set_and_export(lone, module, lone_lisp_intern_c_string(lone, "begin"), primitive);
+	lone_lisp_module_set_and_export_c_string(lone, module, "begin", primitive);
 
 	primitive = lone_lisp_primitive_create(lone, "when", lone_lisp_primitive_lone_when, module, flags);
-	lone_lisp_module_set_and_export(lone, module, lone_lisp_intern_c_string(lone, "when"), primitive);
+	lone_lisp_module_set_and_export_c_string(lone, module, "when", primitive);
 
 	primitive = lone_lisp_primitive_create(lone, "unless", lone_lisp_primitive_lone_unless, module, flags);
-	lone_lisp_module_set_and_export(lone, module, lone_lisp_intern_c_string(lone, "unless"), primitive);
+	lone_lisp_module_set_and_export_c_string(lone, module, "unless", primitive);
 
 	primitive = lone_lisp_primitive_create(lone, "if", lone_lisp_primitive_lone_if, module, flags);
-	lone_lisp_module_set_and_export(lone, module, lone_lisp_intern_c_string(lone, "if"), primitive);
+	lone_lisp_module_set_and_export_c_string(lone, module, "if", primitive);
 
 	primitive = lone_lisp_primitive_create(lone, "let", lone_lisp_primitive_lone_let, module, flags);
-	lone_lisp_module_set_and_export(lone, module, lone_lisp_intern_c_string(lone, "let"), primitive);
+	lone_lisp_module_set_and_export_c_string(lone, module, "let", primitive);
 
 	primitive = lone_lisp_primitive_create(lone, "set", lone_lisp_primitive_lone_set, module, flags);
-	lone_lisp_module_set_and_export(lone, module, lone_lisp_intern_c_string(lone, "set"), primitive);
+	lone_lisp_module_set_and_export_c_string(lone, module, "set", primitive);
 
 	primitive = lone_lisp_primitive_create(lone, "quote", lone_lisp_primitive_lone_quote, module, flags);
-	lone_lisp_module_set_and_export(lone, module, lone_lisp_intern_c_string(lone, "quote"), primitive);
+	lone_lisp_module_set_and_export_c_string(lone, module, "quote", primitive);
 
 	primitive = lone_lisp_primitive_create(lone, "quasiquote", lone_lisp_primitive_lone_quasiquote, module, flags);
-	lone_lisp_module_set_and_export(lone, module, lone_lisp_intern_c_string(lone, "quasiquote"), primitive);
+	lone_lisp_module_set_and_export_c_string(lone, module, "quasiquote", primitive);
 
 	primitive = lone_lisp_primitive_create(lone, "lambda", lone_lisp_primitive_lone_lambda, module, flags);
-	lone_lisp_module_set_and_export(lone, module, lone_lisp_intern_c_string(lone, "lambda"), primitive);
+	lone_lisp_module_set_and_export_c_string(lone, module, "lambda", primitive);
 
 	primitive = lone_lisp_primitive_create(lone, "lambda_bang", lone_lisp_primitive_lone_lambda_bang, module, flags);
-	lone_lisp_module_set_and_export(lone, module, lone_lisp_intern_c_string(lone, "lambda!"), primitive);
+	lone_lisp_module_set_and_export_c_string(lone, module, "lambda!", primitive);
 
 	flags = (struct lone_lisp_function_flags) { .evaluate_arguments = true, .evaluate_result = false };
 
 	primitive = lone_lisp_primitive_create(lone, "print", lone_lisp_primitive_lone_print, module, flags);
-	lone_lisp_module_set_and_export(lone, module, lone_lisp_intern_c_string(lone, "print"), primitive);
+	lone_lisp_module_set_and_export_c_string(lone, module, "print", primitive);
 
 	primitive = lone_lisp_primitive_create(lone, "is_list", lone_lisp_primitive_lone_is_list, module, flags);
-	lone_lisp_module_set_and_export(lone, module, lone_lisp_intern_c_string(lone, "list?"), primitive);
+	lone_lisp_module_set_and_export_c_string(lone, module, "list?", primitive);
 
 	primitive = lone_lisp_primitive_create(lone, "is_vector", lone_lisp_primitive_lone_is_vector, module, flags);
-	lone_lisp_module_set_and_export(lone, module, lone_lisp_intern_c_string(lone, "vector?"), primitive);
+	lone_lisp_module_set_and_export_c_string(lone, module, "vector?", primitive);
 
 	primitive = lone_lisp_primitive_create(lone, "is_table", lone_lisp_primitive_lone_is_table, module, flags);
-	lone_lisp_module_set_and_export(lone, module, lone_lisp_intern_c_string(lone, "table?"), primitive);
+	lone_lisp_module_set_and_export_c_string(lone, module, "table?", primitive);
 
 	primitive = lone_lisp_primitive_create(lone, "is_symbol", lone_lisp_primitive_lone_is_symbol, module, flags);
-	lone_lisp_module_set_and_export(lone, module, lone_lisp_intern_c_string(lone, "symbol?"), primitive);
+	lone_lisp_module_set_and_export_c_string(lone, module, "symbol?", primitive);
 
 	primitive = lone_lisp_primitive_create(lone, "is_text", lone_lisp_primitive_lone_is_text, module, flags);
-	lone_lisp_module_set_and_export(lone, module, lone_lisp_intern_c_string(lone, "text?"), primitive);
+	lone_lisp_module_set_and_export_c_string(lone, module, "text?", primitive);
 
 	primitive = lone_lisp_primitive_create(lone, "is_integer", lone_lisp_primitive_lone_is_integer, module, flags);
-	lone_lisp_module_set_and_export(lone, module, lone_lisp_intern_c_string(lone, "integer?"), primitive);
+	lone_lisp_module_set_and_export_c_string(lone, module, "integer?", primitive);
 
 	primitive = lone_lisp_primitive_create(lone, "is_identical", lone_lisp_primitive_lone_is_identical, module, flags);
-	lone_lisp_module_set_and_export(lone, module, lone_lisp_intern_c_string(lone, "identical?"), primitive);
+	lone_lisp_module_set_and_export_c_string(lone, module, "identical?", primitive);
 
 	primitive = lone_lisp_primitive_create(lone, "is_equivalent", lone_lisp_primitive_lone_is_equivalent, module, flags);
-	lone_lisp_module_set_and_export(lone, module, lone_lisp_intern_c_string(lone, "equivalent?"), primitive);
+	lone_lisp_module_set_and_export_c_string(lone, module, "equivalent?", primitive);
 
 	primitive = lone_lisp_primitive_create(lone, "is_equal", lone_lisp_primitive_lone_is_equal, module, flags);
-	lone_lisp_module_set_and_export(lone, module, lone_lisp_intern_c_string(lone, "equal?"), primitive);
+	lone_lisp_module_set_and_export_c_string(lone, module, "equal?", primitive);
 
 	lone_lisp_table_set(lone, lone->modules.loaded, name, module);
 }
