@@ -2,7 +2,8 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 suite="${1}"
-name="${2}"
+prefix="${2}"
+name="${3}"
 
 code=0
 
@@ -104,17 +105,29 @@ read-file-in-hierarchy() {
 }
 
 find-executable() {
-  type -P "$(read-file-in-hierarchy "${1}" executable)"
+  postfix="$(read-file-in-hierarchy "${1}" executable)"
+  prefix="${2}"
+
+  if [[ "${?}" -eq 0 ]]; then
+    if [[ -n "${prefix}" ]]; then
+      printf "%s/%s\n" "${prefix}" "${postfix}"
+    else
+      printf "%s\n" "${postfix}"
+    fi
+  else
+    return 1
+  fi
 }
 
 test-executable() {
   local name="${1}"
   local test="${2}"
+  local prefix="${3}"
 
   local executable program_name input
   local result=SKIP
 
-  executable="$(find-executable "${test}")"
+  executable="$(find-executable "${test}" "${prefix}")"
   if [[ "${?}" -ne 0 ]]; then
     report-test-result "${name}" "${executable}" "${result}"
     return 2
@@ -175,12 +188,13 @@ test-executable() {
 run-test() {
   local test_name="${1}"
   local test_case="${2}"
+  local prefix="${3}"
 
   local test_script="${test_case}"/script
   if [[ -x "${test_script}" ]]; then
     test-script "${test_name}" "${test_case}" "${test_script}" &
   else
-    test-executable "${test_name}" "${test_case}" &
+    test-executable "${test_name}" "${test_case}" "${prefix}" &
   fi
 
   tests["${test_name}"]="${!}"
@@ -194,11 +208,12 @@ find-tests() {
 
 run-all-tests() {
   local test_suite="${1}"
+  local prefix="${2}"
   local test_name
 
   while IFS= read -r -d '' test_case; do
     test_name="$(remove-prefix "${test_suite}"/ "${test_case}")"
-    run-test "${test_name}" "${test_case}"
+    run-test "${test_name}" "${test_case}" "${prefix}"
   done < <(find-tests "${test_suite}")
 }
 
@@ -275,16 +290,17 @@ report() {
 
 test-suite() {
   local root="${1}"
-  local name="${2}"
+  local prefix="${2}"
+  local name="${3}"
 
   if [[ -n "${name}" ]]; then
-    run-test "${name}" "${root}"/"${name}"
+    run-test "${name}" "${root}"/"${name}" "${prefix}"
   else
-    run-all-tests "${root}"
+    run-all-tests "${root}" "${prefix}"
   fi
 }
 
-test-suite "${suite}" "${name}"
+test-suite "${suite}" "${prefix}" "${name}"
 collect-test-results
 report
 exit "${code}"

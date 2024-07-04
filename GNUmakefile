@@ -152,7 +152,7 @@ tests: $(targets.tests)
 
 targets.phony += test
 test: tests lone tools
-	scripts/test.bash $(directories.test)
+	scripts/test.bash $(directories.test) $(directories.build)
 
 targets.phony += directories
 directories:
