@@ -104,7 +104,8 @@ flags.definitions := -D LONE_ARCH=$(ARCH)
 flags.include_directories := $(foreach directory,$(directories.include),-I $(directory))
 flags.system_include_directories := $(if $(UAPI),-isystem $(UAPI))
 flags.prerequisites_generation = -MMD -MF $(call source_to_prerequisite,$(<))
-flags.common := -static -ffreestanding -nostdlib -fno-omit-frame-pointer -fshort-enums $(flags.lto)
+flags.sanitizer := -fsanitize-trap=all
+flags.common := -static -ffreestanding -nostdlib -fno-omit-frame-pointer -fshort-enums $(flags.lto) $(flags.sanitizer)
 flags.object = $(flags.system_include_directories) $(flags.include_directories) $(flags.prerequisites_generation) $(flags.definitions) $(flags.common)
 flags.executable := $(flags.common) $(flags.whole_program) $(flags.use_ld) -Wl,-elone_start
 
