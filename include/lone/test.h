@@ -46,23 +46,23 @@ struct lone_test_case {
 };
 
 #define LONE_TEST_CASE_WITH_CONTEXT(name_c_string_literal, test_function, _context)       \
-	((struct lone_test_case) {                                                        \
+	{                                                                                 \
 		.name    = LONE_BYTES_FROM_LITERAL((name_c_string_literal)),              \
 		.test    = (test_function),                                               \
 		.context = (_context),                                                    \
 		.result  = LONE_TEST_RESULT_PENDING,                                      \
-	})
+	}
 
 #define LONE_TEST_CASE(name_c_string_literal, test_function) \
 	LONE_TEST_CASE_WITH_CONTEXT((name_c_string_literal), (test_function), 0)
 
 #define LONE_TEST_SUITE(cases)                                                            \
-	((struct lone_test_suite) {                                                       \
+	{                                                                                 \
 		.tests                     = (cases),                                     \
 		.events.context            = 0,                                           \
 		.events.on.test.initiated  = 0,                                           \
 		.events.on.test.terminated = 0,                                           \
-	})
+	}
 
 enum lone_test_result lone_test_suite_run(struct lone_test_suite *suite);
 
