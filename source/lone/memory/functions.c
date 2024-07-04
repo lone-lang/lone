@@ -2,18 +2,21 @@
 
 #include <lone/memory/functions.h>
 
-int lone_memory_compare(unsigned char *a, unsigned char *b, size_t count)
+int lone_memory_compare(void *a, void *b, size_t count)
 {
 	size_t i;
-	unsigned char x, y;
+	unsigned char *p, *q, x, y;
 
 	if (a == b || count == 0) {
 		return 0;
 	}
 
+	p = a;
+	q = b;
+
 	for (i = 0; i < count; ++i) {
-		x = a[i];
-		y = b[i];
+		x = p[i];
+		y = q[i];
 
 		if (x == y) {
 			continue;
@@ -25,7 +28,7 @@ int lone_memory_compare(unsigned char *a, unsigned char *b, size_t count)
 	return 0;
 }
 
-bool lone_memory_is_equal(unsigned char *a, unsigned char *b, size_t count)
+bool lone_memory_is_equal(void *a, void *b, size_t count)
 {
 	return lone_memory_compare(a, b, count) == 0;
 }
