@@ -63,6 +63,12 @@ struct lone_bytes {
 	unsigned char *pointer;    /* address of memory block */
 };
 
+#define LONE_BYTES_FROM_LITERAL(c_string_literal)                      \
+	((struct lone_bytes) {                                         \
+		.count = sizeof(c_string_literal) - 1,                 \
+		.pointer = (unsigned char *) (c_string_literal),       \
+	})
+
 /* ╭────────────────────────────────────────────────────────────────────────╮
    │                                                                        │
    │    Lone primitive type operations.                                     │
