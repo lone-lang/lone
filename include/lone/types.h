@@ -63,11 +63,14 @@ struct lone_bytes {
 	unsigned char *pointer;    /* address of memory block */
 };
 
-#define LONE_BYTES_FROM_LITERAL(c_string_literal)                      \
-	{                                                              \
-		.count = sizeof(c_string_literal) - 1,                 \
-		.pointer = (unsigned char *) (c_string_literal),       \
+#define LONE_BYTES_FROM_LITERAL_INIT(c_string_literal)                                             \
+	{                                                                                          \
+		.count = sizeof((c_string_literal)) - 1,                                           \
+		.pointer = (unsigned char *) (c_string_literal),                                   \
 	}
+
+#define LONE_BYTES_FROM_LITERAL(c_string_literal)                                                  \
+	((struct lone_bytes) LONE_BYTES_FROM_LITERAL_INIT((c_string_literal)))
 
 /* ╭────────────────────────────────────────────────────────────────────────╮
    │                                                                        │
