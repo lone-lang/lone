@@ -32,22 +32,44 @@ bool lone_bytes_contains_address(struct lone_bytes bytes, void *pointer)
 	return pointer >= start && pointer < end;
 }
 
+lone_u8 lone_u8_read(void *address)
+{
+	lone_u8 *always_aligned = address;
+	return *always_aligned;
+}
+
+lone_s8 lone_s8_read(void *address)
+{
+	lone_s8 *always_aligned = address;
+	return *always_aligned;
+}
+
+void lone_u8_write(void *address, lone_u8 value)
+{
+	lone_u8 *always_aligned = address;
+	*always_aligned = value;
+}
+
+void lone_s8_write(void *address, lone_s8 value)
+{
+	lone_s8 *always_aligned = address;
+	*always_aligned = value;
+}
+
 #define LONE_READER(type) \
 lone_##type lone_##type##_read(void *address) \
 { \
-	lone_##type *type = address; \
-	return *type; \
+	lone_##type value; \
+	lone_memory_move(address, &value, sizeof(lone_##type)); /* byte-wise copy, native endianness */ \
+	return value; \
 }
 
 #define LONE_WRITER(type) \
 void lone_##type##_write(void *address, lone_##type value) \
 { \
-	lone_##type *type = address; \
-	*type = value; \
+	lone_memory_move(&value, address, sizeof(lone_##type)); /* byte-wise copy, native endianness */ \
 }
 
-LONE_READER(u8)
-LONE_READER(s8)
 LONE_READER(u16)
 LONE_READER(s16)
 LONE_READER(u32)
@@ -55,8 +77,6 @@ LONE_READER(s32)
 LONE_READER(u64)
 LONE_READER(s64)
 
-LONE_WRITER(u8)
-LONE_WRITER(s8)
 LONE_WRITER(u16)
 LONE_WRITER(s16)
 LONE_WRITER(u32)

@@ -5,7 +5,7 @@
 #include <lone/test.h>
 #include <lone/linux.h>
 
-static enum lone_test_result test_lone_types_lone_u8_read(void *context)
+static enum lone_test_result test_lone_types_lone_u8_read_aligned(void *context)
 {
 	lone_u8 u8 = 214;
 
@@ -14,7 +14,7 @@ static enum lone_test_result test_lone_types_lone_u8_read(void *context)
 		LONE_TEST_RESULT_PASS : LONE_TEST_RESULT_FAIL;
 }
 
-static enum lone_test_result test_lone_types_lone_s8_read(void *context)
+static enum lone_test_result test_lone_types_lone_s8_read_aligned(void *context)
 {
 	lone_s8 s8 = -42;
 
@@ -23,7 +23,7 @@ static enum lone_test_result test_lone_types_lone_s8_read(void *context)
 		LONE_TEST_RESULT_PASS : LONE_TEST_RESULT_FAIL;
 }
 
-static enum lone_test_result test_lone_types_lone_u16_read(void *context)
+static enum lone_test_result test_lone_types_lone_u16_read_aligned(void *context)
 {
 	lone_u16 u16 = 56535;
 
@@ -32,7 +32,7 @@ static enum lone_test_result test_lone_types_lone_u16_read(void *context)
 		LONE_TEST_RESULT_PASS : LONE_TEST_RESULT_FAIL;
 }
 
-static enum lone_test_result test_lone_types_lone_s16_read(void *context)
+static enum lone_test_result test_lone_types_lone_s16_read_aligned(void *context)
 {
 	lone_s16 s16 = -9001;
 
@@ -41,7 +41,7 @@ static enum lone_test_result test_lone_types_lone_s16_read(void *context)
 		LONE_TEST_RESULT_PASS : LONE_TEST_RESULT_FAIL;
 }
 
-static enum lone_test_result test_lone_types_lone_u32_read(void *context)
+static enum lone_test_result test_lone_types_lone_u32_read_aligned(void *context)
 {
 	lone_u32 u32 = 4294927296;
 
@@ -50,7 +50,7 @@ static enum lone_test_result test_lone_types_lone_u32_read(void *context)
 		LONE_TEST_RESULT_PASS : LONE_TEST_RESULT_FAIL;
 }
 
-static enum lone_test_result test_lone_types_lone_s32_read(void *context)
+static enum lone_test_result test_lone_types_lone_s32_read_aligned(void *context)
 {
 	lone_s32 s32 = -40000;
 
@@ -59,7 +59,7 @@ static enum lone_test_result test_lone_types_lone_s32_read(void *context)
 		LONE_TEST_RESULT_PASS : LONE_TEST_RESULT_FAIL;
 }
 
-static enum lone_test_result test_lone_types_lone_u64_read(void *context)
+static enum lone_test_result test_lone_types_lone_u64_read_aligned(void *context)
 {
 	lone_u64 u64 = 17212176182698430302UL;
 
@@ -68,7 +68,7 @@ static enum lone_test_result test_lone_types_lone_u64_read(void *context)
 		LONE_TEST_RESULT_PASS : LONE_TEST_RESULT_FAIL;
 }
 
-static enum lone_test_result test_lone_types_lone_s64_read(void *context)
+static enum lone_test_result test_lone_types_lone_s64_read_aligned(void *context)
 {
 	lone_s64 s64 = -1234567891011121314;
 
@@ -77,7 +77,79 @@ static enum lone_test_result test_lone_types_lone_s64_read(void *context)
 		LONE_TEST_RESULT_PASS : LONE_TEST_RESULT_FAIL;
 }
 
-static enum lone_test_result test_lone_types_lone_u8_write(void *context)
+static enum lone_test_result test_lone_types_lone_u16_read_unaligned(void *context)
+{
+	struct __attribute__((packed)) unaligned {
+		lone_u8 byte;
+		lone_u16 value;
+	} unaligned = { 0, 56535 };
+
+	return
+		(lone_u16_read(&unaligned.value) == 56535) ?
+		LONE_TEST_RESULT_PASS : LONE_TEST_RESULT_FAIL;
+}
+
+static enum lone_test_result test_lone_types_lone_s16_read_unaligned(void *context)
+{
+	struct __attribute__((packed)) unaligned {
+		lone_u8 byte;
+		lone_s16 value;
+	} unaligned = { 0, -9001 };
+
+	return
+		(lone_s16_read(&unaligned.value) == -9001) ?
+		LONE_TEST_RESULT_PASS : LONE_TEST_RESULT_FAIL;
+}
+
+static enum lone_test_result test_lone_types_lone_u32_read_unaligned(void *context)
+{
+	struct __attribute__((packed)) unaligned {
+		lone_u8 byte;
+		lone_u32 value;
+	} unaligned = { 0, 4294927296 };
+
+	return
+		(lone_u32_read(&unaligned.value) == 4294927296) ?
+		LONE_TEST_RESULT_PASS : LONE_TEST_RESULT_FAIL;
+}
+
+static enum lone_test_result test_lone_types_lone_s32_read_unaligned(void *context)
+{
+	struct __attribute__((packed)) unaligned {
+		lone_u8 byte;
+		lone_s32 value;
+	} unaligned = { 0, -40000 };
+
+	return
+		(lone_s32_read(&unaligned.value) == -40000) ?
+		LONE_TEST_RESULT_PASS : LONE_TEST_RESULT_FAIL;
+}
+
+static enum lone_test_result test_lone_types_lone_u64_read_unaligned(void *context)
+{
+	struct __attribute__((packed)) unaligned {
+		lone_u8 byte;
+		lone_u64 value;
+	} unaligned = { 0, 17212176182698430302UL };
+
+	return
+		(lone_u64_read(&unaligned.value) == 17212176182698430302UL) ?
+		LONE_TEST_RESULT_PASS : LONE_TEST_RESULT_FAIL;
+}
+
+static enum lone_test_result test_lone_types_lone_s64_read_unaligned(void *context)
+{
+	struct __attribute__((packed)) unaligned {
+		lone_u8 byte;
+		lone_s64 value;
+	} unaligned = { 0, -1234567891011121314 };
+
+	return
+		(lone_s64_read(&unaligned.value) == -1234567891011121314) ?
+		LONE_TEST_RESULT_PASS : LONE_TEST_RESULT_FAIL;
+}
+
+static enum lone_test_result test_lone_types_lone_u8_write_aligned(void *context)
 {
 	lone_u8 u8 = 0;
 
@@ -87,7 +159,7 @@ static enum lone_test_result test_lone_types_lone_u8_write(void *context)
 		LONE_TEST_RESULT_PASS : LONE_TEST_RESULT_FAIL;
 }
 
-static enum lone_test_result test_lone_types_lone_s8_write(void *context)
+static enum lone_test_result test_lone_types_lone_s8_write_aligned(void *context)
 {
 	lone_s8 s8 = 0;
 
@@ -97,7 +169,7 @@ static enum lone_test_result test_lone_types_lone_s8_write(void *context)
 		LONE_TEST_RESULT_PASS : LONE_TEST_RESULT_FAIL;
 }
 
-static enum lone_test_result test_lone_types_lone_u16_write(void *context)
+static enum lone_test_result test_lone_types_lone_u16_write_aligned(void *context)
 {
 	lone_u16 u16 = 0;
 
@@ -107,7 +179,7 @@ static enum lone_test_result test_lone_types_lone_u16_write(void *context)
 		LONE_TEST_RESULT_PASS : LONE_TEST_RESULT_FAIL;
 }
 
-static enum lone_test_result test_lone_types_lone_s16_write(void *context)
+static enum lone_test_result test_lone_types_lone_s16_write_aligned(void *context)
 {
 	lone_s16 s16 = 0;
 
@@ -117,7 +189,7 @@ static enum lone_test_result test_lone_types_lone_s16_write(void *context)
 		LONE_TEST_RESULT_PASS : LONE_TEST_RESULT_FAIL;
 }
 
-static enum lone_test_result test_lone_types_lone_u32_write(void *context)
+static enum lone_test_result test_lone_types_lone_u32_write_aligned(void *context)
 {
 	lone_u32 u32 = 0;
 
@@ -127,7 +199,7 @@ static enum lone_test_result test_lone_types_lone_u32_write(void *context)
 		LONE_TEST_RESULT_PASS : LONE_TEST_RESULT_FAIL;
 }
 
-static enum lone_test_result test_lone_types_lone_s32_write(void *context)
+static enum lone_test_result test_lone_types_lone_s32_write_aligned(void *context)
 {
 	lone_s32 s32 = 0;
 
@@ -137,7 +209,7 @@ static enum lone_test_result test_lone_types_lone_s32_write(void *context)
 		LONE_TEST_RESULT_PASS : LONE_TEST_RESULT_FAIL;
 }
 
-static enum lone_test_result test_lone_types_lone_u64_write(void *context)
+static enum lone_test_result test_lone_types_lone_u64_write_aligned(void *context)
 {
 	lone_u64 u64 = 0;
 
@@ -147,13 +219,91 @@ static enum lone_test_result test_lone_types_lone_u64_write(void *context)
 		LONE_TEST_RESULT_PASS : LONE_TEST_RESULT_FAIL;
 }
 
-static enum lone_test_result test_lone_types_lone_s64_write(void *context)
+static enum lone_test_result test_lone_types_lone_s64_write_aligned(void *context)
 {
 	lone_s64 s64 = 0;
 
 	lone_s64_write(&s64, -1234567891011121314);
 
 	return s64 == -1234567891011121314 ?
+		LONE_TEST_RESULT_PASS : LONE_TEST_RESULT_FAIL;
+}
+
+static enum lone_test_result test_lone_types_lone_u16_write_unaligned(void *context)
+{
+	struct __attribute__((packed)) {
+		lone_u8 byte;
+		lone_u16 u16;
+	} unaligned = {0};
+
+	lone_u16_write(&unaligned.u16, 56535);
+
+	return unaligned.u16 == 56535 ?
+		LONE_TEST_RESULT_PASS : LONE_TEST_RESULT_FAIL;
+}
+
+static enum lone_test_result test_lone_types_lone_s16_write_unaligned(void *context)
+{
+	struct __attribute__((packed)) {
+		lone_u8 byte;
+		lone_s16 s16;
+	} unaligned = {0};
+
+	lone_s16_write(&unaligned.s16, -9001);
+
+	return unaligned.s16 == -9001 ?
+		LONE_TEST_RESULT_PASS : LONE_TEST_RESULT_FAIL;
+}
+
+static enum lone_test_result test_lone_types_lone_u32_write_unaligned(void *context)
+{
+	struct __attribute__((packed)) {
+		lone_u8 byte;
+		lone_u32 u32;
+	} unaligned = {0};
+
+	lone_u32_write(&unaligned.u32, 4294927296);
+
+	return unaligned.u32 == 4294927296 ?
+		LONE_TEST_RESULT_PASS : LONE_TEST_RESULT_FAIL;
+}
+
+static enum lone_test_result test_lone_types_lone_s32_write_unaligned(void *context)
+{
+	struct __attribute__((packed)) {
+		lone_u8 byte;
+		lone_s32 s32;
+	} unaligned = {0};
+
+	lone_s32_write(&unaligned.s32, -40000);
+
+	return unaligned.s32 == -40000 ?
+		LONE_TEST_RESULT_PASS : LONE_TEST_RESULT_FAIL;
+}
+
+static enum lone_test_result test_lone_types_lone_u64_write_unaligned(void *context)
+{
+	struct __attribute__((packed)) {
+		lone_u8 byte;
+		lone_u64 u64;
+	} unaligned = {0};
+
+	lone_u64_write(&unaligned.u64, 17212176182698430302UL);
+
+	return unaligned.u64 == 17212176182698430302UL ?
+		LONE_TEST_RESULT_PASS : LONE_TEST_RESULT_FAIL;
+}
+
+static enum lone_test_result test_lone_types_lone_s64_write_unaligned(void *context)
+{
+	struct __attribute__((packed)) {
+		lone_u8 byte;
+		lone_s64 s64;
+	} unaligned = {0};
+
+	lone_s64_write(&unaligned.s64, -1234567891011121314);
+
+	return unaligned.s64 == -1234567891011121314 ?
 		LONE_TEST_RESULT_PASS : LONE_TEST_RESULT_FAIL;
 }
 
@@ -186,23 +336,37 @@ long lone(int argc, char **argv, char **envp, struct lone_auxiliary_vector *auxv
 {
 	static struct lone_test_case cases[] = {
 
-		LONE_TEST_CASE("lone/types/u8/read",   test_lone_types_lone_u8_read),
-		LONE_TEST_CASE("lone/types/s8/read",   test_lone_types_lone_s8_read),
-		LONE_TEST_CASE("lone/types/u16/read",  test_lone_types_lone_u16_read),
-		LONE_TEST_CASE("lone/types/s16/read",  test_lone_types_lone_s16_read),
-		LONE_TEST_CASE("lone/types/u32/read",  test_lone_types_lone_u32_read),
-		LONE_TEST_CASE("lone/types/s32/read",  test_lone_types_lone_s32_read),
-		LONE_TEST_CASE("lone/types/u64/read",  test_lone_types_lone_u64_read),
-		LONE_TEST_CASE("lone/types/s64/read",  test_lone_types_lone_s64_read),
+		LONE_TEST_CASE("lone/types/u8/read/aligned",   test_lone_types_lone_u8_read_aligned),
+		LONE_TEST_CASE("lone/types/s8/read/aligned",   test_lone_types_lone_s8_read_aligned),
+		LONE_TEST_CASE("lone/types/u16/read/aligned",  test_lone_types_lone_u16_read_aligned),
+		LONE_TEST_CASE("lone/types/s16/read/aligned",  test_lone_types_lone_s16_read_aligned),
+		LONE_TEST_CASE("lone/types/u32/read/aligned",  test_lone_types_lone_u32_read_aligned),
+		LONE_TEST_CASE("lone/types/s32/read/aligned",  test_lone_types_lone_s32_read_aligned),
+		LONE_TEST_CASE("lone/types/u64/read/aligned",  test_lone_types_lone_u64_read_aligned),
+		LONE_TEST_CASE("lone/types/s64/read/aligned",  test_lone_types_lone_s64_read_aligned),
 
-		LONE_TEST_CASE("lone/types/u8/write",   test_lone_types_lone_u8_write),
-		LONE_TEST_CASE("lone/types/s8/write",   test_lone_types_lone_s8_write),
-		LONE_TEST_CASE("lone/types/u16/write",  test_lone_types_lone_u16_write),
-		LONE_TEST_CASE("lone/types/s16/write",  test_lone_types_lone_s16_write),
-		LONE_TEST_CASE("lone/types/u32/write",  test_lone_types_lone_u32_write),
-		LONE_TEST_CASE("lone/types/s32/write",  test_lone_types_lone_s32_write),
-		LONE_TEST_CASE("lone/types/u64/write",  test_lone_types_lone_u64_write),
-		LONE_TEST_CASE("lone/types/s64/write",  test_lone_types_lone_s64_write),
+		LONE_TEST_CASE("lone/types/u16/read/unaligned",  test_lone_types_lone_u16_read_unaligned),
+		LONE_TEST_CASE("lone/types/s16/read/unaligned",  test_lone_types_lone_s16_read_unaligned),
+		LONE_TEST_CASE("lone/types/u32/read/unaligned",  test_lone_types_lone_u32_read_unaligned),
+		LONE_TEST_CASE("lone/types/s32/read/unaligned",  test_lone_types_lone_s32_read_unaligned),
+		LONE_TEST_CASE("lone/types/u64/read/unaligned",  test_lone_types_lone_u64_read_unaligned),
+		LONE_TEST_CASE("lone/types/s64/read/unaligned",  test_lone_types_lone_s64_read_unaligned),
+
+		LONE_TEST_CASE("lone/types/u8/write/aligned",   test_lone_types_lone_u8_write_aligned),
+		LONE_TEST_CASE("lone/types/s8/write/aligned",   test_lone_types_lone_s8_write_aligned),
+		LONE_TEST_CASE("lone/types/u16/write/aligned",  test_lone_types_lone_u16_write_aligned),
+		LONE_TEST_CASE("lone/types/s16/write/aligned",  test_lone_types_lone_s16_write_aligned),
+		LONE_TEST_CASE("lone/types/u32/write/aligned",  test_lone_types_lone_u32_write_aligned),
+		LONE_TEST_CASE("lone/types/s32/write/aligned",  test_lone_types_lone_s32_write_aligned),
+		LONE_TEST_CASE("lone/types/u64/write/aligned",  test_lone_types_lone_u64_write_aligned),
+		LONE_TEST_CASE("lone/types/s64/write/aligned",  test_lone_types_lone_s64_write_aligned),
+
+		LONE_TEST_CASE("lone/types/u16/write/unaligned",  test_lone_types_lone_u16_write_unaligned),
+		LONE_TEST_CASE("lone/types/s16/write/unaligned",  test_lone_types_lone_s16_write_unaligned),
+		LONE_TEST_CASE("lone/types/u32/write/unaligned",  test_lone_types_lone_u32_write_unaligned),
+		LONE_TEST_CASE("lone/types/s32/write/unaligned",  test_lone_types_lone_s32_write_unaligned),
+		LONE_TEST_CASE("lone/types/u64/write/unaligned",  test_lone_types_lone_u64_write_unaligned),
+		LONE_TEST_CASE("lone/types/s64/write/unaligned",  test_lone_types_lone_s64_write_unaligned),
 
 		LONE_TEST_CASE_NULL(),
 	};
