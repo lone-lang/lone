@@ -45,39 +45,37 @@ struct lone_test_case {
 	void *context;
 };
 
-#define LONE_TEST_CASE_WITH_CONTEXT_INIT(name_c_string_literal, test_function, _context)        \
-	{                                                                                       \
-		.name    = LONE_BYTES_FROM_LITERAL_INIT((name_c_string_literal)),               \
-		.test    = (test_function),                                                     \
-		.context = (_context),                                                          \
-		.result  = LONE_TEST_RESULT_PENDING,                                            \
+#define LONE_TEST_CASE(__name_c_string_literal, __test) \
+	{ \
+		.name = LONE_BYTES_FROM_LITERAL(__name_c_string_literal), \
+		.test = (__test), \
+		.context = 0, \
+		.result = LONE_TEST_RESULT_PENDING \
 	}
 
-#define LONE_TEST_CASE_INIT(name_c_string_literal, test_function)                               \
-	LONE_TEST_CASE_WITH_CONTEXT_INIT((name_c_string_literal),                               \
-		(test_function), 0)
-
-#define LONE_TEST_CASE_WITH_CONTEXT(name_c_string_literal, test_function, _context)             \
-	((struct lone_test_case)                                                                \
-		LONE_TEST_CASE_WITH_CONTEXT_INIT((name_c_string_literal),                       \
-			(test_function), (_context)))
-
-
-#define LONE_TEST_CASE(name_c_string_literal, test_function)                                    \
-	((struct lone_test_case)                                                                \
-		LONE_TEST_CASE_INIT((name_c_string_literal),                                    \
-			(test_function)))
-
-#define LONE_TEST_SUITE_INITIALIZER(cases)                                                      \
-	{                                                                                       \
-		.tests                     = (cases),                                           \
-		.events.context            = 0,                                                 \
-		.events.on.test.initiated  = 0,                                                 \
-		.events.on.test.terminated = 0,                                                 \
+#define LONE_TEST_CASE_WITH_CONTEXT(__name_c_string_literal, __test, __context) \
+	{ \
+		.name = LONE_BYTES_FROM_LITERAL(__name_c_string_literal), \
+		.test = (__test), \
+		.context = (__context), \
+		.result = LONE_TEST_RESULT_PENDING \
 	}
 
-#define LONE_TEST_SUITE(cases)                                                                  \
-	((struct lone_test_suite) LONE_TEST_SUITE_INITIALIZER(cases))
+#define LONE_TEST_CASE_NULL() \
+	{ \
+		.name = LONE_BYTES_NULL(), \
+		.test = 0, \
+		.context = 0, \
+		.result = LONE_TEST_RESULT_PENDING \
+	}
+
+#define LONE_TEST_SUITE(__cases) \
+	{ \
+		.tests = (__cases), \
+		.events.context = 0, \
+		.events.on.test.initiated = 0, \
+		.events.on.test.terminated = 0, \
+	}
 
 enum lone_test_result lone_test_suite_run(struct lone_test_suite *suite);
 

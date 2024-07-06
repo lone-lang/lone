@@ -163,13 +163,13 @@ static void test_finished(struct lone_test_case *test, void *context)
 
 	switch (test->result) {
 	case LONE_TEST_RESULT_PASS:
-		result = LONE_BYTES_FROM_LITERAL("PASS");
+		result = (struct lone_bytes) LONE_BYTES_FROM_LITERAL("PASS");
 		break;
 	case LONE_TEST_RESULT_FAIL:
-		result = LONE_BYTES_FROM_LITERAL("FAIL");
+		result = (struct lone_bytes) LONE_BYTES_FROM_LITERAL("FAIL");
 		break;
 	case LONE_TEST_RESULT_SKIP:
-		result = LONE_BYTES_FROM_LITERAL("SKIP");
+		result = (struct lone_bytes) LONE_BYTES_FROM_LITERAL("SKIP");
 		break;
 	case LONE_TEST_RESULT_PENDING:    __attribute__((fallthrough));
 	default:
@@ -186,25 +186,25 @@ long lone(int argc, char **argv, char **envp, struct lone_auxiliary_vector *auxv
 {
 	static struct lone_test_case cases[] = {
 
-		LONE_TEST_CASE_INIT("lone/types/u8/read",   test_lone_types_lone_u8_read),
-		LONE_TEST_CASE_INIT("lone/types/s8/read",   test_lone_types_lone_s8_read),
-		LONE_TEST_CASE_INIT("lone/types/u16/read",  test_lone_types_lone_u16_read),
-		LONE_TEST_CASE_INIT("lone/types/s16/read",  test_lone_types_lone_s16_read),
-		LONE_TEST_CASE_INIT("lone/types/u32/read",  test_lone_types_lone_u32_read),
-		LONE_TEST_CASE_INIT("lone/types/s32/read",  test_lone_types_lone_s32_read),
-		LONE_TEST_CASE_INIT("lone/types/u64/read",  test_lone_types_lone_u64_read),
-		LONE_TEST_CASE_INIT("lone/types/s64/read",  test_lone_types_lone_s64_read),
+		LONE_TEST_CASE("lone/types/u8/read",   test_lone_types_lone_u8_read),
+		LONE_TEST_CASE("lone/types/s8/read",   test_lone_types_lone_s8_read),
+		LONE_TEST_CASE("lone/types/u16/read",  test_lone_types_lone_u16_read),
+		LONE_TEST_CASE("lone/types/s16/read",  test_lone_types_lone_s16_read),
+		LONE_TEST_CASE("lone/types/u32/read",  test_lone_types_lone_u32_read),
+		LONE_TEST_CASE("lone/types/s32/read",  test_lone_types_lone_s32_read),
+		LONE_TEST_CASE("lone/types/u64/read",  test_lone_types_lone_u64_read),
+		LONE_TEST_CASE("lone/types/s64/read",  test_lone_types_lone_s64_read),
 
-		LONE_TEST_CASE_INIT("lone/types/u8/write",   test_lone_types_lone_u8_write),
-		LONE_TEST_CASE_INIT("lone/types/s8/write",   test_lone_types_lone_s8_write),
-		LONE_TEST_CASE_INIT("lone/types/u16/write",  test_lone_types_lone_u16_write),
-		LONE_TEST_CASE_INIT("lone/types/s16/write",  test_lone_types_lone_s16_write),
-		LONE_TEST_CASE_INIT("lone/types/u32/write",  test_lone_types_lone_u32_write),
-		LONE_TEST_CASE_INIT("lone/types/s32/write",  test_lone_types_lone_s32_write),
-		LONE_TEST_CASE_INIT("lone/types/u64/write",  test_lone_types_lone_u64_write),
-		LONE_TEST_CASE_INIT("lone/types/s64/write",  test_lone_types_lone_s64_write),
+		LONE_TEST_CASE("lone/types/u8/write",   test_lone_types_lone_u8_write),
+		LONE_TEST_CASE("lone/types/s8/write",   test_lone_types_lone_s8_write),
+		LONE_TEST_CASE("lone/types/u16/write",  test_lone_types_lone_u16_write),
+		LONE_TEST_CASE("lone/types/s16/write",  test_lone_types_lone_s16_write),
+		LONE_TEST_CASE("lone/types/u32/write",  test_lone_types_lone_u32_write),
+		LONE_TEST_CASE("lone/types/s32/write",  test_lone_types_lone_s32_write),
+		LONE_TEST_CASE("lone/types/u64/write",  test_lone_types_lone_u64_write),
+		LONE_TEST_CASE("lone/types/s64/write",  test_lone_types_lone_s64_write),
 
-		{0},
+		LONE_TEST_CASE_NULL(),
 	};
 
 	struct lone_test_suite suite = LONE_TEST_SUITE(cases);
