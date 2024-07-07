@@ -108,8 +108,7 @@ LONE_LISP_PRIMITIVE(bytes_read_##type) \
 	struct lone_lisp_value bytes; \
 	struct lone_lisp_value offset; \
 \
-	lone_##type type; \
-	bool success; \
+	struct lone_##type type; \
 \
 	if (lone_lisp_list_destructure(arguments, 2, &bytes, &offset)) { \
 		/* wrong number of arguments */ linux_exit(-1); \
@@ -117,14 +116,10 @@ LONE_LISP_PRIMITIVE(bytes_read_##type) \
 \
 	lone_lisp_bytes_check_read_arguments(bytes, offset); \
 \
-	success = lone_bytes_checked_read_##type( \
-		bytes.as.heap_value->as.bytes, \
-		offset.as.integer, \
-		&type \
-	); \
+	type = lone_bytes_read_##type(bytes.as.heap_value->as.bytes, offset.as.integer); \
 \
-	if (success) { \
-		return lone_lisp_integer_create(type); \
+	if (type.present) { \
+		return lone_lisp_integer_create(type.value); \
 	} else { \
 		linux_exit(-1); \
 	} \
@@ -148,7 +143,7 @@ LONE_LISP_PRIMITIVE(bytes_write_##type) \
 \
 	type = (lone_##type) value.as.integer; \
 \
-	success = lone_bytes_checked_write_##type( \
+	success = lone_bytes_write_##type( \
 		bytes.as.heap_value->as.bytes, \
 		offset.as.integer, \
 		type \
