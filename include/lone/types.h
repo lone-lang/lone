@@ -27,6 +27,15 @@ typedef __s32 lone_s32;
 typedef __u64 lone_u64;
 typedef __s64 lone_s64;
 
+struct lone_u8  { bool present; lone_u8  value; };
+struct lone_s8  { bool present; lone_s8  value; };
+struct lone_u16 { bool present; lone_u16 value; };
+struct lone_s16 { bool present; lone_s16 value; };
+struct lone_u32 { bool present; lone_u32 value; };
+struct lone_s32 { bool present; lone_s32 value; };
+struct lone_u64 { bool present; lone_u64 value; };
+struct lone_s64 { bool present; lone_s64 value; };
+
 #if __BITS_PER_LONG == 64
 typedef Elf64_Ehdr lone_elf_header;
 typedef Elf64_Phdr lone_elf_segment;
