@@ -133,3 +133,115 @@ LONE_BYTES_WRITER(s64)
 
 #undef LONE_BYTES_READER
 #undef LONE_BYTES_WRITER
+
+lone_u16 lone_u16_read_le(void *address)
+{
+	unsigned char *bytes = address;
+	lone_u16 value = 0;
+
+	value |= ((lone_u16) bytes[0]) << 0;
+	value |= ((lone_u16) bytes[1]) << 8;
+
+	return value;
+}
+
+lone_u16 lone_u16_read_be(void *address)
+{
+	unsigned char *bytes = address;
+	lone_u16 value = 0;
+
+	value |= ((lone_u16) bytes[0]) << 8;
+	value |= ((lone_u16) bytes[1]) << 0;
+
+	return value;
+}
+
+lone_u32 lone_u32_read_le(void *address)
+{
+	unsigned char *bytes = address;
+	lone_u32 value = 0;
+
+	value |= ((lone_u32) bytes[0]) <<  0;
+	value |= ((lone_u32) bytes[1]) <<  8;
+	value |= ((lone_u32) bytes[2]) << 16;
+	value |= ((lone_u32) bytes[3]) << 24;
+
+	return value;
+}
+
+lone_u32 lone_u32_read_be(void *address)
+{
+	unsigned char *bytes = address;
+	lone_u32 value = 0;
+
+	value |= ((lone_u32) bytes[0]) << 24;
+	value |= ((lone_u32) bytes[1]) << 16;
+	value |= ((lone_u32) bytes[2]) <<  8;
+	value |= ((lone_u32) bytes[3]) <<  0;
+
+	return value;
+}
+
+lone_u64 lone_u64_read_le(void *address)
+{
+	unsigned char *bytes = address;
+	lone_u64 value = 0;
+
+	value |= ((lone_u64) bytes[0]) <<  0;
+	value |= ((lone_u64) bytes[1]) <<  8;
+	value |= ((lone_u64) bytes[2]) << 16;
+	value |= ((lone_u64) bytes[3]) << 24;
+	value |= ((lone_u64) bytes[4]) << 32;
+	value |= ((lone_u64) bytes[5]) << 40;
+	value |= ((lone_u64) bytes[6]) << 48;
+	value |= ((lone_u64) bytes[7]) << 56;
+
+	return value;
+}
+
+lone_u64 lone_u64_read_be(void *address)
+{
+	unsigned char *bytes = address;
+	lone_u64 value = 0;
+
+	value |= ((lone_u64) bytes[0]) << 56;
+	value |= ((lone_u64) bytes[1]) << 48;
+	value |= ((lone_u64) bytes[2]) << 40;
+	value |= ((lone_u64) bytes[3]) << 32;
+	value |= ((lone_u64) bytes[4]) << 24;
+	value |= ((lone_u64) bytes[5]) << 16;
+	value |= ((lone_u64) bytes[6]) <<  8;
+	value |= ((lone_u64) bytes[7]) <<  0;
+
+	return value;
+}
+
+lone_s16 lone_s16_read_le(void *address)
+{
+	return (lone_s16) lone_u16_read_le(address);
+}
+
+lone_s16 lone_s16_read_be(void *address)
+{
+	return (lone_s16) lone_u16_read_be(address);
+}
+
+lone_s32 lone_s32_read_le(void *address)
+{
+	return (lone_s32) lone_u32_read_le(address);
+}
+
+lone_s32 lone_s32_read_be(void *address)
+{
+	return (lone_s32) lone_u32_read_be(address);
+}
+
+lone_s64 lone_s64_read_le(void *address)
+{
+	return (lone_s64) lone_u64_read_le(address);
+}
+
+lone_s64 lone_s64_read_be(void *address)
+{
+	return (lone_s64) lone_u64_read_be(address);
+}
