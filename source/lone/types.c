@@ -88,15 +88,29 @@ LONE_WRITER(s64)
 #undef LONE_WRITER
 
 #define LONE_BYTES_READER(type) \
-lone_##type lone_bytes_read_##type(struct lone_bytes bytes, lone_size offset) \
-{ \
-	return lone_##type##_read(bytes.pointer + offset); \
+struct lone_##type lone_bytes_read_##type(struct lone_bytes bytes, lone_size offset)               \
+{                                                                                                  \
+	struct lone_##type result = { .present = false, .value = 0 };                              \
+	                                                                                           \
+	if (lone_bytes_contains_block(bytes, offset, sizeof(lone_##type))) {                       \
+		result.value = lone_##type##_read(bytes.pointer + offset);                         \
+		result.present = true;                                                             \
+	}                                                                                          \
+	                                                                                           \
+	return result;                                                                             \
 }
 
 #define LONE_BYTES_WRITER(type) \
-void lone_bytes_write_##type(struct lone_bytes bytes, lone_size offset, lone_##type type) \
-{ \
-	lone_##type##_write(bytes.pointer + offset, type); \
+bool lone_bytes_write_##type(struct lone_bytes bytes, lone_size offset, lone_##type value)         \
+{                                                                                                  \
+	bool written = false;                                                                      \
+	                                                                                           \
+	if (lone_bytes_contains_block(bytes, offset, sizeof(lone_##type))) {                       \
+		lone_##type##_write(bytes.pointer + offset, value);                                \
+		written = true;                                                                    \
+	}                                                                                          \
+	                                                                                           \
+	return written;                                                                            \
 }
 
 LONE_BYTES_READER(u8)
@@ -119,46 +133,3 @@ LONE_BYTES_WRITER(s64)
 
 #undef LONE_BYTES_READER
 #undef LONE_BYTES_WRITER
-
-#define LONE_BYTES_CHECKED_READER(type) \
-bool lone_bytes_checked_read_##type(struct lone_bytes bytes, lone_size offset, lone_##type *type) \
-{ \
-	if (!lone_bytes_contains_block(bytes, offset, sizeof(*type))) { \
-		return false; \
-	} else { \
-		*type = lone_bytes_read_##type(bytes, offset); \
-		return true; \
-	} \
-}
-
-#define LONE_BYTES_CHECKED_WRITER(type) \
-bool lone_bytes_checked_write_##type(struct lone_bytes bytes, lone_size offset, lone_##type type) \
-{ \
-	if (!lone_bytes_contains_block(bytes, offset, sizeof(type))) { \
-		return false; \
-	} else { \
-		lone_bytes_write_##type(bytes, offset, type); \
-		return true; \
-	} \
-}
-
-LONE_BYTES_CHECKED_READER(u8)
-LONE_BYTES_CHECKED_READER(s8)
-LONE_BYTES_CHECKED_READER(u16)
-LONE_BYTES_CHECKED_READER(s16)
-LONE_BYTES_CHECKED_READER(u32)
-LONE_BYTES_CHECKED_READER(s32)
-LONE_BYTES_CHECKED_READER(u64)
-LONE_BYTES_CHECKED_READER(s64)
-
-LONE_BYTES_CHECKED_WRITER(u8)
-LONE_BYTES_CHECKED_WRITER(s8)
-LONE_BYTES_CHECKED_WRITER(u16)
-LONE_BYTES_CHECKED_WRITER(s16)
-LONE_BYTES_CHECKED_WRITER(u32)
-LONE_BYTES_CHECKED_WRITER(s32)
-LONE_BYTES_CHECKED_WRITER(u64)
-LONE_BYTES_CHECKED_WRITER(s64)
-
-#undef LONE_BYTES_CHECKED_READER
-#undef LONE_BYTES_CHECKED_WRITER
