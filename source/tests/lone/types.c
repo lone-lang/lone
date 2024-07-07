@@ -96,14 +96,15 @@ LONE_TYPES_TEST_WRITE_UNALIGNED(s64, -1234567891011121314)
 #undef LONE_TYPES_TEST_WRITE_ALIGNED
 #undef LONE_TYPES_TEST_WRITE_UNALIGNED
 
-#define LONE_TYPES_BYTES_TEST_NAME(type, operation, alignment) \
-	"lone/types/bytes/" #operation "/" #type "/" #alignment
+#define LONE_TYPES_BYTES_TEST_NAME(type, operation, alignment, bounds) \
+	"lone/types/bytes/" #operation "/" #type "/" #alignment "/" #bounds
 
-#define LONE_TYPES_BYTES_TEST_FUNCTION(type, operation, alignment) \
-	test_lone_types_lone_bytes_##operation##_##type##_##alignment
+#define LONE_TYPES_BYTES_TEST_FUNCTION(type, operation, alignment, bounds) \
+	test_lone_types_lone_bytes_##operation##_##type##_##alignment##_##bounds
 
-#define LONE_TYPES_BYTES_TEST_READ_ALIGNED(type, constant)                                         \
-static enum lone_test_result LONE_TYPES_BYTES_TEST_FUNCTION(type, read, aligned)(void *context)    \
+#define LONE_TYPES_BYTES_TEST_READ_ALIGNED_WITHIN_BOUNDS(type, constant)                           \
+static enum lone_test_result                                                                       \
+LONE_TYPES_BYTES_TEST_FUNCTION(type, read, aligned, within_bounds)(void *context)                  \
 {                                                                                                  \
 	lone_##type values[] = { 0, 0, constant, 0, 0 };                                           \
 	struct lone_bytes bytes = { sizeof(values), (unsigned char *) &values };                   \
@@ -116,8 +117,24 @@ static enum lone_test_result LONE_TYPES_BYTES_TEST_FUNCTION(type, read, aligned)
 		LONE_TEST_RESULT_PASS : LONE_TEST_RESULT_FAIL;                                     \
 }
 
-#define LONE_TYPES_BYTES_TEST_READ_UNALIGNED(type, constant)                                       \
-static enum lone_test_result LONE_TYPES_BYTES_TEST_FUNCTION(type, read, unaligned)(void *context)  \
+#define LONE_TYPES_BYTES_TEST_READ_ALIGNED_OUT_OF_BOUNDS(type, constant)                           \
+static enum lone_test_result                                                                       \
+LONE_TYPES_BYTES_TEST_FUNCTION(type, read, aligned, out_of_bounds)(void *context)                  \
+{                                                                                                  \
+	lone_##type values[] = { 0, 0, constant, 0, 0 };                                           \
+	struct lone_bytes bytes = { sizeof(values), (unsigned char *) &values };                   \
+	struct lone_##type actual = { false, 0 };                                                  \
+	                                                                                           \
+	actual = lone_bytes_read_##type(bytes, sizeof(values));                                    \
+	                                                                                           \
+	return                                                                                     \
+		!actual.present ?                                                                  \
+		LONE_TEST_RESULT_PASS : LONE_TEST_RESULT_FAIL;                                     \
+}
+
+#define LONE_TYPES_BYTES_TEST_READ_UNALIGNED_WITHIN_BOUNDS(type, constant)                         \
+static enum lone_test_result                                                                       \
+LONE_TYPES_BYTES_TEST_FUNCTION(type, read, unaligned, within_bounds)(void *context)                \
 {                                                                                                  \
 	struct __attribute__((packed)) {                                                           \
 		unsigned char byte;                                                                \
@@ -133,8 +150,27 @@ static enum lone_test_result LONE_TYPES_BYTES_TEST_FUNCTION(type, read, unaligne
 		LONE_TEST_RESULT_PASS : LONE_TEST_RESULT_FAIL;                                     \
 }
 
-#define LONE_TYPES_BYTES_TEST_WRITE_ALIGNED(type, constant)                                        \
-static enum lone_test_result LONE_TYPES_BYTES_TEST_FUNCTION(type, write, aligned)(void *context)   \
+#define LONE_TYPES_BYTES_TEST_READ_UNALIGNED_OUT_OF_BOUNDS(type, constant)                         \
+static enum lone_test_result                                                                       \
+LONE_TYPES_BYTES_TEST_FUNCTION(type, read, unaligned, out_of_bounds)(void *context)                \
+{                                                                                                  \
+	struct __attribute__((packed)) {                                                           \
+		unsigned char byte;                                                                \
+		lone_##type value;                                                                 \
+	} values[] = { {0}, {0}, { 0, constant }, {0}, {0} };                                      \
+	struct lone_bytes bytes = { sizeof(values), (unsigned char *) &values };                   \
+	struct lone_##type actual = { false, 0 };                                                  \
+	                                                                                           \
+	actual = lone_bytes_read_##type(bytes, sizeof(values));                                    \
+	                                                                                           \
+	return                                                                                     \
+		!actual.present ?                                                                  \
+		LONE_TEST_RESULT_PASS : LONE_TEST_RESULT_FAIL;                                     \
+}
+
+#define LONE_TYPES_BYTES_TEST_WRITE_ALIGNED_WITHIN_BOUNDS(type, constant)                          \
+static enum lone_test_result                                                                       \
+LONE_TYPES_BYTES_TEST_FUNCTION(type, write, aligned, within_bounds)(void *context)                 \
 {                                                                                                  \
 	lone_##type values[] = { 0, 0, constant, 0, 0 };                                           \
 	struct lone_bytes bytes = { sizeof(values), (unsigned char *) &values };                   \
@@ -147,8 +183,24 @@ static enum lone_test_result LONE_TYPES_BYTES_TEST_FUNCTION(type, write, aligned
 		LONE_TEST_RESULT_PASS : LONE_TEST_RESULT_FAIL;                                     \
 }
 
-#define LONE_TYPES_BYTES_TEST_WRITE_UNALIGNED(type, constant)                                      \
-static enum lone_test_result LONE_TYPES_BYTES_TEST_FUNCTION(type, write, unaligned)(void *context) \
+#define LONE_TYPES_BYTES_TEST_WRITE_ALIGNED_OUT_OF_BOUNDS(type, constant)                          \
+static enum lone_test_result                                                                       \
+LONE_TYPES_BYTES_TEST_FUNCTION(type, write, aligned, out_of_bounds)(void *context)                 \
+{                                                                                                  \
+	lone_##type values[] = { 0, 0, constant, 0, 0 };                                           \
+	struct lone_bytes bytes = { sizeof(values), (unsigned char *) &values };                   \
+	bool written = false;                                                                      \
+	                                                                                           \
+	written = lone_bytes_write_##type(bytes, sizeof(values), constant);                        \
+	                                                                                           \
+	return                                                                                     \
+		!written ?                                                                         \
+		LONE_TEST_RESULT_PASS : LONE_TEST_RESULT_FAIL;                                     \
+}
+
+#define LONE_TYPES_BYTES_TEST_WRITE_UNALIGNED_WITHIN_BOUNDS(type, constant)                        \
+static enum lone_test_result                                                                       \
+LONE_TYPES_BYTES_TEST_FUNCTION(type, write, unaligned, within_bounds)(void *context)               \
 {                                                                                                  \
 	struct __attribute__((packed)) {                                                           \
 		unsigned char byte;                                                                \
@@ -164,42 +216,96 @@ static enum lone_test_result LONE_TYPES_BYTES_TEST_FUNCTION(type, write, unalign
 		LONE_TEST_RESULT_PASS : LONE_TEST_RESULT_FAIL;                                     \
 }
 
-LONE_TYPES_BYTES_TEST_READ_ALIGNED(u8,  +214)
-LONE_TYPES_BYTES_TEST_READ_ALIGNED(s8,  -42)
-LONE_TYPES_BYTES_TEST_READ_ALIGNED(u16, +56535)
-LONE_TYPES_BYTES_TEST_READ_ALIGNED(s16, -9001)
-LONE_TYPES_BYTES_TEST_READ_ALIGNED(u32, +4294927296)
-LONE_TYPES_BYTES_TEST_READ_ALIGNED(s32, -40000)
-LONE_TYPES_BYTES_TEST_READ_ALIGNED(u64, +17212176182698430302UL)
-LONE_TYPES_BYTES_TEST_READ_ALIGNED(s64, -1234567891011121314)
+#define LONE_TYPES_BYTES_TEST_WRITE_UNALIGNED_OUT_OF_BOUNDS(type, constant)                        \
+static enum lone_test_result                                                                       \
+LONE_TYPES_BYTES_TEST_FUNCTION(type, write, unaligned, out_of_bounds)(void *context)               \
+{                                                                                                  \
+	struct __attribute__((packed)) {                                                           \
+		unsigned char byte;                                                                \
+		lone_##type value;                                                                 \
+	} values[] = { {0}, {0}, {0}, {0}, {0} };                                                  \
+	struct lone_bytes bytes = { sizeof(values), (unsigned char *) &values };                   \
+	bool written = false;                                                                      \
+	                                                                                           \
+	written = lone_bytes_write_##type(bytes, sizeof(values), constant);                        \
+	                                                                                           \
+	return                                                                                     \
+		!written ?                                                                         \
+		LONE_TEST_RESULT_PASS : LONE_TEST_RESULT_FAIL;                                     \
+}
 
-LONE_TYPES_BYTES_TEST_READ_UNALIGNED(u16, +56535)
-LONE_TYPES_BYTES_TEST_READ_UNALIGNED(s16, -9001)
-LONE_TYPES_BYTES_TEST_READ_UNALIGNED(u32, +4294927296)
-LONE_TYPES_BYTES_TEST_READ_UNALIGNED(s32, -40000)
-LONE_TYPES_BYTES_TEST_READ_UNALIGNED(u64, +17212176182698430302UL)
-LONE_TYPES_BYTES_TEST_READ_UNALIGNED(s64, -1234567891011121314)
+LONE_TYPES_BYTES_TEST_READ_ALIGNED_WITHIN_BOUNDS(u8,  +214)
+LONE_TYPES_BYTES_TEST_READ_ALIGNED_WITHIN_BOUNDS(s8,  -42)
+LONE_TYPES_BYTES_TEST_READ_ALIGNED_WITHIN_BOUNDS(u16, +56535)
+LONE_TYPES_BYTES_TEST_READ_ALIGNED_WITHIN_BOUNDS(s16, -9001)
+LONE_TYPES_BYTES_TEST_READ_ALIGNED_WITHIN_BOUNDS(u32, +4294927296)
+LONE_TYPES_BYTES_TEST_READ_ALIGNED_WITHIN_BOUNDS(s32, -40000)
+LONE_TYPES_BYTES_TEST_READ_ALIGNED_WITHIN_BOUNDS(u64, +17212176182698430302UL)
+LONE_TYPES_BYTES_TEST_READ_ALIGNED_WITHIN_BOUNDS(s64, -1234567891011121314)
 
-LONE_TYPES_BYTES_TEST_WRITE_ALIGNED(u8,  +214)
-LONE_TYPES_BYTES_TEST_WRITE_ALIGNED(s8,  -42)
-LONE_TYPES_BYTES_TEST_WRITE_ALIGNED(u16, +56535)
-LONE_TYPES_BYTES_TEST_WRITE_ALIGNED(s16, -9001)
-LONE_TYPES_BYTES_TEST_WRITE_ALIGNED(u32, +4294927296)
-LONE_TYPES_BYTES_TEST_WRITE_ALIGNED(s32, -40000)
-LONE_TYPES_BYTES_TEST_WRITE_ALIGNED(u64, +17212176182698430302UL)
-LONE_TYPES_BYTES_TEST_WRITE_ALIGNED(s64, -1234567891011121314)
+LONE_TYPES_BYTES_TEST_READ_ALIGNED_OUT_OF_BOUNDS(u8,  +214)
+LONE_TYPES_BYTES_TEST_READ_ALIGNED_OUT_OF_BOUNDS(s8,  -42)
+LONE_TYPES_BYTES_TEST_READ_ALIGNED_OUT_OF_BOUNDS(u16, +56535)
+LONE_TYPES_BYTES_TEST_READ_ALIGNED_OUT_OF_BOUNDS(s16, -9001)
+LONE_TYPES_BYTES_TEST_READ_ALIGNED_OUT_OF_BOUNDS(u32, +4294927296)
+LONE_TYPES_BYTES_TEST_READ_ALIGNED_OUT_OF_BOUNDS(s32, -40000)
+LONE_TYPES_BYTES_TEST_READ_ALIGNED_OUT_OF_BOUNDS(u64, +17212176182698430302UL)
+LONE_TYPES_BYTES_TEST_READ_ALIGNED_OUT_OF_BOUNDS(s64, -1234567891011121314)
 
-LONE_TYPES_BYTES_TEST_WRITE_UNALIGNED(u16, +56535)
-LONE_TYPES_BYTES_TEST_WRITE_UNALIGNED(s16, -9001)
-LONE_TYPES_BYTES_TEST_WRITE_UNALIGNED(u32, +4294927296)
-LONE_TYPES_BYTES_TEST_WRITE_UNALIGNED(s32, -40000)
-LONE_TYPES_BYTES_TEST_WRITE_UNALIGNED(u64, +17212176182698430302UL)
-LONE_TYPES_BYTES_TEST_WRITE_UNALIGNED(s64, -1234567891011121314)
+LONE_TYPES_BYTES_TEST_READ_UNALIGNED_WITHIN_BOUNDS(u16, +56535)
+LONE_TYPES_BYTES_TEST_READ_UNALIGNED_WITHIN_BOUNDS(s16, -9001)
+LONE_TYPES_BYTES_TEST_READ_UNALIGNED_WITHIN_BOUNDS(u32, +4294927296)
+LONE_TYPES_BYTES_TEST_READ_UNALIGNED_WITHIN_BOUNDS(s32, -40000)
+LONE_TYPES_BYTES_TEST_READ_UNALIGNED_WITHIN_BOUNDS(u64, +17212176182698430302UL)
+LONE_TYPES_BYTES_TEST_READ_UNALIGNED_WITHIN_BOUNDS(s64, -1234567891011121314)
 
-#undef LONE_TYPES_BYTES_TEST_READ_ALIGNED
-#undef LONE_TYPES_BYTES_TEST_READ_UNALIGNED
-#undef LONE_TYPES_BYTES_TEST_WRITE_ALIGNED
-#undef LONE_TYPES_BYTES_TEST_WRITE_UNALIGNED
+LONE_TYPES_BYTES_TEST_READ_UNALIGNED_OUT_OF_BOUNDS(u16, +56535)
+LONE_TYPES_BYTES_TEST_READ_UNALIGNED_OUT_OF_BOUNDS(s16, -9001)
+LONE_TYPES_BYTES_TEST_READ_UNALIGNED_OUT_OF_BOUNDS(u32, +4294927296)
+LONE_TYPES_BYTES_TEST_READ_UNALIGNED_OUT_OF_BOUNDS(s32, -40000)
+LONE_TYPES_BYTES_TEST_READ_UNALIGNED_OUT_OF_BOUNDS(u64, +17212176182698430302UL)
+LONE_TYPES_BYTES_TEST_READ_UNALIGNED_OUT_OF_BOUNDS(s64, -1234567891011121314)
+
+LONE_TYPES_BYTES_TEST_WRITE_ALIGNED_WITHIN_BOUNDS(u8,  +214)
+LONE_TYPES_BYTES_TEST_WRITE_ALIGNED_WITHIN_BOUNDS(s8,  -42)
+LONE_TYPES_BYTES_TEST_WRITE_ALIGNED_WITHIN_BOUNDS(u16, +56535)
+LONE_TYPES_BYTES_TEST_WRITE_ALIGNED_WITHIN_BOUNDS(s16, -9001)
+LONE_TYPES_BYTES_TEST_WRITE_ALIGNED_WITHIN_BOUNDS(u32, +4294927296)
+LONE_TYPES_BYTES_TEST_WRITE_ALIGNED_WITHIN_BOUNDS(s32, -40000)
+LONE_TYPES_BYTES_TEST_WRITE_ALIGNED_WITHIN_BOUNDS(u64, +17212176182698430302UL)
+LONE_TYPES_BYTES_TEST_WRITE_ALIGNED_WITHIN_BOUNDS(s64, -1234567891011121314)
+
+LONE_TYPES_BYTES_TEST_WRITE_ALIGNED_OUT_OF_BOUNDS(u8,  +214)
+LONE_TYPES_BYTES_TEST_WRITE_ALIGNED_OUT_OF_BOUNDS(s8,  -42)
+LONE_TYPES_BYTES_TEST_WRITE_ALIGNED_OUT_OF_BOUNDS(u16, +56535)
+LONE_TYPES_BYTES_TEST_WRITE_ALIGNED_OUT_OF_BOUNDS(s16, -9001)
+LONE_TYPES_BYTES_TEST_WRITE_ALIGNED_OUT_OF_BOUNDS(u32, +4294927296)
+LONE_TYPES_BYTES_TEST_WRITE_ALIGNED_OUT_OF_BOUNDS(s32, -40000)
+LONE_TYPES_BYTES_TEST_WRITE_ALIGNED_OUT_OF_BOUNDS(u64, +17212176182698430302UL)
+LONE_TYPES_BYTES_TEST_WRITE_ALIGNED_OUT_OF_BOUNDS(s64, -1234567891011121314)
+
+LONE_TYPES_BYTES_TEST_WRITE_UNALIGNED_WITHIN_BOUNDS(u16, +56535)
+LONE_TYPES_BYTES_TEST_WRITE_UNALIGNED_WITHIN_BOUNDS(s16, -9001)
+LONE_TYPES_BYTES_TEST_WRITE_UNALIGNED_WITHIN_BOUNDS(u32, +4294927296)
+LONE_TYPES_BYTES_TEST_WRITE_UNALIGNED_WITHIN_BOUNDS(s32, -40000)
+LONE_TYPES_BYTES_TEST_WRITE_UNALIGNED_WITHIN_BOUNDS(u64, +17212176182698430302UL)
+LONE_TYPES_BYTES_TEST_WRITE_UNALIGNED_WITHIN_BOUNDS(s64, -1234567891011121314)
+
+LONE_TYPES_BYTES_TEST_WRITE_UNALIGNED_OUT_OF_BOUNDS(u16, +56535)
+LONE_TYPES_BYTES_TEST_WRITE_UNALIGNED_OUT_OF_BOUNDS(s16, -9001)
+LONE_TYPES_BYTES_TEST_WRITE_UNALIGNED_OUT_OF_BOUNDS(u32, +4294927296)
+LONE_TYPES_BYTES_TEST_WRITE_UNALIGNED_OUT_OF_BOUNDS(s32, -40000)
+LONE_TYPES_BYTES_TEST_WRITE_UNALIGNED_OUT_OF_BOUNDS(u64, +17212176182698430302UL)
+LONE_TYPES_BYTES_TEST_WRITE_UNALIGNED_OUT_OF_BOUNDS(s64, -1234567891011121314)
+
+#undef LONE_TYPES_BYTES_TEST_READ_ALIGNED_WITHIN_BOUNDS
+#undef LONE_TYPES_BYTES_TEST_READ_ALIGNED_OUT_OF_BOUNDS
+#undef LONE_TYPES_BYTES_TEST_READ_UNALIGNED_WITHIN_BOUNDS
+#undef LONE_TYPES_BYTES_TEST_READ_UNALIGNED_OUT_OF_BOUNDS
+#undef LONE_TYPES_BYTES_TEST_WRITE_ALIGNED_WITHIN_BOUNDS
+#undef LONE_TYPES_BYTES_TEST_WRITE_ALIGNED_OUT_OF_BOUNDS
+#undef LONE_TYPES_BYTES_TEST_WRITE_UNALIGNED_WITHIN_BOUNDS
+#undef LONE_TYPES_BYTES_TEST_WRITE_UNALIGNED_OUT_OF_BOUNDS
 
 static void test_finished(struct lone_test_case *test, void *context)
 {
@@ -269,41 +375,73 @@ long lone(int argc, char **argv, char **envp, struct lone_auxiliary_vector *auxv
 
 #undef LONE_TYPES_TEST_CASE
 
-#define LONE_TYPES_BYTES_TEST_CASE(type, operation, alignment)                                     \
-	LONE_TEST_CASE(LONE_TYPES_BYTES_TEST_NAME(type, operation, alignment),                     \
-		LONE_TYPES_BYTES_TEST_FUNCTION(type, operation, alignment))
+#define LONE_TYPES_BYTES_TEST_CASE(type, operation, alignment, bounds)                             \
+	LONE_TEST_CASE(LONE_TYPES_BYTES_TEST_NAME(type, operation, alignment, bounds),             \
+		LONE_TYPES_BYTES_TEST_FUNCTION(type, operation, alignment, bounds))
 
-		LONE_TYPES_BYTES_TEST_CASE(u8,  read, aligned),
-		LONE_TYPES_BYTES_TEST_CASE(s8,  read, aligned),
-		LONE_TYPES_BYTES_TEST_CASE(u16, read, aligned),
-		LONE_TYPES_BYTES_TEST_CASE(s16, read, aligned),
-		LONE_TYPES_BYTES_TEST_CASE(u32, read, aligned),
-		LONE_TYPES_BYTES_TEST_CASE(s32, read, aligned),
-		LONE_TYPES_BYTES_TEST_CASE(u64, read, aligned),
-		LONE_TYPES_BYTES_TEST_CASE(s64, read, aligned),
+		LONE_TYPES_BYTES_TEST_CASE(u8,  read, aligned, within_bounds),
+		LONE_TYPES_BYTES_TEST_CASE(s8,  read, aligned, within_bounds),
+		LONE_TYPES_BYTES_TEST_CASE(u16, read, aligned, within_bounds),
+		LONE_TYPES_BYTES_TEST_CASE(s16, read, aligned, within_bounds),
+		LONE_TYPES_BYTES_TEST_CASE(u32, read, aligned, within_bounds),
+		LONE_TYPES_BYTES_TEST_CASE(s32, read, aligned, within_bounds),
+		LONE_TYPES_BYTES_TEST_CASE(u64, read, aligned, within_bounds),
+		LONE_TYPES_BYTES_TEST_CASE(s64, read, aligned, within_bounds),
 
-		LONE_TYPES_BYTES_TEST_CASE(u16, read, unaligned),
-		LONE_TYPES_BYTES_TEST_CASE(s16, read, unaligned),
-		LONE_TYPES_BYTES_TEST_CASE(u32, read, unaligned),
-		LONE_TYPES_BYTES_TEST_CASE(s32, read, unaligned),
-		LONE_TYPES_BYTES_TEST_CASE(u64, read, unaligned),
-		LONE_TYPES_BYTES_TEST_CASE(s64, read, unaligned),
+		LONE_TYPES_BYTES_TEST_CASE(u8,  read, aligned, out_of_bounds),
+		LONE_TYPES_BYTES_TEST_CASE(s8,  read, aligned, out_of_bounds),
+		LONE_TYPES_BYTES_TEST_CASE(u16, read, aligned, out_of_bounds),
+		LONE_TYPES_BYTES_TEST_CASE(s16, read, aligned, out_of_bounds),
+		LONE_TYPES_BYTES_TEST_CASE(u32, read, aligned, out_of_bounds),
+		LONE_TYPES_BYTES_TEST_CASE(s32, read, aligned, out_of_bounds),
+		LONE_TYPES_BYTES_TEST_CASE(u64, read, aligned, out_of_bounds),
+		LONE_TYPES_BYTES_TEST_CASE(s64, read, aligned, out_of_bounds),
 
-		LONE_TYPES_BYTES_TEST_CASE(u8,  write, aligned),
-		LONE_TYPES_BYTES_TEST_CASE(s8,  write, aligned),
-		LONE_TYPES_BYTES_TEST_CASE(u16, write, aligned),
-		LONE_TYPES_BYTES_TEST_CASE(s16, write, aligned),
-		LONE_TYPES_BYTES_TEST_CASE(u32, write, aligned),
-		LONE_TYPES_BYTES_TEST_CASE(s32, write, aligned),
-		LONE_TYPES_BYTES_TEST_CASE(u64, write, aligned),
-		LONE_TYPES_BYTES_TEST_CASE(s64, write, aligned),
+		LONE_TYPES_BYTES_TEST_CASE(u16, read, unaligned, within_bounds),
+		LONE_TYPES_BYTES_TEST_CASE(s16, read, unaligned, within_bounds),
+		LONE_TYPES_BYTES_TEST_CASE(u32, read, unaligned, within_bounds),
+		LONE_TYPES_BYTES_TEST_CASE(s32, read, unaligned, within_bounds),
+		LONE_TYPES_BYTES_TEST_CASE(u64, read, unaligned, within_bounds),
+		LONE_TYPES_BYTES_TEST_CASE(s64, read, unaligned, within_bounds),
 
-		LONE_TYPES_BYTES_TEST_CASE(u16, write, unaligned),
-		LONE_TYPES_BYTES_TEST_CASE(s16, write, unaligned),
-		LONE_TYPES_BYTES_TEST_CASE(u32, write, unaligned),
-		LONE_TYPES_BYTES_TEST_CASE(s32, write, unaligned),
-		LONE_TYPES_BYTES_TEST_CASE(u64, write, unaligned),
-		LONE_TYPES_BYTES_TEST_CASE(s64, write, unaligned),
+		LONE_TYPES_BYTES_TEST_CASE(u16, read, unaligned, out_of_bounds),
+		LONE_TYPES_BYTES_TEST_CASE(s16, read, unaligned, out_of_bounds),
+		LONE_TYPES_BYTES_TEST_CASE(u32, read, unaligned, out_of_bounds),
+		LONE_TYPES_BYTES_TEST_CASE(s32, read, unaligned, out_of_bounds),
+		LONE_TYPES_BYTES_TEST_CASE(u64, read, unaligned, out_of_bounds),
+		LONE_TYPES_BYTES_TEST_CASE(s64, read, unaligned, out_of_bounds),
+
+		LONE_TYPES_BYTES_TEST_CASE(u8,  write, aligned, within_bounds),
+		LONE_TYPES_BYTES_TEST_CASE(s8,  write, aligned, within_bounds),
+		LONE_TYPES_BYTES_TEST_CASE(u16, write, aligned, within_bounds),
+		LONE_TYPES_BYTES_TEST_CASE(s16, write, aligned, within_bounds),
+		LONE_TYPES_BYTES_TEST_CASE(u32, write, aligned, within_bounds),
+		LONE_TYPES_BYTES_TEST_CASE(s32, write, aligned, within_bounds),
+		LONE_TYPES_BYTES_TEST_CASE(u64, write, aligned, within_bounds),
+		LONE_TYPES_BYTES_TEST_CASE(s64, write, aligned, within_bounds),
+
+		LONE_TYPES_BYTES_TEST_CASE(u8,  write, aligned, out_of_bounds),
+		LONE_TYPES_BYTES_TEST_CASE(s8,  write, aligned, out_of_bounds),
+		LONE_TYPES_BYTES_TEST_CASE(u16, write, aligned, out_of_bounds),
+		LONE_TYPES_BYTES_TEST_CASE(s16, write, aligned, out_of_bounds),
+		LONE_TYPES_BYTES_TEST_CASE(u32, write, aligned, out_of_bounds),
+		LONE_TYPES_BYTES_TEST_CASE(s32, write, aligned, out_of_bounds),
+		LONE_TYPES_BYTES_TEST_CASE(u64, write, aligned, out_of_bounds),
+		LONE_TYPES_BYTES_TEST_CASE(s64, write, aligned, out_of_bounds),
+
+		LONE_TYPES_BYTES_TEST_CASE(u16, write, unaligned, within_bounds),
+		LONE_TYPES_BYTES_TEST_CASE(s16, write, unaligned, within_bounds),
+		LONE_TYPES_BYTES_TEST_CASE(u32, write, unaligned, within_bounds),
+		LONE_TYPES_BYTES_TEST_CASE(s32, write, unaligned, within_bounds),
+		LONE_TYPES_BYTES_TEST_CASE(u64, write, unaligned, within_bounds),
+		LONE_TYPES_BYTES_TEST_CASE(s64, write, unaligned, within_bounds),
+
+		LONE_TYPES_BYTES_TEST_CASE(u16, write, unaligned, out_of_bounds),
+		LONE_TYPES_BYTES_TEST_CASE(s16, write, unaligned, out_of_bounds),
+		LONE_TYPES_BYTES_TEST_CASE(u32, write, unaligned, out_of_bounds),
+		LONE_TYPES_BYTES_TEST_CASE(s32, write, unaligned, out_of_bounds),
+		LONE_TYPES_BYTES_TEST_CASE(u64, write, unaligned, out_of_bounds),
+		LONE_TYPES_BYTES_TEST_CASE(s64, write, unaligned, out_of_bounds),
 
 #undef LONE_TYPES_BYTES_TEST_CASE
 
