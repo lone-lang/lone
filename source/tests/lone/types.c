@@ -124,11 +124,11 @@ static void test_finished(struct lone_test_case *test, void *context)
 long lone(int argc, char **argv, char **envp, struct lone_auxiliary_vector *auxv)
 {
 
+	static struct lone_test_case cases[] = {
+
 #define LONE_TYPES_TEST_CASE(type, operation, alignment)                                           \
 	LONE_TEST_CASE(LONE_TYPES_TEST_NAME(type, operation, alignment),                           \
 		LONE_TYPES_TEST_FUNCTION(type, operation, alignment))
-
-	static struct lone_test_case cases[] = {
 
 		LONE_TYPES_TEST_CASE(u8,  read, aligned),
 		LONE_TYPES_TEST_CASE(s8,  read, aligned),
@@ -162,6 +162,8 @@ long lone(int argc, char **argv, char **envp, struct lone_auxiliary_vector *auxv
 		LONE_TYPES_TEST_CASE(u64, write, unaligned),
 		LONE_TYPES_TEST_CASE(s64, write, unaligned),
 
+#undef LONE_TYPES_TEST_CASE
+
 		LONE_TEST_CASE_NULL(),
 	};
 
@@ -183,5 +185,8 @@ long lone(int argc, char **argv, char **envp, struct lone_auxiliary_vector *auxv
 		return -1;
 	}
 }
+
+#undef LONE_TYPES_TEST_NAME
+#undef LONE_TYPES_TEST_FUNCTION
 
 #include <lone/architecture/linux/entry_point.c>
