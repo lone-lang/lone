@@ -84,6 +84,16 @@ struct lone_bytes {
    │                                                                        │
    │    Lone primitive type operations.                                     │
    │                                                                        │
+   │    Supports reading/writing all lone integer types from/to memory      │
+   │    at arbitrary addresses, aligned or not. If not specified,           │
+   │    native endianness is implied. Big/little endian variants            │
+   │    are also provided, also with support for unaligned addresses.       │
+   │                                                                        │
+   │    Useful for avoiding undefined behavior when accessing memory.       │
+   │    Normal C pointers provide efficient access to aligned addresses.    │
+   │    Linux also exports efficient byte swapping functions in the UAPI    │
+   │    headers which also require aligned pointers.                        │
+   │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
 lone_u8  lone_u8_read (void *address);
 lone_s8  lone_s8_read (void *address);
