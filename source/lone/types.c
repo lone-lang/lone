@@ -301,16 +301,21 @@ LONE_ENDIAN_SIGNED_READERS_FOR_BITS(16)                                         
 LONE_ENDIAN_SIGNED_READERS_FOR_BITS(32)                                                            \
 LONE_ENDIAN_SIGNED_READERS_FOR_BITS(64)                                                            \
 
-LONE_ENDIAN_SIGNED_READERS()
+#define LONE_ENDIAN_SIGNED_WRITERS_FOR_BITS(bits)                                                  \
+LONE_ENDIAN_SIGNED_WRITER(bits, le)                                                                \
+LONE_ENDIAN_SIGNED_WRITER(bits, be)                                                                \
 
-LONE_ENDIAN_SIGNED_WRITER(16, le)
-LONE_ENDIAN_SIGNED_WRITER(16, be)
-LONE_ENDIAN_SIGNED_WRITER(32, le)
-LONE_ENDIAN_SIGNED_WRITER(32, be)
-LONE_ENDIAN_SIGNED_WRITER(64, le)
-LONE_ENDIAN_SIGNED_WRITER(64, be)
+#define LONE_ENDIAN_SIGNED_WRITERS()                                                               \
+LONE_ENDIAN_SIGNED_WRITERS_FOR_BITS(16)                                                            \
+LONE_ENDIAN_SIGNED_WRITERS_FOR_BITS(32)                                                            \
+LONE_ENDIAN_SIGNED_WRITERS_FOR_BITS(64)                                                            \
+
+LONE_ENDIAN_SIGNED_READERS()
+LONE_ENDIAN_SIGNED_WRITERS()
 
 #undef LONE_ENDIAN_SIGNED_READER
 #undef LONE_ENDIAN_SIGNED_READERS_FOR_BITS
 #undef LONE_ENDIAN_SIGNED_READERS
 #undef LONE_ENDIAN_SIGNED_WRITER
+#undef LONE_ENDIAN_SIGNED_WRITERS_FOR_BITS
+#undef LONE_ENDIAN_SIGNED_WRITERS
