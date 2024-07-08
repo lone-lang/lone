@@ -216,36 +216,6 @@ lone_u64 lone_u64_read_be(void *address)
 	return value;
 }
 
-lone_s16 lone_s16_read_le(void *address)
-{
-	return (lone_s16) lone_u16_read_le(address);
-}
-
-lone_s16 lone_s16_read_be(void *address)
-{
-	return (lone_s16) lone_u16_read_be(address);
-}
-
-lone_s32 lone_s32_read_le(void *address)
-{
-	return (lone_s32) lone_u32_read_le(address);
-}
-
-lone_s32 lone_s32_read_be(void *address)
-{
-	return (lone_s32) lone_u32_read_be(address);
-}
-
-lone_s64 lone_s64_read_le(void *address)
-{
-	return (lone_s64) lone_u64_read_le(address);
-}
-
-lone_s64 lone_s64_read_be(void *address)
-{
-	return (lone_s64) lone_u64_read_be(address);
-}
-
 void lone_u16_write_le(void *address, lone_u16 value)
 {
 	unsigned char *bytes = address;
@@ -310,11 +280,28 @@ void lone_u64_write_be(void *address, lone_u64 value)
 	bytes[7] = ((unsigned char) (value >>  0));
 }
 
+#define LONE_ENDIAN_SIGNED_READER(bits, endian)                                                    \
+lone_s##bits lone_s##bits##_read_##endian(void *address)                                           \
+{                                                                                                  \
+	return (lone_s##bits) lone_u##bits##_read_##endian(address);                               \
+}
+
 #define LONE_ENDIAN_SIGNED_WRITER(bits, endian)                                                    \
 void lone_s##bits##_write_##endian(void *address, lone_s##bits value)                              \
 {                                                                                                  \
 	lone_u##bits##_write_##endian(address, (lone_u##bits) value);                              \
 }
+
+#define LONE_ENDIAN_SIGNED_READERS_FOR_BITS(bits)                                                  \
+LONE_ENDIAN_SIGNED_READER(bits, le)                                                                \
+LONE_ENDIAN_SIGNED_READER(bits, be)                                                                \
+
+#define LONE_ENDIAN_SIGNED_READERS()                                                               \
+LONE_ENDIAN_SIGNED_READERS_FOR_BITS(16)                                                            \
+LONE_ENDIAN_SIGNED_READERS_FOR_BITS(32)                                                            \
+LONE_ENDIAN_SIGNED_READERS_FOR_BITS(64)                                                            \
+
+LONE_ENDIAN_SIGNED_READERS()
 
 LONE_ENDIAN_SIGNED_WRITER(16, le)
 LONE_ENDIAN_SIGNED_WRITER(16, be)
@@ -323,4 +310,7 @@ LONE_ENDIAN_SIGNED_WRITER(32, be)
 LONE_ENDIAN_SIGNED_WRITER(64, le)
 LONE_ENDIAN_SIGNED_WRITER(64, be)
 
+#undef LONE_ENDIAN_SIGNED_READER
+#undef LONE_ENDIAN_SIGNED_READERS_FOR_BITS
+#undef LONE_ENDIAN_SIGNED_READERS
 #undef LONE_ENDIAN_SIGNED_WRITER
