@@ -117,6 +117,20 @@ lone_s32 lone_s32_read_be(void *address);
 lone_u64 lone_u64_read_be(void *address);
 lone_s64 lone_s64_read_be(void *address);
 
+void lone_u16_write_le(void *address, lone_u16 u16);
+void lone_s16_write_le(void *address, lone_s16 s16);
+void lone_u32_write_le(void *address, lone_u32 u32);
+void lone_s32_write_le(void *address, lone_s32 s32);
+void lone_u64_write_le(void *address, lone_u64 u64);
+void lone_s64_write_le(void *address, lone_s64 s64);
+
+void lone_u16_write_be(void *address, lone_u16 u16);
+void lone_s16_write_be(void *address, lone_s16 s16);
+void lone_u32_write_be(void *address, lone_u32 u32);
+void lone_s32_write_be(void *address, lone_s32 s32);
+void lone_u64_write_be(void *address, lone_u64 u64);
+void lone_s64_write_be(void *address, lone_s64 s64);
+
 /* ╭────────────────────────────────────────────────────────────────────────╮
    │                                                                        │
    │    Lone bytes structure operations.                                    │

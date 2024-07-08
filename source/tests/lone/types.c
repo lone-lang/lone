@@ -324,6 +324,20 @@ LONE_TYPES_ENDIAN_TEST_FUNCTION(type, read, endian, alignment)(void *context)   
 		LONE_TEST_RESULT_PASS : LONE_TEST_RESULT_FAIL;                                     \
 }
 
+#define LONE_TYPES_ENDIAN_TEST_WRITE(type, endian, alignment, constant, offset, ...)               \
+static enum lone_test_result                                                                       \
+LONE_TYPES_ENDIAN_TEST_FUNCTION(type, write, endian, alignment)(void *context)                     \
+{                                                                                                  \
+	unsigned char actual[sizeof(lone_##type) + offset] = {0};                                  \
+	unsigned char expected[] = { __VA_ARGS__ };                                                \
+	                                                                                           \
+	lone_##type##_write_##endian(actual + offset, constant);                                   \
+	                                                                                           \
+	return                                                                                     \
+		lone_memory_is_equal(actual + offset, expected, sizeof(expected)) ?                \
+		LONE_TEST_RESULT_PASS : LONE_TEST_RESULT_FAIL;                                     \
+}
+
 LONE_TYPES_ENDIAN_TEST_READ(u16, le, aligned, 0x0102, 0, 0x02, 0x01)
 LONE_TYPES_ENDIAN_TEST_READ(u16, be, aligned, 0x0102, 0, 0x01, 0x02)
 LONE_TYPES_ENDIAN_TEST_READ(s16, le, aligned, 0x0102, 0, 0x02, 0x01)
@@ -353,6 +367,36 @@ LONE_TYPES_ENDIAN_TEST_READ(u64, le, unaligned, 0x0102030405060708, 1, 0x09, 0x0
 LONE_TYPES_ENDIAN_TEST_READ(u64, be, unaligned, 0x0203040506070809, 1, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09)
 LONE_TYPES_ENDIAN_TEST_READ(s64, le, unaligned, 0x0102030405060708, 1, 0x09, 0x08, 0x07, 0x06, 0x05, 0x04, 0x03, 0x02, 0x01)
 LONE_TYPES_ENDIAN_TEST_READ(s64, be, unaligned, 0x0203040506070809, 1, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09)
+
+LONE_TYPES_ENDIAN_TEST_WRITE(u16, le, aligned, 0x0102, 0, 0x02, 0x01)
+LONE_TYPES_ENDIAN_TEST_WRITE(u16, be, aligned, 0x0102, 0, 0x01, 0x02)
+LONE_TYPES_ENDIAN_TEST_WRITE(s16, le, aligned, 0x0102, 0, 0x02, 0x01)
+LONE_TYPES_ENDIAN_TEST_WRITE(s16, be, aligned, 0x0102, 0, 0x01, 0x02)
+
+LONE_TYPES_ENDIAN_TEST_WRITE(u16, le, unaligned, 0x0102, 1, 0x02, 0x01)
+LONE_TYPES_ENDIAN_TEST_WRITE(u16, be, unaligned, 0x0102, 1, 0x01, 0x02)
+LONE_TYPES_ENDIAN_TEST_WRITE(s16, le, unaligned, 0x0102, 1, 0x02, 0x01)
+LONE_TYPES_ENDIAN_TEST_WRITE(s16, be, unaligned, 0x0102, 1, 0x01, 0x02)
+
+LONE_TYPES_ENDIAN_TEST_WRITE(u32, le, aligned, 0x01020304, 0, 0x04, 0x03, 0x02, 0x01)
+LONE_TYPES_ENDIAN_TEST_WRITE(u32, be, aligned, 0x01020304, 0, 0x01, 0x02, 0x03, 0x04)
+LONE_TYPES_ENDIAN_TEST_WRITE(s32, le, aligned, 0x01020304, 0, 0x04, 0x03, 0x02, 0x01)
+LONE_TYPES_ENDIAN_TEST_WRITE(s32, be, aligned, 0x01020304, 0, 0x01, 0x02, 0x03, 0x04)
+
+LONE_TYPES_ENDIAN_TEST_WRITE(u32, le, unaligned, 0x01020304, 1, 0x04, 0x03, 0x02, 0x01)
+LONE_TYPES_ENDIAN_TEST_WRITE(u32, be, unaligned, 0x01020304, 1, 0x01, 0x02, 0x03, 0x04)
+LONE_TYPES_ENDIAN_TEST_WRITE(s32, le, unaligned, 0x01020304, 1, 0x04, 0x03, 0x02, 0x01)
+LONE_TYPES_ENDIAN_TEST_WRITE(s32, be, unaligned, 0x01020304, 1, 0x01, 0x02, 0x03, 0x04)
+
+LONE_TYPES_ENDIAN_TEST_WRITE(u64, le, aligned, 0x0102030405060708, 0, 0x08, 0x07, 0x06, 0x05, 0x04, 0x03, 0x02, 0x01)
+LONE_TYPES_ENDIAN_TEST_WRITE(u64, be, aligned, 0x0102030405060708, 0, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08)
+LONE_TYPES_ENDIAN_TEST_WRITE(s64, le, aligned, 0x0102030405060708, 0, 0x08, 0x07, 0x06, 0x05, 0x04, 0x03, 0x02, 0x01)
+LONE_TYPES_ENDIAN_TEST_WRITE(s64, be, aligned, 0x0102030405060708, 0, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08)
+
+LONE_TYPES_ENDIAN_TEST_WRITE(u64, le, unaligned, 0x0102030405060708, 1, 0x08, 0x07, 0x06, 0x05, 0x04, 0x03, 0x02, 0x01)
+LONE_TYPES_ENDIAN_TEST_WRITE(u64, be, unaligned, 0x0102030405060708, 1, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08)
+LONE_TYPES_ENDIAN_TEST_WRITE(s64, le, unaligned, 0x0102030405060708, 1, 0x08, 0x07, 0x06, 0x05, 0x04, 0x03, 0x02, 0x01)
+LONE_TYPES_ENDIAN_TEST_WRITE(s64, be, unaligned, 0x0102030405060708, 1, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08)
 
 #undef LONE_TYPES_ENDIAN_TEST_READ_ALIGNED
 
@@ -527,6 +571,36 @@ long lone(int argc, char **argv, char **envp, struct lone_auxiliary_vector *auxv
 		LONE_TYPES_ENDIAN_TEST_CASE(u64, read, be, unaligned),
 		LONE_TYPES_ENDIAN_TEST_CASE(s64, read, le, unaligned),
 		LONE_TYPES_ENDIAN_TEST_CASE(s64, read, be, unaligned),
+
+		LONE_TYPES_ENDIAN_TEST_CASE(u16, write, le, aligned),
+		LONE_TYPES_ENDIAN_TEST_CASE(u16, write, be, aligned),
+		LONE_TYPES_ENDIAN_TEST_CASE(s16, write, le, aligned),
+		LONE_TYPES_ENDIAN_TEST_CASE(s16, write, be, aligned),
+
+		LONE_TYPES_ENDIAN_TEST_CASE(u16, write, le, unaligned),
+		LONE_TYPES_ENDIAN_TEST_CASE(u16, write, be, unaligned),
+		LONE_TYPES_ENDIAN_TEST_CASE(s16, write, le, unaligned),
+		LONE_TYPES_ENDIAN_TEST_CASE(s16, write, be, unaligned),
+
+		LONE_TYPES_ENDIAN_TEST_CASE(u32, write, le, aligned),
+		LONE_TYPES_ENDIAN_TEST_CASE(u32, write, be, aligned),
+		LONE_TYPES_ENDIAN_TEST_CASE(s32, write, le, aligned),
+		LONE_TYPES_ENDIAN_TEST_CASE(s32, write, be, aligned),
+
+		LONE_TYPES_ENDIAN_TEST_CASE(u32, write, le, unaligned),
+		LONE_TYPES_ENDIAN_TEST_CASE(u32, write, be, unaligned),
+		LONE_TYPES_ENDIAN_TEST_CASE(s32, write, le, unaligned),
+		LONE_TYPES_ENDIAN_TEST_CASE(s32, write, be, unaligned),
+
+		LONE_TYPES_ENDIAN_TEST_CASE(u64, write, le, aligned),
+		LONE_TYPES_ENDIAN_TEST_CASE(u64, write, be, aligned),
+		LONE_TYPES_ENDIAN_TEST_CASE(s64, write, le, aligned),
+		LONE_TYPES_ENDIAN_TEST_CASE(s64, write, be, aligned),
+
+		LONE_TYPES_ENDIAN_TEST_CASE(u64, write, le, unaligned),
+		LONE_TYPES_ENDIAN_TEST_CASE(u64, write, be, unaligned),
+		LONE_TYPES_ENDIAN_TEST_CASE(s64, write, le, unaligned),
+		LONE_TYPES_ENDIAN_TEST_CASE(s64, write, be, unaligned),
 
 #undef LONE_TYPES_ENDIAN_TEST_CASE
 

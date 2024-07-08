@@ -245,3 +245,82 @@ lone_s64 lone_s64_read_be(void *address)
 {
 	return (lone_s64) lone_u64_read_be(address);
 }
+
+void lone_u16_write_le(void *address, lone_u16 value)
+{
+	unsigned char *bytes = address;
+
+	bytes[0] = ((unsigned char) (value >>  0));
+	bytes[1] = ((unsigned char) (value >>  8));
+}
+
+void lone_u16_write_be(void *address, lone_u16 value)
+{
+	unsigned char *bytes = address;
+
+	bytes[0] = ((unsigned char) (value >>  8));
+	bytes[1] = ((unsigned char) (value >>  0));
+}
+
+void lone_u32_write_le(void *address, lone_u32 value)
+{
+	unsigned char *bytes = address;
+
+	bytes[0] = ((unsigned char) (value >>  0));
+	bytes[1] = ((unsigned char) (value >>  8));
+	bytes[2] = ((unsigned char) (value >> 16));
+	bytes[3] = ((unsigned char) (value >> 24));
+}
+
+void lone_u32_write_be(void *address, lone_u32 value)
+{
+	unsigned char *bytes = address;
+
+	bytes[0] = ((unsigned char) (value >> 24));
+	bytes[1] = ((unsigned char) (value >> 16));
+	bytes[2] = ((unsigned char) (value >>  8));
+	bytes[3] = ((unsigned char) (value >>  0));
+}
+
+void lone_u64_write_le(void *address, lone_u64 value)
+{
+	unsigned char *bytes = address;
+
+	bytes[0] = ((unsigned char) (value >>  0));
+	bytes[1] = ((unsigned char) (value >>  8));
+	bytes[2] = ((unsigned char) (value >> 16));
+	bytes[3] = ((unsigned char) (value >> 24));
+	bytes[4] = ((unsigned char) (value >> 32));
+	bytes[5] = ((unsigned char) (value >> 40));
+	bytes[6] = ((unsigned char) (value >> 48));
+	bytes[7] = ((unsigned char) (value >> 56));
+}
+
+void lone_u64_write_be(void *address, lone_u64 value)
+{
+	unsigned char *bytes = address;
+
+	bytes[0] = ((unsigned char) (value >> 56));
+	bytes[1] = ((unsigned char) (value >> 48));
+	bytes[2] = ((unsigned char) (value >> 40));
+	bytes[3] = ((unsigned char) (value >> 32));
+	bytes[4] = ((unsigned char) (value >> 24));
+	bytes[5] = ((unsigned char) (value >> 16));
+	bytes[6] = ((unsigned char) (value >>  8));
+	bytes[7] = ((unsigned char) (value >>  0));
+}
+
+#define LONE_ENDIAN_SIGNED_WRITER(bits, endian)                                                    \
+void lone_s##bits##_write_##endian(void *address, lone_s##bits value)                              \
+{                                                                                                  \
+	lone_u##bits##_write_##endian(address, (lone_u##bits) value);                              \
+}
+
+LONE_ENDIAN_SIGNED_WRITER(16, le)
+LONE_ENDIAN_SIGNED_WRITER(16, be)
+LONE_ENDIAN_SIGNED_WRITER(32, le)
+LONE_ENDIAN_SIGNED_WRITER(32, be)
+LONE_ENDIAN_SIGNED_WRITER(64, le)
+LONE_ENDIAN_SIGNED_WRITER(64, be)
+
+#undef LONE_ENDIAN_SIGNED_WRITER
