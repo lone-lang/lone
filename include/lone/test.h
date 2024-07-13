@@ -27,8 +27,8 @@ struct lone_test_suite_events {
 
 	struct {
 		struct {
-			lone_test_event initiated;
-			lone_test_event terminated;
+			lone_test_event started;
+			lone_test_event finished;
 		} test;
 	} on;
 };
@@ -73,8 +73,8 @@ struct lone_test_case {
 	{ \
 		.tests = (__cases), \
 		.events.context = 0, \
-		.events.on.test.initiated = 0, \
-		.events.on.test.terminated = 0, \
+		.events.on.test.started = 0, \
+		.events.on.test.finished = 0, \
 	}
 
 enum lone_test_result lone_test_suite_run(struct lone_test_suite *suite);

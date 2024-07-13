@@ -567,7 +567,7 @@ long lone(int argc, char **argv, char **envp, struct lone_auxiliary_vector *auxv
 	struct lone_test_suite suite = LONE_TEST_SUITE(cases);
 	enum lone_test_result result;
 
-	suite.events.on.test.terminated = test_finished;
+	suite.events.on.test.finished = test_finished;
 
 	result = lone_test_suite_run(&suite);
 

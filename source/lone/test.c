@@ -41,14 +41,14 @@ static void lone_test_suite_dispatch_event(struct lone_test_suite *suite, lone_t
 	lone_test_event_dispatch(event, test, suite->events.context);
 }
 
-static void lone_test_suite_test_initiated(struct lone_test_suite *suite, struct lone_test_case *test)
+static void lone_test_suite_test_started(struct lone_test_suite *suite, struct lone_test_case *test)
 {
-	lone_test_suite_dispatch_event(suite, suite->events.on.test.initiated, test);
+	lone_test_suite_dispatch_event(suite, suite->events.on.test.started, test);
 }
 
-static void lone_test_suite_test_terminated(struct lone_test_suite *suite, struct lone_test_case *test)
+static void lone_test_suite_test_finished(struct lone_test_suite *suite, struct lone_test_case *test)
 {
-	lone_test_suite_dispatch_event(suite, suite->events.on.test.terminated, test);
+	lone_test_suite_dispatch_event(suite, suite->events.on.test.finished, test);
 }
 
 enum lone_test_result lone_test_suite_run(struct lone_test_suite *suite)
@@ -61,9 +61,9 @@ enum lone_test_result lone_test_suite_run(struct lone_test_suite *suite)
 	if (!suite || !suite->tests) { goto end; }
 
 	for (current = suite->tests; current->test; ++current) {
-		lone_test_suite_test_initiated(suite, current);
+		lone_test_suite_test_started(suite, current);
 		current->result = current->test(current->context);
-		lone_test_suite_test_terminated(suite, current);
+		lone_test_suite_test_finished(suite, current);
 
 		switch (current->result) {
 		case LONE_TEST_RESULT_SKIPPED:
