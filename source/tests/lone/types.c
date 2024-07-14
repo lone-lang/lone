@@ -429,7 +429,7 @@ static void test_finished(struct lone_test_suite *suite, struct lone_test_case *
 	case LONE_TEST_RESULT_SKIP:
 		result = (struct lone_bytes) LONE_BYTES_FROM_LITERAL("SKIP");
 		break;
-	case LONE_TEST_RESULT_PENDING:    __attribute__((fallthrough));
+	case LONE_TEST_RESULT_PENDING:
 	default:
 		linux_exit(-1);
 	}
