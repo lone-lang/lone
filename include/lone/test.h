@@ -45,6 +45,10 @@ struct lone_test_case {
 	void *context;
 };
 
+#define LONE_TEST_FUNCTION(__name)                                                                 \
+enum lone_test_result                                                                              \
+__name(struct lone_test_suite *suite, struct lone_test_case *test, void *context)
+
 #define LONE_TEST_CASE(__name_c_string_literal, __test) \
 	{ \
 		.name = LONE_BYTES_FROM_LITERAL(__name_c_string_literal), \

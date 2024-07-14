@@ -20,8 +20,8 @@
 	test_lone_types_lone_##sign##bits##_##operation##_##alignment
 
 #define LONE_TYPES_TEST_READ_ALIGNED(sign, bits, constant)                                         \
-static enum lone_test_result                                                                       \
-LONE_TYPES_TEST_FUNCTION(sign, bits, read, aligned)(void *context)                                 \
+static LONE_TEST_FUNCTION(LONE_TYPES_TEST_FUNCTION(sign, bits,                                     \
+			read, aligned))                                                            \
 {                                                                                                  \
 	lone_##sign##bits value = constant;                                                        \
 	                                                                                           \
@@ -31,8 +31,8 @@ LONE_TYPES_TEST_FUNCTION(sign, bits, read, aligned)(void *context)              
 }
 
 #define LONE_TYPES_TEST_READ_UNALIGNED(sign, bits, constant)                                       \
-static enum lone_test_result                                                                       \
-LONE_TYPES_TEST_FUNCTION(sign, bits, read, unaligned)(void *context)                               \
+static LONE_TEST_FUNCTION(LONE_TYPES_TEST_FUNCTION(sign, bits,                                     \
+			read, unaligned))                                                          \
 {                                                                                                  \
 	struct PACKED(bits) {                                                                      \
 		unsigned char byte;                                                                \
@@ -45,8 +45,8 @@ LONE_TYPES_TEST_FUNCTION(sign, bits, read, unaligned)(void *context)            
 }
 
 #define LONE_TYPES_TEST_WRITE_ALIGNED(sign, bits, constant)                                        \
-static enum lone_test_result                                                                       \
-LONE_TYPES_TEST_FUNCTION(sign, bits, write, aligned)(void *context)                                \
+static LONE_TEST_FUNCTION(LONE_TYPES_TEST_FUNCTION(sign, bits,                                     \
+			write, aligned))                                                           \
 {                                                                                                  \
 	lone_##sign##bits value = 0;                                                               \
 	                                                                                           \
@@ -57,8 +57,8 @@ LONE_TYPES_TEST_FUNCTION(sign, bits, write, aligned)(void *context)             
 }
 
 #define LONE_TYPES_TEST_WRITE_UNALIGNED(sign, bits, constant)                                      \
-static enum lone_test_result                                                                       \
-LONE_TYPES_TEST_FUNCTION(sign, bits, write, unaligned)(void *context)                              \
+static LONE_TEST_FUNCTION(LONE_TYPES_TEST_FUNCTION(sign, bits,                                     \
+			write, unaligned))                                                         \
 {                                                                                                  \
 	struct PACKED(bits) {                                                                      \
 		unsigned char byte;                                                                \
@@ -119,8 +119,8 @@ LONE_TYPES_TEST_WRITE_UNALIGNED(s, 64, -1234567891011121314)
 	test_lone_types_lone_bytes_##operation##_##sign##bits##_##alignment##_##bounds
 
 #define LONE_TYPES_BYTES_TEST_READ_ALIGNED_WITHIN_BOUNDS(sign, bits, constant)                     \
-static enum lone_test_result                                                                       \
-LONE_TYPES_BYTES_TEST_FUNCTION(sign, bits, read, aligned, within_bounds)(void *context)            \
+static LONE_TEST_FUNCTION(LONE_TYPES_BYTES_TEST_FUNCTION(sign, bits,                               \
+			read, aligned, within_bounds))                                             \
 {                                                                                                  \
 	lone_##sign##bits values[] = { 0, 0, constant, 0, 0 };                                     \
 	struct lone_bytes bytes = { sizeof(values), (unsigned char *) &values };                   \
@@ -134,8 +134,8 @@ LONE_TYPES_BYTES_TEST_FUNCTION(sign, bits, read, aligned, within_bounds)(void *c
 }
 
 #define LONE_TYPES_BYTES_TEST_READ_ALIGNED_OUT_OF_BOUNDS(sign, bits, constant)                     \
-static enum lone_test_result                                                                       \
-LONE_TYPES_BYTES_TEST_FUNCTION(sign, bits, read, aligned, out_of_bounds)(void *context)            \
+static LONE_TEST_FUNCTION(LONE_TYPES_BYTES_TEST_FUNCTION(sign, bits,                               \
+			read, aligned, out_of_bounds))                                             \
 {                                                                                                  \
 	lone_##sign##bits values[] = { 0, 0, constant, 0, 0 };                                     \
 	struct lone_bytes bytes = { sizeof(values), (unsigned char *) &values };                   \
@@ -149,8 +149,8 @@ LONE_TYPES_BYTES_TEST_FUNCTION(sign, bits, read, aligned, out_of_bounds)(void *c
 }
 
 #define LONE_TYPES_BYTES_TEST_READ_UNALIGNED_WITHIN_BOUNDS(sign, bits, constant)                   \
-static enum lone_test_result                                                                       \
-LONE_TYPES_BYTES_TEST_FUNCTION(sign, bits, read, unaligned, within_bounds)(void *context)          \
+static LONE_TEST_FUNCTION(LONE_TYPES_BYTES_TEST_FUNCTION(sign, bits,                               \
+			read, unaligned, within_bounds))                                           \
 {                                                                                                  \
 	struct PACKED(bits) {                                                                      \
 		unsigned char byte;                                                                \
@@ -167,8 +167,8 @@ LONE_TYPES_BYTES_TEST_FUNCTION(sign, bits, read, unaligned, within_bounds)(void 
 }
 
 #define LONE_TYPES_BYTES_TEST_READ_UNALIGNED_OUT_OF_BOUNDS(sign, bits, constant)                   \
-static enum lone_test_result                                                                       \
-LONE_TYPES_BYTES_TEST_FUNCTION(sign, bits, read, unaligned, out_of_bounds)(void *context)          \
+static LONE_TEST_FUNCTION(LONE_TYPES_BYTES_TEST_FUNCTION(sign, bits,                               \
+			read, unaligned, out_of_bounds))                                           \
 {                                                                                                  \
 	struct PACKED(bits) {                                                                      \
 		unsigned char byte;                                                                \
@@ -185,8 +185,8 @@ LONE_TYPES_BYTES_TEST_FUNCTION(sign, bits, read, unaligned, out_of_bounds)(void 
 }
 
 #define LONE_TYPES_BYTES_TEST_WRITE_ALIGNED_WITHIN_BOUNDS(sign, bits, constant)                    \
-static enum lone_test_result                                                                       \
-LONE_TYPES_BYTES_TEST_FUNCTION(sign, bits, write, aligned, within_bounds)(void *context)           \
+static LONE_TEST_FUNCTION(LONE_TYPES_BYTES_TEST_FUNCTION(sign, bits,                               \
+			write, aligned, within_bounds))                                            \
 {                                                                                                  \
 	lone_##sign##bits values[] = { 0, 0, constant, 0, 0 };                                     \
 	struct lone_bytes bytes = { sizeof(values), (unsigned char *) &values };                   \
@@ -204,8 +204,8 @@ LONE_TYPES_BYTES_TEST_FUNCTION(sign, bits, write, aligned, within_bounds)(void *
 }
 
 #define LONE_TYPES_BYTES_TEST_WRITE_ALIGNED_OUT_OF_BOUNDS(sign, bits, constant)                    \
-static enum lone_test_result                                                                       \
-LONE_TYPES_BYTES_TEST_FUNCTION(sign, bits, write, aligned, out_of_bounds)(void *context)           \
+static LONE_TEST_FUNCTION(LONE_TYPES_BYTES_TEST_FUNCTION(sign, bits,                               \
+			write, aligned, out_of_bounds))                                            \
 {                                                                                                  \
 	lone_##sign##bits values[] = { 0, 0, constant, 0, 0 };                                     \
 	struct lone_bytes bytes = { sizeof(values), (unsigned char *) &values };                   \
@@ -219,8 +219,8 @@ LONE_TYPES_BYTES_TEST_FUNCTION(sign, bits, write, aligned, out_of_bounds)(void *
 }
 
 #define LONE_TYPES_BYTES_TEST_WRITE_UNALIGNED_WITHIN_BOUNDS(sign, bits, constant)                  \
-static enum lone_test_result                                                                       \
-LONE_TYPES_BYTES_TEST_FUNCTION(sign, bits, write, unaligned, within_bounds)(void *context)         \
+static LONE_TEST_FUNCTION(LONE_TYPES_BYTES_TEST_FUNCTION(sign, bits,                               \
+			write, unaligned, within_bounds))                                          \
 {                                                                                                  \
 	struct PACKED(bits) {                                                                      \
 		unsigned char byte;                                                                \
@@ -241,8 +241,8 @@ LONE_TYPES_BYTES_TEST_FUNCTION(sign, bits, write, unaligned, within_bounds)(void
 }
 
 #define LONE_TYPES_BYTES_TEST_WRITE_UNALIGNED_OUT_OF_BOUNDS(sign, bits, constant)                  \
-static enum lone_test_result                                                                       \
-LONE_TYPES_BYTES_TEST_FUNCTION(sign, bits, write, unaligned, out_of_bounds)(void *context)         \
+static LONE_TEST_FUNCTION(LONE_TYPES_BYTES_TEST_FUNCTION(sign, bits,                               \
+			write, unaligned, out_of_bounds))                                          \
 {                                                                                                  \
 	struct PACKED(bits) {                                                                      \
 		unsigned char byte;                                                                \
@@ -346,8 +346,8 @@ LONE_TYPES_BYTES_TEST_WRITE_UNALIGNED_OUT_OF_BOUNDS(s, 64, -1234567891011121314)
 	test_lone_types_lone_##sign##bits##_##operation##_##endian##_##alignment
 
 #define LONE_TYPES_ENDIAN_TEST_READ(sign, bits, endian, alignment, constant, offset, ...)          \
-static enum lone_test_result                                                                       \
-LONE_TYPES_ENDIAN_TEST_FUNCTION(sign, bits, read, endian, alignment)(void *context)                \
+static LONE_TEST_FUNCTION(LONE_TYPES_ENDIAN_TEST_FUNCTION(sign, bits,                              \
+			read, endian, alignment))                                                  \
 {                                                                                                  \
 	unsigned char bytes[] = { __VA_ARGS__ };                                                   \
 	                                                                                           \
@@ -357,8 +357,8 @@ LONE_TYPES_ENDIAN_TEST_FUNCTION(sign, bits, read, endian, alignment)(void *conte
 }
 
 #define LONE_TYPES_ENDIAN_TEST_WRITE(sign, bits, endian, alignment, constant, offset, ...)         \
-static enum lone_test_result                                                                       \
-LONE_TYPES_ENDIAN_TEST_FUNCTION(sign, bits, write, endian, alignment)(void *context)               \
+static LONE_TEST_FUNCTION(LONE_TYPES_ENDIAN_TEST_FUNCTION(sign, bits,                              \
+			write, endian, alignment))                                                 \
 {                                                                                                  \
 	unsigned char actual[sizeof(lone_##sign##bits) + offset] = {0};                            \
 	unsigned char expected[] = { __VA_ARGS__ };                                                \
