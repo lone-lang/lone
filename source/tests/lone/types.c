@@ -430,7 +430,8 @@ LONE_TYPES_ENDIAN_TEST_WRITE(u, 64, be, unaligned, 0x0102030405060708, 1, 0x01, 
 LONE_TYPES_ENDIAN_TEST_WRITE(s, 64, le, unaligned, 0x0102030405060708, 1, 0x08, 0x07, 0x06, 0x05, 0x04, 0x03, 0x02, 0x01)
 LONE_TYPES_ENDIAN_TEST_WRITE(s, 64, be, unaligned, 0x0102030405060708, 1, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08)
 
-#undef LONE_TYPES_ENDIAN_TEST_READ_ALIGNED
+#undef LONE_TYPES_ENDIAN_TEST_WRITE
+#undef LONE_TYPES_ENDIAN_TEST_READ
 
 static void test_finished(struct lone_test_suite *suite, struct lone_test_case *test, void *context)
 {
