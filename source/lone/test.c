@@ -8,45 +8,63 @@ static enum lone_test_result lone_test_result_for(bool passed)
 	return passed? LONE_TEST_RESULT_PASSED : LONE_TEST_RESULT_FAILED;
 }
 
-static void lone_test_result_override(enum lone_test_result *result, struct lone_test_case *test)
+static void lone_test_result_override(enum lone_test_result from, enum lone_test_result *to)
 {
-	*result = test->result;
-}
-
-static void lone_test_result_override_all_but_error(enum lone_test_result *result, struct lone_test_case *test)
-{
-	switch (*result) {
+	switch (from) {
 	case LONE_TEST_RESULT_ERROR:
-		return;
-	case LONE_TEST_RESULT_PENDING:
-	case LONE_TEST_RESULT_PASSED:
+		switch (*to) {
+		case LONE_TEST_RESULT_ERROR:
+			break;
+		case LONE_TEST_RESULT_FAILED:
+		case LONE_TEST_RESULT_SKIPPED:
+		case LONE_TEST_RESULT_PASSED:
+		case LONE_TEST_RESULT_PENDING:
+			*to = from;
+		}
+		break;
 	case LONE_TEST_RESULT_FAILED:
+		switch (*to) {
+		case LONE_TEST_RESULT_ERROR:
+		case LONE_TEST_RESULT_FAILED:
+			break;
+		case LONE_TEST_RESULT_SKIPPED:
+		case LONE_TEST_RESULT_PASSED:
+		case LONE_TEST_RESULT_PENDING:
+			*to = from;
+		}
+		break;
 	case LONE_TEST_RESULT_SKIPPED:
-		lone_test_result_override(result, test);
+		switch (*to) {
+		case LONE_TEST_RESULT_ERROR:
+		case LONE_TEST_RESULT_FAILED:
+		case LONE_TEST_RESULT_SKIPPED:
+			break;
+		case LONE_TEST_RESULT_PASSED:
+		case LONE_TEST_RESULT_PENDING:
+			*to = from;
+		}
 		break;
-	}
-}
-
-static void lone_test_result_override_pending(enum lone_test_result *result, struct lone_test_case *test)
-{
-	switch (*result) {
+	case LONE_TEST_RESULT_PASSED:
+		switch (*to) {
+		case LONE_TEST_RESULT_ERROR:
+		case LONE_TEST_RESULT_FAILED:
+		case LONE_TEST_RESULT_SKIPPED:
+		case LONE_TEST_RESULT_PASSED:
+			break;
+		case LONE_TEST_RESULT_PENDING:
+			*to = from;
+		}
+		break;
 	case LONE_TEST_RESULT_PENDING:
-		lone_test_result_override(result, test);
+		switch (*to) {
+		case LONE_TEST_RESULT_ERROR:
+		case LONE_TEST_RESULT_FAILED:
+		case LONE_TEST_RESULT_SKIPPED:
+		case LONE_TEST_RESULT_PASSED:
+		case LONE_TEST_RESULT_PENDING:
+			break;
+		}
 		break;
-	default:
-		return;
-	}
-}
-
-static void lone_test_result_override_pending_or_skipped(enum lone_test_result *result, struct lone_test_case *test)
-{
-	switch (*result) {
-	case LONE_TEST_RESULT_PENDING:
-	case LONE_TEST_RESULT_SKIPPED:
-		lone_test_result_override(result, test);
-		break;
-	default:
-		return;
 	}
 }
 
@@ -84,24 +102,7 @@ enum lone_test_result lone_test_suite_run(struct lone_test_suite *suite)
 		lone_test_suite_test_started(suite, current);
 		current->test(suite, current);
 		lone_test_suite_test_finished(suite, current);
-
-		switch (current->result) {
-		case LONE_TEST_RESULT_SKIPPED:
-			lone_test_result_override_pending(&result, current);
-			break;
-		case LONE_TEST_RESULT_PASSED:
-			lone_test_result_override_pending_or_skipped(&result, current);
-			break;
-		case LONE_TEST_RESULT_FAILED:
-			lone_test_result_override_all_but_error(&result, current);
-			break;
-		case LONE_TEST_RESULT_ERROR:
-			lone_test_result_override(&result, current);
-			break;
-		case LONE_TEST_RESULT_PENDING:
-		default:
-			linux_exit(-1);
-		}
+		lone_test_result_override(current->result, &result);
 	}
 
 end:
@@ -175,20 +176,18 @@ static bool lone_test_assert_equal(struct lone_test_suite *suite,
 bool lone_test_assert(struct lone_test_suite *suite,
 		struct lone_test_case *test, struct lone_test_assertion *assertion)
 {
-	bool result;
+	enum lone_test_result result = LONE_TEST_RESULT_PENDING;
 
 	switch (assertion->type) {
 	case LONE_TEST_ASSERTION_TYPE_EQUAL:
-		result = lone_test_assert_equal(suite, test, assertion);
+		result = lone_test_result_for(lone_test_assert_equal(suite, test, assertion));
 		break;
 	case LONE_TEST_ASSERTION_TYPE_NOT_EQUAL:
-		result = !lone_test_assert_equal(suite, test, assertion);
+		result = lone_test_result_for(!lone_test_assert_equal(suite, test, assertion));
 		break;
 	}
 
-	if (test->result == LONE_TEST_RESULT_PENDING) {
-		test->result = result? LONE_TEST_RESULT_PASSED : LONE_TEST_RESULT_FAILED;
-	}
+	lone_test_result_override(result, &test->result);
 
 	return result;
 }
