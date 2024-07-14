@@ -319,3 +319,64 @@ LONE_ENDIAN_SIGNED_WRITERS()
 #undef LONE_ENDIAN_SIGNED_WRITER
 #undef LONE_ENDIAN_SIGNED_WRITERS_FOR_BITS
 #undef LONE_ENDIAN_SIGNED_WRITERS
+
+#define LONE_BYTES_ENDIAN_READER_2(type, endian)                                                   \
+struct lone_##type lone_bytes_read_##type##_##endian(struct lone_bytes bytes, lone_size offset)    \
+{                                                                                                  \
+	struct lone_##type result = { .present = false, .value = 0 };                              \
+	                                                                                           \
+	if (lone_bytes_contains_block(bytes, offset, sizeof(lone_##type))) {                       \
+		result.value = lone_##type##_read_##endian(bytes.pointer + offset);                \
+		result.present = true;                                                             \
+	}                                                                                          \
+	                                                                                           \
+	return result;                                                                             \
+}
+
+#define LONE_BYTES_ENDIAN_WRITER_2(type, endian)                                                   \
+bool lone_bytes_write_##type##_##endian(struct lone_bytes bytes,                                   \
+		lone_size offset, lone_##type value)                                               \
+{                                                                                                  \
+	bool written = false;                                                                      \
+	                                                                                           \
+	if (lone_bytes_contains_block(bytes, offset, sizeof(lone_##type))) {                       \
+		lone_##type##_write_##endian(bytes.pointer + offset, value);                       \
+		written = true;                                                                    \
+	}                                                                                          \
+	                                                                                           \
+	return written;                                                                            \
+}
+
+#define LONE_BYTES_ENDIAN_READER_1(type)                                                           \
+	LONE_BYTES_ENDIAN_READER_2(type, le)                                                       \
+	LONE_BYTES_ENDIAN_READER_2(type, be)
+
+#define LONE_BYTES_ENDIAN_READERS()                                                                \
+	LONE_BYTES_ENDIAN_READER_1(u16)                                                            \
+	LONE_BYTES_ENDIAN_READER_1(s16)                                                            \
+	LONE_BYTES_ENDIAN_READER_1(u32)                                                            \
+	LONE_BYTES_ENDIAN_READER_1(s32)                                                            \
+	LONE_BYTES_ENDIAN_READER_1(u64)                                                            \
+	LONE_BYTES_ENDIAN_READER_1(s64)
+
+#define LONE_BYTES_ENDIAN_WRITER_1(type)                                                           \
+	LONE_BYTES_ENDIAN_WRITER_2(type, le)                                                       \
+	LONE_BYTES_ENDIAN_WRITER_2(type, be)
+
+#define LONE_BYTES_ENDIAN_WRITERS()                                                                \
+	LONE_BYTES_ENDIAN_WRITER_1(u16)                                                            \
+	LONE_BYTES_ENDIAN_WRITER_1(s16)                                                            \
+	LONE_BYTES_ENDIAN_WRITER_1(u32)                                                            \
+	LONE_BYTES_ENDIAN_WRITER_1(s32)                                                            \
+	LONE_BYTES_ENDIAN_WRITER_1(u64)                                                            \
+	LONE_BYTES_ENDIAN_WRITER_1(s64)
+
+LONE_BYTES_ENDIAN_READERS()
+LONE_BYTES_ENDIAN_WRITERS()
+
+#undef LONE_BYTES_ENDIAN_WRITERS
+#undef LONE_BYTES_ENDIAN_WRITER_1
+#undef LONE_BYTES_ENDIAN_WRITER_2
+#undef LONE_BYTES_ENDIAN_READERS
+#undef LONE_BYTES_ENDIAN_READER_1
+#undef LONE_BYTES_ENDIAN_READER_2

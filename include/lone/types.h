@@ -268,6 +268,34 @@ bool lone_bytes_write_s32(struct lone_bytes bytes, lone_size offset, lone_s32 s3
 bool lone_bytes_write_u64(struct lone_bytes bytes, lone_size offset, lone_u64 u64);
 bool lone_bytes_write_s64(struct lone_bytes bytes, lone_size offset, lone_s64 s64);
 
+struct lone_u16 lone_bytes_read_u16_le(struct lone_bytes bytes, lone_size offset);
+struct lone_s16 lone_bytes_read_s16_le(struct lone_bytes bytes, lone_size offset);
+struct lone_u32 lone_bytes_read_u32_le(struct lone_bytes bytes, lone_size offset);
+struct lone_s32 lone_bytes_read_s32_le(struct lone_bytes bytes, lone_size offset);
+struct lone_u64 lone_bytes_read_u64_le(struct lone_bytes bytes, lone_size offset);
+struct lone_s64 lone_bytes_read_s64_le(struct lone_bytes bytes, lone_size offset);
+
+bool lone_bytes_write_u16_le(struct lone_bytes bytes, lone_size offset, lone_u16 u16);
+bool lone_bytes_write_s16_le(struct lone_bytes bytes, lone_size offset, lone_s16 s16);
+bool lone_bytes_write_u32_le(struct lone_bytes bytes, lone_size offset, lone_u32 u32);
+bool lone_bytes_write_s32_le(struct lone_bytes bytes, lone_size offset, lone_s32 s32);
+bool lone_bytes_write_u64_le(struct lone_bytes bytes, lone_size offset, lone_u64 u64);
+bool lone_bytes_write_s64_le(struct lone_bytes bytes, lone_size offset, lone_s64 s64);
+
+struct lone_u16 lone_bytes_read_u16_be(struct lone_bytes bytes, lone_size offset);
+struct lone_s16 lone_bytes_read_s16_be(struct lone_bytes bytes, lone_size offset);
+struct lone_u32 lone_bytes_read_u32_be(struct lone_bytes bytes, lone_size offset);
+struct lone_s32 lone_bytes_read_s32_be(struct lone_bytes bytes, lone_size offset);
+struct lone_u64 lone_bytes_read_u64_be(struct lone_bytes bytes, lone_size offset);
+struct lone_s64 lone_bytes_read_s64_be(struct lone_bytes bytes, lone_size offset);
+
+bool lone_bytes_write_u16_be(struct lone_bytes bytes, lone_size offset, lone_u16 u16);
+bool lone_bytes_write_s16_be(struct lone_bytes bytes, lone_size offset, lone_s16 s16);
+bool lone_bytes_write_u32_be(struct lone_bytes bytes, lone_size offset, lone_u32 u32);
+bool lone_bytes_write_s32_be(struct lone_bytes bytes, lone_size offset, lone_s32 s32);
+bool lone_bytes_write_u64_be(struct lone_bytes bytes, lone_size offset, lone_u64 u64);
+bool lone_bytes_write_s64_be(struct lone_bytes bytes, lone_size offset, lone_s64 s64);
+
 /* ╭────────────────────────────────────────────────────────────────────────╮
    │                                                                        │
    │    The lone system structure represents low level system state         │
