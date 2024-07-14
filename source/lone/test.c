@@ -8,6 +8,20 @@ static void lone_test_result_override(enum lone_test_result *result, struct lone
 	*result = test->result;
 }
 
+static void lone_test_result_override_all_but_error(enum lone_test_result *result, struct lone_test_case *test)
+{
+	switch (*result) {
+	case LONE_TEST_RESULT_ERROR:
+		return;
+	case LONE_TEST_RESULT_PENDING:
+	case LONE_TEST_RESULT_PASSED:
+	case LONE_TEST_RESULT_FAILED:
+	case LONE_TEST_RESULT_SKIPPED:
+		lone_test_result_override(result, test);
+		break;
+	}
+}
+
 static void lone_test_result_override_pending(enum lone_test_result *result, struct lone_test_case *test)
 {
 	switch (*result) {
@@ -74,6 +88,9 @@ enum lone_test_result lone_test_suite_run(struct lone_test_suite *suite)
 			lone_test_result_override_pending_or_skipped(&result, current);
 			break;
 		case LONE_TEST_RESULT_FAILED:
+			lone_test_result_override_all_but_error(&result, current);
+			break;
+		case LONE_TEST_RESULT_ERROR:
 			lone_test_result_override(&result, current);
 			break;
 		case LONE_TEST_RESULT_PENDING:    __attribute__((fallthrough));

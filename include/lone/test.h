@@ -15,6 +15,8 @@ enum lone_test_result {
 	LONE_TEST_RESULT_FAILED    = 2, /* test executed successfully, results were incorrect or unexpected */
 	LONE_TEST_RESULT_SKIPPED   = 3, /* test couldn't execute due to non-error condition and was skipped */
 
+	LONE_TEST_RESULT_ERROR     = 4, /* unexpected error was encountered during test execution */
+
 	LONE_TEST_RESULT_PASS      = LONE_TEST_RESULT_PASSED,
 	LONE_TEST_RESULT_FAIL      = LONE_TEST_RESULT_FAILED,
 	LONE_TEST_RESULT_SKIP      = LONE_TEST_RESULT_SKIPPED,
