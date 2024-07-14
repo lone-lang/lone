@@ -7,6 +7,7 @@
 
 struct lone_test_suite;
 struct lone_test_case;
+struct lone_test_assertion;
 
 enum lone_test_result {
 	LONE_TEST_RESULT_PENDING   = 0, /* initial state, it is an error for a test case to return this */
@@ -20,6 +21,11 @@ enum lone_test_result {
 	LONE_TEST_RESULT_PASS      = LONE_TEST_RESULT_PASSED,
 	LONE_TEST_RESULT_FAIL      = LONE_TEST_RESULT_FAILED,
 	LONE_TEST_RESULT_SKIP      = LONE_TEST_RESULT_SKIPPED,
+};
+
+enum lone_test_assertion_type {
+	LONE_TEST_ASSERTION_TYPE_EQUAL,
+	LONE_TEST_ASSERTION_TYPE_NOT_EQUAL,
 };
 
 typedef enum lone_test_result (*lone_test_function)(struct lone_test_suite *suite,
@@ -48,6 +54,14 @@ struct lone_test_case {
 	enum lone_test_result result;
 	lone_test_function test;
 	void *context;
+};
+
+struct lone_test_assertion {
+	enum lone_test_assertion_type type;
+
+	enum   lone_c_type   values_type;
+	struct lone_c_values x;
+	struct lone_c_values y;
 };
 
 #define LONE_TEST_FUNCTION(__name)                                                                 \
