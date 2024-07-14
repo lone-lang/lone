@@ -36,6 +36,104 @@ struct lone_s32 { bool present; lone_s32 value; };
 struct lone_u64 { bool present; lone_u64 value; };
 struct lone_s64 { bool present; lone_s64 value; };
 
+enum lone_c_type {
+	LONE_TYPES_C_UNDEFINED = 0,
+
+	LONE_TYPES_C_PLAIN_CHAR,
+	LONE_TYPES_C_SIGNED_CHAR,
+	LONE_TYPES_C_UNSIGNED_CHAR,
+
+	LONE_TYPES_C_SIGNED_SHORT_INT,
+	LONE_TYPES_C_UNSIGNED_SHORT_INT,
+
+	LONE_TYPES_C_SIGNED_INT,
+	LONE_TYPES_C_UNSIGNED_INT,
+
+	LONE_TYPES_C_SIGNED_LONG_INT,
+	LONE_TYPES_C_UNSIGNED_LONG_INT,
+
+	LONE_TYPES_C_SIGNED_LONG_LONG_INT,
+	LONE_TYPES_C_UNSIGNED_LONG_LONG_INT,
+
+	LONE_TYPES_C_FLOAT,
+	LONE_TYPES_C_DOUBLE,
+	LONE_TYPES_C_LONG_DOUBLE,
+
+	LONE_TYPES_C_BOOLEAN,
+
+	LONE_TYPES_C_DATA_POINTER,
+	LONE_TYPES_C_FUNCTION_POINTER,
+
+	LONE_TYPES_C_S8,
+	LONE_TYPES_C_S16,
+	LONE_TYPES_C_S32,
+	LONE_TYPES_C_S64,
+
+	LONE_TYPES_C_U8,
+	LONE_TYPES_C_U16,
+	LONE_TYPES_C_U32,
+	LONE_TYPES_C_U64,
+
+	/* useful aliases */
+	LONE_TYPES_C_POINTER               =    LONE_TYPES_C_DATA_POINTER,
+	LONE_TYPES_C_BOOL                  =    LONE_TYPES_C_BOOLEAN,
+	LONE_TYPES_C_CHAR                  =    LONE_TYPES_C_PLAIN_CHAR,
+	LONE_TYPES_C_SHORT                 =    LONE_TYPES_C_SIGNED_SHORT_INT,
+	LONE_TYPES_C_SIGNED_SHORT          =    LONE_TYPES_C_SIGNED_SHORT_INT,
+	LONE_TYPES_C_UNSIGNED_SHORT        =    LONE_TYPES_C_UNSIGNED_SHORT_INT,
+	LONE_TYPES_C_INT                   =    LONE_TYPES_C_SIGNED_INT,
+	LONE_TYPES_C_LONG                  =    LONE_TYPES_C_SIGNED_LONG_INT,
+	LONE_TYPES_C_SIGNED_LONG           =    LONE_TYPES_C_SIGNED_LONG_INT,
+	LONE_TYPES_C_UNSIGNED_LONG         =    LONE_TYPES_C_UNSIGNED_LONG_INT,
+	LONE_TYPES_C_LONG_LONG             =    LONE_TYPES_C_SIGNED_LONG_LONG_INT,
+	LONE_TYPES_C_SIGNED_LONG_LONG      =    LONE_TYPES_C_SIGNED_LONG_LONG_INT,
+	LONE_TYPES_C_UNSIGNED_LONG_LONG    =    LONE_TYPES_C_UNSIGNED_LONG_LONG_INT,
+};
+
+struct lone_c_values {
+	union {
+		char plain_char;
+		signed char signed_char;
+		unsigned char unsigned_char;
+
+		signed short signed_short;
+		unsigned short unsigned_short;
+
+		signed int signed_int;
+		unsigned int unsigned_int;
+
+		signed long signed_long;
+		unsigned long unsigned_long;
+
+		signed long long signed_long_long;
+		unsigned long long unsigned_long_long;
+
+		float single_precision;
+		double double_precision;
+		long double quadruple_precision;
+
+		bool boolean;
+
+		void *pointer;
+		void (*function_pointer)(void);
+
+		lone_s8   s8;
+		lone_s16 s16;
+		lone_s32 s32;
+		lone_s64 s64;
+
+		lone_u8   u8;
+		lone_u16 u16;
+		lone_u32 u32;
+		lone_u64 u64;
+	} as;
+};
+
+struct lone_c_value {
+	enum   lone_c_type   type;
+	struct lone_c_values value;
+};
+
 #if __BITS_PER_LONG == 64
 typedef Elf64_Ehdr lone_elf_header;
 typedef Elf64_Phdr lone_elf_segment;
