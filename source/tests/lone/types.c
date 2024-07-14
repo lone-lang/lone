@@ -25,9 +25,8 @@ static LONE_TEST_FUNCTION(LONE_TYPES_TEST_FUNCTION(sign, bits,                  
 {                                                                                                  \
 	lone_##sign##bits value = constant;                                                        \
 	                                                                                           \
-	return                                                                                     \
-		(lone_##sign##bits##_read(&value) == constant) ?                                   \
-		LONE_TEST_RESULT_PASS : LONE_TEST_RESULT_FAIL;                                     \
+	lone_test_assert_##sign##bits##_equal(suite, test,                                         \
+			lone_##sign##bits##_read(&value), constant);                               \
 }
 
 #define LONE_TYPES_TEST_READ_UNALIGNED(sign, bits, constant)                                       \
@@ -39,9 +38,8 @@ static LONE_TEST_FUNCTION(LONE_TYPES_TEST_FUNCTION(sign, bits,                  
 		lone_##sign##bits value;                                                           \
 	} unaligned = { 0, constant };                                                             \
 	                                                                                           \
-	return                                                                                     \
-		(lone_##sign##bits##_read(&unaligned.value) == constant) ?                         \
-		LONE_TEST_RESULT_PASS : LONE_TEST_RESULT_FAIL;                                     \
+	lone_test_assert_##sign##bits##_equal(suite, test,                                         \
+			lone_##sign##bits##_read(&unaligned.value), constant);                     \
 }
 
 #define LONE_TYPES_TEST_WRITE_ALIGNED(sign, bits, constant)                                        \
@@ -52,8 +50,7 @@ static LONE_TEST_FUNCTION(LONE_TYPES_TEST_FUNCTION(sign, bits,                  
 	                                                                                           \
 	lone_##sign##bits##_write(&value, constant);                                               \
 	                                                                                           \
-	return value == constant ?                                                                 \
-		LONE_TEST_RESULT_PASS : LONE_TEST_RESULT_FAIL;                                     \
+	lone_test_assert_##sign##bits##_equal(suite, test, value, constant);                       \
 }
 
 #define LONE_TYPES_TEST_WRITE_UNALIGNED(sign, bits, constant)                                      \
@@ -67,8 +64,7 @@ static LONE_TEST_FUNCTION(LONE_TYPES_TEST_FUNCTION(sign, bits,                  
 	                                                                                           \
 	lone_##sign##bits##_write(&unaligned.value, constant);                                     \
 	                                                                                           \
-	return unaligned.value == constant ?                                                       \
-		LONE_TEST_RESULT_PASS : LONE_TEST_RESULT_FAIL;                                     \
+	lone_test_assert_##sign##bits##_equal(suite, test, unaligned.value, constant);             \
 }
 
 LONE_TYPES_TEST_READ_ALIGNED(u, 8,  +214)
@@ -128,9 +124,8 @@ static LONE_TEST_FUNCTION(LONE_TYPES_BYTES_TEST_FUNCTION(sign, bits,            
 	                                                                                           \
 	actual = lone_bytes_read_##sign##bits(bytes, 2 * sizeof(lone_##sign##bits));               \
 	                                                                                           \
-	return                                                                                     \
-		actual.present && actual.value == constant ?                                       \
-		LONE_TEST_RESULT_PASS : LONE_TEST_RESULT_FAIL;                                     \
+	lone_test_assert_true(suite, test, actual.present);                                        \
+	lone_test_assert_##sign##bits##_equal(suite, test, actual.value, constant);                \
 }
 
 #define LONE_TYPES_BYTES_TEST_READ_ALIGNED_OUT_OF_BOUNDS(sign, bits, constant)                     \
@@ -143,9 +138,7 @@ static LONE_TEST_FUNCTION(LONE_TYPES_BYTES_TEST_FUNCTION(sign, bits,            
 	                                                                                           \
 	actual = lone_bytes_read_##sign##bits(bytes, sizeof(values));                              \
 	                                                                                           \
-	return                                                                                     \
-		!actual.present ?                                                                  \
-		LONE_TEST_RESULT_PASS : LONE_TEST_RESULT_FAIL;                                     \
+	lone_test_assert_false(suite, test, actual.present);                                       \
 }
 
 #define LONE_TYPES_BYTES_TEST_READ_UNALIGNED_WITHIN_BOUNDS(sign, bits, constant)                   \
@@ -161,9 +154,8 @@ static LONE_TEST_FUNCTION(LONE_TYPES_BYTES_TEST_FUNCTION(sign, bits,            
 	                                                                                           \
 	actual = lone_bytes_read_##sign##bits(bytes, 2 * sizeof(lone_##sign##bits) + 3);           \
 	                                                                                           \
-	return                                                                                     \
-		actual.present && actual.value == constant ?                                       \
-		LONE_TEST_RESULT_PASS : LONE_TEST_RESULT_FAIL;                                     \
+	lone_test_assert_true(suite, test, actual.present);                                        \
+	lone_test_assert_##sign##bits##_equal(suite, test, actual.value, constant);                \
 }
 
 #define LONE_TYPES_BYTES_TEST_READ_UNALIGNED_OUT_OF_BOUNDS(sign, bits, constant)                   \
@@ -179,9 +171,7 @@ static LONE_TEST_FUNCTION(LONE_TYPES_BYTES_TEST_FUNCTION(sign, bits,            
 	                                                                                           \
 	actual = lone_bytes_read_##sign##bits(bytes, sizeof(values));                              \
 	                                                                                           \
-	return                                                                                     \
-		!actual.present ?                                                                  \
-		LONE_TEST_RESULT_PASS : LONE_TEST_RESULT_FAIL;                                     \
+	lone_test_assert_false(suite, test, actual.present);                                       \
 }
 
 #define LONE_TYPES_BYTES_TEST_WRITE_ALIGNED_WITHIN_BOUNDS(sign, bits, constant)                    \
@@ -198,9 +188,8 @@ static LONE_TEST_FUNCTION(LONE_TYPES_BYTES_TEST_FUNCTION(sign, bits,            
 		constant                                                                           \
 	);                                                                                         \
 	                                                                                           \
-	return                                                                                     \
-		written && values[2] == constant ?                                                 \
-		LONE_TEST_RESULT_PASS : LONE_TEST_RESULT_FAIL;                                     \
+	lone_test_assert_true(suite, test, written);                                               \
+	lone_test_assert_##sign##bits##_equal(suite, test, values[2], constant);                   \
 }
 
 #define LONE_TYPES_BYTES_TEST_WRITE_ALIGNED_OUT_OF_BOUNDS(sign, bits, constant)                    \
@@ -213,9 +202,7 @@ static LONE_TEST_FUNCTION(LONE_TYPES_BYTES_TEST_FUNCTION(sign, bits,            
 	                                                                                           \
 	written = lone_bytes_write_##sign##bits(bytes, sizeof(values), constant);                  \
 	                                                                                           \
-	return                                                                                     \
-		!written ?                                                                         \
-		LONE_TEST_RESULT_PASS : LONE_TEST_RESULT_FAIL;                                     \
+	lone_test_assert_false(suite, test, written);                                              \
 }
 
 #define LONE_TYPES_BYTES_TEST_WRITE_UNALIGNED_WITHIN_BOUNDS(sign, bits, constant)                  \
@@ -235,9 +222,8 @@ static LONE_TEST_FUNCTION(LONE_TYPES_BYTES_TEST_FUNCTION(sign, bits,            
 		constant                                                                           \
 	);                                                                                         \
 	                                                                                           \
-	return                                                                                     \
-		written && values[2].value == constant ?                                           \
-		LONE_TEST_RESULT_PASS : LONE_TEST_RESULT_FAIL;                                     \
+	lone_test_assert_true(suite, test, written);                                               \
+	lone_test_assert_##sign##bits##_equal(suite, test, values[2].value, constant);             \
 }
 
 #define LONE_TYPES_BYTES_TEST_WRITE_UNALIGNED_OUT_OF_BOUNDS(sign, bits, constant)                  \
@@ -253,9 +239,7 @@ static LONE_TEST_FUNCTION(LONE_TYPES_BYTES_TEST_FUNCTION(sign, bits,            
 	                                                                                           \
 	written = lone_bytes_write_##sign##bits(bytes, sizeof(values), constant);                  \
 	                                                                                           \
-	return                                                                                     \
-		!written ?                                                                         \
-		LONE_TEST_RESULT_PASS : LONE_TEST_RESULT_FAIL;                                     \
+	lone_test_assert_false(suite, test, written);                                              \
 }
 
 LONE_TYPES_BYTES_TEST_READ_ALIGNED_WITHIN_BOUNDS(u, 8,  +214)
@@ -351,9 +335,8 @@ static LONE_TEST_FUNCTION(LONE_TYPES_ENDIAN_TEST_FUNCTION(sign, bits,           
 {                                                                                                  \
 	unsigned char bytes[] = { __VA_ARGS__ };                                                   \
 	                                                                                           \
-	return                                                                                     \
-		lone_##sign##bits##_read_##endian(bytes + offset) == constant ?                    \
-		LONE_TEST_RESULT_PASS : LONE_TEST_RESULT_FAIL;                                     \
+	lone_test_assert_##sign##bits##_equal(suite, test,                                         \
+			lone_##sign##bits##_read_##endian(bytes + offset), constant);              \
 }
 
 #define LONE_TYPES_ENDIAN_TEST_WRITE(sign, bits, endian, alignment, constant, offset, ...)         \
@@ -365,9 +348,8 @@ static LONE_TEST_FUNCTION(LONE_TYPES_ENDIAN_TEST_FUNCTION(sign, bits,           
 	                                                                                           \
 	lone_##sign##bits##_write_##endian(actual + offset, constant);                             \
 	                                                                                           \
-	return                                                                                     \
-		lone_memory_is_equal(actual + offset, expected, sizeof(expected)) ?                \
-		LONE_TEST_RESULT_PASS : LONE_TEST_RESULT_FAIL;                                     \
+	lone_test_assert_true(suite, test,                                                         \
+			lone_memory_is_equal(actual + offset, expected, sizeof(expected)));        \
 }
 
 LONE_TYPES_ENDIAN_TEST_READ(u, 16, le, aligned, 0x0102, 0, 0x02, 0x01)

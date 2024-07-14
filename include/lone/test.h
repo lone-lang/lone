@@ -28,7 +28,7 @@ enum lone_test_assertion_type {
 	LONE_TEST_ASSERTION_TYPE_NOT_EQUAL,
 };
 
-typedef enum lone_test_result (*lone_test_function)(struct lone_test_suite *suite,
+typedef void (*lone_test_function)(struct lone_test_suite *suite,
 		struct lone_test_case *test);
 typedef void (*lone_test_event)(struct lone_test_suite *suite,
 		struct lone_test_case *test);
