@@ -23,9 +23,9 @@ enum lone_test_result {
 };
 
 typedef enum lone_test_result (*lone_test_function)(struct lone_test_suite *suite,
-		struct lone_test_case *test, void *context);
+		struct lone_test_case *test);
 typedef void (*lone_test_event)(struct lone_test_suite *suite,
-		struct lone_test_case *test, void *context);
+		struct lone_test_case *test);
 
 struct lone_test_suite_events {
 	void *context;
@@ -51,8 +51,7 @@ struct lone_test_case {
 };
 
 #define LONE_TEST_FUNCTION(__name)                                                                 \
-enum lone_test_result                                                                              \
-__name(struct lone_test_suite *suite, struct lone_test_case *test, void *context)
+void __name(struct lone_test_suite *suite, struct lone_test_case *test)
 
 #define LONE_TEST_CASE(__name_c_string_literal, __test) \
 	{ \

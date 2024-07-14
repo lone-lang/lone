@@ -46,14 +46,14 @@ static void lone_test_result_override_pending_or_skipped(enum lone_test_result *
 }
 
 static void lone_test_event_dispatch(lone_test_event event,
-		struct lone_test_suite *suite, struct lone_test_case *test, void *context)
+		struct lone_test_suite *suite, struct lone_test_case *test)
 {
-	if (event) { event(suite, test, context); }
+	if (event) { event(suite, test); }
 }
 
 static void lone_test_suite_dispatch_event(struct lone_test_suite *suite, lone_test_event event, struct lone_test_case *test)
 {
-	lone_test_event_dispatch(event, suite, test, suite->events.context);
+	lone_test_event_dispatch(event, suite, test);
 }
 
 static void lone_test_suite_test_started(struct lone_test_suite *suite, struct lone_test_case *test)
@@ -77,7 +77,7 @@ enum lone_test_result lone_test_suite_run(struct lone_test_suite *suite)
 
 	for (current = suite->tests; current->test; ++current) {
 		lone_test_suite_test_started(suite, current);
-		current->result = current->test(suite, current, current->context);
+		current->test(suite, current);
 		lone_test_suite_test_finished(suite, current);
 
 		switch (current->result) {
