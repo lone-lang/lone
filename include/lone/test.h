@@ -5,6 +5,7 @@
 
 #include <lone/types.h>
 
+struct lone_test_suite;
 struct lone_test_case;
 
 enum lone_test_result {
@@ -19,8 +20,10 @@ enum lone_test_result {
 	LONE_TEST_RESULT_SKIP      = LONE_TEST_RESULT_SKIPPED,
 };
 
-typedef enum lone_test_result (*lone_test_function)(void *context);
-typedef void (*lone_test_event)(struct lone_test_case *test, void *context);
+typedef enum lone_test_result (*lone_test_function)(struct lone_test_suite *suite,
+		struct lone_test_case *test, void *context);
+typedef void (*lone_test_event)(struct lone_test_suite *suite,
+		struct lone_test_case *test, void *context);
 
 struct lone_test_suite_events {
 	void *context;

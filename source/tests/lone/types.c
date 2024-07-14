@@ -432,7 +432,7 @@ LONE_TYPES_ENDIAN_TEST_WRITE(s, 64, be, unaligned, 0x0102030405060708, 1, 0x01, 
 
 #undef LONE_TYPES_ENDIAN_TEST_READ_ALIGNED
 
-static void test_finished(struct lone_test_case *test, void *context)
+static void test_finished(struct lone_test_suite *suite, struct lone_test_case *test, void *context)
 {
 	struct lone_bytes result;
 
