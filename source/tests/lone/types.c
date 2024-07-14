@@ -415,31 +415,6 @@ LONE_TYPES_ENDIAN_TEST_WRITE(s, 64, be, unaligned, 0x0102030405060708, 1, 0x01, 
 #undef LONE_TYPES_ENDIAN_TEST_WRITE
 #undef LONE_TYPES_ENDIAN_TEST_READ
 
-static void test_finished(struct lone_test_suite *suite, struct lone_test_case *test)
-{
-	struct lone_bytes result;
-
-	switch (test->result) {
-	case LONE_TEST_RESULT_PASS:
-		result = (struct lone_bytes) LONE_BYTES_FROM_LITERAL("PASS");
-		break;
-	case LONE_TEST_RESULT_FAIL:
-		result = (struct lone_bytes) LONE_BYTES_FROM_LITERAL("FAIL");
-		break;
-	case LONE_TEST_RESULT_SKIP:
-		result = (struct lone_bytes) LONE_BYTES_FROM_LITERAL("SKIP");
-		break;
-	case LONE_TEST_RESULT_PENDING:
-	default:
-		linux_exit(-1);
-	}
-
-	linux_write(1, result.pointer, result.count);
-	linux_write(1, " ", 1);
-	linux_write(1, test->name.pointer, test->name.count);
-	linux_write(1, "\n", 1);
-}
-
 long lone(int argc, char **argv, char **envp, struct lone_auxiliary_vector *auxv)
 {
 
@@ -549,8 +524,6 @@ long lone(int argc, char **argv, char **envp, struct lone_auxiliary_vector *auxv
 
 	struct lone_test_suite suite = LONE_TEST_SUITE(cases);
 	enum lone_test_result result;
-
-	suite.events.on.test.finished = test_finished;
 
 	result = lone_test_suite_run(&suite);
 

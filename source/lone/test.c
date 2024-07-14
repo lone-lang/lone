@@ -251,3 +251,39 @@ LONE_TEST_ASSERTION_FUNCTION(u64, lone_u64, U64, u64)
 
 #undef LONE_TEST_ASSERTION_FUNCTION
 #undef LONE_TEST_ASSERTION_FUNCTION_5
+
+#define LINUX_WRITE_LITERAL(fd, c_string_literal)                                                  \
+	linux_write(fd, c_string_literal, sizeof(c_string_literal) - 1)
+
+void lone_test_suite_default_test_started_handler(struct lone_test_suite *suite, struct lone_test_case *test)
+{
+	LINUX_WRITE_LITERAL(1, "TEST ");
+	linux_write(1, test->name.pointer, test->name.count);
+	LINUX_WRITE_LITERAL(1, "\n");
+}
+
+void lone_test_suite_default_test_finished_handler(struct lone_test_suite *suite, struct lone_test_case *test)
+{
+	struct lone_bytes result;
+
+	switch (test->result) {
+	case LONE_TEST_RESULT_PASS:
+		result = (struct lone_bytes) LONE_BYTES_FROM_LITERAL("PASS");
+		break;
+	case LONE_TEST_RESULT_FAIL:
+		result = (struct lone_bytes) LONE_BYTES_FROM_LITERAL("FAIL");
+		break;
+	case LONE_TEST_RESULT_SKIP:
+		result = (struct lone_bytes) LONE_BYTES_FROM_LITERAL("SKIP");
+		break;
+	case LONE_TEST_RESULT_ERROR:
+	case LONE_TEST_RESULT_PENDING:
+	default:
+		result = (struct lone_bytes) LONE_BYTES_FROM_LITERAL("ERROR");
+		break;
+	}
+
+	LINUX_WRITE_LITERAL(1, "\tRESULT ");
+	linux_write(1, result.pointer, result.count);
+	LINUX_WRITE_LITERAL(1, "\n");
+}

@@ -33,6 +33,9 @@ typedef void (*lone_test_function)(struct lone_test_suite *suite,
 typedef void (*lone_test_event)(struct lone_test_suite *suite,
 		struct lone_test_case *test);
 
+void lone_test_suite_default_test_started_handler(struct lone_test_suite *suite, struct lone_test_case *test);
+void lone_test_suite_default_test_finished_handler(struct lone_test_suite *suite, struct lone_test_case *test);
+
 struct lone_test_suite_events {
 	void *context;
 
@@ -95,8 +98,8 @@ void __name(struct lone_test_suite *suite, struct lone_test_case *test)
 	{ \
 		.tests = (__cases), \
 		.events.context = 0, \
-		.events.on.test.started = 0, \
-		.events.on.test.finished = 0, \
+		.events.on.test.started = lone_test_suite_default_test_started_handler, \
+		.events.on.test.finished = lone_test_suite_default_test_finished_handler, \
 	}
 
 enum lone_test_result lone_test_suite_run(struct lone_test_suite *suite);
