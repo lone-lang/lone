@@ -3,6 +3,11 @@
 #include <lone/test.h>
 #include <lone/linux.h>
 
+static enum lone_test_result lone_test_result_for(bool passed)
+{
+	return passed? LONE_TEST_RESULT_PASSED : LONE_TEST_RESULT_FAILED;
+}
+
 static void lone_test_result_override(enum lone_test_result *result, struct lone_test_case *test)
 {
 	*result = test->result;
