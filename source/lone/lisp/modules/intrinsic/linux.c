@@ -317,7 +317,7 @@ void lone_lisp_modules_intrinsic_linux_initialize(struct lone_lisp *lone,
 
 	flags = (struct lone_lisp_function_flags) { .evaluate_arguments = true, .evaluate_result = false };
 	lone_lisp_module_export_primitive(lone, module, "system-call",
-			"linux_system_call", lone_lisp_primitive_linux_system_call, module, flags);
+			"linux_system_call", lone_lisp_primitive_linux_system_call, linux_system_call_table, flags);
 }
 
 static inline long lone_lisp_value_to_linux_system_call_number(struct lone_lisp *lone,
