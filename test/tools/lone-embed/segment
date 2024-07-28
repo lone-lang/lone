@@ -1,4 +1,4 @@
-{ run (1 . 65) }
-(import (lone quote) (linux system-call))
+{ run (1 . 53) }
+(import (linux system-call))
 
-(system-call 'exit 42)
+(system-call "exit" 42)
