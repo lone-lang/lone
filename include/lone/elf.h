@@ -341,4 +341,15 @@ enum lone_elf_machine {
 	LONE_ELF_MACHINE_RISCV = 243, /* RISC-V */
 };
 
+/* ╭────────────────────────────────────────────────────────────────────────╮
+   │                                                                        │
+   │    As of this writing, there is only one version of the ELF format.    │
+   │                                                                        │
+   ╰────────────────────────────────────────────────────────────────────────╯ */
+
+enum lone_elf_version {
+	LONE_ELF_VERSION_INVALID = LONE_ELF_IDENT_VERSION_INVALID,
+	LONE_ELF_VERSION_CURRENT = LONE_ELF_IDENT_VERSION_CURRENT,
+};
+
 #endif /* LONE_ELF_HEADER */
