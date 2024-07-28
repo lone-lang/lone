@@ -430,4 +430,49 @@ enum lone_elf_ranges_version {
 	LONE_ELF_RANGES_VERSION_MAX = LONE_ELF_VERSION_CURRENT,
 };
 
+struct lone_elf_header {
+	unsigned char ident[LONE_ELF_SIZES_IDENT];
+	lone_u16 type;
+	lone_u16 machine;
+	lone_u32 version;
+
+	union {
+		struct {
+			lone_u32 entry_point;
+
+			lone_u32 segments_offset;
+			lone_u32 sections_offset;
+
+			lone_u32 flags;
+
+			lone_u16 header_size;
+
+			lone_u16 segment_size;
+			lone_u16 segment_count;
+
+			lone_u16 section_size;
+			lone_u16 section_count;
+			lone_u16 section_names_index;
+		} elf32;
+
+		struct {
+			lone_u64 entry_point;
+
+			lone_u64 segments_offset;
+			lone_u64 sections_offset;
+
+			lone_u32 flags;
+
+			lone_u16 header_size;
+
+			lone_u16 segment_size;
+			lone_u16 segment_count;
+
+			lone_u16 section_size;
+			lone_u16 section_count;
+			lone_u16 section_names_index;
+		} elf64;
+	} as;
+};
+
 #endif /* LONE_ELF_HEADER */
