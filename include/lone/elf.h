@@ -108,4 +108,31 @@ enum lone_elf_ident_os_abi_version {
 	LONE_ELF_IDENT_OS_ABI_VERSION_UNSPECIFIED = 0,
 };
 
+/* ╭────────────────────────────────────────────────────────────────────────╮
+   │                                                                        │
+   │    The ELF type folds multiple distinct data types                     │
+   │    into one unsigned 16 bit integer value:                             │
+   │                                                                        │
+   │        ◦ General object file type                                      │
+   │        ◦ Operating system-specific object file type                    │
+   │        ◦ Processor-specific object file type                           │
+   │                                                                        │
+   │    Values within [0x0000, 0xFDFF] are general object file types.       │
+   │    Values within [0x0000, 0x0004] are defined by the specification.    │
+   │    Values within [0x0005, 0xFDFF] are reserved for future use.         │
+   │    Values within [0xFE00, 0xFEFF] are OS-specific file types.          │
+   │    Values within [0xFF00, 0xFFFF] are processor-specific file types.   │
+   │                                                                        │
+   ╰────────────────────────────────────────────────────────────────────────╯ */
+
+enum lone_elf_type {
+	LONE_ELF_TYPE_NONE        = 0,
+	LONE_ELF_TYPE_RELOCATABLE = 1,
+	LONE_ELF_TYPE_EXECUTABLE  = 2,
+	LONE_ELF_TYPE_DYNAMIC     = 3, /* Shared object file */
+	LONE_ELF_TYPE_CORE        = 4,
+
+	LONE_ELF_TYPE_SHARED_OBJECT = LONE_ELF_TYPE_DYNAMIC,
+};
+
 #endif /* LONE_ELF_HEADER */
