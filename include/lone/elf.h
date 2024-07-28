@@ -475,4 +475,12 @@ struct lone_elf_header {
 	} as;
 };
 
+struct lone_elf_value {
+	enum lone_elf_ident_class class;
+	union {
+		lone_u32 u32;
+		lone_u64 u64;
+	} as;
+};
+
 #endif /* LONE_ELF_HEADER */
