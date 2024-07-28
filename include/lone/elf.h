@@ -483,4 +483,7 @@ struct lone_elf_value {
 	} as;
 };
 
+typedef lone_s64 lone_elf_smax;
+typedef lone_u64 lone_elf_umax;
+
 #endif /* LONE_ELF_HEADER */
