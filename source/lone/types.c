@@ -88,9 +88,9 @@ LONE_WRITER(s64)
 #undef LONE_WRITER
 
 #define LONE_BYTES_READER(type) \
-struct lone_##type lone_bytes_read_##type(struct lone_bytes bytes, lone_size offset)               \
+struct lone_optional_##type lone_bytes_read_##type(struct lone_bytes bytes, lone_size offset)      \
 {                                                                                                  \
-	struct lone_##type result = { .present = false, .value = 0 };                              \
+	struct lone_optional_##type result = { .present = false, .value = 0 };                     \
 	                                                                                           \
 	if (lone_bytes_contains_block(bytes, offset, sizeof(lone_##type))) {                       \
 		result.value = lone_##type##_read(bytes.pointer + offset);                         \
@@ -321,9 +321,10 @@ LONE_ENDIAN_SIGNED_WRITERS()
 #undef LONE_ENDIAN_SIGNED_WRITERS
 
 #define LONE_BYTES_ENDIAN_READER_2(type, endian)                                                   \
-struct lone_##type lone_bytes_read_##type##_##endian(struct lone_bytes bytes, lone_size offset)    \
+struct lone_optional_##type                                                                        \
+lone_bytes_read_##type##_##endian(struct lone_bytes bytes, lone_size offset)                       \
 {                                                                                                  \
-	struct lone_##type result = { .present = false, .value = 0 };                              \
+	struct lone_optional_##type result = { .present = false, .value = 0 };                     \
 	                                                                                           \
 	if (lone_bytes_contains_block(bytes, offset, sizeof(lone_##type))) {                       \
 		result.value = lone_##type##_read_##endian(bytes.pointer + offset);                \

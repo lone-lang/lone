@@ -120,7 +120,7 @@ static LONE_TEST_FUNCTION(LONE_TYPES_BYTES_TEST_FUNCTION(sign, bits,            
 {                                                                                                  \
 	lone_##sign##bits values[] = { 0, 0, constant, 0, 0 };                                     \
 	struct lone_bytes bytes = { sizeof(values), (unsigned char *) &values };                   \
-	struct lone_##sign##bits actual = { false, 0 };                                            \
+	struct lone_optional_##sign##bits actual = { false, 0 };                                   \
 	                                                                                           \
 	actual = lone_bytes_read_##sign##bits(bytes, 2 * sizeof(lone_##sign##bits));               \
 	                                                                                           \
@@ -134,7 +134,7 @@ static LONE_TEST_FUNCTION(LONE_TYPES_BYTES_TEST_FUNCTION(sign, bits,            
 {                                                                                                  \
 	lone_##sign##bits values[] = { 0, 0, constant, 0, 0 };                                     \
 	struct lone_bytes bytes = { sizeof(values), (unsigned char *) &values };                   \
-	struct lone_##sign##bits actual = { false, 0 };                                            \
+	struct lone_optional_##sign##bits actual = { false, 0 };                                   \
 	                                                                                           \
 	actual = lone_bytes_read_##sign##bits(bytes, sizeof(values));                              \
 	                                                                                           \
@@ -150,7 +150,7 @@ static LONE_TEST_FUNCTION(LONE_TYPES_BYTES_TEST_FUNCTION(sign, bits,            
 		lone_##sign##bits value;                                                           \
 	} values[] = { {0}, {0}, { 0, constant }, {0}, {0} };                                      \
 	struct lone_bytes bytes = { sizeof(values), (unsigned char *) &values };                   \
-	struct lone_##sign##bits actual = { false, 0 };                                            \
+	struct lone_optional_##sign##bits actual = { false, 0 };                                   \
 	                                                                                           \
 	actual = lone_bytes_read_##sign##bits(bytes, 2 * sizeof(lone_##sign##bits) + 3);           \
 	                                                                                           \
@@ -167,7 +167,7 @@ static LONE_TEST_FUNCTION(LONE_TYPES_BYTES_TEST_FUNCTION(sign, bits,            
 		lone_##sign##bits value;                                                           \
 	} values[] = { {0}, {0}, { 0, constant }, {0}, {0} };                                      \
 	struct lone_bytes bytes = { sizeof(values), (unsigned char *) &values };                   \
-	struct lone_##sign##bits actual = { false, 0 };                                            \
+	struct lone_optional_##sign##bits actual = { false, 0 };                                   \
 	                                                                                           \
 	actual = lone_bytes_read_##sign##bits(bytes, sizeof(values));                              \
 	                                                                                           \
@@ -428,7 +428,7 @@ static LONE_TEST_FUNCTION(LONE_TYPES_BYTES_ENDIAN_TEST_FUNCTION(sign, bits,     
 {                                                                                                  \
 	unsigned char data[] = { __VA_ARGS__ };                                                    \
 	struct lone_bytes bytes = { .count = sizeof(data), .pointer = data };                      \
-	struct lone_##sign##bits actual;                                                           \
+	struct lone_optional_##sign##bits actual;                                                  \
 	                                                                                           \
 	actual = lone_bytes_read_##sign##bits##_##endian(bytes, offset);                           \
 	                                                                                           \
@@ -443,7 +443,7 @@ static LONE_TEST_FUNCTION(LONE_TYPES_BYTES_ENDIAN_TEST_FUNCTION(sign, bits,     
 {                                                                                                  \
 	unsigned char data[] = { __VA_ARGS__ };                                                    \
 	struct lone_bytes bytes = { .count = sizeof(data), .pointer = data };                      \
-	struct lone_##sign##bits actual;                                                           \
+	struct lone_optional_##sign##bits actual;                                                  \
 	                                                                                           \
 	actual = lone_bytes_read_##sign##bits##_##endian(bytes, sizeof(data));                     \
 	                                                                                           \

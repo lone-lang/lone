@@ -27,14 +27,14 @@ typedef __s32 lone_s32;
 typedef __u64 lone_u64;
 typedef __s64 lone_s64;
 
-struct lone_u8  { bool present; lone_u8  value; };
-struct lone_s8  { bool present; lone_s8  value; };
-struct lone_u16 { bool present; lone_u16 value; };
-struct lone_s16 { bool present; lone_s16 value; };
-struct lone_u32 { bool present; lone_u32 value; };
-struct lone_s32 { bool present; lone_s32 value; };
-struct lone_u64 { bool present; lone_u64 value; };
-struct lone_s64 { bool present; lone_s64 value; };
+struct lone_optional_u8  { bool present; lone_u8  value; };
+struct lone_optional_s8  { bool present; lone_s8  value; };
+struct lone_optional_u16 { bool present; lone_u16 value; };
+struct lone_optional_s16 { bool present; lone_s16 value; };
+struct lone_optional_u32 { bool present; lone_u32 value; };
+struct lone_optional_s32 { bool present; lone_s32 value; };
+struct lone_optional_u64 { bool present; lone_u64 value; };
+struct lone_optional_s64 { bool present; lone_s64 value; };
 
 enum lone_c_type {
 	LONE_TYPES_C_UNDEFINED = 0,
@@ -274,14 +274,14 @@ bool lone_bytes_contains_offset(struct lone_bytes bytes, lone_size offset);
 bool lone_bytes_contains_block(struct lone_bytes bytes, lone_size offset, lone_size size);
 bool lone_bytes_contains_address(struct lone_bytes bytes, void *pointer);
 
-struct lone_u8  lone_bytes_read_u8 (struct lone_bytes bytes, lone_size offset);
-struct lone_s8  lone_bytes_read_s8 (struct lone_bytes bytes, lone_size offset);
-struct lone_u16 lone_bytes_read_u16(struct lone_bytes bytes, lone_size offset);
-struct lone_s16 lone_bytes_read_s16(struct lone_bytes bytes, lone_size offset);
-struct lone_u32 lone_bytes_read_u32(struct lone_bytes bytes, lone_size offset);
-struct lone_s32 lone_bytes_read_s32(struct lone_bytes bytes, lone_size offset);
-struct lone_u64 lone_bytes_read_u64(struct lone_bytes bytes, lone_size offset);
-struct lone_s64 lone_bytes_read_s64(struct lone_bytes bytes, lone_size offset);
+struct lone_optional_u8  lone_bytes_read_u8 (struct lone_bytes bytes, lone_size offset);
+struct lone_optional_s8  lone_bytes_read_s8 (struct lone_bytes bytes, lone_size offset);
+struct lone_optional_u16 lone_bytes_read_u16(struct lone_bytes bytes, lone_size offset);
+struct lone_optional_s16 lone_bytes_read_s16(struct lone_bytes bytes, lone_size offset);
+struct lone_optional_u32 lone_bytes_read_u32(struct lone_bytes bytes, lone_size offset);
+struct lone_optional_s32 lone_bytes_read_s32(struct lone_bytes bytes, lone_size offset);
+struct lone_optional_u64 lone_bytes_read_u64(struct lone_bytes bytes, lone_size offset);
+struct lone_optional_s64 lone_bytes_read_s64(struct lone_bytes bytes, lone_size offset);
 
 bool lone_bytes_write_u8 (struct lone_bytes bytes, lone_size offset, lone_u8  u8);
 bool lone_bytes_write_s8 (struct lone_bytes bytes, lone_size offset, lone_s8  s8);
@@ -292,12 +292,12 @@ bool lone_bytes_write_s32(struct lone_bytes bytes, lone_size offset, lone_s32 s3
 bool lone_bytes_write_u64(struct lone_bytes bytes, lone_size offset, lone_u64 u64);
 bool lone_bytes_write_s64(struct lone_bytes bytes, lone_size offset, lone_s64 s64);
 
-struct lone_u16 lone_bytes_read_u16_le(struct lone_bytes bytes, lone_size offset);
-struct lone_s16 lone_bytes_read_s16_le(struct lone_bytes bytes, lone_size offset);
-struct lone_u32 lone_bytes_read_u32_le(struct lone_bytes bytes, lone_size offset);
-struct lone_s32 lone_bytes_read_s32_le(struct lone_bytes bytes, lone_size offset);
-struct lone_u64 lone_bytes_read_u64_le(struct lone_bytes bytes, lone_size offset);
-struct lone_s64 lone_bytes_read_s64_le(struct lone_bytes bytes, lone_size offset);
+struct lone_optional_u16 lone_bytes_read_u16_le(struct lone_bytes bytes, lone_size offset);
+struct lone_optional_s16 lone_bytes_read_s16_le(struct lone_bytes bytes, lone_size offset);
+struct lone_optional_u32 lone_bytes_read_u32_le(struct lone_bytes bytes, lone_size offset);
+struct lone_optional_s32 lone_bytes_read_s32_le(struct lone_bytes bytes, lone_size offset);
+struct lone_optional_u64 lone_bytes_read_u64_le(struct lone_bytes bytes, lone_size offset);
+struct lone_optional_s64 lone_bytes_read_s64_le(struct lone_bytes bytes, lone_size offset);
 
 bool lone_bytes_write_u16_le(struct lone_bytes bytes, lone_size offset, lone_u16 u16);
 bool lone_bytes_write_s16_le(struct lone_bytes bytes, lone_size offset, lone_s16 s16);
@@ -306,12 +306,12 @@ bool lone_bytes_write_s32_le(struct lone_bytes bytes, lone_size offset, lone_s32
 bool lone_bytes_write_u64_le(struct lone_bytes bytes, lone_size offset, lone_u64 u64);
 bool lone_bytes_write_s64_le(struct lone_bytes bytes, lone_size offset, lone_s64 s64);
 
-struct lone_u16 lone_bytes_read_u16_be(struct lone_bytes bytes, lone_size offset);
-struct lone_s16 lone_bytes_read_s16_be(struct lone_bytes bytes, lone_size offset);
-struct lone_u32 lone_bytes_read_u32_be(struct lone_bytes bytes, lone_size offset);
-struct lone_s32 lone_bytes_read_s32_be(struct lone_bytes bytes, lone_size offset);
-struct lone_u64 lone_bytes_read_u64_be(struct lone_bytes bytes, lone_size offset);
-struct lone_s64 lone_bytes_read_s64_be(struct lone_bytes bytes, lone_size offset);
+struct lone_optional_u16 lone_bytes_read_u16_be(struct lone_bytes bytes, lone_size offset);
+struct lone_optional_s16 lone_bytes_read_s16_be(struct lone_bytes bytes, lone_size offset);
+struct lone_optional_u32 lone_bytes_read_u32_be(struct lone_bytes bytes, lone_size offset);
+struct lone_optional_s32 lone_bytes_read_s32_be(struct lone_bytes bytes, lone_size offset);
+struct lone_optional_u64 lone_bytes_read_u64_be(struct lone_bytes bytes, lone_size offset);
+struct lone_optional_s64 lone_bytes_read_s64_be(struct lone_bytes bytes, lone_size offset);
 
 bool lone_bytes_write_u16_be(struct lone_bytes bytes, lone_size offset, lone_u16 u16);
 bool lone_bytes_write_s16_be(struct lone_bytes bytes, lone_size offset, lone_s16 s16);

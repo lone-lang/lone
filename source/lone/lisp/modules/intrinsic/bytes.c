@@ -108,7 +108,7 @@ LONE_LISP_PRIMITIVE(bytes_read_##type) \
 	struct lone_lisp_value bytes; \
 	struct lone_lisp_value offset; \
 \
-	struct lone_##type type; \
+	struct lone_optional_##type type; \
 \
 	if (lone_lisp_list_destructure(arguments, 2, &bytes, &offset)) { \
 		/* wrong number of arguments */ linux_exit(-1); \
