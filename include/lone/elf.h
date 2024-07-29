@@ -486,4 +486,17 @@ struct lone_elf_value {
 typedef lone_s64 lone_elf_smax;
 typedef lone_u64 lone_elf_umax;
 
+/* ╭────────────────────────────────────────────────────────────────────────╮
+   │                                                                        │
+   │    The ELF identification information is a sixteen byte array.         │
+   │    Values are independent of ELF class and endianness                  │
+   │    and can be indexed and accessed directly.                           │
+   │    Functions are provided to access logical sections of the array.     │
+   │                                                                        │
+   ╰────────────────────────────────────────────────────────────────────────╯ */
+
+struct lone_bytes lone_elf_header_read_ident_data(struct lone_elf_header *header);
+struct lone_bytes lone_elf_header_read_ident_padding(struct lone_elf_header *header);
+struct lone_bytes lone_elf_header_read_ident_magic(struct lone_elf_header *header);
+
 #endif /* LONE_ELF_HEADER */
