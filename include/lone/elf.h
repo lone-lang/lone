@@ -512,4 +512,20 @@ struct lone_bytes lone_elf_header_read_ident_magic(struct lone_elf_header *heade
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
 
+struct lone_optional_u16 lone_elf_header_read_type(struct lone_elf_header *header);
+struct lone_optional_u16 lone_elf_header_read_machine(struct lone_elf_header *header);
+struct lone_optional_u32 lone_elf_header_read_version(struct lone_elf_header *header);
+
+struct lone_elf_value lone_elf_header_read_entry_point(struct lone_elf_header *header);
+struct lone_elf_value lone_elf_header_read_segments_offset(struct lone_elf_header *header);
+struct lone_elf_value lone_elf_header_read_sections_offset(struct lone_elf_header *header);
+
+struct lone_optional_u32 lone_elf_header_read_flags(struct lone_elf_header *header);
+struct lone_optional_u16 lone_elf_header_read_header_size(struct lone_elf_header *header);
+struct lone_optional_u16 lone_elf_header_read_segment_size(struct lone_elf_header *header);
+struct lone_optional_u16 lone_elf_header_read_segment_count(struct lone_elf_header *header);
+struct lone_optional_u16 lone_elf_header_read_section_size(struct lone_elf_header *header);
+struct lone_optional_u16 lone_elf_header_read_section_count(struct lone_elf_header *header);
+struct lone_optional_u16 lone_elf_header_read_section_names_index(struct lone_elf_header *header);
+
 #endif /* LONE_ELF_HEADER */

@@ -85,3 +85,80 @@ LONE_ELF_MULTIBYTE_MULTICLASS_VALUE_READER(s, 32)
 LONE_ELF_MULTIBYTE_MULTICLASS_VALUE_READER(s, 64)
 
 #undef LONE_ELF_MULTIBYTE_MULTICLASS_VALUE_READER
+
+#define LONE_ELF_HEADER_COMMON_READER(field, sign, bits)                                           \
+struct lone_optional_##sign##bits                                                                  \
+lone_elf_header_read_##field(struct lone_elf_header *header)                                       \
+{                                                                                                  \
+	return lone_elf_read_##sign##bits(header, &header->field);                                 \
+}
+
+#define LONE_ELF_HEADER_CLASSIFIED_READER(field, sign, bits)                                       \
+struct lone_optional_##sign##bits                                                                  \
+lone_elf_header_read_##field(struct lone_elf_header *header)                                       \
+{                                                                                                  \
+	return lone_elf_read_classified_##sign##bits(header,                                       \
+			&header->as.elf32.field, &header->as.elf64.field);                         \
+}
+
+static struct lone_elf_value lone_elf_read_address_or_offset(struct lone_elf_header *header,
+		void *address32, void *address64)
+{
+	struct lone_optional_u32 u32;
+	struct lone_optional_u64 u64;
+	struct lone_elf_value value = {
+		.class = LONE_ELF_IDENT_CLASS_INVALID,
+		.as.u64 = 0,
+	};
+
+	if (!header) { return value; }
+
+	switch (header->ident[LONE_ELF_IDENT_INDEX_CLASS]) {
+	case LONE_ELF_IDENT_CLASS_32BIT:
+		u32 = lone_elf_read_u32(header, address32);
+		if (u32.present) {
+			value.class  = LONE_ELF_IDENT_CLASS_32BIT;
+			value.as.u32 = u32.value;
+		}
+		break;
+	case LONE_ELF_IDENT_CLASS_64BIT:
+		u64 = lone_elf_read_u64(header, address64);
+		if (u64.present) {
+			value.class  = LONE_ELF_IDENT_CLASS_64BIT;
+			value.as.u64 = u64.value;
+		}
+		break;
+	default:
+		break;
+	}
+
+	return value;
+}
+
+#define LONE_ELF_HEADER_ADDRESS_OR_OFFSET_READER(field)                                            \
+struct lone_elf_value                                                                              \
+lone_elf_header_read_##field(struct lone_elf_header *header)                                       \
+{                                                                                                  \
+	return lone_elf_read_address_or_offset(header,                                             \
+			&header->as.elf32.field, &header->as.elf64.field);                         \
+}
+
+LONE_ELF_HEADER_COMMON_READER(type,    u, 16)
+LONE_ELF_HEADER_COMMON_READER(machine, u, 16)
+LONE_ELF_HEADER_COMMON_READER(version, u, 32)
+
+LONE_ELF_HEADER_ADDRESS_OR_OFFSET_READER(entry_point)
+LONE_ELF_HEADER_ADDRESS_OR_OFFSET_READER(segments_offset)
+LONE_ELF_HEADER_ADDRESS_OR_OFFSET_READER(sections_offset)
+
+LONE_ELF_HEADER_CLASSIFIED_READER(flags,               u, 32)
+LONE_ELF_HEADER_CLASSIFIED_READER(header_size,         u, 16)
+LONE_ELF_HEADER_CLASSIFIED_READER(segment_size,        u, 16)
+LONE_ELF_HEADER_CLASSIFIED_READER(segment_count,       u, 16)
+LONE_ELF_HEADER_CLASSIFIED_READER(section_size,        u, 16)
+LONE_ELF_HEADER_CLASSIFIED_READER(section_count,       u, 16)
+LONE_ELF_HEADER_CLASSIFIED_READER(section_names_index, u, 16)
+
+#undef LONE_ELF_HEADER_ADDRESS_OR_OFFSET_READER
+#undef LONE_ELF_HEADER_CLASSIFIED_READER
+#undef LONE_ELF_HEADER_COMMON_READER
