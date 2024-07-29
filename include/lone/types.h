@@ -36,6 +36,11 @@ struct lone_optional_s32 { bool present; lone_s32 value; };
 struct lone_optional_u64 { bool present; lone_u64 value; };
 struct lone_optional_s64 { bool present; lone_s64 value; };
 
+#define LONE_OPTIONAL_ABSENT_VALUE(__type) \
+	((struct lone_optional_##__type) { .present = false, .value = 0 })
+#define LONE_OPTIONAL_PRESENT_VALUE(__type, __value) \
+	((struct lone_optional_##__type) { .present = true, .value = (__value) })
+
 enum lone_c_type {
 	LONE_TYPES_C_UNDEFINED = 0,
 
