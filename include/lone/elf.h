@@ -499,4 +499,17 @@ struct lone_bytes lone_elf_header_read_ident_data(struct lone_elf_header *header
 struct lone_bytes lone_elf_header_read_ident_padding(struct lone_elf_header *header);
 struct lone_bytes lone_elf_header_read_ident_magic(struct lone_elf_header *header);
 
+/* ╭────────────────────────────────────────────────────────────────────────╮
+   │                                                                        │
+   │    The ELF data types have the same sizes and byte order               │
+   │    as the platform the program is meant to run on.                     │
+   │    This makes it convenient to load and link the ELF.                  │
+   │    However, it also means extra logic is required                      │
+   │    to process arbitrary ELF files.                                     │
+   │                                                                        │
+   │    These functions implement ELF class and endianness independent      │
+   │    access to the values contained in the ELF data structures.          │
+   │                                                                        │
+   ╰────────────────────────────────────────────────────────────────────────╯ */
+
 #endif /* LONE_ELF_HEADER */
