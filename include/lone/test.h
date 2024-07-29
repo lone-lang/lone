@@ -72,7 +72,7 @@ void __name(struct lone_test_suite *suite, struct lone_test_case *test)
 
 #define LONE_TEST_CASE(__name_c_string_literal, __test) \
 	{ \
-		.name = LONE_BYTES_FROM_LITERAL(__name_c_string_literal), \
+		.name = LONE_BYTES_INIT_FROM_LITERAL(__name_c_string_literal), \
 		.test = (__test), \
 		.context = 0, \
 		.result = LONE_TEST_RESULT_PENDING \
@@ -80,7 +80,7 @@ void __name(struct lone_test_suite *suite, struct lone_test_case *test)
 
 #define LONE_TEST_CASE_WITH_CONTEXT(__name_c_string_literal, __test, __context) \
 	{ \
-		.name = LONE_BYTES_FROM_LITERAL(__name_c_string_literal), \
+		.name = LONE_BYTES_INIT_FROM_LITERAL(__name_c_string_literal), \
 		.test = (__test), \
 		.context = (__context), \
 		.result = LONE_TEST_RESULT_PENDING \
@@ -88,7 +88,7 @@ void __name(struct lone_test_suite *suite, struct lone_test_case *test)
 
 #define LONE_TEST_CASE_NULL() \
 	{ \
-		.name = LONE_BYTES_NULL(), \
+		.name = LONE_BYTES_INIT_NULL(), \
 		.test = 0, \
 		.context = 0, \
 		.result = LONE_TEST_RESULT_PENDING \

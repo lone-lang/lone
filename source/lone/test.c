@@ -268,18 +268,18 @@ void lone_test_suite_default_test_finished_handler(struct lone_test_suite *suite
 
 	switch (test->result) {
 	case LONE_TEST_RESULT_PASS:
-		result = (struct lone_bytes) LONE_BYTES_FROM_LITERAL("PASS");
+		result = LONE_BYTES_VALUE_FROM_LITERAL("PASS");
 		break;
 	case LONE_TEST_RESULT_FAIL:
-		result = (struct lone_bytes) LONE_BYTES_FROM_LITERAL("FAIL");
+		result = LONE_BYTES_VALUE_FROM_LITERAL("FAIL");
 		break;
 	case LONE_TEST_RESULT_SKIP:
-		result = (struct lone_bytes) LONE_BYTES_FROM_LITERAL("SKIP");
+		result = LONE_BYTES_VALUE_FROM_LITERAL("SKIP");
 		break;
 	case LONE_TEST_RESULT_ERROR:
 	case LONE_TEST_RESULT_PENDING:
 	default:
-		result = (struct lone_bytes) LONE_BYTES_FROM_LITERAL("ERROR");
+		result = LONE_BYTES_VALUE_FROM_LITERAL("ERROR");
 		break;
 	}
 

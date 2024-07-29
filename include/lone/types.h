@@ -170,13 +170,37 @@ struct lone_bytes {
 	unsigned char *pointer;    /* address of memory block */
 };
 
-#define LONE_BYTES(__count, __pointer) { .count = (__count), .pointer = (__pointer) }
-#define LONE_BYTES_NULL() { .count = 0, .pointer = 0 }
-#define LONE_BYTES_FROM_LITERAL(__c_string_literal) \
+#define LONE_BYTES_INIT(__count, __pointer) { .count = (__count), .pointer = (__pointer) }
+#define LONE_BYTES_INIT_NULL() { .count = 0, .pointer = 0 }
+#define LONE_BYTES_INIT_FROM_LITERAL(__c_string_literal) \
 	{ \
 		.count = sizeof(__c_string_literal) - 1, \
-		.pointer = (unsigned char *) (__c_string_literal) \
+		.pointer = ((unsigned char *) (__c_string_literal)) \
 	}
+
+#define LONE_BYTES_VALUE(__count, __pointer)                                                       \
+	((struct lone_bytes) {                                                                     \
+		.count = (__count),                                                                \
+		.pointer = ((unsigned char *) (__pointer)),                                        \
+	})
+
+#define LONE_BYTES_VALUE_NULL()                                                                    \
+	((struct lone_bytes) {                                                                     \
+		.count = 0,                                                                        \
+		.pointer = 0,                                                                      \
+	})
+
+#define LONE_BYTES_VALUE_FROM_LITERAL(__c_string_literal)                                          \
+	((struct lone_bytes) {                                                                     \
+		.count = sizeof(__c_string_literal) - 1,                                           \
+		.pointer = ((unsigned char *) (__c_string_literal)),                               \
+	})
+
+#define LONE_BYTES_VALUE_FROM_ARRAY(__array)                                                       \
+	((struct lone_bytes) {                                                                     \
+		.count = sizeof(__array),                                                          \
+		.pointer = ((unsigned char *) (__array)),                                          \
+	})
 
 /* ╭────────────────────────────────────────────────────────────────────────╮
    │                                                                        │
