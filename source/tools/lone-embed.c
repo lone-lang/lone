@@ -3,6 +3,7 @@
 #include <lone.h>
 #include <lone/definitions.h>
 #include <lone/types.h>
+#include <lone/elf.h>
 #include <lone/linux.h>
 #include <lone/auxiliary_vector.h>
 #include <lone/memory/functions.h>
@@ -15,7 +16,7 @@
 
 struct elf {
 	struct lone_bytes header;
-	unsigned char class;
+	enum lone_elf_ident_class class;
 	size_t page_size;
 
 	struct {
@@ -174,46 +175,19 @@ static off_t file_size(int fd)
 	return seek_to_end(fd);
 }
 
-static bool has_valid_elf_magic_numbers(struct lone_bytes buffer)
+static void read_elf_header(struct elf *elf)
 {
-	return buffer.pointer[EI_MAG0] == ELFMAG0 &&
-	       buffer.pointer[EI_MAG1] == ELFMAG1 &&
-	       buffer.pointer[EI_MAG2] == ELFMAG2 &&
-	       buffer.pointer[EI_MAG3] == ELFMAG3;
-}
-
-static bool has_valid_elf_class(struct lone_bytes buffer)
-{
-	return buffer.pointer[EI_CLASS] > ELFCLASSNONE &&
-	       buffer.pointer[EI_CLASS] < ELFCLASSNUM;
-}
-
-static bool has_valid_elf_header_size(size_t size, unsigned char class)
-{
-	switch (class) {
-	case ELFCLASS64:
-		return size >= sizeof(Elf64_Ehdr);
-	case ELFCLASS32:
-		return size >= sizeof(Elf32_Ehdr);
-	default:
-		/* Invalid ELF class but somehow made it here? */ linux_exit(8);
-	}
+	read_bytes(elf->file.descriptor, elf->header);
 }
 
 static void validate_elf_header(struct elf *elf)
 {
-	read_bytes(elf->file.descriptor, elf->header);
+	elf->class = LONE_ELF_IDENT_CLASS_INVALID;
 
-	elf->class = ELFCLASSNONE;
-
-	if (!(has_valid_elf_magic_numbers(elf->header) && has_valid_elf_class(elf->header))) {
-		/* Definitely not an ELF */ linux_exit(7);
-	}
-
-	elf->class = elf->header.pointer[EI_CLASS];
-
-	if (!has_valid_elf_header_size(elf->header.count, elf->class)) {
-		/* Incomplete or corrupt ELF */ linux_exit(8);
+	if (lone_elf_header_is_valid(elf->header.pointer)) {
+		elf->class = elf->header.pointer[LONE_ELF_IDENT_INDEX_CLASS];
+	} else {
+		/* Invalid ELF */ linux_exit(8);
 	}
 }
 
@@ -632,6 +606,7 @@ long lone(int argc, char **argv, char **envp, struct lone_auxiliary_vector *auxv
 	check_arguments(argc, argv);
 	open_files(&elf, argv[1], argv[2]);
 
+	read_elf_header(&elf);
 	validate_elf_header(&elf);
 
 	set_page_size(&elf, auxvec);
