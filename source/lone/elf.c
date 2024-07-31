@@ -174,6 +174,11 @@ static bool is_within_u16(lone_u16 n, lone_u16 min, lone_u16 max)
 	return n >= min && n <= max;
 }
 
+static bool is_within_u32(lone_u32 n, lone_u32 min, lone_u32 max)
+{
+	return n >= min && n <= max;
+}
+
 static bool ident_is_within_u16(struct lone_elf_header *header,
 		enum lone_elf_ident_index index, lone_u16 min, lone_u16 max)
 {
@@ -289,4 +294,19 @@ bool lone_elf_header_has_valid_machine(struct lone_elf_header *header)
 			LONE_ELF_RANGES_MACHINE_MIN,
 			LONE_ELF_RANGES_MACHINE_MAX) &&
 		!lone_elf_header_machine_is_reserved(machine.value);
+}
+
+bool lone_elf_header_has_valid_version(struct lone_elf_header *header)
+{
+	struct lone_optional_u32 version;
+
+	if (!header) { return false; }
+
+	version = lone_elf_header_read_version(header);
+
+	if (!version.present) { return false; }
+
+	return is_within_u32(version.value,
+			LONE_ELF_RANGES_VERSION_MIN,
+			LONE_ELF_RANGES_VERSION_MAX);
 }
