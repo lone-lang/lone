@@ -557,6 +557,7 @@ bool lone_elf_header_ident_has_valid_os_abi(struct lone_elf_header *header);
 bool lone_elf_header_ident_has_zero_filled_padding(struct lone_elf_header *header);
 bool lone_elf_header_has_valid_ident(struct lone_elf_header *header);
 bool lone_elf_header_has_valid_type(struct lone_elf_header *header);
+bool lone_elf_header_has_valid_machine(struct lone_elf_header *header);
 
 bool lone_elf_header_ident_is_linux_os_abi(struct lone_elf_header *header);
 

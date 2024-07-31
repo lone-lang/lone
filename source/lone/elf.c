@@ -274,3 +274,19 @@ bool lone_elf_header_machine_is_reserved(lone_u16 machine)
 	       is_within_u16(machine, 145, 159)      ||
 	       is_within_u16(machine, 225, 242);
 }
+
+bool lone_elf_header_has_valid_machine(struct lone_elf_header *header)
+{
+	struct lone_optional_u16 machine;
+
+	if (!header) { return false; }
+
+	machine = lone_elf_header_read_machine(header);
+
+	if (!machine.present) { return false; }
+
+	return is_within_u16(machine.value,
+			LONE_ELF_RANGES_MACHINE_MIN,
+			LONE_ELF_RANGES_MACHINE_MAX) &&
+		!lone_elf_header_machine_is_reserved(machine.value);
+}
