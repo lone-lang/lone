@@ -1,0 +1,6 @@
+(import (lone print set) (bytes new zero? write-u8))
+
+(set buffer (new 16))
+(print (zero? buffer))
+(write-u8 buffer 7 42)
+(print (zero? buffer))
