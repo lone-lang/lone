@@ -162,3 +162,15 @@ LONE_ELF_HEADER_CLASSIFIED_READER(section_names_index, u, 16)
 #undef LONE_ELF_HEADER_ADDRESS_OR_OFFSET_READER
 #undef LONE_ELF_HEADER_CLASSIFIED_READER
 #undef LONE_ELF_HEADER_COMMON_READER
+
+/* ╭────────────────────────────────────────────────────────────────────────╮
+   │                                                                        │
+   │    ELF header validation functions.                                    │
+   │                                                                        │
+   ╰────────────────────────────────────────────────────────────────────────╯ */
+
+bool lone_elf_header_ident_has_zero_filled_padding(struct lone_elf_header *header)
+{
+	return header &&
+	       lone_bytes_is_zero(lone_elf_header_read_ident_padding(header));
+}
