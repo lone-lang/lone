@@ -555,5 +555,6 @@ bool lone_elf_header_ident_has_valid_data_encoding(struct lone_elf_header *heade
 bool lone_elf_header_ident_has_valid_version(struct lone_elf_header *header);
 bool lone_elf_header_ident_has_valid_os_abi(struct lone_elf_header *header);
 bool lone_elf_header_ident_has_zero_filled_padding(struct lone_elf_header *header);
+bool lone_elf_header_has_valid_ident(struct lone_elf_header *header);
 
 #endif /* LONE_ELF_HEADER */
