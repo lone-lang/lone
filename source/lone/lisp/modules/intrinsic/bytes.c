@@ -28,6 +28,9 @@ void lone_lisp_modules_intrinsic_bytes_initialize(struct lone_lisp *lone)
 	lone_lisp_module_export_primitive(lone, module, "new",
 			"bytes_new", lone_lisp_primitive_bytes_new, module, flags);
 
+	lone_lisp_module_export_primitive(lone, module, "zero?",
+			"bytes_is_zero", lone_lisp_primitive_bytes_is_zero, module, flags);
+
 #define LONE_LISP_EXPORT_BYTES_READER_PRIMITIVE(type) \
 	lone_lisp_module_export_primitive(lone, module, "read-" #type, \
 			"bytes_read_" #type, lone_lisp_primitive_bytes_read_##type, module, flags)
@@ -79,6 +82,22 @@ LONE_LISP_PRIMITIVE(bytes_new)
 
 	return lone_lisp_bytes_create(lone, allocation);
 }
+
+LONE_LISP_PRIMITIVE(bytes_is_zero)
+{
+	struct lone_lisp_value bytes;
+
+	if (lone_lisp_list_destructure(arguments, 1, &bytes)) {
+		/* wrong number of arguments */ linux_exit(-1);
+	}
+
+	if (!lone_lisp_is_bytes(bytes)) {
+		/* expected a bytes object: (zero? 0), (zero? "text") */ linux_exit(-1);
+	}
+
+	return lone_lisp_boolean_for(lone, lone_bytes_is_zero(bytes.as.heap_value->as.bytes));
+}
+
 
 static void lone_lisp_bytes_check_read_arguments(struct lone_lisp_value bytes,
 		struct lone_lisp_value offset)

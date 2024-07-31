@@ -15,6 +15,7 @@
 void lone_lisp_modules_intrinsic_bytes_initialize(struct lone_lisp *lone);
 
 LONE_LISP_PRIMITIVE(bytes_new);
+LONE_LISP_PRIMITIVE(bytes_is_zero);
 
 LONE_LISP_PRIMITIVE(bytes_read_u8);
 LONE_LISP_PRIMITIVE(bytes_read_s8);
