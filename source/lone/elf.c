@@ -331,3 +331,12 @@ bool lone_elf_header_has_valid_header_size(struct lone_elf_header *header)
 		return false;
 	}
 }
+
+bool lone_elf_header_is_valid(struct lone_elf_header *header)
+{
+	return lone_elf_header_has_valid_ident(header)          &&
+	       lone_elf_header_has_valid_type(header)           &&
+	       lone_elf_header_has_valid_machine(header)        &&
+	       lone_elf_header_has_valid_version(header)        &&
+	       lone_elf_header_has_valid_header_size(header);
+}

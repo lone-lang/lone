@@ -560,6 +560,7 @@ bool lone_elf_header_has_valid_type(struct lone_elf_header *header);
 bool lone_elf_header_has_valid_machine(struct lone_elf_header *header);
 bool lone_elf_header_has_valid_version(struct lone_elf_header *header);
 bool lone_elf_header_has_valid_header_size(struct lone_elf_header *header);
+bool lone_elf_header_is_valid(struct lone_elf_header *header);
 
 bool lone_elf_header_ident_is_linux_os_abi(struct lone_elf_header *header);
 
