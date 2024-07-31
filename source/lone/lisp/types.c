@@ -166,7 +166,7 @@ bool lone_lisp_is_equivalent(struct lone_lisp_value x, struct lone_lisp_value y)
 	switch (x.as.heap_value->type) {
 	case LONE_LISP_TYPE_TEXT:
 	case LONE_LISP_TYPE_BYTES:
-		return lone_bytes_equals(x.as.heap_value->as.bytes, y.as.heap_value->as.bytes);
+		return lone_bytes_is_equal(x.as.heap_value->as.bytes, y.as.heap_value->as.bytes);
 
 	case LONE_LISP_TYPE_MODULE:
 	case LONE_LISP_TYPE_FUNCTION:

@@ -4,16 +4,16 @@
 #include <lone/linux.h>
 #include <lone/memory/functions.h>
 
-bool lone_bytes_equals(struct lone_bytes x, struct lone_bytes y)
+bool lone_bytes_is_equal(struct lone_bytes x, struct lone_bytes y)
 {
 	if (x.count != y.count) return false;
 	return lone_memory_compare(x.pointer, y.pointer, x.count) == 0;
 }
 
-bool lone_bytes_equals_c_string(struct lone_bytes bytes, char *c_string)
+bool lone_bytes_is_equal_to_c_string(struct lone_bytes bytes, char *c_string)
 {
 	struct lone_bytes c_string_bytes = { lone_c_string_length(c_string), (unsigned char *) c_string };
-	return lone_bytes_equals(bytes, c_string_bytes);
+	return lone_bytes_is_equal(bytes, c_string_bytes);
 }
 
 bool lone_bytes_is_zero(struct lone_bytes b)
