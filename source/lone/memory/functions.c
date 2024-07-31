@@ -33,6 +33,22 @@ bool lone_memory_is_equal(void *a, void *b, size_t count)
 	return lone_memory_compare(a, b, count) == 0;
 }
 
+bool lone_memory_is_zero(void *x, size_t count)
+{
+	unsigned char *p;
+	lone_size i;
+
+	if (!x) {
+		return true;
+	}
+
+	for (i = 0, p = x; i < count; ++i) {
+		if (p[i]) { return false; }
+	}
+
+	return true;
+}
+
 void lone_memory_move(void *from, void *to, size_t count)
 {
 	unsigned char *source = from, *destination = to;

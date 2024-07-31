@@ -7,6 +7,7 @@
 
 int lone_memory_compare(void *a, void *b, size_t count);
 bool lone_memory_is_equal(void *a, void *b, size_t count);
+bool lone_memory_is_zero(void *x, size_t count);
 void lone_memory_move(void *from, void *to, size_t count);
 void lone_memory_set(void *to, unsigned char byte, size_t count);
 void lone_memory_zero(void *to, size_t count);
