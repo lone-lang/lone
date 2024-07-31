@@ -169,8 +169,36 @@ LONE_ELF_HEADER_CLASSIFIED_READER(section_names_index, u, 16)
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
 
+static bool is_within_u16(lone_u16 n, lone_u16 min, lone_u16 max)
+{
+	return n >= min && n <= max;
+}
+
+static bool ident_is_within_u16(struct lone_elf_header *header,
+		enum lone_elf_ident_index index, lone_u16 min, lone_u16 max)
+{
+	return is_within_u16(header->ident[index], min, max);
+}
+
 bool lone_elf_header_ident_has_zero_filled_padding(struct lone_elf_header *header)
 {
 	return header &&
 	       lone_bytes_is_zero(lone_elf_header_read_ident_padding(header));
 }
+
+#define LONE_ELF_HEADER_IDENT_RANGE_CHECKER(name, constant)                                        \
+bool lone_elf_header_ident_has_valid_##name(struct lone_elf_header *header)                        \
+{                                                                                                  \
+	return header &&                                                                           \
+	       ident_is_within_u16(header,                                                         \
+			LONE_ELF_IDENT_INDEX_##constant,                                           \
+			LONE_ELF_RANGES_IDENT_##constant##_MIN,                                    \
+			LONE_ELF_RANGES_IDENT_##constant##_MAX);                                   \
+}
+
+LONE_ELF_HEADER_IDENT_RANGE_CHECKER(class,         CLASS)
+LONE_ELF_HEADER_IDENT_RANGE_CHECKER(data_encoding, DATA_ENCODING)
+LONE_ELF_HEADER_IDENT_RANGE_CHECKER(version,       VERSION)
+LONE_ELF_HEADER_IDENT_RANGE_CHECKER(os_abi,        OS_ABI)
+
+#undef LONE_ELF_HEADER_IDENT_RANGE_CHECKER
