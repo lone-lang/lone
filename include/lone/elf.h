@@ -549,6 +549,7 @@ struct lone_optional_u16 lone_elf_header_read_section_size(struct lone_elf_heade
 struct lone_optional_u16 lone_elf_header_read_section_count(struct lone_elf_header *header);
 struct lone_optional_u16 lone_elf_header_read_section_names_index(struct lone_elf_header *header);
 
+bool lone_elf_header_ident_has_valid_magic_numbers(struct lone_elf_header *header);
 bool lone_elf_header_ident_has_valid_class(struct lone_elf_header *header);
 bool lone_elf_header_ident_has_valid_data_encoding(struct lone_elf_header *header);
 bool lone_elf_header_ident_has_valid_version(struct lone_elf_header *header);

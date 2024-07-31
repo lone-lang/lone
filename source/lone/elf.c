@@ -180,6 +180,13 @@ static bool ident_is_within_u16(struct lone_elf_header *header,
 	return is_within_u16(header->ident[index], min, max);
 }
 
+bool lone_elf_header_ident_has_valid_magic_numbers(struct lone_elf_header *header)
+{
+	return header &&
+	       lone_bytes_is_equal(lone_elf_header_read_ident_magic(header),
+	                           LONE_ELF_IDENT_MAGIC_BYTES());
+}
+
 bool lone_elf_header_ident_has_zero_filled_padding(struct lone_elf_header *header)
 {
 	return header &&
