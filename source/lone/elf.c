@@ -210,6 +210,12 @@ LONE_ELF_HEADER_IDENT_RANGE_CHECKER(os_abi,        OS_ABI)
 
 #undef LONE_ELF_HEADER_IDENT_RANGE_CHECKER
 
+bool lone_elf_header_ident_is_linux_os_abi(struct lone_elf_header *header)
+{
+	return header &&
+	       header->ident[LONE_ELF_IDENT_INDEX_OS_ABI] == LONE_ELF_IDENT_OS_ABI_LINUX;
+}
+
 bool lone_elf_header_has_valid_ident(struct lone_elf_header *header)
 {
 	return header                                                  &&
