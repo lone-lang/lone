@@ -260,3 +260,17 @@ bool lone_elf_header_has_valid_type(struct lone_elf_header *header)
 	       lone_elf_header_type_is_os(type.value)      ||
 	       lone_elf_header_type_is_proc(type.value);
 }
+
+bool lone_elf_header_machine_is_reserved(lone_u16 machine)
+{
+	return machine > LONE_ELF_RANGES_MACHINE_MAX ||
+	       machine == 16                         ||
+	       machine == 182                        ||
+	       machine == 184                        ||
+	       is_within_u16(machine,  11,  14)      ||
+	       is_within_u16(machine,  24,  35)      ||
+	       is_within_u16(machine, 121, 130)      ||
+	       is_within_u16(machine, 145, 159)      ||
+	       is_within_u16(machine, 145, 159)      ||
+	       is_within_u16(machine, 225, 242);
+}

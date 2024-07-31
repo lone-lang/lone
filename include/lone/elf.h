@@ -565,4 +565,6 @@ bool lone_elf_header_type_is_proc(lone_u16 type);
 bool lone_elf_header_type_is_general(lone_u16 type);
 bool lone_elf_header_type_is_specific(lone_u16 type);
 
+bool lone_elf_header_machine_is_reserved(lone_u16 machine);
+
 #endif /* LONE_ELF_HEADER */
