@@ -275,6 +275,7 @@ void lone_s64_write_be(void *address, lone_s64 s64);
    ╰────────────────────────────────────────────────────────────────────────╯ */
 bool lone_bytes_equals(struct lone_bytes x, struct lone_bytes y);
 bool lone_bytes_equals_c_string(struct lone_bytes bytes, char *c_string);
+bool lone_bytes_is_zero(struct lone_bytes b);
 bool lone_bytes_contains_offset(struct lone_bytes bytes, lone_size offset);
 bool lone_bytes_contains_block(struct lone_bytes bytes, lone_size offset, lone_size size);
 bool lone_bytes_contains_address(struct lone_bytes bytes, void *pointer);

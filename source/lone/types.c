@@ -16,6 +16,12 @@ bool lone_bytes_equals_c_string(struct lone_bytes bytes, char *c_string)
 	return lone_bytes_equals(bytes, c_string_bytes);
 }
 
+bool lone_bytes_is_zero(struct lone_bytes b)
+{
+	if (b.count == 0) { return true; }
+	return lone_memory_is_zero(b.pointer, b.count);
+}
+
 bool lone_bytes_contains_offset(struct lone_bytes bytes, lone_size offset)
 {
 	return offset >= 0 && offset < bytes.count;
