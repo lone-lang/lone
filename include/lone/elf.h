@@ -559,4 +559,9 @@ bool lone_elf_header_has_valid_ident(struct lone_elf_header *header);
 
 bool lone_elf_header_ident_is_linux_os_abi(struct lone_elf_header *header);
 
+bool lone_elf_header_type_is_os(lone_u16 type);
+bool lone_elf_header_type_is_proc(lone_u16 type);
+bool lone_elf_header_type_is_general(lone_u16 type);
+bool lone_elf_header_type_is_specific(lone_u16 type);
+
 #endif /* LONE_ELF_HEADER */

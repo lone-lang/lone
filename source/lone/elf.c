@@ -226,3 +226,22 @@ bool lone_elf_header_has_valid_ident(struct lone_elf_header *header)
 	       lone_elf_header_ident_has_valid_os_abi(header)          &&
 	       lone_elf_header_ident_has_zero_filled_padding(header);
 }
+
+#define LONE_ELF_HEADER_RANGE_PREDICATE(name, predicate, constant)                                 \
+bool lone_elf_header_##name##_is_##predicate(lone_u16 name)                                        \
+{                                                                                                  \
+	return is_within_u16(name,                                                                 \
+			LONE_ELF_RANGES_##constant##_MIN,                                          \
+			LONE_ELF_RANGES_##constant##_MAX);                                         \
+}
+
+LONE_ELF_HEADER_RANGE_PREDICATE(type, general, TYPE_GENERAL)
+LONE_ELF_HEADER_RANGE_PREDICATE(type, os,      TYPE_OS)
+LONE_ELF_HEADER_RANGE_PREDICATE(type, proc,    TYPE_PROC)
+
+#undef LONE_ELF_HEADER_RANGE_PREDICATE
+
+bool lone_elf_header_type_is_specific(lone_u16 type)
+{
+	return lone_elf_header_type_is_os(type) || lone_elf_header_type_is_proc(type);
+}
