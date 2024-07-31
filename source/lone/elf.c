@@ -245,3 +245,18 @@ bool lone_elf_header_type_is_specific(lone_u16 type)
 {
 	return lone_elf_header_type_is_os(type) || lone_elf_header_type_is_proc(type);
 }
+
+bool lone_elf_header_has_valid_type(struct lone_elf_header *header)
+{
+	struct lone_optional_u16 type;
+
+	if (!header) { return false; }
+
+	type = lone_elf_header_read_type(header);
+
+	if (!type.present) { return false; }
+
+	return lone_elf_header_type_is_general(type.value) ||
+	       lone_elf_header_type_is_os(type.value)      ||
+	       lone_elf_header_type_is_proc(type.value);
+}
