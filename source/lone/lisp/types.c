@@ -11,6 +11,15 @@ struct lone_lisp_value lone_lisp_nil(void)
 	return (struct lone_lisp_value) { .type = LONE_LISP_TYPE_NIL };
 }
 
+struct lone_lisp_value lone_lisp_boolean_for(struct lone_lisp *lisp, bool value)
+{
+	if (value) {
+		return lisp->constants.truth;
+	} else {
+		return (struct lone_lisp_value) { .type = LONE_LISP_TYPE_NIL };
+	}
+}
+
 bool lone_lisp_has_same_type(struct lone_lisp_value x, struct lone_lisp_value y)
 {
 	if (x.type == y.type) {

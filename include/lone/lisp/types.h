@@ -236,6 +236,7 @@ typedef bool (*lone_lisp_comparator_function)(struct lone_lisp_value x, struct l
    ╰────────────────────────────────────────────────────────────────────────╯ */
 
 struct lone_lisp_value lone_lisp_nil(void);
+struct lone_lisp_value lone_lisp_boolean_for(struct lone_lisp *lisp, bool value);
 
 /* ╭────────────────────────────────────────────────────────────────────────╮
    │                                                                        │
