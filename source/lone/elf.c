@@ -310,3 +310,24 @@ bool lone_elf_header_has_valid_version(struct lone_elf_header *header)
 			LONE_ELF_RANGES_VERSION_MIN,
 			LONE_ELF_RANGES_VERSION_MAX);
 }
+
+bool lone_elf_header_has_valid_header_size(struct lone_elf_header *header)
+{
+	struct lone_optional_u16 header_size;
+
+	if (!header) { return false; }
+
+	header_size = lone_elf_header_read_header_size(header);
+
+	if (!header_size.present) { return false; }
+
+	switch (header->ident[LONE_ELF_IDENT_INDEX_CLASS]) {
+	case LONE_ELF_IDENT_CLASS_32BIT:
+		return header_size.value == sizeof(Elf32_Ehdr);
+	case LONE_ELF_IDENT_CLASS_64BIT:
+		return header_size.value == sizeof(Elf64_Ehdr);
+	case LONE_ELF_IDENT_CLASS_INVALID:
+	default:
+		return false;
+	}
+}
