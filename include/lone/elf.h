@@ -430,6 +430,27 @@ enum lone_elf_ranges_version {
 	LONE_ELF_RANGES_VERSION_MAX = LONE_ELF_VERSION_CURRENT,
 };
 
+#define LONE_ELF_IDENT_MAGIC_INIT(...)                                                             \
+	{                                                                                          \
+		LONE_ELF_IDENT_MAGIC_0,                                                            \
+		LONE_ELF_IDENT_MAGIC_1,                                                            \
+		LONE_ELF_IDENT_MAGIC_2,                                                            \
+		LONE_ELF_IDENT_MAGIC_3,                                                            \
+		__VA_ARGS__                                                                        \
+	}
+
+#define LONE_ELF_IDENT_MAGIC()                                                                     \
+	((unsigned char[LONE_ELF_SIZES_IDENT_MAGIC]) LONE_ELF_IDENT_MAGIC_INIT())
+
+#define LONE_ELF_IDENT_MAGIC_C_STRING()                                                            \
+	((char[LONE_ELF_SIZES_IDENT_MAGIC]) LONE_ELF_IDENT_MAGIC_INIT('\0'))
+
+#define LONE_ELF_IDENT_MAGIC_BYTES()                                                               \
+	((struct lone_bytes) {                                                                     \
+		.count = LONE_ELF_SIZES_IDENT_MAGIC,                                               \
+		.pointer = LONE_ELF_IDENT_MAGIC(),                                                 \
+	})
+
 struct lone_elf_header {
 	unsigned char ident[LONE_ELF_SIZES_IDENT];
 	lone_u16 type;
