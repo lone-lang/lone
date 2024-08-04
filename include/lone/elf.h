@@ -470,6 +470,9 @@ typedef lone_u32 lone_elf32_offset;  /* Elf32_Off                  Unsigned  Siz
 typedef lone_u64 lone_elf64_address; /* Elf64_Addr                 Unsigned  Size = Alignment = 8 */
 typedef lone_u64 lone_elf64_offset;  /* Elf64_Off                  Unsigned  Size = Alignment = 8 */
 
+typedef lone_s64 lone_elf_smax;
+typedef lone_u64 lone_elf_umax;
+
 struct lone_elf_header {
 	unsigned char ident[LONE_ELF_SIZES_IDENT];
 	lone_u16 type;
@@ -522,9 +525,6 @@ struct lone_elf_value {
 		lone_u64 u64;
 	} as;
 };
-
-typedef lone_s64 lone_elf_smax;
-typedef lone_u64 lone_elf_umax;
 
 /* ╭────────────────────────────────────────────────────────────────────────╮
    │                                                                        │
