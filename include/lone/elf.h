@@ -451,6 +451,25 @@ enum lone_elf_ranges_version {
 		.pointer = LONE_ELF_IDENT_MAGIC(),                                                 \
 	})
 
+/* ╭────────────────────────────────────────────────────────────────────────╮
+   │                                                                        │
+   │    ELF primitive data types. For some reason, many of these types      │
+   │    are duplicated between the ELF classes in the specification.        │
+   │    I have chosen to deduplicate them in this implementation.           │
+   │                                                                        │
+   ╰────────────────────────────────────────────────────────────────────────╯ */
+
+typedef lone_u16 lone_elf_uhalf;     /* Elf32_Half   Elf64_Half    Unsigned  Size = Alignment = 2 */
+typedef lone_u32 lone_elf_uword;     /* Elf32_Word   Elf64_Word    Unsigned  Size = Alignment = 4 */
+typedef lone_s32 lone_elf_sword;     /* Elf32_Sword  Elf64_Sword     Signed  Size = Alignment = 4 */
+typedef lone_u64 lone_elf_xuword;    /* Elf64_Xword                Unsigned  Size = Alignment = 8 */
+typedef lone_s64 lone_elf_xsword;    /* Elf64_Sxword                 Signed  Size = Alignment = 8 */
+
+typedef lone_u32 lone_elf32_address; /* Elf32_Addr                 Unsigned  Size = Alignment = 4 */
+typedef lone_u32 lone_elf32_offset;  /* Elf32_Off                  Unsigned  Size = Alignment = 4 */
+typedef lone_u64 lone_elf64_address; /* Elf64_Addr                 Unsigned  Size = Alignment = 8 */
+typedef lone_u64 lone_elf64_offset;  /* Elf64_Off                  Unsigned  Size = Alignment = 8 */
+
 struct lone_elf_header {
 	unsigned char ident[LONE_ELF_SIZES_IDENT];
 	lone_u16 type;
