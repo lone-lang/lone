@@ -473,6 +473,16 @@ typedef lone_u64 lone_elf64_offset;  /* Elf64_Off                  Unsigned  Siz
 typedef lone_s64 lone_elf_smax;
 typedef lone_u64 lone_elf_umax;
 
+#if __BITS_PER_LONG == 32
+typedef lone_elf32_address lone_elf_native_address;
+typedef lone_elf32_offset  lone_elf_native_offset;
+#elif __BITS_PER_LONG == 64
+typedef lone_elf64_address lone_elf_native_address;
+typedef lone_elf64_offset  lone_elf_native_offset;
+#else
+#	error "Unsupported architecture"
+#endif
+
 struct lone_elf_header {
 	unsigned char ident[LONE_ELF_SIZES_IDENT];
 	lone_u16 type;
