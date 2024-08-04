@@ -11,7 +11,7 @@
 
 #include <lone/linux.h>
 
-struct lone_lisp_value lone_lisp_segment_read_descriptor(struct lone_lisp *lone, lone_elf_segment *segment)
+struct lone_lisp_value lone_lisp_segment_read_descriptor(struct lone_lisp *lone, lone_elf_native_segment *segment)
 {
 	struct lone_bytes bytes;
 	struct lone_lisp_value descriptor, symbol, data;

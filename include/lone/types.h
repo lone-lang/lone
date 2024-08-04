@@ -139,22 +139,6 @@ struct lone_c_value {
 	struct lone_c_values value;
 };
 
-#if __BITS_PER_LONG == 64
-typedef Elf64_Ehdr lone_elf_header;
-typedef Elf64_Phdr lone_elf_segment;
-#elif __BITS_PER_LONG == 32
-typedef Elf32_Ehdr lone_elf_header;
-typedef Elf32_Phdr lone_elf_segment;
-#else
-	#error "Unsupported architecture"
-#endif
-
-struct lone_elf_segments {
-	size_t entry_size;
-	size_t entry_count;
-	lone_elf_segment *segments;
-};
-
 struct lone_auxiliary_value {
 	union {
 		void *pointer;

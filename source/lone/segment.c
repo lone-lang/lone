@@ -2,17 +2,11 @@
 
 #include <lone/segment.h>
 
-struct lone_bytes lone_segment_bytes(lone_elf_segment *segment)
+struct lone_bytes lone_segment_bytes(lone_elf_native_segment *segment)
 {
 	if (!segment) {
-		return (struct lone_bytes) {
-			.count = 0,
-			.pointer = 0
-		};
+		return LONE_BYTES_VALUE_NULL();
 	}
 
-	return (struct lone_bytes) {
-		.count = segment->p_memsz,
-		.pointer = (unsigned char *) segment->p_vaddr
-	};
+	return LONE_BYTES_VALUE(segment->p_memsz, segment->p_vaddr);
 }

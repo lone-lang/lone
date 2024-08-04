@@ -476,12 +476,24 @@ typedef lone_u64 lone_elf_umax;
 #if __BITS_PER_LONG == 32
 typedef lone_elf32_address lone_elf_native_address;
 typedef lone_elf32_offset  lone_elf_native_offset;
+typedef Elf32_Ehdr lone_elf_native_header;
+typedef Elf32_Phdr lone_elf_native_segment;
 #elif __BITS_PER_LONG == 64
 typedef lone_elf64_address lone_elf_native_address;
 typedef lone_elf64_offset  lone_elf_native_offset;
+typedef Elf64_Ehdr lone_elf_native_header;
+typedef Elf64_Phdr lone_elf_native_segment;
 #else
 #	error "Unsupported architecture"
 #endif
+
+struct lone_elf_native_segments {
+	struct {
+		size_t size;
+		size_t count;
+	} entry;
+	lone_elf_native_segment *segments;
+};
 
 struct lone_elf_header {
 	unsigned char ident[LONE_ELF_SIZES_IDENT];

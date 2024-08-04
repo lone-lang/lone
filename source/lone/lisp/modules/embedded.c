@@ -37,7 +37,7 @@ static struct lone_bytes slice(struct lone_bytes bytes, struct lone_lisp_value p
 	};
 }
 
-void lone_lisp_modules_embedded_load(struct lone_lisp *lone, lone_elf_segment *segment)
+void lone_lisp_modules_embedded_load(struct lone_lisp *lone, lone_elf_native_segment *segment)
 {
 	struct lone_lisp_value descriptor;
 	struct lone_lisp_value symbol, data, module, locations;
