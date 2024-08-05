@@ -497,8 +497,8 @@ typedef Elf64_Phdr lone_elf_native_segment;
 
 struct lone_elf_native_segments {
 	struct {
-		size_t size;
-		size_t count;
+		lone_u16 size;
+		lone_u16 count;
 	} entry;
 	lone_elf_native_segment *segments;
 };

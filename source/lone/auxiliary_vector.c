@@ -40,7 +40,7 @@ struct lone_elf_native_segments lone_auxiliary_vector_elf_segments(struct lone_a
 lone_elf_native_segment *lone_auxiliary_vector_embedded_segment(struct lone_auxiliary_vector *values)
 {
 	struct lone_elf_native_segments table;
-	size_t i;
+	lone_u16 i;
 
 	table = lone_auxiliary_vector_elf_segments(values);
 
