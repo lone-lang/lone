@@ -370,6 +370,21 @@ enum lone_elf_segment_type {
 	LONE_ELF_SEGMENT_TYPE_TLS      = LONE_ELF_SEGMENT_TYPE_THREAD_LOCAL_STORAGE,
 };
 
+enum lone_elf_segment_flags {
+	LONE_ELF_SEGMENT_FLAGS_EXECUTABLE = 0x1,
+	LONE_ELF_SEGMENT_FLAGS_WRITABLE   = 0x2,
+	LONE_ELF_SEGMENT_FLAGS_READABLE   = 0x4,
+
+	LONE_ELF_SEGMENT_FLAGS_NONE = 0,
+	LONE_ELF_SEGMENT_FLAGS_X    = 1,
+	LONE_ELF_SEGMENT_FLAGS_W    = 2,
+	LONE_ELF_SEGMENT_FLAGS_WX   = 3,
+	LONE_ELF_SEGMENT_FLAGS_R    = 4,
+	LONE_ELF_SEGMENT_FLAGS_RX   = 5,
+	LONE_ELF_SEGMENT_FLAGS_RW   = 6,
+	LONE_ELF_SEGMENT_FLAGS_RWX  = 7,
+};
+
 /* ╭────────────────────────────────────────────────────────────────────────╮
    │                                                                        │
    │    Useful ranges and sizes of various ELF structures and types.        │
