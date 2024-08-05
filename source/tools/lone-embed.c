@@ -74,8 +74,8 @@ static bool has_required_null_segments(struct elf *elf)
 
 static size_t align(size_t n, size_t a) { return ((size_t) ((n + (a - 1)) / a)) * a; }
 static size_t align_to_page(struct elf *elf, size_t n) { return align(n, elf->page_size); }
-static size_t min(size_t x, size_t y) { return x < y? x : y; }
-static size_t max(size_t x, size_t y) { return x > y? x : y; }
+static lone_elf_umax min(lone_elf_umax x, lone_elf_umax y) { return x < y? x : y; }
+static lone_elf_umax max(lone_elf_umax x, lone_elf_umax y) { return x > y? x : y; }
 
 static void check_arguments(int argc, char **argv)
 {
@@ -222,68 +222,75 @@ static void load_program_header_table(struct elf *elf)
 	read_bytes(elf->file.descriptor, elf->program_header_table.memory);
 }
 
-static void analyze(struct elf *elf)
+static lone_elf_umax segment_umax(struct lone_elf_header *header,
+		struct lone_elf_segment *segment,
+		struct lone_elf_optional_umax (*reader)(struct lone_elf_header *, struct lone_elf_segment *),
+		int exit_code)
 {
-	size_t entry_count = elf->program_header_table.entry_count;
-	void *table = elf->program_header_table.memory.pointer;
-	struct { size_t file, virtual, physical; } start = {-1, -1, -1}, end = {0, 0, 0};
-	Elf32_Phdr *phdr32;
-	Elf64_Phdr *phdr64;
-	size_t i;
+	struct lone_elf_optional_umax read;
+	read = reader(header, segment);
+	if (!read.present) { linux_exit(exit_code); }
+	return read.value;
+}
 
-	elf->program_header_table.nulls_count = 0;
+static void set_start_end(lone_elf_umax *start, lone_elf_umax *end,
+		lone_elf_umax address_or_offset, lone_elf_umax size,
+		int exit_code)
+{
+	lone_elf_umax limit;
 
-	switch (elf->class) {
-	case ELFCLASS64:
-		for (i = 0; i < entry_count; ++i) {
-			phdr64 = ((Elf64_Phdr *) table) + i;
-
-			if (phdr64->p_type == PT_LOAD) {
-				start.file = min(phdr64->p_offset, start.file);
-				end.file = max(phdr64->p_offset + phdr64->p_filesz, end.file);
-
-				start.virtual = min(phdr64->p_vaddr, start.virtual);
-				end.virtual = max(phdr64->p_vaddr + phdr64->p_memsz, end.virtual);
-
-				start.physical = min(phdr64->p_paddr, start.physical);
-				end.physical = max(phdr64->p_paddr + phdr64->p_memsz, end.physical);
-
-			} else if (phdr64->p_type == PT_NULL) {
-				++elf->program_header_table.nulls_count;
-			}
-		}
-
-		break;
-	case ELFCLASS32:
-		for (i = 0; i < entry_count; ++i) {
-			phdr32 = ((Elf32_Phdr *) table) + i;
-
-			if (phdr32->p_type == PT_LOAD) {
-				start.file = min(phdr32->p_offset, start.file);
-				end.file = max(phdr32->p_offset + phdr32->p_filesz, end.file);
-
-				start.virtual = min(phdr32->p_vaddr, start.virtual);
-				end.virtual = max(phdr32->p_vaddr + phdr32->p_memsz, end.virtual);
-
-				start.physical = min(phdr32->p_paddr, start.physical);
-				end.physical = max(phdr32->p_paddr + phdr32->p_memsz, end.physical);
-
-			} else if (phdr32->p_type == PT_NULL) {
-				++elf->program_header_table.nulls_count;
-			}
-		}
-
-		break;
-	default:
-		/* Invalid ELF class but somehow made it here? */ linux_exit(8);
+	if (!start || !end || __builtin_add_overflow(address_or_offset, size, &limit)) {
+		linux_exit(exit_code);
 	}
 
-	elf->limits.start.file = start.file;
-	elf->limits.start.virtual = start.virtual;
-	elf->limits.start.physical = start.physical;
-	elf->limits.end.file = end.file;
-	elf->limits.end.virtual = end.virtual;
-	elf->limits.end.physical = end.physical;
+	*start = min(*start, address_or_offset);
+	*end = max(*end, limit);
+}
+
+static void analyze(struct elf *elf)
+{
+	struct lone_elf_header *header = elf->header.pointer;
+	struct lone_elf_segment *segments = elf->program_header_table.memory.pointer;
+	lone_u16 entry_count = elf->program_header_table.entry_count;
+	struct lone_elf_segment *segment;
+	struct lone_optional_u32 type;
+	lone_u16 i;
+
+	elf->limits.start.file = -1ULL;
+	elf->limits.start.virtual = -1ULL;
+	elf->limits.start.physical = -1ULL;
+	elf->limits.end.file = 0;
+	elf->limits.end.virtual = 0;
+	elf->limits.end.physical = 0;
+	elf->program_header_table.nulls_count = 0;
+
+	for (i = 0; i < entry_count; ++i) {
+		segment = &segments[i];
+
+		type = lone_elf_segment_read_type(header, segment);
+		if (!type.present) { /* Invalid ELF */ linux_exit(8); }
+
+		if (type.value == PT_LOAD) {
+
+			set_start_end(&elf->limits.start.file, &elf->limits.end.file,
+			              segment_umax(header, segment, lone_elf_segment_read_file_offset, 8),
+			              segment_umax(header, segment, lone_elf_segment_read_size_in_file, 8),
+			              8);
+
+			set_start_end(&elf->limits.start.virtual, &elf->limits.end.virtual,
+			              segment_umax(header, segment, lone_elf_segment_read_virtual_address, 8),
+			              segment_umax(header, segment, lone_elf_segment_read_size_in_memory, 8),
+			              8);
+
+			set_start_end(&elf->limits.start.physical, &elf->limits.end.physical,
+			              segment_umax(header, segment, lone_elf_segment_read_physical_address, 8),
+			              segment_umax(header, segment, lone_elf_segment_read_size_in_memory, 8),
+			              8);
+
+		} else if (type.value == PT_NULL) {
+			++elf->program_header_table.nulls_count;
+		}
+	}
 
 	elf->data.offset = align_to_page(elf, elf->file.size);
 }
