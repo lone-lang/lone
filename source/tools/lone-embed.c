@@ -270,7 +270,7 @@ static void analyze(struct elf *elf)
 		type = lone_elf_segment_read_type(header, segment);
 		if (!type.present) { /* Invalid ELF */ linux_exit(8); }
 
-		if (type.value == PT_LOAD) {
+		if (type.value == LONE_ELF_SEGMENT_TYPE_LOADABLE) {
 
 			set_start_end(&elf->limits.start.file, &elf->limits.end.file,
 			              segment_umax(header, segment, lone_elf_segment_read_file_offset, 8),
@@ -287,7 +287,7 @@ static void analyze(struct elf *elf)
 			              segment_umax(header, segment, lone_elf_segment_read_size_in_memory, 8),
 			              8);
 
-		} else if (type.value == PT_NULL) {
+		} else if (type.value == LONE_ELF_SEGMENT_TYPE_NULL) {
 			++elf->program_header_table.nulls_count;
 		}
 	}
