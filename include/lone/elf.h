@@ -548,6 +548,46 @@ struct lone_elf_header {
 	} as;
 };
 
+struct lone_elf_segment {
+	lone_u32 type;
+
+	union {
+		struct {
+			lone_u32 file_offset;
+
+			struct {
+				lone_u32 virtual;
+				lone_u32 physical;
+			} address;
+
+			struct {
+				lone_u32 file;
+				lone_u32 memory;
+			} size_in;
+
+			lone_u32 flags;
+			lone_u32 alignment;
+		} elf32;
+
+		struct {
+			lone_u32 flags;
+			lone_u64 file_offset;
+
+			struct {
+				lone_u64 virtual;
+				lone_u64 physical;
+			} address;
+
+			struct {
+				lone_u64 file;
+				lone_u64 memory;
+			} size_in;
+
+			lone_u64 alignment;
+		} elf64;
+	} as;
+};
+
 /* ╭────────────────────────────────────────────────────────────────────────╮
    │                                                                        │
    │    The ELF identification information is a sixteen byte array.         │
