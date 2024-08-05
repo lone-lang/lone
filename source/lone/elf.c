@@ -102,7 +102,7 @@ lone_elf_header_read_##field(struct lone_elf_header *header)                    
 }
 
 static struct lone_elf_optional_umax
-lone_elf_read_address_or_offset(struct lone_elf_header *header,
+lone_elf_read_32_or_64(struct lone_elf_header *header,
 		void *address32, void *address64)
 {
 	struct lone_optional_u32 u32;
@@ -138,7 +138,7 @@ absent:
 struct lone_elf_optional_umax                                                                      \
 lone_elf_header_read_##field(struct lone_elf_header *header)                                       \
 {                                                                                                  \
-	return lone_elf_read_address_or_offset(header,                                             \
+	return lone_elf_read_32_or_64(header,                                                      \
 			&header->as.elf32.field, &header->as.elf64.field);                         \
 }
 
@@ -161,6 +161,57 @@ LONE_ELF_HEADER_CLASSIFIED_READER(section_names_index, u, 16)
 #undef LONE_ELF_HEADER_ADDRESS_OR_OFFSET_READER
 #undef LONE_ELF_HEADER_CLASSIFIED_READER
 #undef LONE_ELF_HEADER_COMMON_READER
+
+#define LONE_ELF_COMMON_READER(structure, field, sign, bits)                                       \
+struct lone_optional_##sign##bits                                                                  \
+lone_elf_##structure##_read_##field(struct lone_elf_header *header,                                \
+		struct lone_elf_##structure *structure)                                            \
+{                                                                                                  \
+	return lone_elf_read_##sign##bits(header, &structure->field);                              \
+}
+
+#define LONE_ELF_CLASSIFIED_READER(structure, field, sign, bits)                                   \
+struct lone_optional_##sign##bits                                                                  \
+lone_elf_##structure##_read_##field(struct lone_elf_header *header,                                \
+		struct lone_elf_##structure *structure)                                            \
+{                                                                                                  \
+	return lone_elf_read_classified_##sign##bits(header,                                       \
+			&structure->as.elf32.field, &structure->as.elf64.field);                   \
+}
+
+#define LONE_ELF_32_OR_64_BIT_READER(structure, field)                                             \
+struct lone_elf_optional_umax                                                                      \
+lone_elf_##structure##_read_##field(struct lone_elf_header *header,                                \
+		struct lone_elf_##structure *structure)                                            \
+{                                                                                                  \
+	return lone_elf_read_32_or_64(header,                                                      \
+			&structure->as.elf32.field, &structure->as.elf64.field);                   \
+}
+
+#define LONE_ELF_32_OR_64_BIT_STRUCT_READER(structure, name, field)                                \
+struct lone_elf_optional_umax                                                                      \
+lone_elf_##structure##_read_##name(struct lone_elf_header *header,                                 \
+		struct lone_elf_##structure *structure)                                            \
+{                                                                                                  \
+	return lone_elf_read_32_or_64(header,                                                      \
+			&structure->as.elf32.field, &structure->as.elf64.field);                   \
+}
+
+LONE_ELF_COMMON_READER(segment, type, u, 32)
+
+LONE_ELF_CLASSIFIED_READER(segment, flags, u, 32)
+
+LONE_ELF_32_OR_64_BIT_READER(segment, file_offset)
+LONE_ELF_32_OR_64_BIT_STRUCT_READER(segment, virtual_address, address.virtual)
+LONE_ELF_32_OR_64_BIT_STRUCT_READER(segment, physical_address, address.physical)
+LONE_ELF_32_OR_64_BIT_STRUCT_READER(segment, size_in_file, size_in.file)
+LONE_ELF_32_OR_64_BIT_STRUCT_READER(segment, size_in_memory, size_in.memory)
+LONE_ELF_32_OR_64_BIT_READER(segment, alignment)
+
+#undef LONE_ELF_32_OR_64_BIT_STRUCT_READER
+#undef LONE_ELF_32_OR_64_BIT_READER
+#undef LONE_ELF_CLASSIFIED_READER
+#undef LONE_ELF_COMMON_READER
 
 /* ╭────────────────────────────────────────────────────────────────────────╮
    │                                                                        │

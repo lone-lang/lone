@@ -630,6 +630,38 @@ struct lone_optional_u16 lone_elf_header_read_section_size(struct lone_elf_heade
 struct lone_optional_u16 lone_elf_header_read_section_count(struct lone_elf_header *header);
 struct lone_optional_u16 lone_elf_header_read_section_names_index(struct lone_elf_header *header);
 
+struct lone_optional_u32
+lone_elf_segment_read_type(struct lone_elf_header *header,
+		struct lone_elf_segment *segment);
+
+struct lone_optional_u32
+lone_elf_segment_read_flags(struct lone_elf_header *header,
+		struct lone_elf_segment *segment);
+
+struct lone_elf_optional_umax
+lone_elf_segment_read_file_offset(struct lone_elf_header *header,
+		struct lone_elf_segment *segment);
+
+struct lone_elf_optional_umax
+lone_elf_segment_read_virtual_address(struct lone_elf_header *header,
+		struct lone_elf_segment *segment);
+
+struct lone_elf_optional_umax
+lone_elf_segment_read_physical_address(struct lone_elf_header *header,
+		struct lone_elf_segment *segment);
+
+struct lone_elf_optional_umax
+lone_elf_segment_read_size_in_file(struct lone_elf_header *header,
+		struct lone_elf_segment *segment);
+
+struct lone_elf_optional_umax
+lone_elf_segment_read_size_in_memory(struct lone_elf_header *header,
+		struct lone_elf_segment *segment);
+
+struct lone_elf_optional_umax
+lone_elf_segment_read_alignment(struct lone_elf_header *header,
+		struct lone_elf_segment *segment);
+
 bool lone_elf_header_ident_is_linux_os_abi(struct lone_elf_header *header);
 
 bool lone_elf_header_type_is_os(lone_u16 type);
