@@ -473,6 +473,14 @@ typedef lone_u64 lone_elf64_offset;  /* Elf64_Off                  Unsigned  Siz
 typedef lone_s64 lone_elf_smax;
 typedef lone_u64 lone_elf_umax;
 
+struct lone_elf_optional_smax { bool present; lone_elf_smax value; };
+struct lone_elf_optional_umax { bool present; lone_elf_umax value; };
+
+#define LONE_ELF_OPTIONAL_ABSENT_VALUE(__type) \
+	((struct lone_elf_optional_##__type) { .present = false, .value = 0 })
+#define LONE_ELF_OPTIONAL_PRESENT_VALUE(__type, __value) \
+	((struct lone_elf_optional_##__type) { .present = true, .value = (__value) })
+
 #if __BITS_PER_LONG == 32
 typedef lone_elf32_address lone_elf_native_address;
 typedef lone_elf32_offset  lone_elf_native_offset;
@@ -540,14 +548,6 @@ struct lone_elf_header {
 	} as;
 };
 
-struct lone_elf_value {
-	enum lone_elf_ident_class class;
-	union {
-		lone_u32 u32;
-		lone_u64 u64;
-	} as;
-};
-
 /* ╭────────────────────────────────────────────────────────────────────────╮
    │                                                                        │
    │    The ELF identification information is a sixteen byte array.         │
@@ -578,9 +578,9 @@ struct lone_optional_u16 lone_elf_header_read_type(struct lone_elf_header *heade
 struct lone_optional_u16 lone_elf_header_read_machine(struct lone_elf_header *header);
 struct lone_optional_u32 lone_elf_header_read_version(struct lone_elf_header *header);
 
-struct lone_elf_value lone_elf_header_read_entry_point(struct lone_elf_header *header);
-struct lone_elf_value lone_elf_header_read_segments_offset(struct lone_elf_header *header);
-struct lone_elf_value lone_elf_header_read_sections_offset(struct lone_elf_header *header);
+struct lone_elf_optional_umax lone_elf_header_read_entry_point(struct lone_elf_header *header);
+struct lone_elf_optional_umax lone_elf_header_read_segments_offset(struct lone_elf_header *header);
+struct lone_elf_optional_umax lone_elf_header_read_sections_offset(struct lone_elf_header *header);
 
 struct lone_optional_u32 lone_elf_header_read_flags(struct lone_elf_header *header);
 struct lone_optional_u16 lone_elf_header_read_header_size(struct lone_elf_header *header);

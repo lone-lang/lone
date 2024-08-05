@@ -101,42 +101,41 @@ lone_elf_header_read_##field(struct lone_elf_header *header)                    
 			&header->as.elf32.field, &header->as.elf64.field);                         \
 }
 
-static struct lone_elf_value lone_elf_read_address_or_offset(struct lone_elf_header *header,
+static struct lone_elf_optional_umax
+lone_elf_read_address_or_offset(struct lone_elf_header *header,
 		void *address32, void *address64)
 {
 	struct lone_optional_u32 u32;
 	struct lone_optional_u64 u64;
-	struct lone_elf_value value = {
-		.class = LONE_ELF_IDENT_CLASS_INVALID,
-		.as.u64 = 0,
-	};
 
-	if (!header) { return value; }
+	if (!header) { goto absent; }
 
 	switch (header->ident[LONE_ELF_IDENT_INDEX_CLASS]) {
 	case LONE_ELF_IDENT_CLASS_32BIT:
 		u32 = lone_elf_read_u32(header, address32);
 		if (u32.present) {
-			value.class  = LONE_ELF_IDENT_CLASS_32BIT;
-			value.as.u32 = u32.value;
+			return LONE_ELF_OPTIONAL_PRESENT_VALUE(umax, u32.value);
+		} else {
+			break;
 		}
-		break;
 	case LONE_ELF_IDENT_CLASS_64BIT:
 		u64 = lone_elf_read_u64(header, address64);
 		if (u64.present) {
-			value.class  = LONE_ELF_IDENT_CLASS_64BIT;
-			value.as.u64 = u64.value;
+			return LONE_ELF_OPTIONAL_PRESENT_VALUE(umax, u64.value);
+		} else {
+			break;
 		}
-		break;
+	case LONE_ELF_IDENT_CLASS_INVALID:
 	default:
 		break;
 	}
 
-	return value;
+absent:
+	return LONE_ELF_OPTIONAL_ABSENT_VALUE(umax);
 }
 
 #define LONE_ELF_HEADER_ADDRESS_OR_OFFSET_READER(field)                                            \
-struct lone_elf_value                                                                              \
+struct lone_elf_optional_umax                                                                      \
 lone_elf_header_read_##field(struct lone_elf_header *header)                                       \
 {                                                                                                  \
 	return lone_elf_read_address_or_offset(header,                                             \
