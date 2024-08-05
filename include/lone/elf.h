@@ -499,7 +499,7 @@ struct lone_elf_native_segments {
 	struct {
 		lone_u16 size;
 		lone_u16 count;
-	} entry;
+	} segment;
 	lone_elf_native_segment *segments;
 };
 

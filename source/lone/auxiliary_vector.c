@@ -31,9 +31,9 @@ struct lone_bytes lone_auxiliary_vector_random(struct lone_auxiliary_vector *aux
 struct lone_elf_native_segments lone_auxiliary_vector_elf_segments(struct lone_auxiliary_vector *auxiliary)
 {
 	return (struct lone_elf_native_segments) {
-		.entry.size  = lone_auxiliary_vector_value(auxiliary, AT_PHENT).as.unsigned_integer,
-		.entry.count = lone_auxiliary_vector_value(auxiliary, AT_PHNUM).as.unsigned_integer,
-		.segments    = lone_auxiliary_vector_value(auxiliary, AT_PHDR).as.pointer
+		.segment.size  = lone_auxiliary_vector_value(auxiliary, AT_PHENT).as.unsigned_integer,
+		.segment.count = lone_auxiliary_vector_value(auxiliary, AT_PHNUM).as.unsigned_integer,
+		.segments      = lone_auxiliary_vector_value(auxiliary, AT_PHDR).as.pointer
 	};
 }
 
@@ -44,7 +44,7 @@ lone_elf_native_segment *lone_auxiliary_vector_embedded_segment(struct lone_auxi
 
 	table = lone_auxiliary_vector_elf_segments(values);
 
-	for (i = 0; i < table.entry.count; ++i) {
+	for (i = 0; i < table.segment.count; ++i) {
 		lone_elf_native_segment *entry = &table.segments[i];
 
 		if (entry->p_type == PT_LONE) {
