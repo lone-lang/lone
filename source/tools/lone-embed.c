@@ -21,22 +21,22 @@ struct elf {
 
 	struct {
 		struct {
-			size_t file;
-			size_t virtual;
-			size_t physical;
+			lone_elf_umax file;
+			lone_elf_umax virtual;
+			lone_elf_umax physical;
 		} start;
 		struct {
-			size_t file;
-			size_t virtual;
-			size_t physical;
+			lone_elf_umax file;
+			lone_elf_umax virtual;
+			lone_elf_umax physical;
 		} end;
 	} limits;
 
 	struct {
-		size_t offset;
-		size_t entry_size;
-		size_t entry_count;
-		size_t nulls_count;
+		lone_elf_umax offset;
+		lone_u16 entry_size;
+		lone_u16 entry_count;
+		lone_u16 nulls_count;
 		struct lone_bytes memory;
 	} program_header_table;
 
@@ -193,40 +193,32 @@ static void validate_elf_header(struct elf *elf)
 
 static void load_program_header_table(struct elf *elf)
 {
-	size_t offset, entry_size, entry_count, size;
-	Elf32_Ehdr *elf32;
-	Elf64_Ehdr *elf64;
+	struct lone_elf_optional_umax offset;
+	struct lone_optional_u16 entry_size, entry_count;
+	lone_elf_umax size;
 	void *address;
 
-	switch (elf->class) {
-	case ELFCLASS64:
-		elf64 = (Elf64_Ehdr *) elf->header.pointer;
-		offset = elf64->e_phoff;
-		entry_size = elf64->e_phentsize;
-		entry_count = elf64->e_phnum;
-		break;
-	case ELFCLASS32:
-		elf32 = (Elf32_Ehdr *) elf->header.pointer;
-		offset = elf32->e_phoff;
-		entry_size = elf32->e_phentsize;
-		entry_count = elf32->e_phnum;
-		break;
-	default:
-		/* Invalid ELF class but somehow made it here? */ linux_exit(8);
-	}
+	offset = lone_elf_header_read_segments_offset(elf->header.pointer);
+	if (!offset.present) { linux_exit(8); }
 
-	elf->program_header_table.offset = offset;
-	elf->program_header_table.entry_size = entry_size;
-	elf->program_header_table.entry_count = entry_count;
+	entry_size = lone_elf_header_read_segment_size(elf->header.pointer);
+	if (!entry_size.present) { linux_exit(8); }
+
+	entry_count = lone_elf_header_read_segment_count(elf->header.pointer);
+	if (!entry_count.present) { linux_exit(8); }
+
+	elf->program_header_table.offset = offset.value;
+	elf->program_header_table.entry_size = entry_size.value;
+	elf->program_header_table.entry_count = entry_count.value;
 	elf->program_header_table.nulls_count = 0;
 
-	size = pht_size_for(elf, entry_count + REQUIRED_PT_NULLS + 1);
+	size = pht_size_for(elf, entry_count.value + REQUIRED_PT_NULLS + 1);
 	address = map(size);
 
 	elf->program_header_table.memory.count = size;
 	elf->program_header_table.memory.pointer = address;
 
-	seek_to(elf->file.descriptor, offset);
+	seek_to(elf->file.descriptor, offset.value);
 	read_bytes(elf->file.descriptor, elf->program_header_table.memory);
 }
 
