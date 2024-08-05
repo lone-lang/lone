@@ -463,6 +463,16 @@ enum lone_elf_ranges_version {
 	LONE_ELF_RANGES_VERSION_MAX = LONE_ELF_VERSION_CURRENT,
 };
 
+enum lone_elf_ranges_segment_type {
+	LONE_ELF_RANGES_SEGMENT_TYPE_MIN = LONE_ELF_SEGMENT_TYPE_NULL,
+	LONE_ELF_RANGES_SEGMENT_TYPE_MAX = LONE_ELF_SEGMENT_TYPE_TLS,
+};
+
+enum lone_elf_ranges_segment_flags {
+	LONE_ELF_RANGES_SEGMENT_FLAGS_MIN = LONE_ELF_SEGMENT_FLAGS_NONE,
+	LONE_ELF_RANGES_SEGMENT_FLAGS_MAX = LONE_ELF_SEGMENT_FLAGS_RWX,
+};
+
 #define LONE_ELF_IDENT_MAGIC_INIT(...)                                                             \
 	{                                                                                          \
 		LONE_ELF_IDENT_MAGIC_0,                                                            \
