@@ -323,7 +323,7 @@ void lone_lisp_modules_intrinsic_linux_initialize(struct lone_lisp *lone,
 static inline long lone_lisp_value_to_linux_system_call_number(struct lone_lisp *lone,
 		struct lone_lisp_value linux_system_call_table, struct lone_lisp_value value)
 {
-	struct lone_lisp_heap_value *actual;
+	struct lone_lisp_value number;
 
 	switch (value.type) {
 	case LONE_LISP_TYPE_INTEGER:
@@ -335,14 +335,12 @@ static inline long lone_lisp_value_to_linux_system_call_number(struct lone_lisp 
 		break;
 	}
 
-	actual = value.as.heap_value;
-
-	switch (actual->type) {
+	switch (value.as.heap_value->type) {
 	case LONE_LISP_TYPE_TEXT:
 		value = lone_lisp_text_to_symbol(lone, value);
 		__attribute__((fallthrough));
 	case LONE_LISP_TYPE_SYMBOL:
-		return lone_lisp_table_get(lone, linux_system_call_table, value).as.integer;
+		number = lone_lisp_table_get(lone, linux_system_call_table, value);
 	case LONE_LISP_TYPE_BYTES:
 	case LONE_LISP_TYPE_MODULE:
 	case LONE_LISP_TYPE_FUNCTION:
@@ -350,6 +348,15 @@ static inline long lone_lisp_value_to_linux_system_call_number(struct lone_lisp 
 	case LONE_LISP_TYPE_LIST:
 	case LONE_LISP_TYPE_VECTOR:
 	case LONE_LISP_TYPE_TABLE:
+		linux_exit(-1);
+	}
+
+	switch (number.type) {
+	case LONE_LISP_TYPE_INTEGER:
+		return value.as.integer;
+	case LONE_LISP_TYPE_NIL:
+	case LONE_LISP_TYPE_HEAP_VALUE:
+	case LONE_LISP_TYPE_POINTER:
 		linux_exit(-1);
 	}
 }
