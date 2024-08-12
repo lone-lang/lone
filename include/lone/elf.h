@@ -681,6 +681,22 @@ struct lone_optional_u16 lone_elf_header_read_section_size(struct lone_elf_heade
 struct lone_optional_u16 lone_elf_header_read_section_count(struct lone_elf_header *header);
 struct lone_optional_u16 lone_elf_header_read_section_names_index(struct lone_elf_header *header);
 
+bool lone_elf_header_write_type(struct lone_elf_header *header, lone_u16 type);
+bool lone_elf_header_write_machine(struct lone_elf_header *header, lone_u16 machine);
+bool lone_elf_header_write_version(struct lone_elf_header *header, lone_u32 version);
+
+bool lone_elf_header_write_entry_point(struct lone_elf_header *header, lone_elf_umax address);
+bool lone_elf_header_write_segments_offset(struct lone_elf_header *header, lone_elf_umax offset);
+bool lone_elf_header_write_sections_offset(struct lone_elf_header *header, lone_elf_umax offset);
+
+bool lone_elf_header_write_flags(struct lone_elf_header *header, lone_u32 flags);
+bool lone_elf_header_write_header_size(struct lone_elf_header *header, lone_u16 size);
+bool lone_elf_header_write_segment_size(struct lone_elf_header *header, lone_u16 size);
+bool lone_elf_header_write_segment_count(struct lone_elf_header *header, lone_u16 count);
+bool lone_elf_header_write_section_size(struct lone_elf_header *header, lone_u16 size);
+bool lone_elf_header_write_section_count(struct lone_elf_header *header, lone_u16 count);
+bool lone_elf_header_write_section_names_index(struct lone_elf_header *header, lone_u16 index);
+
 struct lone_optional_u32
 lone_elf_segment_read_type(struct lone_elf_header *header,
 		struct lone_elf_segment *segment);

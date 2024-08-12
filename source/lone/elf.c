@@ -311,6 +311,22 @@ bool lone_elf_header_write_##field(struct lone_elf_header *header, lone_elf_umax
 			&header->as.elf32.field, &header->as.elf64.field, value);                  \
 }
 
+LONE_ELF_HEADER_COMMON_WRITER(type,    u, 16)
+LONE_ELF_HEADER_COMMON_WRITER(machine, u, 16)
+LONE_ELF_HEADER_COMMON_WRITER(version, u, 32)
+
+LONE_ELF_HEADER_ADDRESS_OR_OFFSET_WRITER(entry_point)
+LONE_ELF_HEADER_ADDRESS_OR_OFFSET_WRITER(segments_offset)
+LONE_ELF_HEADER_ADDRESS_OR_OFFSET_WRITER(sections_offset)
+
+LONE_ELF_HEADER_CLASSIFIED_WRITER(flags,               u, 32)
+LONE_ELF_HEADER_CLASSIFIED_WRITER(header_size,         u, 16)
+LONE_ELF_HEADER_CLASSIFIED_WRITER(segment_size,        u, 16)
+LONE_ELF_HEADER_CLASSIFIED_WRITER(segment_count,       u, 16)
+LONE_ELF_HEADER_CLASSIFIED_WRITER(section_size,        u, 16)
+LONE_ELF_HEADER_CLASSIFIED_WRITER(section_count,       u, 16)
+LONE_ELF_HEADER_CLASSIFIED_WRITER(section_names_index, u, 16)
+
 #undef LONE_ELF_HEADER_ADDRESS_OR_OFFSET_WRITER
 #undef LONE_ELF_HEADER_CLASSIFIED_WRITER
 #undef LONE_ELF_HEADER_COMMON_WRITER
