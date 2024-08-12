@@ -235,14 +235,13 @@ static void load_program_header_table(struct elf *elf)
 	read_bytes(elf->file.descriptor, elf->segments.memory);
 }
 
-static lone_elf_umax segment_umax(struct lone_elf_header *header,
+static lone_elf_umax segment_read_umax(struct lone_elf_header *header,
 		struct lone_elf_segment *segment,
-		struct lone_elf_optional_umax (*reader)(struct lone_elf_header *, struct lone_elf_segment *),
-		int exit_code)
+		struct lone_elf_optional_umax (*reader)(struct lone_elf_header *, struct lone_elf_segment *))
 {
 	struct lone_elf_optional_umax read;
 	read = reader(header, segment);
-	if (!read.present) { linux_exit(exit_code); }
+	if (!read.present) { invalid_elf(); }
 	return read.value;
 }
 
@@ -286,18 +285,18 @@ static void analyze(struct elf *elf)
 		if (type.value == LONE_ELF_SEGMENT_TYPE_LOADABLE) {
 
 			set_start_end(&elf->limits.start.file, &elf->limits.end.file,
-			              segment_umax(header, segment, lone_elf_segment_read_file_offset, 8),
-			              segment_umax(header, segment, lone_elf_segment_read_size_in_file, 8),
+			              segment_read_umax(header, segment, lone_elf_segment_read_file_offset),
+			              segment_read_umax(header, segment, lone_elf_segment_read_size_in_file),
 			              8);
 
 			set_start_end(&elf->limits.start.virtual, &elf->limits.end.virtual,
-			              segment_umax(header, segment, lone_elf_segment_read_virtual_address, 8),
-			              segment_umax(header, segment, lone_elf_segment_read_size_in_memory, 8),
+			              segment_read_umax(header, segment, lone_elf_segment_read_virtual_address),
+			              segment_read_umax(header, segment, lone_elf_segment_read_size_in_memory),
 			              8);
 
 			set_start_end(&elf->limits.start.physical, &elf->limits.end.physical,
-			              segment_umax(header, segment, lone_elf_segment_read_physical_address, 8),
-			              segment_umax(header, segment, lone_elf_segment_read_size_in_memory, 8),
+			              segment_read_umax(header, segment, lone_elf_segment_read_physical_address),
+			              segment_read_umax(header, segment, lone_elf_segment_read_size_in_memory),
 			              8);
 
 		} else if (type.value == LONE_ELF_SEGMENT_TYPE_NULL) {
