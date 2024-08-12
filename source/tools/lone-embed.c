@@ -245,6 +245,14 @@ static lone_elf_umax segment_read_umax(struct lone_elf_header *header,
 	return read.value;
 }
 
+static void segment_write_umax(struct lone_elf_header *header,
+		struct lone_elf_segment *segment,
+		bool (*writer)(struct lone_elf_header *, struct lone_elf_segment *, lone_elf_umax),
+		lone_elf_umax value)
+{
+	if (!writer(header, segment, value)) { invalid_elf(); }
+}
+
 static void set_start_end(lone_elf_umax *start, lone_elf_umax *end,
 		lone_elf_umax address_or_offset, lone_elf_umax size,
 		int exit_code)
