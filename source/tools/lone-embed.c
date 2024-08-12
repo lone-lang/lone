@@ -15,6 +15,9 @@
 #define REQUIRED_PT_NULLS 2
 
 #define LONE_TOOLS_EMBED_EXIT_INVALID_ELF           8
+#define LONE_TOOLS_EMBED_EXIT_MISSING_NULL_ENTRY    9
+#define LONE_TOOLS_EMBED_EXIT_MULTIPLE_PHDR_ENTRIES 10
+#define LONE_TOOLS_EMBED_EXIT_MISSING_PHDR_ENTRY    11
 #define LONE_TOOLS_EMBED_EXIT_OVERFLOW              250
 
 struct elf {
@@ -335,98 +338,65 @@ static void analyze(struct elf *elf)
 
 static void adjust_phdr_entry(struct elf *elf)
 {
-	size_t entry_count = elf->segments.table.segment.count;
-	void *table = elf->segments.memory.pointer;
-	Elf32_Phdr *phdr32, *phdr32_entry, *phdr32_load;
-	Elf64_Phdr *phdr64, *phdr64_entry, *phdr64_load;
-	size_t i;
+	size_t entry_count, i;
+	struct lone_elf_header *header;
+	struct lone_elf_segment *segments, *segment, *phdr, *load;
+	lone_elf_umax alignment, size, size_aligned, offset, virtual, physical;
+	lone_u32 type;
 
-	switch (elf->class) {
-	case ELFCLASS64:
-		phdr64_entry = 0;
-		phdr64_load = 0;
+	header = elf->header.pointer;
+	segments = elf->segments.table.segments;
+	entry_count = elf->segments.table.segment.count;
+	phdr = 0;
+	load = 0;
 
-		for (i = 0; i < entry_count; ++i) {
-			phdr64 = ((Elf64_Phdr *) table) + i;
+	for (i = 0; i < entry_count; ++i) {
+		segment = lone_elf_segment_at(elf->segments.table, i);
+		if (!segment) { overflow(); }
 
-			if (phdr64->p_type == PT_PHDR) {
-				if (phdr64_entry) {
-					/* Multiple PT_PHDR entries, invalid */ linux_exit(10);
-				} else {
-					phdr64_entry = phdr64;
-				}
-			} else if (phdr64->p_type == PT_NULL) {
-				phdr64_load = phdr64;
-				break;
+		type = segment_read_u32(header, segment, lone_elf_segment_read_type);
+
+		if (type == LONE_ELF_SEGMENT_TYPE_PHDR) {
+			if (phdr) {
+				linux_exit(LONE_TOOLS_EMBED_EXIT_MULTIPLE_PHDR_ENTRIES);
+			} else {
+				phdr = segment;
 			}
+		} else if (type == LONE_ELF_SEGMENT_TYPE_NULL) {
+			load = segment;
+			break;
 		}
-
-		if (!phdr64_entry) {
-			/* Missing PT_PHDR entry */ linux_exit(11);
-		}
-
-		if (!phdr64_load) {
-			/* Missing required PT_NULL entry */ linux_exit(9);
-		}
-
-		phdr64_entry->p_offset = elf->program_header_table.offset;
-		phdr64_entry->p_vaddr = align_to_page(elf, elf->limits.end.virtual);
-		phdr64_entry->p_paddr = align_to_page(elf, elf->limits.end.physical);
-		phdr64_entry->p_filesz = phdr64_entry->p_memsz = pht_size(elf);
-
-		phdr64_load->p_type = PT_LOAD;
-		phdr64_load->p_offset = elf->program_header_table.offset;
-		phdr64_load->p_vaddr = phdr64_entry->p_vaddr;
-		phdr64_load->p_paddr = phdr64_entry->p_paddr;
-		phdr64_load->p_filesz = phdr64_load->p_memsz = align_to_page(elf, pht_size(elf));
-		phdr64_load->p_align = elf->page_size;
-		phdr64_load->p_flags = PF_R;
-
-		break;
-	case ELFCLASS32:
-		phdr32_entry = 0;
-		phdr32_load = 0;
-
-		for (i = 0; i < entry_count; ++i) {
-			phdr32 = ((Elf32_Phdr *) table) + i;
-
-			if (phdr32->p_type == PT_PHDR) {
-				if (phdr32_entry) {
-					/* Multiple PT_PHDR entries, invalid */ linux_exit(10);
-				} else {
-					phdr32_entry = phdr32;
-				}
-			} else if (phdr32->p_type == PT_NULL) {
-				phdr32_load = phdr32;
-				break;
-			}
-		}
-
-		if (!phdr32_entry) {
-			/* Missing PT_PHDR entry */ linux_exit(11);
-		}
-
-		if (!phdr32_load) {
-			/* Missing required PT_NULL entry */ linux_exit(9);
-		}
-
-		phdr32_entry->p_offset = elf->program_header_table.offset;
-		phdr32_entry->p_vaddr = align_to_page(elf, elf->limits.end.virtual);
-		phdr32_entry->p_paddr = align_to_page(elf, elf->limits.end.physical);
-		phdr32_entry->p_filesz = phdr32_entry->p_memsz = pht_size(elf);
-
-		phdr32_load->p_type = PT_LOAD;
-		phdr32_load->p_offset = elf->program_header_table.offset;
-		phdr32_load->p_vaddr = phdr32_entry->p_vaddr;
-		phdr32_load->p_paddr = phdr32_entry->p_paddr;
-		phdr32_load->p_filesz = phdr32_load->p_memsz = align_to_page(elf, pht_size(elf));
-		phdr32_load->p_align = elf->page_size;
-		phdr32_load->p_flags = PF_R;
-
-		break;
-	default:
-		/* Invalid ELF class but somehow made it here? */ linux_exit(8);
 	}
+
+	if (!phdr) {
+		linux_exit(LONE_TOOLS_EMBED_EXIT_MISSING_PHDR_ENTRY);
+	}
+
+	if (!load) {
+		linux_exit(LONE_TOOLS_EMBED_EXIT_MISSING_NULL_ENTRY);
+	}
+
+	alignment = elf->page_size;
+	size = pht_size(elf);
+	size_aligned = align_to_page(elf, size);
+	offset = elf->segments.offset;
+	virtual = align_to_page(elf, elf->limits.end.virtual);
+	physical = align_to_page(elf, elf->limits.end.physical);
+
+	segment_write_umax(header, phdr, lone_elf_segment_write_file_offset, offset);
+	segment_write_umax(header, phdr, lone_elf_segment_write_virtual_address, virtual);
+	segment_write_umax(header, phdr, lone_elf_segment_write_physical_address, physical);
+	segment_write_umax(header, phdr, lone_elf_segment_write_size_in_file, size);
+	segment_write_umax(header, phdr, lone_elf_segment_write_size_in_memory, size);
+
+	segment_write_u32(header,  load, lone_elf_segment_write_type, LONE_ELF_SEGMENT_TYPE_LOAD);
+	segment_write_u32(header,  load, lone_elf_segment_write_flags, LONE_ELF_SEGMENT_FLAGS_R);
+	segment_write_umax(header, load, lone_elf_segment_write_file_offset, offset);
+	segment_write_umax(header, load, lone_elf_segment_write_virtual_address, virtual);
+	segment_write_umax(header, load, lone_elf_segment_write_physical_address, physical);
+	segment_write_umax(header, load, lone_elf_segment_write_size_in_file, size_aligned);
+	segment_write_umax(header, load, lone_elf_segment_write_size_in_memory, size_aligned);
+	segment_write_umax(header, load, lone_elf_segment_write_alignment, alignment);
 }
 
 static void move_and_expand_pht_if_needed(struct elf *elf)
