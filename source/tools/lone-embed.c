@@ -35,12 +35,11 @@ struct elf {
 	} limits;
 
 	struct {
-		lone_elf_umax offset;
-		lone_u16 entry_size;
-		lone_u16 entry_count;
-		lone_u16 nulls_count;
 		struct lone_bytes memory;
-	} program_header_table;
+		struct lone_elf_segments table;
+		lone_elf_umax offset;
+		lone_u16 nulls_count;
+	} segments;
 
 	struct {
 		int descriptor;
@@ -56,22 +55,22 @@ struct elf {
 
 static size_t pht_size_for(struct elf *elf, size_t entry_count)
 {
-	return elf->program_header_table.entry_size * entry_count;
+	return elf->segments.table.segment.size * entry_count;
 }
 
 static size_t pht_size(struct elf *elf)
 {
-	return pht_size_for(elf, elf->program_header_table.entry_count);
+	return pht_size_for(elf, elf->segments.table.segment.count);
 }
 
 static void *pht_end(struct elf *elf)
 {
-	return elf->program_header_table.memory.pointer + pht_size(elf);
+	return elf->segments.table.segments + pht_size(elf);
 }
 
 static bool has_required_null_segments(struct elf *elf)
 {
-	return elf->program_header_table.nulls_count >= REQUIRED_PT_NULLS;
+	return elf->segments.nulls_count >= REQUIRED_PT_NULLS;
 }
 
 static size_t align(size_t n, size_t a) { return ((size_t) ((n + (a - 1)) / a)) * a; }
@@ -214,19 +213,20 @@ static void load_program_header_table(struct elf *elf)
 	entry_count = lone_elf_header_read_segment_count(elf->header.pointer);
 	if (!entry_count.present) { invalid_elf(); }
 
-	elf->program_header_table.offset = offset.value;
-	elf->program_header_table.entry_size = entry_size.value;
-	elf->program_header_table.entry_count = entry_count.value;
-	elf->program_header_table.nulls_count = 0;
+	elf->segments.nulls_count = 0;
+	elf->segments.offset = offset.value;
+	elf->segments.table.segment.size = entry_size.value;
+	elf->segments.table.segment.count = entry_count.value;
 
 	size = pht_size_for(elf, entry_count.value + REQUIRED_PT_NULLS + 1);
 	address = map(size);
 
-	elf->program_header_table.memory.count = size;
-	elf->program_header_table.memory.pointer = address;
+	elf->segments.table.segments = address;
+	elf->segments.memory.pointer = address;
+	elf->segments.memory.count = size;
 
 	seek_to(elf->file.descriptor, offset.value);
-	read_bytes(elf->file.descriptor, elf->program_header_table.memory);
+	read_bytes(elf->file.descriptor, elf->segments.memory);
 }
 
 static lone_elf_umax segment_umax(struct lone_elf_header *header,
@@ -257,8 +257,7 @@ static void set_start_end(lone_elf_umax *start, lone_elf_umax *end,
 static void analyze(struct elf *elf)
 {
 	struct lone_elf_header *header = elf->header.pointer;
-	struct lone_elf_segment *segments = elf->program_header_table.memory.pointer;
-	lone_u16 entry_count = elf->program_header_table.entry_count;
+	lone_u16 entry_count = elf->segments.table.segment.count;
 	struct lone_elf_segment *segment;
 	struct lone_optional_u32 type;
 	lone_u16 i;
@@ -269,10 +268,10 @@ static void analyze(struct elf *elf)
 	elf->limits.end.file = 0;
 	elf->limits.end.virtual = 0;
 	elf->limits.end.physical = 0;
-	elf->program_header_table.nulls_count = 0;
+	elf->segments.nulls_count = 0;
 
 	for (i = 0; i < entry_count; ++i) {
-		segment = &segments[i];
+		segment = lone_elf_segment_at(elf->segments.table, i);
 
 		type = lone_elf_segment_read_type(header, segment);
 		if (!type.present) { invalid_elf(); }
@@ -295,7 +294,7 @@ static void analyze(struct elf *elf)
 			              8);
 
 		} else if (type.value == LONE_ELF_SEGMENT_TYPE_NULL) {
-			++elf->program_header_table.nulls_count;
+			++elf->segments.nulls_count;
 		}
 	}
 
@@ -304,8 +303,8 @@ static void analyze(struct elf *elf)
 
 static void adjust_phdr_entry(struct elf *elf)
 {
-	size_t entry_count = elf->program_header_table.entry_count;
-	void *table = elf->program_header_table.memory.pointer;
+	size_t entry_count = elf->segments.table.segment.count;
+	void *table = elf->segments.memory.pointer;
 	Elf32_Phdr *phdr32, *phdr32_entry, *phdr32_load;
 	Elf64_Phdr *phdr64, *phdr64_entry, *phdr64_load;
 	size_t i;
@@ -406,9 +405,9 @@ static void move_and_expand_pht_if_needed(struct elf *elf)
 
 	new_nulls = pht_end(elf);
 
-	elf->program_header_table.offset = elf->data.offset;
-	elf->program_header_table.entry_count += REQUIRED_PT_NULLS + 1;
-	elf->file.size = elf->program_header_table.offset + pht_size(elf);
+	elf->segments.offset = elf->data.offset;
+	elf->segments.table.segment.count += REQUIRED_PT_NULLS + 1;
+	elf->file.size = elf->segments.offset + pht_size(elf);
 
 	lone_memory_zero(new_nulls, pht_size_for(elf, REQUIRED_PT_NULLS + 1));
 	adjust_phdr_entry(elf);
@@ -417,8 +416,8 @@ static void move_and_expand_pht_if_needed(struct elf *elf)
 
 static void set_lone_segments(struct elf *elf)
 {
-	size_t entry_count = elf->program_header_table.entry_count;
-	void *table = elf->program_header_table.memory.pointer;
+	size_t entry_count = elf->segments.table.segment.count;
+	void *table = elf->segments.table.segments;
 	bool set_load_segment = false, set_lone_segment = false;
 	Elf32_Phdr *phdr32;
 	Elf64_Phdr *phdr64;
@@ -541,8 +540,8 @@ static void query_file_sizes(struct elf *elf)
 
 static void patch_program_header_table(struct elf *elf)
 {
-	seek_to(elf->file.descriptor, elf->program_header_table.offset);
-	write_bytes(elf->file.descriptor, elf->program_header_table.memory);
+	seek_to(elf->file.descriptor, elf->segments.offset);
+	write_bytes(elf->file.descriptor, elf->segments.memory);
 }
 
 static void append_data(struct elf *elf)
@@ -570,9 +569,9 @@ static void patch_ehdr_if_needed(struct elf *elf)
 	case ELFCLASS64:
 		elf64 = (Elf64_Ehdr *) elf->header.pointer;
 
-		if (elf64->e_phoff != elf->program_header_table.offset) {
-			elf64->e_phoff = elf->program_header_table.offset;
-			elf64->e_phnum = elf->program_header_table.entry_count;
+		if (elf64->e_phoff != elf->segments.offset) {
+			elf64->e_phoff = elf->segments.offset;
+			elf64->e_phnum = elf->segments.table.segment.count;
 			patching_required = true;
 		}
 
@@ -580,9 +579,9 @@ static void patch_ehdr_if_needed(struct elf *elf)
 	case ELFCLASS32:
 		elf32 = (Elf32_Ehdr *) elf->header.pointer;
 
-		if (elf32->e_phoff != elf->program_header_table.offset) {
-			elf32->e_phoff = elf->program_header_table.offset;
-			elf32->e_phnum = elf->program_header_table.entry_count;
+		if (elf32->e_phoff != elf->segments.offset) {
+			elf32->e_phoff = elf->segments.offset;
+			elf32->e_phnum = elf->segments.table.segment.count;
 			patching_required = true;
 		}
 
