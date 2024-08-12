@@ -235,6 +235,24 @@ static void load_program_header_table(struct elf *elf)
 	read_bytes(elf->file.descriptor, elf->segments.memory);
 }
 
+static lone_u32 segment_read_u32(struct lone_elf_header *header,
+		struct lone_elf_segment *segment,
+		struct lone_optional_u32 (*reader)(struct lone_elf_header *, struct lone_elf_segment *))
+{
+	struct lone_optional_u32 read;
+	read = reader(header, segment);
+	if (!read.present) { invalid_elf(); }
+	return read.value;
+}
+
+static void segment_write_u32(struct lone_elf_header *header,
+		struct lone_elf_segment *segment,
+		bool (*writer)(struct lone_elf_header *, struct lone_elf_segment *, lone_u32),
+		lone_u32 value)
+{
+	if (!writer(header, segment, value)) { invalid_elf(); }
+}
+
 static lone_elf_umax segment_read_umax(struct lone_elf_header *header,
 		struct lone_elf_segment *segment,
 		struct lone_elf_optional_umax (*reader)(struct lone_elf_header *, struct lone_elf_segment *))
