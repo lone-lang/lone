@@ -358,8 +358,10 @@ static inline long lone_lisp_value_to_linux_system_call_number(struct lone_lisp 
 	case LONE_LISP_TYPE_NIL:
 	case LONE_LISP_TYPE_HEAP_VALUE:
 	case LONE_LISP_TYPE_POINTER:
-		linux_exit(-1);
+		break;
 	}
+
+	linux_exit(-1);
 }
 
 static inline long lone_lisp_value_to_linux_system_call_argument(struct lone_lisp_value value)
