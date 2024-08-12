@@ -729,6 +729,30 @@ struct lone_elf_optional_umax
 lone_elf_segment_read_alignment(struct lone_elf_header *header,
 		struct lone_elf_segment *segment);
 
+bool lone_elf_segment_write_type(struct lone_elf_header *header,
+		struct lone_elf_segment *segment, lone_u32 type);
+
+bool lone_elf_segment_write_flags(struct lone_elf_header *header,
+		struct lone_elf_segment *segment, lone_u32 flags);
+
+bool lone_elf_segment_write_file_offset(struct lone_elf_header *header,
+		struct lone_elf_segment *segment, lone_elf_umax file_offset);
+
+bool lone_elf_segment_write_virtual_address(struct lone_elf_header *header,
+		struct lone_elf_segment *segment, lone_elf_umax virtual_address);
+
+bool lone_elf_segment_write_physical_address(struct lone_elf_header *header,
+		struct lone_elf_segment *segment, lone_elf_umax physical_address);
+
+bool lone_elf_segment_write_size_in_file(struct lone_elf_header *header,
+		struct lone_elf_segment *segment, lone_elf_umax size_in_file);
+
+bool lone_elf_segment_write_size_in_memory(struct lone_elf_header *header,
+		struct lone_elf_segment *segment, lone_elf_umax size_in_memory);
+
+bool lone_elf_segment_write_alignment(struct lone_elf_header *header,
+		struct lone_elf_segment *segment, lone_elf_umax alignment);
+
 bool lone_elf_header_ident_is_linux_os_abi(struct lone_elf_header *header);
 
 bool lone_elf_header_type_is_os(lone_u16 type);

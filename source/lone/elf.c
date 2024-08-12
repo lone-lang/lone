@@ -362,6 +362,17 @@ bool lone_elf_##structure##_write_##name(struct lone_elf_header *header,        
 			&structure->as.elf32.field, &structure->as.elf64.field, value);            \
 }
 
+LONE_ELF_COMMON_WRITER(segment, type, u, 32)
+
+LONE_ELF_CLASSIFIED_WRITER(segment, flags, u, 32)
+
+LONE_ELF_32_OR_64_BIT_WRITER(segment, file_offset)
+LONE_ELF_32_OR_64_BIT_STRUCT_WRITER(segment, virtual_address, address.virtual)
+LONE_ELF_32_OR_64_BIT_STRUCT_WRITER(segment, physical_address, address.physical)
+LONE_ELF_32_OR_64_BIT_STRUCT_WRITER(segment, size_in_file, size_in.file)
+LONE_ELF_32_OR_64_BIT_STRUCT_WRITER(segment, size_in_memory, size_in.memory)
+LONE_ELF_32_OR_64_BIT_WRITER(segment, alignment)
+
 #undef LONE_ELF_32_OR_64_BIT_STRUCT_WRITER
 #undef LONE_ELF_32_OR_64_BIT_WRITER
 #undef LONE_ELF_CLASSIFIED_WRITER
