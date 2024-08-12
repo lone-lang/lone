@@ -14,6 +14,8 @@
 
 #define REQUIRED_PT_NULLS 2
 
+#define LONE_TOOLS_EMBED_EXIT_INVALID_ELF           8
+
 struct elf {
 	struct lone_bytes header;
 	enum lone_elf_ident_class class;
@@ -76,6 +78,11 @@ static size_t align(size_t n, size_t a) { return ((size_t) ((n + (a - 1)) / a)) 
 static size_t align_to_page(struct elf *elf, size_t n) { return align(n, elf->page_size); }
 static lone_elf_umax min(lone_elf_umax x, lone_elf_umax y) { return x < y? x : y; }
 static lone_elf_umax max(lone_elf_umax x, lone_elf_umax y) { return x > y? x : y; }
+
+static void invalid_elf(void)
+{
+	linux_exit(LONE_TOOLS_EMBED_EXIT_INVALID_ELF);
+}
 
 static void check_arguments(int argc, char **argv)
 {
@@ -187,7 +194,7 @@ static void validate_elf_header(struct elf *elf)
 	if (lone_elf_header_is_valid(elf->header.pointer)) {
 		elf->class = elf->header.pointer[LONE_ELF_IDENT_INDEX_CLASS];
 	} else {
-		/* Invalid ELF */ linux_exit(8);
+		invalid_elf();
 	}
 }
 
@@ -199,13 +206,13 @@ static void load_program_header_table(struct elf *elf)
 	void *address;
 
 	offset = lone_elf_header_read_segments_offset(elf->header.pointer);
-	if (!offset.present) { linux_exit(8); }
+	if (!offset.present) { invalid_elf(); }
 
 	entry_size = lone_elf_header_read_segment_size(elf->header.pointer);
-	if (!entry_size.present) { linux_exit(8); }
+	if (!entry_size.present) { invalid_elf(); }
 
 	entry_count = lone_elf_header_read_segment_count(elf->header.pointer);
-	if (!entry_count.present) { linux_exit(8); }
+	if (!entry_count.present) { invalid_elf(); }
 
 	elf->program_header_table.offset = offset.value;
 	elf->program_header_table.entry_size = entry_size.value;
@@ -268,7 +275,7 @@ static void analyze(struct elf *elf)
 		segment = &segments[i];
 
 		type = lone_elf_segment_read_type(header, segment);
-		if (!type.present) { /* Invalid ELF */ linux_exit(8); }
+		if (!type.present) { invalid_elf(); }
 
 		if (type.value == LONE_ELF_SEGMENT_TYPE_LOADABLE) {
 
