@@ -554,14 +554,14 @@ struct lone_elf_native_segments {
 	lone_elf_native_segment *segments;
 };
 
-struct lone_elf_header {
+struct __attribute__((packed)) lone_elf_header {
 	unsigned char ident[LONE_ELF_SIZES_IDENT];
 	lone_u16 type;
 	lone_u16 machine;
 	lone_u32 version;
 
-	union {
-		struct {
+	union __attribute__((packed)) {
+		struct __attribute__((packed)) {
 			lone_u32 entry_point;
 
 			lone_u32 segments_offset;
@@ -579,7 +579,7 @@ struct lone_elf_header {
 			lone_u16 section_names_index;
 		} elf32;
 
-		struct {
+		struct __attribute__((packed)) {
 			lone_u64 entry_point;
 
 			lone_u64 segments_offset;
@@ -599,19 +599,19 @@ struct lone_elf_header {
 	} as;
 };
 
-struct lone_elf_segment {
+struct __attribute__((packed)) lone_elf_segment {
 	lone_u32 type;
 
-	union {
-		struct {
+	union __attribute__((packed)) {
+		struct __attribute__((packed)) {
 			lone_u32 file_offset;
 
-			struct {
+			struct __attribute__((packed)) {
 				lone_u32 virtual;
 				lone_u32 physical;
 			} address;
 
-			struct {
+			struct __attribute__((packed)) {
 				lone_u32 file;
 				lone_u32 memory;
 			} size_in;
@@ -620,16 +620,16 @@ struct lone_elf_segment {
 			lone_u32 alignment;
 		} elf32;
 
-		struct {
+		struct __attribute__((packed)) {
 			lone_u32 flags;
 			lone_u64 file_offset;
 
-			struct {
+			struct __attribute__((packed)) {
 				lone_u64 virtual;
 				lone_u64 physical;
 			} address;
 
-			struct {
+			struct __attribute__((packed)) {
 				lone_u64 file;
 				lone_u64 memory;
 			} size_in;
