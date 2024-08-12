@@ -215,6 +215,144 @@ LONE_ELF_32_OR_64_BIT_READER(segment, alignment)
 
 /* ╭────────────────────────────────────────────────────────────────────────╮
    │                                                                        │
+   │    Writers for ELF data structures.                                    │
+   │                                                                        │
+   ╰────────────────────────────────────────────────────────────────────────╯ */
+
+#define LONE_ELF_MULTIBYTE_VALUE_WRITER(sign, bits)                                                \
+static bool                                                                                        \
+lone_elf_write_##sign##bits(struct lone_elf_header *header,                                        \
+		void *address, lone_##sign##bits value)                                            \
+{                                                                                                  \
+	if (!header) { return false; }                                                             \
+	                                                                                           \
+	switch (header->ident[LONE_ELF_IDENT_INDEX_DATA_ENCODING]) {                               \
+	case LONE_ELF_IDENT_DATA_ENCODING_LITTLE_ENDIAN:                                           \
+		lone_##sign##bits##_write_le(address, value);                                      \
+		break;                                                                             \
+	case LONE_ELF_IDENT_DATA_ENCODING_BIG_ENDIAN:                                              \
+		lone_##sign##bits##_write_be(address, value);                                      \
+		break;                                                                             \
+	case LONE_ELF_IDENT_DATA_ENCODING_INVALID:                                                 \
+	default:                                                                                   \
+		return false;                                                                      \
+	}                                                                                          \
+	                                                                                           \
+	return true;                                                                               \
+}
+
+LONE_ELF_MULTIBYTE_VALUE_WRITER(u, 16)
+LONE_ELF_MULTIBYTE_VALUE_WRITER(u, 32)
+LONE_ELF_MULTIBYTE_VALUE_WRITER(u, 64)
+LONE_ELF_MULTIBYTE_VALUE_WRITER(s, 32)
+LONE_ELF_MULTIBYTE_VALUE_WRITER(s, 64)
+
+#undef LONE_ELF_MULTIBYTE_VALUE_WRITER
+
+#define LONE_ELF_MULTIBYTE_MULTICLASS_VALUE_WRITER(sign, bits)                                     \
+static bool                                                                                        \
+lone_elf_write_classified_##sign##bits(struct lone_elf_header *header,                             \
+		void *address32, void *address64, lone_##sign##bits value)                         \
+{                                                                                                  \
+	if (!header) { return false; }                                                             \
+	                                                                                           \
+	switch (header->ident[LONE_ELF_IDENT_INDEX_CLASS]) {                                       \
+	case LONE_ELF_IDENT_CLASS_32BIT:                                                           \
+		return lone_elf_write_##sign##bits(header, address32, value);                      \
+	case LONE_ELF_IDENT_CLASS_64BIT:                                                           \
+		return lone_elf_write_##sign##bits(header, address64, value);                      \
+	case LONE_ELF_IDENT_CLASS_INVALID:                                                         \
+	default:                                                                                   \
+		return false;                                                                      \
+	}                                                                                          \
+}
+
+LONE_ELF_MULTIBYTE_MULTICLASS_VALUE_WRITER(u, 16)
+LONE_ELF_MULTIBYTE_MULTICLASS_VALUE_WRITER(u, 32)
+LONE_ELF_MULTIBYTE_MULTICLASS_VALUE_WRITER(u, 64)
+LONE_ELF_MULTIBYTE_MULTICLASS_VALUE_WRITER(s, 32)
+LONE_ELF_MULTIBYTE_MULTICLASS_VALUE_WRITER(s, 64)
+
+#undef LONE_ELF_MULTIBYTE_MULTICLASS_VALUE_WRITER
+
+#define LONE_ELF_HEADER_COMMON_WRITER(field, sign, bits)                                           \
+bool lone_elf_header_write_##field(struct lone_elf_header *header, lone_##sign##bits value)        \
+{                                                                                                  \
+	return lone_elf_write_##sign##bits(header, &header->field, value);                         \
+}
+
+#define LONE_ELF_HEADER_CLASSIFIED_WRITER(field, sign, bits)                                       \
+bool lone_elf_header_write_##field(struct lone_elf_header *header, lone_##sign##bits value)        \
+{                                                                                                  \
+	return lone_elf_write_classified_##sign##bits(header,                                      \
+			&header->as.elf32.field, &header->as.elf64.field, value);                  \
+}
+
+static bool lone_elf_write_32_or_64(struct lone_elf_header *header,
+		void *address32, void *address64, lone_elf_umax value)
+{
+	if (!header) { return false; }
+
+	switch (header->ident[LONE_ELF_IDENT_INDEX_CLASS]) {
+	case LONE_ELF_IDENT_CLASS_32BIT:
+		return lone_elf_write_u32(header, address32, value);
+	case LONE_ELF_IDENT_CLASS_64BIT:
+		return lone_elf_write_u64(header, address64, value);
+	case LONE_ELF_IDENT_CLASS_INVALID:
+	default:
+		return false;
+	}
+}
+
+#define LONE_ELF_HEADER_ADDRESS_OR_OFFSET_WRITER(field)                                            \
+bool lone_elf_header_write_##field(struct lone_elf_header *header, lone_elf_umax value)            \
+{                                                                                                  \
+	return lone_elf_write_32_or_64(header,                                                     \
+			&header->as.elf32.field, &header->as.elf64.field, value);                  \
+}
+
+#undef LONE_ELF_HEADER_ADDRESS_OR_OFFSET_WRITER
+#undef LONE_ELF_HEADER_CLASSIFIED_WRITER
+#undef LONE_ELF_HEADER_COMMON_WRITER
+
+#define LONE_ELF_COMMON_WRITER(structure, field, sign, bits)                                       \
+bool lone_elf_##structure##_write_##field(struct lone_elf_header *header,                          \
+		struct lone_elf_##structure *structure, lone_##sign##bits value)                   \
+{                                                                                                  \
+	return lone_elf_write_##sign##bits(header, &structure->field, value);                      \
+}
+
+#define LONE_ELF_CLASSIFIED_WRITER(structure, field, sign, bits)                                   \
+bool lone_elf_##structure##_write_##field(struct lone_elf_header *header,                          \
+		struct lone_elf_##structure *structure, lone_##sign##bits value)                   \
+{                                                                                                  \
+	return lone_elf_write_classified_##sign##bits(header,                                      \
+			&structure->as.elf32.field, &structure->as.elf64.field, value);            \
+}
+
+#define LONE_ELF_32_OR_64_BIT_WRITER(structure, field)                                             \
+bool lone_elf_##structure##_write_##field(struct lone_elf_header *header,                          \
+		struct lone_elf_##structure *structure, lone_elf_umax value)                       \
+{                                                                                                  \
+	return lone_elf_write_32_or_64(header,                                                     \
+			&structure->as.elf32.field, &structure->as.elf64.field, value);            \
+}
+
+#define LONE_ELF_32_OR_64_BIT_STRUCT_WRITER(structure, name, field)                                \
+bool lone_elf_##structure##_write_##name(struct lone_elf_header *header,                           \
+		struct lone_elf_##structure *structure, lone_elf_umax value)                       \
+{                                                                                                  \
+	return lone_elf_write_32_or_64(header,                                                     \
+			&structure->as.elf32.field, &structure->as.elf64.field, value);            \
+}
+
+#undef LONE_ELF_32_OR_64_BIT_STRUCT_WRITER
+#undef LONE_ELF_32_OR_64_BIT_WRITER
+#undef LONE_ELF_CLASSIFIED_WRITER
+#undef LONE_ELF_COMMON_WRITER
+
+/* ╭────────────────────────────────────────────────────────────────────────╮
+   │                                                                        │
    │    ELF header validation functions.                                    │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
