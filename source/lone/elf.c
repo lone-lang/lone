@@ -230,6 +230,30 @@ lone_elf_resolve_offset(struct lone_elf_header *header,
 	return (void *) address;
 }
 
+struct lone_elf_segments
+lone_elf_header_read_segments(struct lone_elf_header *header)
+{
+	struct lone_optional_u16 size, count;
+	void *address;
+
+	if (!header) { return (struct lone_elf_segments) {0}; }
+
+	size = lone_elf_header_read_segment_size(header);
+	if (!size.present) { return (struct lone_elf_segments) {0}; }
+
+	count = lone_elf_header_read_segment_count(header);
+	if (!count.present) { return (struct lone_elf_segments) {0}; }
+
+	address = lone_elf_resolve_offset(header, lone_elf_header_read_segments_offset(header));
+	if (!address) { return (struct lone_elf_segments) {0}; }
+
+	return (struct lone_elf_segments) {
+		.segment.size = size.value,
+		.segment.count = count.value,
+		.segments = address,
+	};
+}
+
 /* ╭────────────────────────────────────────────────────────────────────────╮
    │                                                                        │
    │    Writers for ELF data structures.                                    │

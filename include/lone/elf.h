@@ -639,6 +639,14 @@ struct __attribute__((packed)) lone_elf_segment {
 	} as;
 };
 
+struct lone_elf_segments {
+	struct {
+		lone_u16 size;
+		lone_u16 count;
+	} segment;
+	unsigned char *segments;
+};
+
 /* ╭────────────────────────────────────────────────────────────────────────╮
    │                                                                        │
    │    The ELF identification information is a sixteen byte array.         │
@@ -761,6 +769,8 @@ bool lone_elf_header_type_is_general(lone_u16 type);
 bool lone_elf_header_type_is_specific(lone_u16 type);
 
 bool lone_elf_header_machine_is_reserved(lone_u16 machine);
+
+struct lone_elf_segments lone_elf_header_read_segments(struct lone_elf_header *header);
 
 /* ╭────────────────────────────────────────────────────────────────────────╮
    │                                                                        │
