@@ -341,6 +341,7 @@ static inline long lone_lisp_value_to_linux_system_call_number(struct lone_lisp 
 		__attribute__((fallthrough));
 	case LONE_LISP_TYPE_SYMBOL:
 		number = lone_lisp_table_get(lone, linux_system_call_table, value);
+		break;
 	case LONE_LISP_TYPE_BYTES:
 	case LONE_LISP_TYPE_MODULE:
 	case LONE_LISP_TYPE_FUNCTION:
