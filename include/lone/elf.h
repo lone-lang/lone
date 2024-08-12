@@ -772,6 +772,8 @@ bool lone_elf_header_machine_is_reserved(lone_u16 machine);
 
 struct lone_elf_segments lone_elf_header_read_segments(struct lone_elf_header *header);
 
+struct lone_elf_segment *lone_elf_segment_at(struct lone_elf_segments segments, lone_u16 index);
+
 /* ╭────────────────────────────────────────────────────────────────────────╮
    │                                                                        │
    │    Functions for validating an ELF header as a whole or in parts.      │

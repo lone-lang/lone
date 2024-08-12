@@ -254,6 +254,30 @@ lone_elf_header_read_segments(struct lone_elf_header *header)
 	};
 }
 
+struct lone_elf_segment *
+lone_elf_segment_at(struct lone_elf_segments table, lone_u16 index)
+{
+	uintptr_t address;
+	size_t offset;
+
+	if (!table.segment.size  ||
+	    !table.segment.count ||
+	    !table.segments      ||
+	     index >= table.segment.count) { return 0; }
+
+	address = (uintptr_t) table.segments;
+
+	if (__builtin_mul_overflow(index, table.segment.size, &offset)) {
+		return 0;
+	}
+
+	if (__builtin_add_overflow(address, offset, &address)) {
+		return 0;
+	}
+
+	return (struct lone_elf_segment *) address;
+}
+
 /* ╭────────────────────────────────────────────────────────────────────────╮
    │                                                                        │
    │    Writers for ELF data structures.                                    │
