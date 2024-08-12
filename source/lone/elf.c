@@ -213,6 +213,23 @@ LONE_ELF_32_OR_64_BIT_READER(segment, alignment)
 #undef LONE_ELF_CLASSIFIED_READER
 #undef LONE_ELF_COMMON_READER
 
+static void *
+lone_elf_resolve_offset(struct lone_elf_header *header,
+		struct lone_elf_optional_umax offset)
+{
+	uintptr_t address, header_address;
+
+	if (!header || !offset.present) { return 0; }
+
+	header_address = (uintptr_t) header;
+
+	if (__builtin_add_overflow(header_address, offset.value, &address)) {
+		return 0;
+	}
+
+	return (void *) address;
+}
+
 /* ╭────────────────────────────────────────────────────────────────────────╮
    │                                                                        │
    │    Writers for ELF data structures.                                    │
