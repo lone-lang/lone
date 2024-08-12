@@ -15,6 +15,7 @@
 #define REQUIRED_PT_NULLS 2
 
 #define LONE_TOOLS_EMBED_EXIT_INVALID_ELF           8
+#define LONE_TOOLS_EMBED_EXIT_OVERFLOW              250
 
 struct elf {
 	struct lone_bytes header;
@@ -81,6 +82,11 @@ static lone_elf_umax max(lone_elf_umax x, lone_elf_umax y) { return x > y? x : y
 static void invalid_elf(void)
 {
 	linux_exit(LONE_TOOLS_EMBED_EXIT_INVALID_ELF);
+}
+
+static void overflow(void)
+{
+	linux_exit(LONE_TOOLS_EMBED_EXIT_OVERFLOW);
 }
 
 static void check_arguments(int argc, char **argv)
@@ -272,6 +278,7 @@ static void analyze(struct elf *elf)
 
 	for (i = 0; i < entry_count; ++i) {
 		segment = lone_elf_segment_at(elf->segments.table, i);
+		if (!segment) { overflow(); }
 
 		type = lone_elf_segment_read_type(header, segment);
 		if (!type.present) { invalid_elf(); }
