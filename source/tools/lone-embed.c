@@ -57,6 +57,18 @@ struct elf {
 	} data;
 };
 
+static struct lone_elf_header *
+hdr(struct elf *elf)
+{
+	return (struct lone_elf_header *) elf->header.pointer;
+}
+
+static struct lone_elf_segment *
+segs(struct elf *elf)
+{
+	return (struct lone_elf_segment *) elf->header.pointer;
+}
+
 static size_t pht_size_for(struct elf *elf, size_t entry_count)
 {
 	return elf->segments.table.segment.size * entry_count;
@@ -199,7 +211,7 @@ static void validate_elf_header(struct elf *elf)
 {
 	elf->class = LONE_ELF_IDENT_CLASS_INVALID;
 
-	if (lone_elf_header_is_valid(elf->header.pointer)) {
+	if (lone_elf_header_is_valid(hdr(elf))) {
 		elf->class = elf->header.pointer[LONE_ELF_IDENT_INDEX_CLASS];
 	} else {
 		invalid_elf();
@@ -213,13 +225,13 @@ static void load_program_header_table(struct elf *elf)
 	lone_elf_umax size;
 	void *address;
 
-	offset = lone_elf_header_read_segments_offset(elf->header.pointer);
+	offset = lone_elf_header_read_segments_offset(hdr(elf));
 	if (!offset.present) { invalid_elf(); }
 
-	entry_size = lone_elf_header_read_segment_size(elf->header.pointer);
+	entry_size = lone_elf_header_read_segment_size(hdr(elf));
 	if (!entry_size.present) { invalid_elf(); }
 
-	entry_count = lone_elf_header_read_segment_count(elf->header.pointer);
+	entry_count = lone_elf_header_read_segment_count(hdr(elf));
 	if (!entry_count.present) { invalid_elf(); }
 
 	elf->segments.nulls_count = 0;
@@ -290,7 +302,7 @@ static void set_start_end(lone_elf_umax *start, lone_elf_umax *end,
 
 static void analyze(struct elf *elf)
 {
-	struct lone_elf_header *header = elf->header.pointer;
+	struct lone_elf_header *header = hdr(elf);
 	lone_u16 entry_count = elf->segments.table.segment.count;
 	struct lone_elf_segment *segment;
 	struct lone_optional_u32 type;
@@ -344,8 +356,8 @@ static void adjust_phdr_entry(struct elf *elf)
 	lone_elf_umax alignment, size, size_aligned, offset, virtual, physical;
 	lone_u32 type;
 
-	header = elf->header.pointer;
-	segments = elf->segments.table.segments;
+	header = hdr(elf);
+	segments = segs(elf);
 	entry_count = elf->segments.table.segment.count;
 	phdr = 0;
 	load = 0;
