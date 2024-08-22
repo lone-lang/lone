@@ -36,4 +36,6 @@
 
 #define LONE_SIZE_OF_MEMBER(type, member) sizeof(((type) { 0 }).member)
 
+#define LONE_WARN_UNUSED_RESULT __attribute__((warn_unused_result))
+
 #endif /* LONE_DEFINITIONS_HEADER */
