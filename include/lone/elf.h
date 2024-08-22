@@ -783,18 +783,17 @@ struct lone_elf_segment *lone_elf_segment_at(struct lone_elf_segments segments, 
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
 
-bool lone_elf_header_ident_has_valid_magic_numbers(struct lone_elf_header *header);
-bool lone_elf_header_ident_has_valid_class(struct lone_elf_header *header);
-bool lone_elf_header_ident_has_valid_data_encoding(struct lone_elf_header *header);
-bool lone_elf_header_ident_has_valid_version(struct lone_elf_header *header);
-bool lone_elf_header_ident_has_valid_os_abi(struct lone_elf_header *header);
-bool lone_elf_header_ident_has_zero_filled_padding(struct lone_elf_header *header);
-bool lone_elf_header_has_valid_ident(struct lone_elf_header *header);
-bool lone_elf_header_has_valid_type(struct lone_elf_header *header);
-bool lone_elf_header_has_valid_machine(struct lone_elf_header *header);
-bool lone_elf_header_has_valid_version(struct lone_elf_header *header);
-bool lone_elf_header_has_valid_header_size(struct lone_elf_header *header);
-bool lone_elf_header_is_valid(struct lone_elf_header *header);
-
+bool lone_elf_header_ident_has_valid_magic_numbers(struct lone_elf_header *header) LONE_WARN_UNUSED_RESULT;
+bool lone_elf_header_ident_has_valid_class(struct lone_elf_header *header) LONE_WARN_UNUSED_RESULT;
+bool lone_elf_header_ident_has_valid_data_encoding(struct lone_elf_header *header) LONE_WARN_UNUSED_RESULT;
+bool lone_elf_header_ident_has_valid_version(struct lone_elf_header *header) LONE_WARN_UNUSED_RESULT;
+bool lone_elf_header_ident_has_valid_os_abi(struct lone_elf_header *header) LONE_WARN_UNUSED_RESULT;
+bool lone_elf_header_ident_has_zero_filled_padding(struct lone_elf_header *header) LONE_WARN_UNUSED_RESULT;
+bool lone_elf_header_has_valid_ident(struct lone_elf_header *header) LONE_WARN_UNUSED_RESULT;
+bool lone_elf_header_has_valid_type(struct lone_elf_header *header) LONE_WARN_UNUSED_RESULT;
+bool lone_elf_header_has_valid_machine(struct lone_elf_header *header) LONE_WARN_UNUSED_RESULT;
+bool lone_elf_header_has_valid_version(struct lone_elf_header *header) LONE_WARN_UNUSED_RESULT;
+bool lone_elf_header_has_valid_header_size(struct lone_elf_header *header) LONE_WARN_UNUSED_RESULT;
+bool lone_elf_header_is_valid(struct lone_elf_header *header) LONE_WARN_UNUSED_RESULT;
 
 #endif /* LONE_ELF_HEADER */
