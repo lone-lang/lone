@@ -692,21 +692,21 @@ struct lone_optional_u16 lone_elf_header_read_section_size(struct lone_elf_heade
 struct lone_optional_u16 lone_elf_header_read_section_count(struct lone_elf_header *header);
 struct lone_optional_u16 lone_elf_header_read_section_names_index(struct lone_elf_header *header);
 
-bool lone_elf_header_write_type(struct lone_elf_header *header, lone_u16 type);
-bool lone_elf_header_write_machine(struct lone_elf_header *header, lone_u16 machine);
-bool lone_elf_header_write_version(struct lone_elf_header *header, lone_u32 version);
+bool lone_elf_header_write_type(struct lone_elf_header *header, lone_u16 type) LONE_WARN_UNUSED_RESULT;
+bool lone_elf_header_write_machine(struct lone_elf_header *header, lone_u16 machine) LONE_WARN_UNUSED_RESULT;
+bool lone_elf_header_write_version(struct lone_elf_header *header, lone_u32 version) LONE_WARN_UNUSED_RESULT;
 
-bool lone_elf_header_write_entry_point(struct lone_elf_header *header, lone_elf_umax address);
-bool lone_elf_header_write_segments_offset(struct lone_elf_header *header, lone_elf_umax offset);
-bool lone_elf_header_write_sections_offset(struct lone_elf_header *header, lone_elf_umax offset);
+bool lone_elf_header_write_entry_point(struct lone_elf_header *header, lone_elf_umax address) LONE_WARN_UNUSED_RESULT;
+bool lone_elf_header_write_segments_offset(struct lone_elf_header *header, lone_elf_umax offset) LONE_WARN_UNUSED_RESULT;
+bool lone_elf_header_write_sections_offset(struct lone_elf_header *header, lone_elf_umax offset) LONE_WARN_UNUSED_RESULT;
 
-bool lone_elf_header_write_flags(struct lone_elf_header *header, lone_u32 flags);
-bool lone_elf_header_write_header_size(struct lone_elf_header *header, lone_u16 size);
-bool lone_elf_header_write_segment_size(struct lone_elf_header *header, lone_u16 size);
-bool lone_elf_header_write_segment_count(struct lone_elf_header *header, lone_u16 count);
-bool lone_elf_header_write_section_size(struct lone_elf_header *header, lone_u16 size);
-bool lone_elf_header_write_section_count(struct lone_elf_header *header, lone_u16 count);
-bool lone_elf_header_write_section_names_index(struct lone_elf_header *header, lone_u16 index);
+bool lone_elf_header_write_flags(struct lone_elf_header *header, lone_u32 flags) LONE_WARN_UNUSED_RESULT;
+bool lone_elf_header_write_header_size(struct lone_elf_header *header, lone_u16 size) LONE_WARN_UNUSED_RESULT;
+bool lone_elf_header_write_segment_size(struct lone_elf_header *header, lone_u16 size) LONE_WARN_UNUSED_RESULT;
+bool lone_elf_header_write_segment_count(struct lone_elf_header *header, lone_u16 count) LONE_WARN_UNUSED_RESULT;
+bool lone_elf_header_write_section_size(struct lone_elf_header *header, lone_u16 size) LONE_WARN_UNUSED_RESULT;
+bool lone_elf_header_write_section_count(struct lone_elf_header *header, lone_u16 count) LONE_WARN_UNUSED_RESULT;
+bool lone_elf_header_write_section_names_index(struct lone_elf_header *header, lone_u16 index) LONE_WARN_UNUSED_RESULT;
 
 struct lone_optional_u32
 lone_elf_segment_read_type(struct lone_elf_header *header,
@@ -741,28 +741,28 @@ lone_elf_segment_read_alignment(struct lone_elf_header *header,
 		struct lone_elf_segment *segment);
 
 bool lone_elf_segment_write_type(struct lone_elf_header *header,
-		struct lone_elf_segment *segment, lone_u32 type);
+		struct lone_elf_segment *segment, lone_u32 type) LONE_WARN_UNUSED_RESULT;
 
 bool lone_elf_segment_write_flags(struct lone_elf_header *header,
-		struct lone_elf_segment *segment, lone_u32 flags);
+		struct lone_elf_segment *segment, lone_u32 flags) LONE_WARN_UNUSED_RESULT;
 
 bool lone_elf_segment_write_file_offset(struct lone_elf_header *header,
-		struct lone_elf_segment *segment, lone_elf_umax file_offset);
+		struct lone_elf_segment *segment, lone_elf_umax file_offset) LONE_WARN_UNUSED_RESULT;
 
 bool lone_elf_segment_write_virtual_address(struct lone_elf_header *header,
-		struct lone_elf_segment *segment, lone_elf_umax virtual_address);
+		struct lone_elf_segment *segment, lone_elf_umax virtual_address) LONE_WARN_UNUSED_RESULT;
 
 bool lone_elf_segment_write_physical_address(struct lone_elf_header *header,
-		struct lone_elf_segment *segment, lone_elf_umax physical_address);
+		struct lone_elf_segment *segment, lone_elf_umax physical_address) LONE_WARN_UNUSED_RESULT;
 
 bool lone_elf_segment_write_size_in_file(struct lone_elf_header *header,
-		struct lone_elf_segment *segment, lone_elf_umax size_in_file);
+		struct lone_elf_segment *segment, lone_elf_umax size_in_file) LONE_WARN_UNUSED_RESULT;
 
 bool lone_elf_segment_write_size_in_memory(struct lone_elf_header *header,
-		struct lone_elf_segment *segment, lone_elf_umax size_in_memory);
+		struct lone_elf_segment *segment, lone_elf_umax size_in_memory) LONE_WARN_UNUSED_RESULT;
 
 bool lone_elf_segment_write_alignment(struct lone_elf_header *header,
-		struct lone_elf_segment *segment, lone_elf_umax alignment);
+		struct lone_elf_segment *segment, lone_elf_umax alignment) LONE_WARN_UNUSED_RESULT;
 
 bool lone_elf_header_ident_is_linux_os_abi(struct lone_elf_header *header);
 
