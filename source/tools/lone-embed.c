@@ -66,7 +66,7 @@ hdr(struct elf *elf)
 static struct lone_elf_segment *
 segs(struct elf *elf)
 {
-	return (struct lone_elf_segment *) elf->header.pointer;
+	return (struct lone_elf_segment *) elf->segments.memory.pointer;
 }
 
 static size_t pht_size_for(struct elf *elf, size_t entry_count)
