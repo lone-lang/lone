@@ -431,110 +431,72 @@ static void move_and_expand_pht_if_needed(struct elf *elf)
 	analyze(elf);
 }
 
+static void
+set_segment(struct elf *elf, struct lone_elf_header *header,
+		struct lone_elf_segment *segment, enum lone_elf_segment_type type)
+{
+	lone_elf_umax address, size;
+	bool set_true_size;
+
+	set_true_size = type == LONE_ELF_SEGMENT_TYPE_LONE;
+
+	lone_elf_segment_write_type(header, segment, type);
+	lone_elf_segment_write_file_offset(header, segment, elf->data.offset);
+
+	address = align_to_page(elf, elf->limits.end.virtual);
+	lone_elf_segment_write_virtual_address(header, segment, address);
+	lone_elf_segment_write_physical_address(header, segment, address);
+
+	size = elf->data.size;
+	size = set_true_size? size : align_to_page(elf, size);
+	lone_elf_segment_write_size_in_file(header, segment, size);
+	lone_elf_segment_write_size_in_memory(header, segment, size);
+
+	lone_elf_segment_write_alignment(header, segment, set_true_size? 1 : elf->page_size);
+	lone_elf_segment_write_flags(header, segment, LONE_ELF_SEGMENT_FLAGS_READABLE);
+}
+
 static void set_lone_segments(struct elf *elf)
 {
-	size_t entry_count = elf->segments.table.segment.count;
-	void *table = elf->segments.table.segments;
-	bool set_load_segment = false, set_lone_segment = false;
-	Elf32_Phdr *phdr32;
-	Elf64_Phdr *phdr64;
-	size_t i;
+	struct lone_elf_header *header;
+	struct lone_elf_segments segments;
+	struct lone_elf_segment *segment;
+	struct lone_optional_u32 type;
+	bool set_load_segment, set_lone_segment;
+	lone_u16 i;
 
-	if (!has_required_null_segments(elf)) {
-		/* Not enough null segments to patch this ELF */ linux_exit(9);
-	}
+	if (!has_required_null_segments(elf)) { not_enough_nulls(); }
 
-	switch (elf->class) {
-	case ELFCLASS64:
-		for (i = 0; i < entry_count; ++i) {
-			phdr64 = ((Elf64_Phdr *) table) + i;
+	header = hdr(elf);
+	segments = elf->segments.table;
+	set_load_segment = false;
+	set_lone_segment = false;
 
-			switch (phdr64->p_type) {
-			case PT_NULL: // linker allocated spare segment
+	for (i = 0; i < segments.segment.count; ++i) {
+		segment = lone_elf_segment_at(segments, i);
+		type = lone_elf_segment_read_type(header, segment);
+		if (!type.present) { invalid_elf(); }
 
-				if (!set_load_segment) {
-					phdr64->p_type = PT_LOAD;
-
-					phdr64->p_offset = elf->data.offset;
-					phdr64->p_vaddr = phdr64->p_paddr = align_to_page(elf, elf->limits.end.virtual);
-					phdr64->p_filesz = phdr64->p_memsz = align_to_page(elf, elf->data.size);
-					phdr64->p_align = elf->page_size;
-					phdr64->p_flags = PF_R;
-
-					set_load_segment = true;
-
-				} else if (!set_lone_segment) {
-					phdr64->p_type = PT_LONE;
-
-					phdr64->p_offset = elf->data.offset;
-					phdr64->p_vaddr = phdr64->p_paddr = align_to_page(elf, elf->limits.end.virtual);
-					phdr64->p_filesz = phdr64->p_memsz = elf->data.size;
-					phdr64->p_align = 1;
-					phdr64->p_flags = PF_R;
-
-					set_lone_segment = true;
-
-				} else {
-					break;
-				}
-
-			__attribute__((fallthrough));
-			default:
-				continue;
-			}
-
-			if (set_lone_segment && set_load_segment) {
+		switch ((enum lone_elf_segment_type) type.value) {
+		case LONE_ELF_SEGMENT_TYPE_NULL: // linker allocated spare segment
+			if (!set_load_segment) {
+				set_segment(elf, header, segment, LONE_ELF_SEGMENT_TYPE_LOAD);
+				set_load_segment = true;
+			} else if (!set_lone_segment) {
+				set_segment(elf, header, segment, LONE_ELF_SEGMENT_TYPE_LONE);
+				set_lone_segment = true;
+			} else {
 				break;
 			}
+
+		__attribute__((fallthrough));
+		default:
+			continue;
 		}
 
-		break;
-	case ELFCLASS32:
-		for (i = 0; i < entry_count; ++i) {
-			phdr32 = ((Elf32_Phdr *) table) + i;
-
-			switch (phdr32->p_type) {
-			case PT_NULL: // linker allocated spare segment
-
-				if (!set_load_segment) {
-					phdr32->p_type = PT_LOAD;
-
-					phdr32->p_offset = elf->data.offset;
-					phdr32->p_vaddr = phdr32->p_paddr = align_to_page(elf, elf->limits.end.virtual);
-					phdr32->p_filesz = phdr32->p_memsz = align_to_page(elf, elf->data.size);
-					phdr32->p_align = elf->page_size;
-					phdr32->p_flags = PF_R;
-
-					set_load_segment = true;
-
-				} else if (!set_lone_segment) {
-					phdr32->p_type = PT_LONE;
-
-					phdr32->p_offset = elf->data.offset;
-					phdr32->p_vaddr = phdr32->p_paddr = align_to_page(elf, elf->limits.end.virtual);
-					phdr32->p_filesz = phdr32->p_memsz = elf->data.size;
-					phdr32->p_align = 1;
-					phdr32->p_flags = PF_R;
-
-					set_lone_segment = true;
-
-				} else {
-					break;
-				}
-
-			__attribute__((fallthrough));
-			default:
-				continue;
-			}
-
-			if (set_lone_segment && set_load_segment) {
-				break;
-			}
+		if (set_lone_segment && set_load_segment) {
+			break;
 		}
-
-		break;
-	default:
-		/* Invalid ELF class but somehow made it here? */ linux_exit(8);
 	}
 }
 
