@@ -104,6 +104,11 @@ static void overflow(void)
 	linux_exit(LONE_TOOLS_EMBED_EXIT_OVERFLOW);
 }
 
+static void not_enough_nulls(void)
+{
+	linux_exit(LONE_TOOLS_EMBED_EXIT_MISSING_NULL_ENTRY);
+}
+
 static void check_arguments(int argc, char **argv)
 {
 	if (argc <= 2) { /* at least 2 arguments are needed */ linux_exit(1); }
@@ -384,9 +389,7 @@ static void adjust_phdr_entry(struct elf *elf)
 		linux_exit(LONE_TOOLS_EMBED_EXIT_MISSING_PHDR_ENTRY);
 	}
 
-	if (!load) {
-		linux_exit(LONE_TOOLS_EMBED_EXIT_MISSING_NULL_ENTRY);
-	}
+	if (!load) { not_enough_nulls(); }
 
 	alignment = elf->page_size;
 	size = pht_size(elf);
