@@ -31,27 +31,27 @@ void lone_lisp_modules_intrinsic_bytes_initialize(struct lone_lisp *lone)
 	lone_lisp_module_export_primitive(lone, module, "zero?",
 			"bytes_is_zero", lone_lisp_primitive_bytes_is_zero, module, flags);
 
-#define LONE_LISP_EXPORT_BYTES_READER_PRIMITIVE(type) \
-	lone_lisp_module_export_primitive(lone, module, "read-" #type, \
-			"bytes_read_" #type, lone_lisp_primitive_bytes_read_##type, module, flags)
+#define LONE_LISP_EXPORT_BYTES_READER_PRIMITIVE(sign, bits) \
+	lone_lisp_module_export_primitive(lone, module, "read-" #sign #bits, \
+			"bytes_read_" #sign #bits, lone_lisp_primitive_bytes_read_##sign##bits, module, flags)
 
-#define LONE_LISP_EXPORT_BYTES_WRITER_PRIMITIVE(type) \
-	lone_lisp_module_export_primitive(lone, module, "write-" #type, \
-			"bytes_write_" #type, lone_lisp_primitive_bytes_write_##type, module, flags)
+#define LONE_LISP_EXPORT_BYTES_WRITER_PRIMITIVE(sign, bits) \
+	lone_lisp_module_export_primitive(lone, module, "write-" #sign #bits, \
+			"bytes_write_" #sign #bits, lone_lisp_primitive_bytes_write_##sign##bits, module, flags)
 
-	LONE_LISP_EXPORT_BYTES_READER_PRIMITIVE(u8);
-	LONE_LISP_EXPORT_BYTES_READER_PRIMITIVE(s8);
-	LONE_LISP_EXPORT_BYTES_READER_PRIMITIVE(u16);
-	LONE_LISP_EXPORT_BYTES_READER_PRIMITIVE(s16);
-	LONE_LISP_EXPORT_BYTES_READER_PRIMITIVE(u32);
-	LONE_LISP_EXPORT_BYTES_READER_PRIMITIVE(s32);
+	LONE_LISP_EXPORT_BYTES_READER_PRIMITIVE(u, 8);
+	LONE_LISP_EXPORT_BYTES_READER_PRIMITIVE(s, 8);
+	LONE_LISP_EXPORT_BYTES_READER_PRIMITIVE(u, 16);
+	LONE_LISP_EXPORT_BYTES_READER_PRIMITIVE(s, 16);
+	LONE_LISP_EXPORT_BYTES_READER_PRIMITIVE(u, 32);
+	LONE_LISP_EXPORT_BYTES_READER_PRIMITIVE(s, 32);
 
-	LONE_LISP_EXPORT_BYTES_WRITER_PRIMITIVE(u8);
-	LONE_LISP_EXPORT_BYTES_WRITER_PRIMITIVE(s8);
-	LONE_LISP_EXPORT_BYTES_WRITER_PRIMITIVE(u16);
-	LONE_LISP_EXPORT_BYTES_WRITER_PRIMITIVE(s16);
-	LONE_LISP_EXPORT_BYTES_WRITER_PRIMITIVE(u32);
-	LONE_LISP_EXPORT_BYTES_WRITER_PRIMITIVE(s32);
+	LONE_LISP_EXPORT_BYTES_WRITER_PRIMITIVE(u, 8);
+	LONE_LISP_EXPORT_BYTES_WRITER_PRIMITIVE(s, 8);
+	LONE_LISP_EXPORT_BYTES_WRITER_PRIMITIVE(u, 16);
+	LONE_LISP_EXPORT_BYTES_WRITER_PRIMITIVE(s, 16);
+	LONE_LISP_EXPORT_BYTES_WRITER_PRIMITIVE(u, 32);
+	LONE_LISP_EXPORT_BYTES_WRITER_PRIMITIVE(s, 32);
 
 #undef LONE_LISP_EXPORT_BYTES_READER_PRIMITIVE
 #undef LONE_LISP_EXPORT_BYTES_WRITER_PRIMITIVE
@@ -121,13 +121,13 @@ static void lone_lisp_bytes_check_write_arguments(struct lone_lisp_value bytes,
 	}
 }
 
-#define LONE_LISP_BYTES_READER_PRIMITIVE(type) \
-LONE_LISP_PRIMITIVE(bytes_read_##type) \
+#define LONE_LISP_BYTES_READER_PRIMITIVE(sign, bits) \
+LONE_LISP_PRIMITIVE(bytes_read_##sign##bits) \
 { \
 	struct lone_lisp_value bytes; \
 	struct lone_lisp_value offset; \
 \
-	struct lone_optional_##type type; \
+	struct lone_optional_##sign##bits integer; \
 \
 	if (lone_lisp_list_destructure(arguments, 2, &bytes, &offset)) { \
 		/* wrong number of arguments */ linux_exit(-1); \
@@ -135,23 +135,23 @@ LONE_LISP_PRIMITIVE(bytes_read_##type) \
 \
 	lone_lisp_bytes_check_read_arguments(bytes, offset); \
 \
-	type = lone_bytes_read_##type(bytes.as.heap_value->as.bytes, offset.as.integer); \
+	integer = lone_bytes_read_##sign##bits(bytes.as.heap_value->as.bytes, offset.as.integer); \
 \
-	if (type.present) { \
-		return lone_lisp_integer_create(type.value); \
+	if (integer.present) { \
+		return lone_lisp_integer_create(integer.value); \
 	} else { \
 		linux_exit(-1); \
 	} \
 }
 
-#define LONE_LISP_BYTES_WRITER_PRIMITIVE(type) \
-LONE_LISP_PRIMITIVE(bytes_write_##type) \
+#define LONE_LISP_BYTES_WRITER_PRIMITIVE(sign, bits) \
+LONE_LISP_PRIMITIVE(bytes_write_##sign##bits) \
 { \
 	struct lone_lisp_value bytes; \
 	struct lone_lisp_value offset; \
 	struct lone_lisp_value value; \
 \
-	lone_##type type; \
+	lone_##sign##bits integer; \
 	bool success; \
 \
 	if (lone_lisp_list_destructure(arguments, 3, &bytes, &offset, &value)) { \
@@ -160,34 +160,34 @@ LONE_LISP_PRIMITIVE(bytes_write_##type) \
 \
 	lone_lisp_bytes_check_write_arguments(bytes, offset, value); \
 \
-	type = (lone_##type) value.as.integer; \
+	integer = (lone_##sign##bits) value.as.integer; \
 \
-	success = lone_bytes_write_##type( \
+	success = lone_bytes_write_##sign##bits( \
 		bytes.as.heap_value->as.bytes, \
 		offset.as.integer, \
-		type \
+		integer \
 	); \
 \
 	if (success) { \
-		return lone_lisp_integer_create(type); \
+		return lone_lisp_integer_create(integer); \
 	} else { \
 		linux_exit(-1); \
 	} \
 }
 
-LONE_LISP_BYTES_READER_PRIMITIVE(u8)
-LONE_LISP_BYTES_READER_PRIMITIVE(s8)
-LONE_LISP_BYTES_READER_PRIMITIVE(u16)
-LONE_LISP_BYTES_READER_PRIMITIVE(s16)
-LONE_LISP_BYTES_READER_PRIMITIVE(u32)
-LONE_LISP_BYTES_READER_PRIMITIVE(s32)
+LONE_LISP_BYTES_READER_PRIMITIVE(u, 8)
+LONE_LISP_BYTES_READER_PRIMITIVE(s, 8)
+LONE_LISP_BYTES_READER_PRIMITIVE(u, 16)
+LONE_LISP_BYTES_READER_PRIMITIVE(s, 16)
+LONE_LISP_BYTES_READER_PRIMITIVE(u, 32)
+LONE_LISP_BYTES_READER_PRIMITIVE(s, 32)
 
-LONE_LISP_BYTES_WRITER_PRIMITIVE(u8)
-LONE_LISP_BYTES_WRITER_PRIMITIVE(s8)
-LONE_LISP_BYTES_WRITER_PRIMITIVE(u16)
-LONE_LISP_BYTES_WRITER_PRIMITIVE(s16)
-LONE_LISP_BYTES_WRITER_PRIMITIVE(u32)
-LONE_LISP_BYTES_WRITER_PRIMITIVE(s32)
+LONE_LISP_BYTES_WRITER_PRIMITIVE(u, 8)
+LONE_LISP_BYTES_WRITER_PRIMITIVE(s, 8)
+LONE_LISP_BYTES_WRITER_PRIMITIVE(u, 16)
+LONE_LISP_BYTES_WRITER_PRIMITIVE(s, 16)
+LONE_LISP_BYTES_WRITER_PRIMITIVE(u, 32)
+LONE_LISP_BYTES_WRITER_PRIMITIVE(s, 32)
 
 #undef LONE_LISP_BYTES_READER_PRIMITIVE
 #undef LONE_LISP_BYTES_WRITER_PRIMITIVE
