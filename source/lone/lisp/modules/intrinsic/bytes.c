@@ -31,27 +31,53 @@ void lone_lisp_modules_intrinsic_bytes_initialize(struct lone_lisp *lone)
 	lone_lisp_module_export_primitive(lone, module, "zero?",
 			"bytes_is_zero", lone_lisp_primitive_bytes_is_zero, module, flags);
 
-#define LONE_LISP_EXPORT_BYTES_READER_PRIMITIVE(sign, bits) \
-	lone_lisp_module_export_primitive(lone, module, "read-" #sign #bits, \
-			"bytes_read_" #sign #bits, lone_lisp_primitive_bytes_read_##sign##bits, module, flags)
+#define LONE_LISP_EXPORT_BYTES_READER_PRIMITIVE(sign, bits, endian) \
+	lone_lisp_module_export_primitive(lone, module, "read-" #sign #bits #endian, \
+			"bytes_read_" #sign #bits #endian, \
+			lone_lisp_primitive_bytes_read_##sign##bits##endian, \
+			module, flags)
 
-#define LONE_LISP_EXPORT_BYTES_WRITER_PRIMITIVE(sign, bits) \
-	lone_lisp_module_export_primitive(lone, module, "write-" #sign #bits, \
-			"bytes_write_" #sign #bits, lone_lisp_primitive_bytes_write_##sign##bits, module, flags)
+#define LONE_LISP_EXPORT_BYTES_WRITER_PRIMITIVE(sign, bits, endian) \
+	lone_lisp_module_export_primitive(lone, module, "write-" #sign #bits #endian, \
+			"bytes_write_" #sign #bits #endian, \
+			lone_lisp_primitive_bytes_write_##sign##bits##endian, \
+			module, flags)
 
-	LONE_LISP_EXPORT_BYTES_READER_PRIMITIVE(u, 8);
-	LONE_LISP_EXPORT_BYTES_READER_PRIMITIVE(s, 8);
-	LONE_LISP_EXPORT_BYTES_READER_PRIMITIVE(u, 16);
-	LONE_LISP_EXPORT_BYTES_READER_PRIMITIVE(s, 16);
-	LONE_LISP_EXPORT_BYTES_READER_PRIMITIVE(u, 32);
-	LONE_LISP_EXPORT_BYTES_READER_PRIMITIVE(s, 32);
+	LONE_LISP_EXPORT_BYTES_READER_PRIMITIVE(u, 8, /* no endianness */);
+	LONE_LISP_EXPORT_BYTES_READER_PRIMITIVE(s, 8, /* no endianness */);
 
-	LONE_LISP_EXPORT_BYTES_WRITER_PRIMITIVE(u, 8);
-	LONE_LISP_EXPORT_BYTES_WRITER_PRIMITIVE(s, 8);
-	LONE_LISP_EXPORT_BYTES_WRITER_PRIMITIVE(u, 16);
-	LONE_LISP_EXPORT_BYTES_WRITER_PRIMITIVE(s, 16);
-	LONE_LISP_EXPORT_BYTES_WRITER_PRIMITIVE(u, 32);
-	LONE_LISP_EXPORT_BYTES_WRITER_PRIMITIVE(s, 32);
+	LONE_LISP_EXPORT_BYTES_WRITER_PRIMITIVE(u, 8, /* no endianness */);
+	LONE_LISP_EXPORT_BYTES_WRITER_PRIMITIVE(s, 8, /* no endianness */);
+
+	LONE_LISP_EXPORT_BYTES_READER_PRIMITIVE(u, 16, /* native endianness */);
+	LONE_LISP_EXPORT_BYTES_READER_PRIMITIVE(s, 16, /* native endianness */);
+	LONE_LISP_EXPORT_BYTES_READER_PRIMITIVE(u, 32, /* native endianness */);
+	LONE_LISP_EXPORT_BYTES_READER_PRIMITIVE(s, 32, /* native endianness */);
+
+	LONE_LISP_EXPORT_BYTES_WRITER_PRIMITIVE(u, 16, /* native endianness */);
+	LONE_LISP_EXPORT_BYTES_WRITER_PRIMITIVE(s, 16, /* native endianness */);
+	LONE_LISP_EXPORT_BYTES_WRITER_PRIMITIVE(u, 32, /* native endianness */);
+	LONE_LISP_EXPORT_BYTES_WRITER_PRIMITIVE(s, 32, /* native endianness */);
+
+	LONE_LISP_EXPORT_BYTES_READER_PRIMITIVE(u, 16, le);
+	LONE_LISP_EXPORT_BYTES_READER_PRIMITIVE(s, 16, le);
+	LONE_LISP_EXPORT_BYTES_READER_PRIMITIVE(u, 32, le);
+	LONE_LISP_EXPORT_BYTES_READER_PRIMITIVE(s, 32, le);
+
+	LONE_LISP_EXPORT_BYTES_WRITER_PRIMITIVE(u, 16, le);
+	LONE_LISP_EXPORT_BYTES_WRITER_PRIMITIVE(s, 16, le);
+	LONE_LISP_EXPORT_BYTES_WRITER_PRIMITIVE(u, 32, le);
+	LONE_LISP_EXPORT_BYTES_WRITER_PRIMITIVE(s, 32, le);
+
+	LONE_LISP_EXPORT_BYTES_READER_PRIMITIVE(u, 16, be);
+	LONE_LISP_EXPORT_BYTES_READER_PRIMITIVE(s, 16, be);
+	LONE_LISP_EXPORT_BYTES_READER_PRIMITIVE(u, 32, be);
+	LONE_LISP_EXPORT_BYTES_READER_PRIMITIVE(s, 32, be);
+
+	LONE_LISP_EXPORT_BYTES_WRITER_PRIMITIVE(u, 16, be);
+	LONE_LISP_EXPORT_BYTES_WRITER_PRIMITIVE(s, 16, be);
+	LONE_LISP_EXPORT_BYTES_WRITER_PRIMITIVE(u, 32, be);
+	LONE_LISP_EXPORT_BYTES_WRITER_PRIMITIVE(s, 32, be);
 
 #undef LONE_LISP_EXPORT_BYTES_READER_PRIMITIVE
 #undef LONE_LISP_EXPORT_BYTES_WRITER_PRIMITIVE
@@ -121,8 +147,8 @@ static void lone_lisp_bytes_check_write_arguments(struct lone_lisp_value bytes,
 	}
 }
 
-#define LONE_LISP_BYTES_READER_PRIMITIVE(sign, bits) \
-LONE_LISP_PRIMITIVE(bytes_read_##sign##bits) \
+#define LONE_LISP_BYTES_READER_PRIMITIVE(sign, bits, endian) \
+LONE_LISP_PRIMITIVE(bytes_read_##sign##bits##endian) \
 { \
 	struct lone_lisp_value bytes; \
 	struct lone_lisp_value offset; \
@@ -135,7 +161,7 @@ LONE_LISP_PRIMITIVE(bytes_read_##sign##bits) \
 \
 	lone_lisp_bytes_check_read_arguments(bytes, offset); \
 \
-	integer = lone_bytes_read_##sign##bits(bytes.as.heap_value->as.bytes, offset.as.integer); \
+	integer = lone_bytes_read_##sign##bits##endian(bytes.as.heap_value->as.bytes, offset.as.integer); \
 \
 	if (integer.present) { \
 		return lone_lisp_integer_create(integer.value); \
@@ -144,8 +170,8 @@ LONE_LISP_PRIMITIVE(bytes_read_##sign##bits) \
 	} \
 }
 
-#define LONE_LISP_BYTES_WRITER_PRIMITIVE(sign, bits) \
-LONE_LISP_PRIMITIVE(bytes_write_##sign##bits) \
+#define LONE_LISP_BYTES_WRITER_PRIMITIVE(sign, bits, endian) \
+LONE_LISP_PRIMITIVE(bytes_write_##sign##bits##endian) \
 { \
 	struct lone_lisp_value bytes; \
 	struct lone_lisp_value offset; \
@@ -162,7 +188,7 @@ LONE_LISP_PRIMITIVE(bytes_write_##sign##bits) \
 \
 	integer = (lone_##sign##bits) value.as.integer; \
 \
-	success = lone_bytes_write_##sign##bits( \
+	success = lone_bytes_write_##sign##bits##endian( \
 		bytes.as.heap_value->as.bytes, \
 		offset.as.integer, \
 		integer \
@@ -175,19 +201,41 @@ LONE_LISP_PRIMITIVE(bytes_write_##sign##bits) \
 	} \
 }
 
-LONE_LISP_BYTES_READER_PRIMITIVE(u, 8)
-LONE_LISP_BYTES_READER_PRIMITIVE(s, 8)
-LONE_LISP_BYTES_READER_PRIMITIVE(u, 16)
-LONE_LISP_BYTES_READER_PRIMITIVE(s, 16)
-LONE_LISP_BYTES_READER_PRIMITIVE(u, 32)
-LONE_LISP_BYTES_READER_PRIMITIVE(s, 32)
+LONE_LISP_BYTES_READER_PRIMITIVE(u, 8, /* no endianness */)
+LONE_LISP_BYTES_READER_PRIMITIVE(s, 8, /* no endianness */)
 
-LONE_LISP_BYTES_WRITER_PRIMITIVE(u, 8)
-LONE_LISP_BYTES_WRITER_PRIMITIVE(s, 8)
-LONE_LISP_BYTES_WRITER_PRIMITIVE(u, 16)
-LONE_LISP_BYTES_WRITER_PRIMITIVE(s, 16)
-LONE_LISP_BYTES_WRITER_PRIMITIVE(u, 32)
-LONE_LISP_BYTES_WRITER_PRIMITIVE(s, 32)
+LONE_LISP_BYTES_WRITER_PRIMITIVE(u, 8, /* no endianness */)
+LONE_LISP_BYTES_WRITER_PRIMITIVE(s, 8, /* no endianness */)
+
+LONE_LISP_BYTES_READER_PRIMITIVE(u, 16, /* native endianness */)
+LONE_LISP_BYTES_READER_PRIMITIVE(s, 16, /* native endianness */)
+LONE_LISP_BYTES_READER_PRIMITIVE(u, 32, /* native endianness */)
+LONE_LISP_BYTES_READER_PRIMITIVE(s, 32, /* native endianness */)
+
+LONE_LISP_BYTES_WRITER_PRIMITIVE(u, 16, /* native endianness */)
+LONE_LISP_BYTES_WRITER_PRIMITIVE(s, 16, /* native endianness */)
+LONE_LISP_BYTES_WRITER_PRIMITIVE(u, 32, /* native endianness */)
+LONE_LISP_BYTES_WRITER_PRIMITIVE(s, 32, /* native endianness */)
+
+LONE_LISP_BYTES_READER_PRIMITIVE(u, 16, le)
+LONE_LISP_BYTES_READER_PRIMITIVE(s, 16, le)
+LONE_LISP_BYTES_READER_PRIMITIVE(u, 32, le)
+LONE_LISP_BYTES_READER_PRIMITIVE(s, 32, le)
+
+LONE_LISP_BYTES_WRITER_PRIMITIVE(u, 16, le)
+LONE_LISP_BYTES_WRITER_PRIMITIVE(s, 16, le)
+LONE_LISP_BYTES_WRITER_PRIMITIVE(u, 32, le)
+LONE_LISP_BYTES_WRITER_PRIMITIVE(s, 32, le)
+
+LONE_LISP_BYTES_READER_PRIMITIVE(u, 16, be)
+LONE_LISP_BYTES_READER_PRIMITIVE(s, 16, be)
+LONE_LISP_BYTES_READER_PRIMITIVE(u, 32, be)
+LONE_LISP_BYTES_READER_PRIMITIVE(s, 32, be)
+
+LONE_LISP_BYTES_WRITER_PRIMITIVE(u, 16, be)
+LONE_LISP_BYTES_WRITER_PRIMITIVE(s, 16, be)
+LONE_LISP_BYTES_WRITER_PRIMITIVE(u, 32, be)
+LONE_LISP_BYTES_WRITER_PRIMITIVE(s, 32, be)
 
 #undef LONE_LISP_BYTES_READER_PRIMITIVE
 #undef LONE_LISP_BYTES_WRITER_PRIMITIVE
