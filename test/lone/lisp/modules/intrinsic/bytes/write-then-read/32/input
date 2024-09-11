@@ -3,8 +3,12 @@
   (math /)
   (bytes
     new
-    read-u32 write-u32
-    read-s32 write-s32))
+    read-u32   write-u32
+    read-s32   write-s32
+    read-u32le write-u32le
+    read-s32le write-s32le
+    read-u32be write-u32be
+    read-s32be write-s32be))
 
 (set max-bits 32)
 (set memory (new (/ max-bits 8)))
@@ -16,3 +20,31 @@
 (print (write-s32 memory 0 -2000000000))
 (print (read-u32  memory 0))
 (print (read-s32  memory 0))
+
+(print (write-u32le memory 0 +4000000000))
+(print memory)
+(print (read-u32le memory 0))
+(print (read-s32le memory 0))
+(print (read-u32be memory 0))
+(print (read-s32be memory 0))
+
+(print (write-s32le memory 0 -2000000000))
+(print memory)
+(print (read-u32le memory 0))
+(print (read-s32le memory 0))
+(print (read-u32be memory 0))
+(print (read-s32be memory 0))
+
+(print (write-u32be memory 0 +4000000000))
+(print memory)
+(print (read-u32le memory 0))
+(print (read-s32le memory 0))
+(print (read-u32be memory 0))
+(print (read-s32be memory 0))
+
+(print (write-s32be memory 0 -2000000000))
+(print memory)
+(print (read-u32le memory 0))
+(print (read-s32le memory 0))
+(print (read-u32be memory 0))
+(print (read-s32be memory 0))
