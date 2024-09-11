@@ -3,8 +3,12 @@
   (math /)
   (bytes
     new
-    read-u16 write-u16
-    read-s16 write-s16))
+    read-u16   write-u16
+    read-s16   write-s16
+    read-u16le write-u16le
+    read-s16le write-s16le
+    read-u16be write-u16be
+    read-s16be write-s16be))
 
 (set max-bits 16)
 (set memory (new (/ max-bits 8)))
@@ -16,3 +20,31 @@
 (print (write-s16 memory 0 -30000))
 (print (read-u16  memory 0))
 (print (read-s16  memory 0))
+
+(print (write-u16le memory 0 +60000))
+(print memory)
+(print (read-u16le memory 0))
+(print (read-s16le memory 0))
+(print (read-u16be memory 0))
+(print (read-s16be memory 0))
+
+(print (write-u16be memory 0 +60000))
+(print memory)
+(print (read-u16le memory 0))
+(print (read-s16le memory 0))
+(print (read-u16be memory 0))
+(print (read-s16be memory 0))
+
+(print (write-s16le memory 0 -30000))
+(print memory)
+(print (read-u16le memory 0))
+(print (read-s16le memory 0))
+(print (read-u16be memory 0))
+(print (read-s16be memory 0))
+
+(print (write-s16be memory 0 -30000))
+(print memory)
+(print (read-u16le memory 0))
+(print (read-s16le memory 0))
+(print (read-u16be memory 0))
+(print (read-s16be memory 0))
