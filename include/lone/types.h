@@ -224,33 +224,33 @@ void lone_s32_write(void *address, lone_s32 s32);
 void lone_u64_write(void *address, lone_u64 u64);
 void lone_s64_write(void *address, lone_s64 s64);
 
-lone_u16 lone_u16_read_le(void *address);
-lone_s16 lone_s16_read_le(void *address);
-lone_u32 lone_u32_read_le(void *address);
-lone_s32 lone_s32_read_le(void *address);
-lone_u64 lone_u64_read_le(void *address);
-lone_s64 lone_s64_read_le(void *address);
+lone_u16 lone_u16le_read(void *address);
+lone_s16 lone_s16le_read(void *address);
+lone_u32 lone_u32le_read(void *address);
+lone_s32 lone_s32le_read(void *address);
+lone_u64 lone_u64le_read(void *address);
+lone_s64 lone_s64le_read(void *address);
 
-lone_u16 lone_u16_read_be(void *address);
-lone_s16 lone_s16_read_be(void *address);
-lone_u32 lone_u32_read_be(void *address);
-lone_s32 lone_s32_read_be(void *address);
-lone_u64 lone_u64_read_be(void *address);
-lone_s64 lone_s64_read_be(void *address);
+lone_u16 lone_u16be_read(void *address);
+lone_s16 lone_s16be_read(void *address);
+lone_u32 lone_u32be_read(void *address);
+lone_s32 lone_s32be_read(void *address);
+lone_u64 lone_u64be_read(void *address);
+lone_s64 lone_s64be_read(void *address);
 
-void lone_u16_write_le(void *address, lone_u16 u16);
-void lone_s16_write_le(void *address, lone_s16 s16);
-void lone_u32_write_le(void *address, lone_u32 u32);
-void lone_s32_write_le(void *address, lone_s32 s32);
-void lone_u64_write_le(void *address, lone_u64 u64);
-void lone_s64_write_le(void *address, lone_s64 s64);
+void lone_u16le_write(void *address, lone_u16 u16);
+void lone_s16le_write(void *address, lone_s16 s16);
+void lone_u32le_write(void *address, lone_u32 u32);
+void lone_s32le_write(void *address, lone_s32 s32);
+void lone_u64le_write(void *address, lone_u64 u64);
+void lone_s64le_write(void *address, lone_s64 s64);
 
-void lone_u16_write_be(void *address, lone_u16 u16);
-void lone_s16_write_be(void *address, lone_s16 s16);
-void lone_u32_write_be(void *address, lone_u32 u32);
-void lone_s32_write_be(void *address, lone_s32 s32);
-void lone_u64_write_be(void *address, lone_u64 u64);
-void lone_s64_write_be(void *address, lone_s64 s64);
+void lone_u16be_write(void *address, lone_u16 u16);
+void lone_s16be_write(void *address, lone_s16 s16);
+void lone_u32be_write(void *address, lone_u32 u32);
+void lone_s32be_write(void *address, lone_s32 s32);
+void lone_u64be_write(void *address, lone_u64 u64);
+void lone_s64be_write(void *address, lone_s64 s64);
 
 /* ╭────────────────────────────────────────────────────────────────────────╮
    │                                                                        │
@@ -282,33 +282,33 @@ bool lone_bytes_write_s32(struct lone_bytes bytes, lone_size offset, lone_s32 s3
 bool lone_bytes_write_u64(struct lone_bytes bytes, lone_size offset, lone_u64 u64);
 bool lone_bytes_write_s64(struct lone_bytes bytes, lone_size offset, lone_s64 s64);
 
-struct lone_optional_u16 lone_bytes_read_u16_le(struct lone_bytes bytes, lone_size offset);
-struct lone_optional_s16 lone_bytes_read_s16_le(struct lone_bytes bytes, lone_size offset);
-struct lone_optional_u32 lone_bytes_read_u32_le(struct lone_bytes bytes, lone_size offset);
-struct lone_optional_s32 lone_bytes_read_s32_le(struct lone_bytes bytes, lone_size offset);
-struct lone_optional_u64 lone_bytes_read_u64_le(struct lone_bytes bytes, lone_size offset);
-struct lone_optional_s64 lone_bytes_read_s64_le(struct lone_bytes bytes, lone_size offset);
+struct lone_optional_u16 lone_bytes_read_u16le(struct lone_bytes bytes, lone_size offset);
+struct lone_optional_s16 lone_bytes_read_s16le(struct lone_bytes bytes, lone_size offset);
+struct lone_optional_u32 lone_bytes_read_u32le(struct lone_bytes bytes, lone_size offset);
+struct lone_optional_s32 lone_bytes_read_s32le(struct lone_bytes bytes, lone_size offset);
+struct lone_optional_u64 lone_bytes_read_u64le(struct lone_bytes bytes, lone_size offset);
+struct lone_optional_s64 lone_bytes_read_s64le(struct lone_bytes bytes, lone_size offset);
 
-bool lone_bytes_write_u16_le(struct lone_bytes bytes, lone_size offset, lone_u16 u16);
-bool lone_bytes_write_s16_le(struct lone_bytes bytes, lone_size offset, lone_s16 s16);
-bool lone_bytes_write_u32_le(struct lone_bytes bytes, lone_size offset, lone_u32 u32);
-bool lone_bytes_write_s32_le(struct lone_bytes bytes, lone_size offset, lone_s32 s32);
-bool lone_bytes_write_u64_le(struct lone_bytes bytes, lone_size offset, lone_u64 u64);
-bool lone_bytes_write_s64_le(struct lone_bytes bytes, lone_size offset, lone_s64 s64);
+bool lone_bytes_write_u16le(struct lone_bytes bytes, lone_size offset, lone_u16 u16);
+bool lone_bytes_write_s16le(struct lone_bytes bytes, lone_size offset, lone_s16 s16);
+bool lone_bytes_write_u32le(struct lone_bytes bytes, lone_size offset, lone_u32 u32);
+bool lone_bytes_write_s32le(struct lone_bytes bytes, lone_size offset, lone_s32 s32);
+bool lone_bytes_write_u64le(struct lone_bytes bytes, lone_size offset, lone_u64 u64);
+bool lone_bytes_write_s64le(struct lone_bytes bytes, lone_size offset, lone_s64 s64);
 
-struct lone_optional_u16 lone_bytes_read_u16_be(struct lone_bytes bytes, lone_size offset);
-struct lone_optional_s16 lone_bytes_read_s16_be(struct lone_bytes bytes, lone_size offset);
-struct lone_optional_u32 lone_bytes_read_u32_be(struct lone_bytes bytes, lone_size offset);
-struct lone_optional_s32 lone_bytes_read_s32_be(struct lone_bytes bytes, lone_size offset);
-struct lone_optional_u64 lone_bytes_read_u64_be(struct lone_bytes bytes, lone_size offset);
-struct lone_optional_s64 lone_bytes_read_s64_be(struct lone_bytes bytes, lone_size offset);
+struct lone_optional_u16 lone_bytes_read_u16be(struct lone_bytes bytes, lone_size offset);
+struct lone_optional_s16 lone_bytes_read_s16be(struct lone_bytes bytes, lone_size offset);
+struct lone_optional_u32 lone_bytes_read_u32be(struct lone_bytes bytes, lone_size offset);
+struct lone_optional_s32 lone_bytes_read_s32be(struct lone_bytes bytes, lone_size offset);
+struct lone_optional_u64 lone_bytes_read_u64be(struct lone_bytes bytes, lone_size offset);
+struct lone_optional_s64 lone_bytes_read_s64be(struct lone_bytes bytes, lone_size offset);
 
-bool lone_bytes_write_u16_be(struct lone_bytes bytes, lone_size offset, lone_u16 u16);
-bool lone_bytes_write_s16_be(struct lone_bytes bytes, lone_size offset, lone_s16 s16);
-bool lone_bytes_write_u32_be(struct lone_bytes bytes, lone_size offset, lone_u32 u32);
-bool lone_bytes_write_s32_be(struct lone_bytes bytes, lone_size offset, lone_s32 s32);
-bool lone_bytes_write_u64_be(struct lone_bytes bytes, lone_size offset, lone_u64 u64);
-bool lone_bytes_write_s64_be(struct lone_bytes bytes, lone_size offset, lone_s64 s64);
+bool lone_bytes_write_u16be(struct lone_bytes bytes, lone_size offset, lone_u16 u16);
+bool lone_bytes_write_s16be(struct lone_bytes bytes, lone_size offset, lone_s16 s16);
+bool lone_bytes_write_u32be(struct lone_bytes bytes, lone_size offset, lone_u32 u32);
+bool lone_bytes_write_s32be(struct lone_bytes bytes, lone_size offset, lone_s32 s32);
+bool lone_bytes_write_u64be(struct lone_bytes bytes, lone_size offset, lone_u64 u64);
+bool lone_bytes_write_s64be(struct lone_bytes bytes, lone_size offset, lone_s64 s64);
 
 /* ╭────────────────────────────────────────────────────────────────────────╮
    │                                                                        │

@@ -39,10 +39,10 @@ lone_elf_read_##sign##bits(struct lone_elf_header *header, void *address)       
 	                                                                                           \
 	switch (header->ident[LONE_ELF_IDENT_INDEX_DATA_ENCODING]) {                               \
 	case LONE_ELF_IDENT_DATA_ENCODING_LITTLE_ENDIAN:                                           \
-		value = lone_##sign##bits##_read_le(address);                                      \
+		value = lone_##sign##bits##le_read(address);                                       \
 		break;                                                                             \
 	case LONE_ELF_IDENT_DATA_ENCODING_BIG_ENDIAN:                                              \
-		value = lone_##sign##bits##_read_be(address);                                      \
+		value = lone_##sign##bits##be_read(address);                                       \
 		break;                                                                             \
 	default:                                                                                   \
 		return LONE_OPTIONAL_ABSENT_VALUE(sign##bits);                                     \
@@ -293,10 +293,10 @@ lone_elf_write_##sign##bits(struct lone_elf_header *header,                     
 	                                                                                           \
 	switch (header->ident[LONE_ELF_IDENT_INDEX_DATA_ENCODING]) {                               \
 	case LONE_ELF_IDENT_DATA_ENCODING_LITTLE_ENDIAN:                                           \
-		lone_##sign##bits##_write_le(address, value);                                      \
+		lone_##sign##bits##le_write(address, value);                                       \
 		break;                                                                             \
 	case LONE_ELF_IDENT_DATA_ENCODING_BIG_ENDIAN:                                              \
-		lone_##sign##bits##_write_be(address, value);                                      \
+		lone_##sign##bits##be_write(address, value);                                       \
 		break;                                                                             \
 	case LONE_ELF_IDENT_DATA_ENCODING_INVALID:                                                 \
 	default:                                                                                   \

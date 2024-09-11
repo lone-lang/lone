@@ -140,7 +140,7 @@ LONE_BYTES_WRITER(s64)
 #undef LONE_BYTES_READER
 #undef LONE_BYTES_WRITER
 
-lone_u16 lone_u16_read_le(void *address)
+lone_u16 lone_u16le_read(void *address)
 {
 	unsigned char *bytes = address;
 	lone_u16 value = 0;
@@ -151,7 +151,7 @@ lone_u16 lone_u16_read_le(void *address)
 	return value;
 }
 
-lone_u16 lone_u16_read_be(void *address)
+lone_u16 lone_u16be_read(void *address)
 {
 	unsigned char *bytes = address;
 	lone_u16 value = 0;
@@ -162,7 +162,7 @@ lone_u16 lone_u16_read_be(void *address)
 	return value;
 }
 
-lone_u32 lone_u32_read_le(void *address)
+lone_u32 lone_u32le_read(void *address)
 {
 	unsigned char *bytes = address;
 	lone_u32 value = 0;
@@ -175,7 +175,7 @@ lone_u32 lone_u32_read_le(void *address)
 	return value;
 }
 
-lone_u32 lone_u32_read_be(void *address)
+lone_u32 lone_u32be_read(void *address)
 {
 	unsigned char *bytes = address;
 	lone_u32 value = 0;
@@ -188,7 +188,7 @@ lone_u32 lone_u32_read_be(void *address)
 	return value;
 }
 
-lone_u64 lone_u64_read_le(void *address)
+lone_u64 lone_u64le_read(void *address)
 {
 	unsigned char *bytes = address;
 	lone_u64 value = 0;
@@ -205,7 +205,7 @@ lone_u64 lone_u64_read_le(void *address)
 	return value;
 }
 
-lone_u64 lone_u64_read_be(void *address)
+lone_u64 lone_u64be_read(void *address)
 {
 	unsigned char *bytes = address;
 	lone_u64 value = 0;
@@ -222,7 +222,7 @@ lone_u64 lone_u64_read_be(void *address)
 	return value;
 }
 
-void lone_u16_write_le(void *address, lone_u16 value)
+void lone_u16le_write(void *address, lone_u16 value)
 {
 	unsigned char *bytes = address;
 
@@ -230,7 +230,7 @@ void lone_u16_write_le(void *address, lone_u16 value)
 	bytes[1] = ((unsigned char) (value >>  8));
 }
 
-void lone_u16_write_be(void *address, lone_u16 value)
+void lone_u16be_write(void *address, lone_u16 value)
 {
 	unsigned char *bytes = address;
 
@@ -238,7 +238,7 @@ void lone_u16_write_be(void *address, lone_u16 value)
 	bytes[1] = ((unsigned char) (value >>  0));
 }
 
-void lone_u32_write_le(void *address, lone_u32 value)
+void lone_u32le_write(void *address, lone_u32 value)
 {
 	unsigned char *bytes = address;
 
@@ -248,7 +248,7 @@ void lone_u32_write_le(void *address, lone_u32 value)
 	bytes[3] = ((unsigned char) (value >> 24));
 }
 
-void lone_u32_write_be(void *address, lone_u32 value)
+void lone_u32be_write(void *address, lone_u32 value)
 {
 	unsigned char *bytes = address;
 
@@ -258,7 +258,7 @@ void lone_u32_write_be(void *address, lone_u32 value)
 	bytes[3] = ((unsigned char) (value >>  0));
 }
 
-void lone_u64_write_le(void *address, lone_u64 value)
+void lone_u64le_write(void *address, lone_u64 value)
 {
 	unsigned char *bytes = address;
 
@@ -272,7 +272,7 @@ void lone_u64_write_le(void *address, lone_u64 value)
 	bytes[7] = ((unsigned char) (value >> 56));
 }
 
-void lone_u64_write_be(void *address, lone_u64 value)
+void lone_u64be_write(void *address, lone_u64 value)
 {
 	unsigned char *bytes = address;
 
@@ -287,15 +287,15 @@ void lone_u64_write_be(void *address, lone_u64 value)
 }
 
 #define LONE_ENDIAN_SIGNED_READER(bits, endian)                                                    \
-lone_s##bits lone_s##bits##_read_##endian(void *address)                                           \
+lone_s##bits lone_s##bits##endian##_read(void *address)                                            \
 {                                                                                                  \
-	return (lone_s##bits) lone_u##bits##_read_##endian(address);                               \
+	return (lone_s##bits) lone_u##bits##endian##_read(address);                                \
 }
 
 #define LONE_ENDIAN_SIGNED_WRITER(bits, endian)                                                    \
-void lone_s##bits##_write_##endian(void *address, lone_s##bits value)                              \
+void lone_s##bits##endian##_write(void *address, lone_s##bits value)                               \
 {                                                                                                  \
-	lone_u##bits##_write_##endian(address, (lone_u##bits) value);                              \
+	lone_u##bits##endian##_write(address, (lone_u##bits) value);                               \
 }
 
 #define LONE_ENDIAN_SIGNED_READERS_FOR_BITS(bits)                                                  \
@@ -328,12 +328,12 @@ LONE_ENDIAN_SIGNED_WRITERS()
 
 #define LONE_BYTES_ENDIAN_READER_2(type, endian)                                                   \
 struct lone_optional_##type                                                                        \
-lone_bytes_read_##type##_##endian(struct lone_bytes bytes, lone_size offset)                       \
+lone_bytes_read_##type##endian(struct lone_bytes bytes, lone_size offset)                          \
 {                                                                                                  \
 	struct lone_optional_##type result = { .present = false, .value = 0 };                     \
 	                                                                                           \
 	if (lone_bytes_contains_block(bytes, offset, sizeof(lone_##type))) {                       \
-		result.value = lone_##type##_read_##endian(bytes.pointer + offset);                \
+		result.value = lone_##type##endian##_read(bytes.pointer + offset);                 \
 		result.present = true;                                                             \
 	}                                                                                          \
 	                                                                                           \
@@ -341,13 +341,13 @@ lone_bytes_read_##type##_##endian(struct lone_bytes bytes, lone_size offset)    
 }
 
 #define LONE_BYTES_ENDIAN_WRITER_2(type, endian)                                                   \
-bool lone_bytes_write_##type##_##endian(struct lone_bytes bytes,                                   \
+bool lone_bytes_write_##type##endian(struct lone_bytes bytes,                                      \
 		lone_size offset, lone_##type value)                                               \
 {                                                                                                  \
 	bool written = false;                                                                      \
 	                                                                                           \
 	if (lone_bytes_contains_block(bytes, offset, sizeof(lone_##type))) {                       \
-		lone_##type##_write_##endian(bytes.pointer + offset, value);                       \
+		lone_##type##endian##_write(bytes.pointer + offset, value);                        \
 		written = true;                                                                    \
 	}                                                                                          \
 	                                                                                           \

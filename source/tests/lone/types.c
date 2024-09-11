@@ -324,10 +324,10 @@ LONE_TYPES_BYTES_TEST_WRITE_UNALIGNED_OUT_OF_BOUNDS(s, 64, -1234567891011121314)
 #undef LONE_TYPES_BYTES_TEST_WRITE_UNALIGNED_OUT_OF_BOUNDS
 
 #define LONE_TYPES_ENDIAN_TEST_NAME(sign, bits, operation, endian, alignment)                      \
-	"lone/types/" #sign #bits "/" #operation "/" #endian "/" #alignment
+	"lone/types/" #sign #bits #endian "/" #operation "/" #alignment
 
 #define LONE_TYPES_ENDIAN_TEST_FUNCTION(sign, bits, operation, endian, alignment)                  \
-	test_lone_types_lone_##sign##bits##_##operation##_##endian##_##alignment
+	test_lone_types_lone_##sign##bits##endian##_##operation##_##alignment
 
 #define LONE_TYPES_ENDIAN_TEST_READ(sign, bits, endian, alignment, constant, offset, ...)          \
 static LONE_TEST_FUNCTION(LONE_TYPES_ENDIAN_TEST_FUNCTION(sign, bits,                              \
@@ -336,7 +336,7 @@ static LONE_TEST_FUNCTION(LONE_TYPES_ENDIAN_TEST_FUNCTION(sign, bits,           
 	unsigned char bytes[] = { __VA_ARGS__ };                                                   \
 	                                                                                           \
 	lone_test_assert_##sign##bits##_equal(suite, test,                                         \
-			lone_##sign##bits##_read_##endian(bytes + offset), constant);              \
+			lone_##sign##bits##endian##_read(bytes + offset), constant);               \
 }
 
 #define LONE_TYPES_ENDIAN_TEST_WRITE(sign, bits, endian, alignment, constant, offset, ...)         \
@@ -346,7 +346,7 @@ static LONE_TEST_FUNCTION(LONE_TYPES_ENDIAN_TEST_FUNCTION(sign, bits,           
 	unsigned char actual[sizeof(lone_##sign##bits) + offset] = {0};                            \
 	unsigned char expected[] = { __VA_ARGS__ };                                                \
 	                                                                                           \
-	lone_##sign##bits##_write_##endian(actual + offset, constant);                             \
+	lone_##sign##bits##endian##_write(actual + offset, constant);                              \
 	                                                                                           \
 	lone_test_assert_true(suite, test,                                                         \
 			lone_memory_is_equal(actual + offset, expected, sizeof(expected)));        \
@@ -416,10 +416,10 @@ LONE_TYPES_ENDIAN_TEST_WRITE(s, 64, be, unaligned, 0x0102030405060708, 1, 0x01, 
 #undef LONE_TYPES_ENDIAN_TEST_READ
 
 #define LONE_TYPES_BYTES_ENDIAN_TEST_NAME(sign, bits, operation, endian, alignment, bounds)        \
-	"lone/types/bytes/" #operation "/" #sign #bits "/" #endian "/" #alignment "/" #bounds
+	"lone/types/bytes/" #operation "/" #sign #bits #endian "/" #alignment "/" #bounds
 
 #define LONE_TYPES_BYTES_ENDIAN_TEST_FUNCTION(sign, bits, operation, endian, alignment, bounds)    \
-	test_lone_types_lone_bytes_##operation##_##sign##bits##_##endian##_##alignment##_##bounds
+	test_lone_types_lone_bytes_##operation##_##sign##bits##endian##_##alignment##_##bounds
 
 #define LONE_TYPES_BYTES_ENDIAN_TEST_READ_WITHIN_BOUNDS(sign, bits, endian, alignment,             \
 		constant, offset, ...)                                                             \
@@ -430,7 +430,7 @@ static LONE_TEST_FUNCTION(LONE_TYPES_BYTES_ENDIAN_TEST_FUNCTION(sign, bits,     
 	struct lone_bytes bytes = { .count = sizeof(data), .pointer = data };                      \
 	struct lone_optional_##sign##bits actual;                                                  \
 	                                                                                           \
-	actual = lone_bytes_read_##sign##bits##_##endian(bytes, offset);                           \
+	actual = lone_bytes_read_##sign##bits##endian(bytes, offset);                              \
 	                                                                                           \
 	lone_test_assert_true(suite, test, actual.present);                                        \
 	lone_test_assert_##sign##bits##_equal(suite, test, actual.value, constant);                \
@@ -445,7 +445,7 @@ static LONE_TEST_FUNCTION(LONE_TYPES_BYTES_ENDIAN_TEST_FUNCTION(sign, bits,     
 	struct lone_bytes bytes = { .count = sizeof(data), .pointer = data };                      \
 	struct lone_optional_##sign##bits actual;                                                  \
 	                                                                                           \
-	actual = lone_bytes_read_##sign##bits##_##endian(bytes, sizeof(data));                     \
+	actual = lone_bytes_read_##sign##bits##endian(bytes, sizeof(data));                        \
 	                                                                                           \
 	lone_test_assert_false(suite, test, actual.present);                                       \
 }
@@ -460,7 +460,7 @@ static LONE_TEST_FUNCTION(LONE_TYPES_BYTES_ENDIAN_TEST_FUNCTION(sign, bits,     
 	struct lone_bytes bytes = { .count = sizeof(actual), .pointer = actual };                  \
 	bool written = false;                                                                      \
 	                                                                                           \
-	written = lone_bytes_write_##sign##bits##_##endian(bytes, offset, constant);               \
+	written = lone_bytes_write_##sign##bits##endian(bytes, offset, constant);                  \
 	                                                                                           \
 	lone_test_assert_true(suite, test, written);                                               \
 	lone_test_assert_true(suite, test,                                                         \
@@ -476,7 +476,7 @@ static LONE_TEST_FUNCTION(LONE_TYPES_BYTES_ENDIAN_TEST_FUNCTION(sign, bits,     
 	struct lone_bytes bytes = { .count = sizeof(actual), .pointer = actual };                  \
 	bool written = false;                                                                      \
 	                                                                                           \
-	written = lone_bytes_write_##sign##bits##_##endian(bytes, sizeof(actual), constant);       \
+	written = lone_bytes_write_##sign##bits##endian(bytes, sizeof(actual), constant);          \
 	                                                                                           \
 	lone_test_assert_false(suite, test, written);                                              \
 }
