@@ -40,7 +40,8 @@ source_to_test = $(patsubst $(directories.source.tests)/%.c,$(directories.build.
 
 ARCH := $(TARGET)
 
-directories.build := build/$(ARCH)
+directories.build.root := build
+directories.build := $(directories.build.root)/$(ARCH)
 directories.build.tools := $(directories.build)/tools
 directories.build.tests := $(directories.build)/tests
 directories.build.objects := $(directories.build)/objects
@@ -156,6 +157,7 @@ test: tests lone tools
 
 targets.phony += directories
 directories:
+	scripts/create-symlinked-directory.bash $(directories.build.root)
 	mkdir -p $(sort $(directories.create))
 
 .PHONY: $(targets.phony)
