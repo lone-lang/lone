@@ -1,2 +1,2 @@
-# build tree
-build/
+# build directory or symlink
+build
