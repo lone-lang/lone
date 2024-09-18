@@ -54,4 +54,15 @@ jobs:
 
     - name: Update packages and install dependencies
       run: pacman -Syu --noconfirm clang lld llvm mold
+
+    - name: Checkout lone repository
+      uses: actions/checkout@v4
+
+    - name: Build lone
+      run: make --jobs --output-sync lone
+
+    - name: Build lone's test suite
+      run: make --jobs --output-sync tests
+
+    - name: Test lone
       run: make test
