@@ -127,12 +127,12 @@ $(directories.build.tools)/%: $(directories.build.objects.tools)/%.o $(targets.o
 $(directories.build.tests)/%: $(directories.build.objects.tests)/%.o $(targets.objects.lone) | directories
 	$(strip $(CC) $(flags.executable) $(CFLAGS.with_overrides) $(LDFLAGS) -o $@ $^)
 
-$(call source_to_object,source/lone/lisp/modules/intrinsic/linux.c): $(targets.NR.c)
+$(call source_to_object,source/lone/lisp/modules/intrinsic/linux.c): $(targets.NR.c) | directories
 
-$(targets.NR.c): $(targets.NR.list) scripts/NR.generate
+$(targets.NR.c): $(targets.NR.list) scripts/NR.generate | directories
 	scripts/NR.generate < $< > $@
 
-$(targets.NR.list): scripts/NR.filter
+$(targets.NR.list): scripts/NR.filter | directories
 	$(CC) -E -dM -include linux/unistd.h - < /dev/null | scripts/NR.filter > $@
 
 targets.phony += lone
