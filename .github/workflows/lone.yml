@@ -61,6 +61,9 @@ jobs:
     - name: Build lone
       run: make --jobs --output-sync lone
 
+    - name: Build lone's tools
+      run: make --jobs --output-sync tools
+
     - name: Build lone's test suite
       run: make --jobs --output-sync tests
 
