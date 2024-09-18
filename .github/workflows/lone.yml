@@ -8,8 +8,12 @@ on:
 
 jobs:
   build-and-test:
+    runs-on: ubuntu-latest
+    container: archlinux:base-devel
+
     strategy:
       fail-fast: false
+
       matrix:
         compiler:
           - name: cc
@@ -35,13 +39,14 @@ jobs:
             env:
               LD: mold
               LDFLAGS: -Wl,--spare-program-headers,2
-    runs-on: ubuntu-latest
-    container: archlinux:base-devel
+
     name: ${{ matrix.compiler.name }} ${{ matrix.linker.name }}
+
     steps:
     - name: Set up pacman keys
       run: pacman-key --init
-    - name: Update and install packages
+
+    - name: Update packages and install dependencies
       run: pacman -Syu --noconfirm clang lld llvm mold
     - uses: actions/checkout@v4
     - name: Build
