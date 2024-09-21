@@ -41,6 +41,7 @@ jobs:
               LDFLAGS: -Wl,--spare-program-headers,2
 
     env:
+      CONFIGURATION: ${{ matrix.compiler.name }}-${{ matrix.linker.name }}
       CC: ${{ matrix.compiler.env.CC }}
       LD: ${{ matrix.linker.env.LD }}
       CFLAGS: ${{ matrix.compiler.env.CFLAGS }}
