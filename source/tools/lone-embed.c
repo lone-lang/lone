@@ -536,42 +536,26 @@ static void append_data(struct elf *elf)
 	}
 }
 
+static void patch_elf_header(struct elf *elf)
+{
+	seek_to_start(elf->file.descriptor);
+	write_bytes(elf->file.descriptor, elf->header);
+}
+
 static void patch_ehdr_if_needed(struct elf *elf)
 {
-	bool patching_required;
-	Elf32_Ehdr *elf32;
-	Elf64_Ehdr *elf64;
+	struct lone_elf_header *header;
+	struct lone_elf_optional_umax offset;
 
-	patching_required = false;
+	header = hdr(elf);
 
-	switch (elf->class) {
-	case ELFCLASS64:
-		elf64 = (Elf64_Ehdr *) elf->header.pointer;
+	offset = lone_elf_header_read_segments_offset(header);
+	if (!offset.present) { invalid_elf(); }
 
-		if (elf64->e_phoff != elf->segments.offset) {
-			elf64->e_phoff = elf->segments.offset;
-			elf64->e_phnum = elf->segments.table.segment.count;
-			patching_required = true;
-		}
-
-		break;
-	case ELFCLASS32:
-		elf32 = (Elf32_Ehdr *) elf->header.pointer;
-
-		if (elf32->e_phoff != elf->segments.offset) {
-			elf32->e_phoff = elf->segments.offset;
-			elf32->e_phnum = elf->segments.table.segment.count;
-			patching_required = true;
-		}
-
-		break;
-	default:
-		/* Invalid ELF class but somehow made it here? */ linux_exit(8);
-	}
-
-	if (patching_required) {
-		seek_to_start(elf->file.descriptor);
-		write_bytes(elf->file.descriptor, elf->header);
+	if (offset.value != elf->segments.offset) {
+		lone_elf_header_write_segments_offset(header, elf->segments.offset);
+		lone_elf_header_write_segment_count(header, elf->segments.table.segment.count);
+		patch_elf_header(elf);
 	}
 }
 
