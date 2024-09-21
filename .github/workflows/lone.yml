@@ -62,6 +62,14 @@ jobs:
     - name: Build lone
       run: make --jobs --output-sync lone
 
+    - name: Upload lone interpreter artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ matrix.compiler.name }}-${{ matrix.linker.name }}-lone
+        path: build/${{ matrix.compiler.name }}-${{ matrix.linker.name }}/lone
+        compression-level: 9
+        overwrite: false
+
     - name: Build lone's tools
       run: make --jobs --output-sync tools
 
@@ -70,14 +78,6 @@ jobs:
 
     - name: Test lone
       run: make test
-
-    - name: Upload lone executable artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: ${{ matrix.compiler.name }}-${{ matrix.linker.name }}-lone
-        path: build/${{ matrix.compiler.name }}-${{ matrix.linker.name }}/lone
-        compression-level: 9
-        overwrite: false
 
   analyze:
     name: CodeQL analysis
