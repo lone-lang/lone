@@ -35,7 +35,7 @@ jobs:
           - name: mold
             env:
               LD: mold
-          - name: mold+spare-segments
+          - name: mold+nulls
             env:
               LD: mold
               LDFLAGS: -Wl,--spare-program-headers,2
