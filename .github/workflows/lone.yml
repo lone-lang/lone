@@ -74,8 +74,8 @@ jobs:
     - name: Upload lone executable artifact
       uses: actions/upload-artifact@v4
       with:
-        name: lone
-        path: build/*/lone
+        name: ${{ matrix.compiler.name }}-${{ matrix.linker.name }}-lone
+        path: build/${{ matrix.compiler.name }}-${{ matrix.linker.name }}/lone
         compression-level: 9
         overwrite: false
 
