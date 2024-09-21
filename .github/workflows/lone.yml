@@ -70,6 +70,14 @@ jobs:
     - name: Test lone
       run: make test
 
+    - name: Upload lone executable artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: lone
+        path: build/*/lone
+        compression-level: 9
+        overwrite: false
+
   analyze:
     name: CodeQL analysis
     runs-on: ubuntu-latest
