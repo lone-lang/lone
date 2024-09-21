@@ -445,6 +445,8 @@ set_segment(struct elf *elf, struct lone_elf_header *header,
 
 	address = align_to_page(elf, elf->limits.end.virtual);
 	lone_elf_segment_write_virtual_address(header, segment, address);
+
+	address = align_to_page(elf, elf->limits.end.physical);
 	lone_elf_segment_write_physical_address(header, segment, address);
 
 	size = elf->data.size;
