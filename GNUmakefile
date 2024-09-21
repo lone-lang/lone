@@ -33,15 +33,18 @@ else
   TARGET := $(shell uname -m)
 endif
 
+ARCH := $(TARGET)
+
+CONFIGURATION ?= $(ARCH)
+CONFIGURATION := $(CONFIGURATION)
+
 source_to_object = $(patsubst $(directories.source)/%.c,$(directories.build.objects)/%.o,$(1))
 source_to_prerequisite = $(patsubst $(directories.source)/%.c,$(directories.build.prerequisites)/%.d,$(1))
 source_to_tool = $(patsubst $(directories.source.tools)/%.c,$(directories.build.tools)/%,$(1))
 source_to_test = $(patsubst $(directories.source.tests)/%.c,$(directories.build.tests)/%,$(1))
 
-ARCH := $(TARGET)
-
 directories.build.root := build
-directories.build := $(directories.build.root)/$(ARCH)
+directories.build := $(directories.build.root)/$(CONFIGURATION)
 directories.build.tools := $(directories.build)/tools
 directories.build.tests := $(directories.build)/tests
 directories.build.objects := $(directories.build)/objects
@@ -166,5 +169,5 @@ directories:
 
 sinclude $(targets.prerequisites)
 
-$(call variables.log,TARGET TARGET.triple UAPI CC LD CFLAGS LDFLAGS LTO PATH.additions)
+$(call variables.log,CONFIGURATION TARGET TARGET.triple UAPI CC LD CFLAGS LDFLAGS LTO PATH.additions)
 $(call newline)
