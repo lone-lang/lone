@@ -27,6 +27,8 @@ typedef __s32 lone_s32;
 typedef __u64 lone_u64;
 typedef __s64 lone_s64;
 
+typedef void (*lone_function_pointer)(void);
+
 struct lone_optional_u8  { bool present; lone_u8  value; };
 struct lone_optional_s8  { bool present; lone_s8  value; };
 struct lone_optional_u16 { bool present; lone_u16 value; };
@@ -120,7 +122,7 @@ struct lone_c_values {
 		bool boolean;
 
 		void *pointer;
-		void (*function_pointer)(void);
+		lone_function_pointer function_pointer;
 
 		lone_s8   s8;
 		lone_s16 s16;
