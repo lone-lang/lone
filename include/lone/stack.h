@@ -63,7 +63,8 @@
 
 bool lone_stack_is_empty(void *top, void *base);
 bool lone_stack_is_full(void  *top, void *limit);
-bool lone_stack_can_pop(void  *top, void *limit, lone_size size);
+bool lone_stack_can_peek(void *top, void *base,  lone_size size);
+bool lone_stack_can_pop(void  *top, void *base,  lone_size size);
 bool lone_stack_can_push(void *top, void *limit, lone_size size);
 
 void lone_stack_push_char(         void **top,          char value);

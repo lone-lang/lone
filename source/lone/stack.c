@@ -10,6 +10,11 @@ bool lone_stack_is_full(void *top, void *limit)
 	return ((unsigned char *) top) >= limit;
 }
 
+bool lone_stack_can_peek(void *top, void *base, lone_size bytes)
+{
+	return lone_stack_can_pop(top, base, bytes);
+}
+
 bool lone_stack_can_pop(void *top, void *base, lone_size bytes)
 {
 	return (((unsigned char *) top) - bytes) >= base;
