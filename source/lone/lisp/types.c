@@ -20,6 +20,26 @@ struct lone_lisp_value lone_lisp_boolean_for(struct lone_lisp *lisp, bool value)
 	}
 }
 
+enum lone_lisp_value_type lone_lisp_value_to_type(struct lone_lisp_value value)
+{
+	return value.type;
+}
+
+struct lone_lisp_heap_value *lone_lisp_value_to_heap_value(struct lone_lisp_value value)
+{
+	return value.as.heap_value;
+}
+
+lone_lisp_integer lone_lisp_value_to_integer(struct lone_lisp_value value)
+{
+	return value.as.integer;
+}
+
+void *lone_lisp_value_to_pointer(struct lone_lisp_value value)
+{
+	return value.as.pointer.to_void;
+}
+
 bool lone_lisp_has_same_type(struct lone_lisp_value x, struct lone_lisp_value y)
 {
 	if (x.type == y.type) {

@@ -244,6 +244,11 @@ struct lone_lisp_value lone_lisp_boolean_for(struct lone_lisp *lisp, bool value)
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
 
+enum lone_lisp_value_type lone_lisp_value_to_type(struct lone_lisp_value value);
+struct lone_lisp_heap_value *lone_lisp_value_to_heap_value(struct lone_lisp_value value);
+lone_lisp_integer lone_lisp_value_to_integer(struct lone_lisp_value value);
+void *lone_lisp_value_to_pointer(struct lone_lisp_value value);
+
 bool lone_lisp_is_register_value(struct lone_lisp_value value);
 bool lone_lisp_is_heap_value(struct lone_lisp_value value);
 bool lone_lisp_is_register_value_of_type(struct lone_lisp_value value, enum lone_lisp_value_type register_value_type);
