@@ -219,7 +219,7 @@ static struct lone_lisp_value lone_lisp_auxiliary_vector_to_table(struct lone_li
 		lone_lisp_auxiliary_value_to_table(lone, table, unknowns, &auxiliary_vector[i]);
 	}
 
-	if (unknowns.as.heap_value->as.table.count) {
+	if (lone_lisp_value_to_heap_value(unknowns)->as.table.count) {
 		lone_lisp_table_set(lone, table, lone_lisp_intern_c_string(lone, "unknown"), unknowns);
 	}
 
@@ -325,9 +325,9 @@ static inline long lone_lisp_value_to_linux_system_call_number(struct lone_lisp 
 {
 	struct lone_lisp_value number;
 
-	switch (value.type) {
+	switch (lone_lisp_value_to_type(value)) {
 	case LONE_LISP_TYPE_INTEGER:
-		return value.as.integer;
+		return lone_lisp_value_to_integer(value);
 	case LONE_LISP_TYPE_NIL:
 	case LONE_LISP_TYPE_POINTER:
 		linux_exit(-1);
@@ -335,7 +335,7 @@ static inline long lone_lisp_value_to_linux_system_call_number(struct lone_lisp 
 		break;
 	}
 
-	switch (value.as.heap_value->type) {
+	switch (lone_lisp_value_to_heap_value(value)->type) {
 	case LONE_LISP_TYPE_TEXT:
 		value = lone_lisp_text_to_symbol(lone, value);
 		__attribute__((fallthrough));
@@ -352,9 +352,9 @@ static inline long lone_lisp_value_to_linux_system_call_number(struct lone_lisp 
 		linux_exit(-1);
 	}
 
-	switch (number.type) {
+	switch (lone_lisp_value_to_type(number)) {
 	case LONE_LISP_TYPE_INTEGER:
-		return number.as.integer;
+		return lone_lisp_value_to_integer(number);
 	case LONE_LISP_TYPE_NIL:
 	case LONE_LISP_TYPE_HEAP_VALUE:
 	case LONE_LISP_TYPE_POINTER:
@@ -366,28 +366,24 @@ static inline long lone_lisp_value_to_linux_system_call_number(struct lone_lisp 
 
 static inline long lone_lisp_value_to_linux_system_call_argument(struct lone_lisp_value value)
 {
-	struct lone_lisp_heap_value *actual;
-
-	switch (value.type) {
+	switch (lone_lisp_value_to_type(value)) {
 	case LONE_LISP_TYPE_NIL:
 		return 0;
 	case LONE_LISP_TYPE_POINTER:
-		return (long) value.as.pointer.to_void;
+		return (long) lone_lisp_value_to_pointer(value);
 	case LONE_LISP_TYPE_INTEGER:
-		return (long) value.as.integer;
+		return (long) lone_lisp_value_to_integer(value);
 	case LONE_LISP_TYPE_HEAP_VALUE:
 		break;
 	}
 
-	actual = value.as.heap_value;
-
-	switch (actual->type) {
+	switch (lone_lisp_value_to_heap_value(value)->type) {
 	case LONE_LISP_TYPE_BYTES:
 	case LONE_LISP_TYPE_TEXT:
 	case LONE_LISP_TYPE_SYMBOL:
-		return (long) actual->as.bytes.pointer;
+		return (long) lone_lisp_value_to_heap_value(value)->as.bytes.pointer;
 	case LONE_LISP_TYPE_PRIMITIVE:
-		return (long) actual->as.primitive.function;
+		return (long) lone_lisp_value_to_heap_value(value)->as.primitive.function;
 	case LONE_LISP_TYPE_FUNCTION:
 	case LONE_LISP_TYPE_LIST:
 	case LONE_LISP_TYPE_VECTOR:
