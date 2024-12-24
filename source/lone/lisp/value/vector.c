@@ -24,12 +24,12 @@ struct lone_lisp_value lone_lisp_vector_create(struct lone_lisp *lone, size_t ca
 
 size_t lone_lisp_vector_count(struct lone_lisp_value vector)
 {
-	return vector.as.heap_value->as.vector.count;
+	return lone_lisp_value_to_heap_value(vector)->as.vector.count;
 }
 
 void lone_lisp_vector_resize(struct lone_lisp *lone, struct lone_lisp_value vector, size_t new_capacity)
 {
-	struct lone_lisp_vector *actual = &vector.as.heap_value->as.vector;
+	struct lone_lisp_vector *actual = &lone_lisp_value_to_heap_value(vector)->as.vector;
 
 	actual->capacity = new_capacity;
 	actual->values = lone_memory_array(lone->system, actual->values, actual->capacity, sizeof(*actual->values));
@@ -44,7 +44,7 @@ struct lone_lisp_value lone_lisp_vector_get_value_at(struct lone_lisp_value vect
 {
 	struct lone_lisp_vector *actual;
 
-	actual = &vector.as.heap_value->as.vector;
+	actual = &lone_lisp_value_to_heap_value(vector)->as.vector;
 
 	if (lone_memory_array_is_bounded(i, actual->capacity, sizeof(*actual->values))) {
 		return actual->values[i];
@@ -57,7 +57,7 @@ struct lone_lisp_value lone_lisp_vector_get(struct lone_lisp *lone,
 		struct lone_lisp_value vector, struct lone_lisp_value index)
 {
 	if (!lone_lisp_is_integer(index)) { /* only integer indexes supported */ linux_exit(-1); }
-	return lone_lisp_vector_get_value_at(vector, index.as.integer);
+	return lone_lisp_vector_get_value_at(vector, lone_lisp_value_to_integer(index));
 }
 
 void lone_lisp_vector_set_value_at(struct lone_lisp *lone, struct lone_lisp_value vector,
@@ -65,7 +65,7 @@ void lone_lisp_vector_set_value_at(struct lone_lisp *lone, struct lone_lisp_valu
 {
 	struct lone_lisp_vector *actual;
 
-	actual = &vector.as.heap_value->as.vector;
+	actual = &lone_lisp_value_to_heap_value(vector)->as.vector;
 
 	if (!lone_memory_array_is_bounded(i, actual->capacity, sizeof(*actual->values))) {
 		lone_lisp_vector_resize(lone, vector, 2 * (i + 1));
@@ -79,7 +79,7 @@ void lone_lisp_vector_set(struct lone_lisp *lone, struct lone_lisp_value vector,
 		struct lone_lisp_value index, struct lone_lisp_value value)
 {
 	if (!lone_lisp_is_integer(index)) { /* only integer indexes supported */ linux_exit(-1); }
-	lone_lisp_vector_set_value_at(lone, vector, index.as.integer, value);
+	lone_lisp_vector_set_value_at(lone, vector, lone_lisp_value_to_integer(index), value);
 }
 
 void lone_lisp_vector_push(struct lone_lisp *lone,

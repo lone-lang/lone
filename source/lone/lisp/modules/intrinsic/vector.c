@@ -85,7 +85,7 @@ LONE_LISP_PRIMITIVE(vector_slice)
 	arguments = lone_lisp_list_rest(arguments);
 	if (!lone_lisp_is_integer(start)) { /* start is not an integer: (slice vector "error") */ linux_exit(-1); }
 
-	i = start.as.integer;
+	i = lone_lisp_value_to_integer(start);
 
 	if (lone_lisp_is_nil(arguments)) {
 		j = lone_lisp_vector_count(vector);
@@ -95,7 +95,7 @@ LONE_LISP_PRIMITIVE(vector_slice)
 		if (!lone_lisp_is_nil(arguments)) { /* too many arguments given: (slice vector start end extra) */ linux_exit(-1); }
 		if (!lone_lisp_is_integer(end)) { /* end is not an integer: (slice vector 10 "error") */ linux_exit(-1); }
 
-		j = end.as.integer;
+		j = lone_lisp_value_to_integer(end);
 	}
 
 	slice = lone_lisp_vector_create(lone, j - i);
