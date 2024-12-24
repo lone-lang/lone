@@ -12,24 +12,31 @@ static size_t lone_lisp_hash_heap_value_recursively(struct lone_lisp_heap_value 
 static size_t lone_lisp_hash_value_recursively(struct lone_lisp_value value, unsigned long hash)
 {
 	struct lone_bytes bytes;
+	enum lone_lisp_value_type type;
+	lone_lisp_integer integer;
+	void *pointer;
 
-	bytes.pointer = (unsigned char *) &value.type;
-	bytes.count = sizeof(value.type);
+	type = lone_lisp_value_to_type(value);
+
+	bytes.pointer = (unsigned char *) &type;
+	bytes.count = sizeof(type);
 	hash = lone_hash_fnv_1a(bytes, hash);
 
-	switch (value.type) {
+	switch (type) {
 	case LONE_LISP_TYPE_NIL:
 		return hash;
 	case LONE_LISP_TYPE_INTEGER:
-		bytes.pointer = (unsigned char *) &value.as.integer;
-		bytes.count = sizeof(value.as.integer);
+		integer = lone_lisp_value_to_integer(value);
+		bytes.pointer = (unsigned char *) &integer;
+		bytes.count = sizeof(integer);
 		break;
 	case LONE_LISP_TYPE_POINTER:
-		bytes.pointer = (unsigned char *) &value.as.pointer;
-		bytes.count = sizeof(value.as.pointer);
+		pointer = lone_lisp_value_to_pointer(value);
+		bytes.pointer = (unsigned char *) &pointer;
+		bytes.count = sizeof(pointer);
 		break;
 	case LONE_LISP_TYPE_HEAP_VALUE:
-		return lone_lisp_hash_heap_value_recursively(value.as.heap_value, hash);
+		return lone_lisp_hash_heap_value_recursively(lone_lisp_value_to_heap_value(value), hash);
 	}
 
 	hash = lone_hash_fnv_1a(bytes, hash);
