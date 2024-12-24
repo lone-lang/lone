@@ -15,9 +15,8 @@ static struct lone_lisp_value lone_lisp_evaluate_form_index(struct lone_lisp *lo
 	struct lone_lisp_value (*get)(struct lone_lisp *, struct lone_lisp_value, struct lone_lisp_value);
 	void (*set)(struct lone_lisp *, struct lone_lisp_value, struct lone_lisp_value, struct lone_lisp_value);
 	struct lone_lisp_value key, value;
-	struct lone_lisp_heap_value *actual;
 
-	switch (collection.type) {
+	switch (lone_lisp_value_to_type(collection)) {
 	case LONE_LISP_TYPE_NIL:
 	case LONE_LISP_TYPE_INTEGER:
 	case LONE_LISP_TYPE_POINTER:
@@ -26,9 +25,7 @@ static struct lone_lisp_value lone_lisp_evaluate_form_index(struct lone_lisp *lo
 		break;
 	}
 
-	actual = collection.as.heap_value;
-
-	switch (actual->type) {
+	switch (lone_lisp_value_to_heap_value(collection)->type) {
 	case LONE_LISP_TYPE_VECTOR:
 		get = lone_lisp_vector_get;
 		set = lone_lisp_vector_set;
@@ -82,12 +79,11 @@ static struct lone_lisp_value lone_lisp_evaluate_form(struct lone_lisp *lone,
 		struct lone_lisp_value list)
 {
 	struct lone_lisp_value first, rest;
-	struct lone_lisp_heap_value *actual;
 
 	first = lone_lisp_list_first(list);
 	first = lone_lisp_evaluate(lone, module, environment, first);
 
-	switch (first.type) {
+	switch (lone_lisp_value_to_type(first)) {
 	case LONE_LISP_TYPE_NIL:
 	case LONE_LISP_TYPE_INTEGER:
 	case LONE_LISP_TYPE_POINTER:
@@ -96,11 +92,10 @@ static struct lone_lisp_value lone_lisp_evaluate_form(struct lone_lisp *lone,
 		break;
 	}
 
-	actual = first.as.heap_value;
 	rest = lone_lisp_list_rest(list);
 
 	/* apply arguments to the value */
-	switch (actual->type) {
+	switch (lone_lisp_value_to_heap_value(first)->type) {
 	case LONE_LISP_TYPE_FUNCTION:
 	case LONE_LISP_TYPE_PRIMITIVE:
 		return lone_lisp_apply(lone, module, environment, first, rest);
@@ -120,9 +115,7 @@ struct lone_lisp_value lone_lisp_evaluate(struct lone_lisp *lone,
 		struct lone_lisp_value module, struct lone_lisp_value environment,
 		struct lone_lisp_value value)
 {
-	struct lone_lisp_heap_value *actual;
-
-	switch (value.type) {
+	switch (lone_lisp_value_to_type(value)) {
 	case LONE_LISP_TYPE_NIL:
 	case LONE_LISP_TYPE_INTEGER:
 	case LONE_LISP_TYPE_POINTER:
@@ -131,9 +124,7 @@ struct lone_lisp_value lone_lisp_evaluate(struct lone_lisp *lone,
 		break;
 	}
 
-	actual = value.as.heap_value;
-
-	switch (actual->type) {
+	switch (lone_lisp_value_to_heap_value(value)->type) {
 	case LONE_LISP_TYPE_LIST:
 		return lone_lisp_evaluate_form(lone, module, environment, value);
 	case LONE_LISP_TYPE_SYMBOL:
@@ -166,7 +157,7 @@ struct lone_lisp_value lone_lisp_evaluate_all(struct lone_lisp *lone,
 struct lone_lisp_value lone_lisp_evaluate_in_module(struct lone_lisp *lone,
 		struct lone_lisp_value module, struct lone_lisp_value value)
 {
-	return lone_lisp_evaluate(lone, module, module.as.heap_value->as.module.environment, value);
+	return lone_lisp_evaluate(lone, module, lone_lisp_value_to_heap_value(module)->as.module.environment, value);
 }
 
 static struct lone_lisp_value lone_lisp_apply_function(struct lone_lisp *lone,
@@ -174,16 +165,16 @@ static struct lone_lisp_value lone_lisp_apply_function(struct lone_lisp *lone,
 		struct lone_lisp_value function, struct lone_lisp_value arguments)
 {
 	struct lone_lisp_value new_environment, names, code, value, current;
-	struct lone_lisp_heap_value *actual;
 
-	actual = function.as.heap_value;
-	new_environment = lone_lisp_table_create(lone, 16, actual->as.function.environment);
-	names = actual->as.function.arguments;
-	code = actual->as.function.code;
+	names = lone_lisp_value_to_heap_value(function)->as.function.arguments;
+	code = lone_lisp_value_to_heap_value(function)->as.function.code;
 	value = lone_lisp_nil();
 
+	new_environment = lone_lisp_table_create(lone, 16,
+		lone_lisp_value_to_heap_value(function)->as.function.environment);
+
 	/* evaluate each argument if function is configured to do so */
-	if (actual->as.function.flags.evaluate_arguments) {
+	if (lone_lisp_value_to_heap_value(function)->as.function.flags.evaluate_arguments) {
 		arguments = lone_lisp_evaluate_all(lone, module, environment, arguments);
 	}
 
@@ -191,7 +182,7 @@ static struct lone_lisp_value lone_lisp_apply_function(struct lone_lisp *lone,
 		if (!lone_lisp_is_nil(names)) {
 			current = lone_lisp_list_first(names);
 
-			switch (current.type) {
+			switch (lone_lisp_value_to_type(current)) {
 			case LONE_LISP_TYPE_HEAP_VALUE:
 				break;
 			case LONE_LISP_TYPE_NIL:
@@ -200,7 +191,7 @@ static struct lone_lisp_value lone_lisp_apply_function(struct lone_lisp *lone,
 				/* unexpected value */ linux_exit(-1);
 			}
 
-			switch (current.as.heap_value->type) {
+			switch (lone_lisp_value_to_heap_value(current)->type) {
 			case LONE_LISP_TYPE_SYMBOL:
 				/* normal argument passing: (lambda (x y)) */
 
@@ -258,7 +249,7 @@ names_bound:
 	}
 
 	/* evaluate result if function is configured to do so */
-	if (actual->as.function.flags.evaluate_result) {
+	if (lone_lisp_value_to_heap_value(function)->as.function.flags.evaluate_result) {
 		value = lone_lisp_evaluate(lone, module, environment, value);
 	}
 
@@ -269,16 +260,21 @@ static struct lone_lisp_value lone_lisp_apply_primitive(struct lone_lisp *lone,
 		struct lone_lisp_value module, struct lone_lisp_value environment,
 		struct lone_lisp_value primitive, struct lone_lisp_value arguments)
 {
-	struct lone_lisp_heap_value *actual = primitive.as.heap_value;
 	struct lone_lisp_value result;
 
-	if (actual->as.primitive.flags.evaluate_arguments) {
+	if (lone_lisp_value_to_heap_value(primitive)->as.primitive.flags.evaluate_arguments) {
 		arguments = lone_lisp_evaluate_all(lone, module, environment, arguments);
 	}
 
-	result = actual->as.primitive.function(lone, module, environment, arguments, actual->as.primitive.closure);
+	result = lone_lisp_value_to_heap_value(primitive)->as.primitive.function(
+		lone,
+		module,
+		environment,
+		arguments,
+		lone_lisp_value_to_heap_value(primitive)->as.primitive.closure
+	);
 
-	if (actual->as.primitive.flags.evaluate_result) {
+	if (lone_lisp_value_to_heap_value(primitive)->as.primitive.flags.evaluate_result) {
 		result = lone_lisp_evaluate(lone, module, environment, result);
 	}
 
