@@ -33,7 +33,7 @@ struct lone_lisp_value lone_lisp_list_first(struct lone_lisp_value value)
 	} else if (!lone_lisp_is_list(value)) {
 		/* expected a list value */ linux_exit(-1);
 	} else {
-		return value.as.heap_value->as.list.first;
+		return lone_lisp_value_to_heap_value(value)->as.list.first;
 	}
 }
 
@@ -44,7 +44,7 @@ struct lone_lisp_value lone_lisp_list_rest(struct lone_lisp_value value)
 	} else if (!lone_lisp_is_list(value)) {
 		/* expected a list value */ linux_exit(-1);
 	} else {
-		return value.as.heap_value->as.list.rest;
+		return lone_lisp_value_to_heap_value(value)->as.list.rest;
 	}
 }
 
@@ -56,7 +56,7 @@ struct lone_lisp_value lone_lisp_list_set_first(struct lone_lisp *lone,
 	} else if (!lone_lisp_is_list(value)) {
 		/* expected a list value */ linux_exit(-1);
 	} else {
-		return value.as.heap_value->as.list.first = first;
+		return lone_lisp_value_to_heap_value(value)->as.list.first = first;
 	}
 }
 
@@ -68,7 +68,7 @@ struct lone_lisp_value lone_lisp_list_set_rest(struct lone_lisp *lone,
 	} else if (!lone_lisp_is_list(value)) {
 		/* expected a list value */ linux_exit(-1);
 	} else {
-		return value.as.heap_value->as.list.rest = rest;
+		return lone_lisp_value_to_heap_value(value)->as.list.rest = rest;
 	}
 }
 
@@ -146,7 +146,7 @@ bool lone_lisp_list_has_rest(struct lone_lisp_value value)
 	} else if (!lone_lisp_is_list(value)) {
 		/* expected a list value */ linux_exit(-1);
 	} else {
-		return !lone_lisp_is_nil(value.as.heap_value->as.list.rest);
+		return !lone_lisp_is_nil(lone_lisp_value_to_heap_value(value)->as.list.rest);
 	}
 }
 
