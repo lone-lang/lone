@@ -42,9 +42,9 @@ void *lone_lisp_value_to_pointer(struct lone_lisp_value value)
 
 bool lone_lisp_has_same_type(struct lone_lisp_value x, struct lone_lisp_value y)
 {
-	if (x.type == y.type) {
+	if (lone_lisp_value_to_type(x) == lone_lisp_value_to_type(y)) {
 		if (lone_lisp_is_heap_value(x) && lone_lisp_is_heap_value(y)) {
-			if (x.as.heap_value->type == y.as.heap_value->type) {
+			if (lone_lisp_value_to_heap_value(x)->type == lone_lisp_value_to_heap_value(y)->type) {
 				return true;
 			} else {
 				return false;
@@ -59,22 +59,22 @@ bool lone_lisp_has_same_type(struct lone_lisp_value x, struct lone_lisp_value y)
 
 bool lone_lisp_is_register_value(struct lone_lisp_value value)
 {
-	return value.type != LONE_LISP_TYPE_HEAP_VALUE;
+	return lone_lisp_value_to_type(value) != LONE_LISP_TYPE_HEAP_VALUE;
 }
 
 bool lone_lisp_is_register_value_of_type(struct lone_lisp_value value, enum lone_lisp_value_type register_value_type)
 {
-	return lone_lisp_is_register_value(value) && value.type == register_value_type;
+	return lone_lisp_is_register_value(value) && lone_lisp_value_to_type(value) == register_value_type;
 }
 
 bool lone_lisp_is_heap_value(struct lone_lisp_value value)
 {
-	return value.type == LONE_LISP_TYPE_HEAP_VALUE;
+	return lone_lisp_value_to_type(value) == LONE_LISP_TYPE_HEAP_VALUE;
 }
 
 bool lone_lisp_is_heap_value_of_type(struct lone_lisp_value value, enum lone_lisp_heap_value_type heap_value_type)
 {
-	return lone_lisp_is_heap_value(value) && value.as.heap_value->type == heap_value_type;
+	return lone_lisp_is_heap_value(value) && lone_lisp_value_to_heap_value(value)->type == heap_value_type;
 }
 
 bool lone_lisp_is_module(struct lone_lisp_value value)
@@ -155,15 +155,15 @@ bool lone_lisp_is_pointer(struct lone_lisp_value value)
 bool lone_lisp_is_identical(struct lone_lisp_value x, struct lone_lisp_value y)
 {
 	if (lone_lisp_has_same_type(x, y)) {
-		switch (x.type) {
+		switch (lone_lisp_value_to_type(x)) {
 		case LONE_LISP_TYPE_NIL:
 			return true;
 		case LONE_LISP_TYPE_HEAP_VALUE:
-			return x.as.heap_value == y.as.heap_value;
+			return lone_lisp_value_to_heap_value(x) == lone_lisp_value_to_heap_value(y);
 		case LONE_LISP_TYPE_INTEGER:
-			return x.as.integer == y.as.integer;
+			return lone_lisp_value_to_integer(x) == lone_lisp_value_to_integer(y);
 		case LONE_LISP_TYPE_POINTER:
-			return x.as.pointer.to_void == y.as.pointer.to_void;
+			return lone_lisp_value_to_pointer(x) == lone_lisp_value_to_pointer(y);
 		}
 	} else {
 		return false;
@@ -174,7 +174,7 @@ bool lone_lisp_is_equivalent(struct lone_lisp_value x, struct lone_lisp_value y)
 {
 	if (!lone_lisp_has_same_type(x, y)) { return false; }
 
-	switch (x.type) {
+	switch (lone_lisp_value_to_type(x)) {
 	case LONE_LISP_TYPE_NIL:
 	case LONE_LISP_TYPE_INTEGER:
 	case LONE_LISP_TYPE_POINTER:
@@ -183,10 +183,11 @@ bool lone_lisp_is_equivalent(struct lone_lisp_value x, struct lone_lisp_value y)
 		break;
 	}
 
-	switch (x.as.heap_value->type) {
+	switch (lone_lisp_value_to_heap_value(x)->type) {
 	case LONE_LISP_TYPE_TEXT:
 	case LONE_LISP_TYPE_BYTES:
-		return lone_bytes_is_equal(x.as.heap_value->as.bytes, y.as.heap_value->as.bytes);
+		return lone_bytes_is_equal(lone_lisp_value_to_heap_value(x)->as.bytes,
+		                           lone_lisp_value_to_heap_value(y)->as.bytes);
 
 	case LONE_LISP_TYPE_MODULE:
 	case LONE_LISP_TYPE_FUNCTION:
@@ -201,8 +202,11 @@ bool lone_lisp_is_equivalent(struct lone_lisp_value x, struct lone_lisp_value y)
 
 static bool lone_lisp_list_is_equal(struct lone_lisp_value x, struct lone_lisp_value y)
 {
-	return lone_lisp_is_equal(x.as.heap_value->as.list.first, y.as.heap_value->as.list.first) &&
-	       lone_lisp_is_equal(x.as.heap_value->as.list.rest,  y.as.heap_value->as.list.rest);
+	return lone_lisp_is_equal(lone_lisp_value_to_heap_value(x)->as.list.first,
+	                          lone_lisp_value_to_heap_value(y)->as.list.first)
+	       &&
+	       lone_lisp_is_equal(lone_lisp_value_to_heap_value(x)->as.list.rest,
+		                  lone_lisp_value_to_heap_value(y)->as.list.rest);
 }
 
 static bool lone_lisp_vector_is_equal(struct lone_lisp_value x, struct lone_lisp_value y)
@@ -230,7 +234,7 @@ bool lone_lisp_is_equal(struct lone_lisp_value x, struct lone_lisp_value y)
 {
 	if (!lone_lisp_has_same_type(x, y)) { return false; }
 
-	switch (x.type) {
+	switch (lone_lisp_value_to_type(x)) {
 	case LONE_LISP_TYPE_NIL:
 	case LONE_LISP_TYPE_INTEGER:
 	case LONE_LISP_TYPE_POINTER:
@@ -239,7 +243,7 @@ bool lone_lisp_is_equal(struct lone_lisp_value x, struct lone_lisp_value y)
 		break;
 	}
 
-	switch (x.as.heap_value->type) {
+	switch (lone_lisp_value_to_heap_value(x)->type) {
 	case LONE_LISP_TYPE_LIST:
 		return lone_lisp_list_is_equal(x, y);
 	case LONE_LISP_TYPE_VECTOR:
@@ -267,7 +271,7 @@ static bool integers(struct lone_lisp_value x, struct lone_lisp_value y)
 bool lone_lisp_integer_is_less_than(struct lone_lisp_value x, struct lone_lisp_value y)
 {
 	if (integers(x, y)) {
-		return x.as.integer < y.as.integer;
+		return lone_lisp_value_to_integer(x) < lone_lisp_value_to_integer(y);
 	} else {
 		/* can't compare incompatible or non-integers integers */ linux_exit(-1);
 	}
@@ -276,7 +280,7 @@ bool lone_lisp_integer_is_less_than(struct lone_lisp_value x, struct lone_lisp_v
 bool lone_lisp_integer_is_less_than_or_equal_to(struct lone_lisp_value x, struct lone_lisp_value y)
 {
 	if (integers(x, y)) {
-		return x.as.integer <= y.as.integer;
+		return lone_lisp_value_to_integer(x) <= lone_lisp_value_to_integer(y);
 	} else {
 		/* can't compare incompatible or non-integers integers */ linux_exit(-1);
 	}
@@ -285,7 +289,7 @@ bool lone_lisp_integer_is_less_than_or_equal_to(struct lone_lisp_value x, struct
 bool lone_lisp_integer_is_greater_than(struct lone_lisp_value x, struct lone_lisp_value y)
 {
 	if (integers(x, y)) {
-		return x.as.integer > y.as.integer;
+		return lone_lisp_value_to_integer(x) > lone_lisp_value_to_integer(y);
 	} else {
 		/* can't compare incompatible or non-integers integers */ linux_exit(-1);
 	}
@@ -294,7 +298,7 @@ bool lone_lisp_integer_is_greater_than(struct lone_lisp_value x, struct lone_lis
 bool lone_lisp_integer_is_greater_than_or_equal_to(struct lone_lisp_value x, struct lone_lisp_value y)
 {
 	if (integers(x, y)) {
-		return x.as.integer >= y.as.integer;
+		return lone_lisp_value_to_integer(x) >= lone_lisp_value_to_integer(y);
 	} else {
 		/* can't compare incompatible or non-integers integers */ linux_exit(-1);
 	}
