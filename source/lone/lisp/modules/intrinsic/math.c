@@ -104,13 +104,11 @@ static struct lone_lisp_value lone_lisp_primitive_integer_operation(struct lone_
 				break;
 			case LONE_LISP_TYPE_NIL:
 			case LONE_LISP_TYPE_HEAP_VALUE:
-			case LONE_LISP_TYPE_POINTER:
 				/* accumulator is not a number */ linux_exit(-1);
 			}
 			break;
 		case LONE_LISP_TYPE_NIL:
 		case LONE_LISP_TYPE_HEAP_VALUE:
-		case LONE_LISP_TYPE_POINTER:
 			/* argument is not a number */ linux_exit(-1);
 		}
 
@@ -167,7 +165,6 @@ LONE_LISP_PRIMITIVE(math_divide)
 			return lone_lisp_integer_create(lone_lisp_value_to_integer(dividend) / lone_lisp_value_to_integer(divisor));
 		}
 	case LONE_LISP_TYPE_NIL:
-	case LONE_LISP_TYPE_POINTER:
 	case LONE_LISP_TYPE_HEAP_VALUE:
 		/* can't divide non-numbers: (/ "not a number") */ linux_exit(-1);
 	}
@@ -207,7 +204,6 @@ LONE_LISP_PRIMITIVE(math_sign)
 		else if (lone_lisp_value_to_integer(value) < 0) { return lone_lisp_minus_one(); }
 		else { return lone_lisp_zero(); }
 	case LONE_LISP_TYPE_NIL:
-	case LONE_LISP_TYPE_POINTER:
 	case LONE_LISP_TYPE_HEAP_VALUE:
 		/* value is not a number */ linux_exit(-1);
 	}

@@ -101,7 +101,6 @@ LONE_LISP_PRIMITIVE(bytes_new)
 		allocation = lone_lisp_value_to_integer(count);
 		break;
 	case LONE_LISP_TYPE_NIL:
-	case LONE_LISP_TYPE_POINTER:
 	case LONE_LISP_TYPE_HEAP_VALUE:
 		/* count not an integer: (new {}) */ linux_exit(-1);
 	}

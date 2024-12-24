@@ -14,7 +14,6 @@ static size_t lone_lisp_hash_value_recursively(struct lone_lisp_value value, uns
 	struct lone_bytes bytes;
 	enum lone_lisp_value_type type;
 	lone_lisp_integer integer;
-	void *pointer;
 
 	type = lone_lisp_value_to_type(value);
 
@@ -29,11 +28,6 @@ static size_t lone_lisp_hash_value_recursively(struct lone_lisp_value value, uns
 		integer = lone_lisp_value_to_integer(value);
 		bytes.pointer = (unsigned char *) &integer;
 		bytes.count = sizeof(integer);
-		break;
-	case LONE_LISP_TYPE_POINTER:
-		pointer = lone_lisp_value_to_pointer(value);
-		bytes.pointer = (unsigned char *) &pointer;
-		bytes.count = sizeof(pointer);
 		break;
 	case LONE_LISP_TYPE_HEAP_VALUE:
 		return lone_lisp_hash_heap_value_recursively(lone_lisp_value_to_heap_value(value), hash);

@@ -10,6 +10,11 @@ struct lone_lisp_value lone_lisp_integer_create(lone_lisp_integer integer)
 	};
 }
 
+struct lone_lisp_value lone_lisp_integer_from_pointer(void *pointer)
+{
+	return lone_lisp_integer_create((intptr_t) pointer);
+}
+
 struct lone_lisp_value lone_lisp_integer_parse(struct lone_lisp *lone, unsigned char *digits, size_t count)
 {
 	size_t i = 0;

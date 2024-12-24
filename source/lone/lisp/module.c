@@ -33,7 +33,6 @@ static struct lone_lisp_value lone_lisp_module_name_to_key(struct lone_lisp *lon
 	switch (lone_lisp_value_to_type(name)) {
 	case LONE_LISP_TYPE_NIL:
 	case LONE_LISP_TYPE_INTEGER:
-	case LONE_LISP_TYPE_POINTER:
 		/* invalid module name component */ linux_exit(-1);
 	case LONE_LISP_TYPE_HEAP_VALUE:
 		break;
@@ -314,7 +313,6 @@ static void lone_lisp_primitive_import_form(struct lone_lisp *lone,
 	case LONE_LISP_TYPE_NIL:
 		/* nothing to import: (import ()) */ linux_exit(-1);
 	case LONE_LISP_TYPE_INTEGER:
-	case LONE_LISP_TYPE_POINTER:
 		/* not a supported import argument type */ linux_exit(-1);
 	case LONE_LISP_TYPE_HEAP_VALUE:
 		break;

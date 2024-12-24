@@ -14,7 +14,6 @@ static void lone_lisp_mark_value(struct lone_lisp_value value)
 	switch (lone_lisp_value_to_type(value)) {
 	case LONE_LISP_TYPE_NIL:
 	case LONE_LISP_TYPE_INTEGER:
-	case LONE_LISP_TYPE_POINTER:
 		/* value types need not be marked */
 		return;
 	case LONE_LISP_TYPE_HEAP_VALUE:

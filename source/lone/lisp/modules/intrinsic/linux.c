@@ -12,7 +12,6 @@
 #include <lone/lisp/value/text.h>
 #include <lone/lisp/value/symbol.h>
 #include <lone/lisp/value/integer.h>
-#include <lone/lisp/value/pointer.h>
 
 #include <lone/linux.h>
 
@@ -69,28 +68,28 @@ static void lone_lisp_auxiliary_value_to_table(struct lone_lisp *lone,
 #ifdef AT_BASE
 	case AT_BASE:
 		key = lone_lisp_intern_c_string(lone, "interpreter-base-address");
-		value = lone_lisp_pointer_create(auxiliary->value.as.pointer);
+		value = lone_lisp_integer_from_pointer(auxiliary->value.as.pointer);
 		break;
 #endif
 
 #ifdef AT_ENTRY
 	case AT_ENTRY:
 		key = lone_lisp_intern_c_string(lone, "entry-point");
-		value = lone_lisp_pointer_create(auxiliary->value.as.pointer);
+		value = lone_lisp_integer_from_pointer(auxiliary->value.as.pointer);
 		break;
 #endif
 
 #ifdef AT_SYSINFO_EHDR
 	case AT_SYSINFO_EHDR:
 		key = lone_lisp_intern_c_string(lone, "vDSO");
-		value = lone_lisp_pointer_create(auxiliary->value.as.pointer);
+		value = lone_lisp_integer_from_pointer(auxiliary->value.as.pointer);
 		break;
 #endif
 
 #ifdef AT_PHDR
 	case AT_PHDR:
 		key = lone_lisp_intern_c_string(lone, "program-header-table-address");
-		value = lone_lisp_pointer_create(auxiliary->value.as.pointer);
+		value = lone_lisp_integer_from_pointer(auxiliary->value.as.pointer);
 		break;
 #endif
 
@@ -329,7 +328,6 @@ static inline long lone_lisp_value_to_linux_system_call_number(struct lone_lisp 
 	case LONE_LISP_TYPE_INTEGER:
 		return lone_lisp_value_to_integer(value);
 	case LONE_LISP_TYPE_NIL:
-	case LONE_LISP_TYPE_POINTER:
 		linux_exit(-1);
 	case LONE_LISP_TYPE_HEAP_VALUE:
 		break;
@@ -357,7 +355,6 @@ static inline long lone_lisp_value_to_linux_system_call_number(struct lone_lisp 
 		return lone_lisp_value_to_integer(number);
 	case LONE_LISP_TYPE_NIL:
 	case LONE_LISP_TYPE_HEAP_VALUE:
-	case LONE_LISP_TYPE_POINTER:
 		break;
 	}
 
@@ -369,8 +366,6 @@ static inline long lone_lisp_value_to_linux_system_call_argument(struct lone_lis
 	switch (lone_lisp_value_to_type(value)) {
 	case LONE_LISP_TYPE_NIL:
 		return 0;
-	case LONE_LISP_TYPE_POINTER:
-		return (long) lone_lisp_value_to_pointer(value);
 	case LONE_LISP_TYPE_INTEGER:
 		return (long) lone_lisp_value_to_integer(value);
 	case LONE_LISP_TYPE_HEAP_VALUE:

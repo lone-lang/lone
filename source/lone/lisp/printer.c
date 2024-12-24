@@ -5,7 +5,6 @@
 #include <lone/lisp/value/list.h>
 #include <lone/lisp/value/vector.h>
 #include <lone/lisp/value/table.h>
-#include <lone/lisp/value/pointer.h>
 
 #include <lone/memory/allocator.h>
 #include <lone/memory/functions.h>
@@ -41,11 +40,6 @@ static void lone_lisp_print_integer(int fd, long n)
 	}
 
 	linux_write(fd, digit, count);
-}
-
-static void lone_lisp_print_pointer(struct lone_lisp *lone, struct lone_lisp_value pointer, int fd)
-{
-	lone_lisp_print_integer(fd, (intptr_t) lone_lisp_value_to_pointer(pointer));
 }
 
 static void lone_lisp_print_bytes(struct lone_lisp *lone, struct lone_lisp_value bytes, int fd)
@@ -175,9 +169,6 @@ void lone_lisp_print(struct lone_lisp *lone, struct lone_lisp_value value, int f
 		return;
 	case LONE_LISP_TYPE_INTEGER:
 		lone_lisp_print_integer(fd, lone_lisp_value_to_integer(value));
-		return;
-	case LONE_LISP_TYPE_POINTER:
-		lone_lisp_print_pointer(lone, value, fd);
 		return;
 	case LONE_LISP_TYPE_HEAP_VALUE:
 		break;

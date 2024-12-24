@@ -584,7 +584,6 @@ static struct lone_lisp_value lone_lisp_parse(struct lone_lisp *lone,
 	switch (lone_lisp_value_to_type(token)) {
 	case LONE_LISP_TYPE_NIL:
 	case LONE_LISP_TYPE_INTEGER:
-	case LONE_LISP_TYPE_POINTER:
 		return token;
 	case LONE_LISP_TYPE_HEAP_VALUE:
 		break;
