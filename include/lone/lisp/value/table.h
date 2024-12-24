@@ -27,9 +27,9 @@ size_t lone_lisp_table_count(struct lone_lisp_value table);
 struct lone_lisp_value lone_lisp_table_key_at(struct lone_lisp_value table, lone_size i);
 struct lone_lisp_value lone_lisp_table_value_at(struct lone_lisp_value table, lone_size i);
 
-#define LONE_LISP_TABLE_FOR_EACH(entry, table, i)                               \
-	for ((i) = 0, (entry) = &(table).as.heap_value->as.table.entries[0];    \
-	     (i) < (table).as.heap_value->as.table.count;                       \
-	     ++(i), (entry) = &(table).as.heap_value->as.table.entries[i])
+#define LONE_LISP_TABLE_FOR_EACH(entry, table, i)                                                  \
+	for ((i) = 0, (entry) = &lone_lisp_value_to_heap_value(table)->as.table.entries[0];        \
+	     (i) < lone_lisp_value_to_heap_value(table)->as.table.count;                           \
+	     ++(i), (entry) = &lone_lisp_value_to_heap_value(table)->as.table.entries[i])
 
 #endif /* LONE_VALUE_TABLE_HEADER */
