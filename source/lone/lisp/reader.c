@@ -390,7 +390,7 @@ static bool lone_lisp_reader_is_expected_character_symbol(struct lone_lisp_value
 	unsigned char character;
 
 	if (lone_lisp_is_symbol(value)) {
-		actual = value.as.heap_value;
+		actual = lone_lisp_value_to_heap_value(value);
 
 		if (actual->as.bytes.count != 1) {
 			return false;
@@ -581,7 +581,7 @@ static struct lone_lisp_value lone_lisp_parse(struct lone_lisp *lone,
 	if (reader->status.end_of_input) { return lone_lisp_nil(); }
 
 	/* lexer has already parsed atoms */
-	switch (token.type) {
+	switch (lone_lisp_value_to_type(token)) {
 	case LONE_LISP_TYPE_NIL:
 	case LONE_LISP_TYPE_INTEGER:
 	case LONE_LISP_TYPE_POINTER:
@@ -590,7 +590,7 @@ static struct lone_lisp_value lone_lisp_parse(struct lone_lisp *lone,
 		break;
 	}
 
-	actual = token.as.heap_value;
+	actual = lone_lisp_value_to_heap_value(token);
 
 	/* parser deals with nested structures */
 	switch (actual->type) {
