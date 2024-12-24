@@ -16,7 +16,7 @@ struct lone_lisp_value lone_lisp_boolean_for(struct lone_lisp *lisp, bool value)
 	if (value) {
 		return lisp->constants.truth;
 	} else {
-		return (struct lone_lisp_value) { .type = LONE_LISP_TYPE_NIL };
+		return lone_lisp_nil();
 	}
 }
 
