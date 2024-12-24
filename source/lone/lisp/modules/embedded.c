@@ -23,8 +23,8 @@ static struct lone_bytes slice(struct lone_bytes bytes, struct lone_lisp_value p
 	second = lone_lisp_list_rest(pair);
 	if (!lone_lisp_is_integer(second)) { /* unexpected value type */ linux_exit(-1); }
 
-	start = first.as.integer;
-	size = second.as.integer;
+	start = lone_lisp_value_to_integer(first);
+	size = lone_lisp_value_to_integer(second);
 	end = start + size;
 
 	if (start >= bytes.count || end >= bytes.count) {
@@ -49,7 +49,7 @@ void lone_lisp_modules_embedded_load(struct lone_lisp *lone, lone_elf_native_seg
 
 	symbol = lone_lisp_intern_c_string(lone, "data");
 	data = lone_lisp_table_get(lone, descriptor, symbol);
-	bytes = data.as.heap_value->as.bytes;
+	bytes = lone_lisp_value_to_heap_value(data)->as.bytes;
 
 	symbol = lone_lisp_intern_c_string(lone, "modules");
 	lone->modules.embedded = lone_lisp_table_get(lone, descriptor, symbol);
