@@ -92,13 +92,13 @@ LONE_LISP_PRIMITIVE(bytes_new)
 		/* wrong number of arguments */ linux_exit(-1);
 	}
 
-	switch (count.type) {
+	switch (lone_lisp_value_to_type(count)) {
 	case LONE_LISP_TYPE_INTEGER:
-		if (count.as.integer <= 0) {
+		if (lone_lisp_value_to_integer(count) <= 0) {
 			/* zero or negative allocation, likely a mistake: (new 0), (new -64) */ linux_exit(-1);
 		}
 
-		allocation = count.as.integer;
+		allocation = lone_lisp_value_to_integer(count);
 		break;
 	case LONE_LISP_TYPE_NIL:
 	case LONE_LISP_TYPE_POINTER:
@@ -121,7 +121,7 @@ LONE_LISP_PRIMITIVE(bytes_is_zero)
 		/* expected a bytes object: (zero? 0), (zero? "text") */ linux_exit(-1);
 	}
 
-	return lone_lisp_boolean_for(lone, lone_bytes_is_zero(bytes.as.heap_value->as.bytes));
+	return lone_lisp_boolean_for(lone, lone_bytes_is_zero(lone_lisp_value_to_heap_value(bytes)->as.bytes));
 }
 
 
@@ -161,7 +161,8 @@ LONE_LISP_PRIMITIVE(bytes_read_##sign##bits##endian) \
 \
 	lone_lisp_bytes_check_read_arguments(bytes, offset); \
 \
-	integer = lone_bytes_read_##sign##bits##endian(bytes.as.heap_value->as.bytes, offset.as.integer); \
+	integer = lone_bytes_read_##sign##bits##endian(lone_lisp_value_to_heap_value(bytes)->as.bytes, \
+			lone_lisp_value_to_integer(offset)); \
 \
 	if (integer.present) { \
 		return lone_lisp_integer_create(integer.value); \
@@ -186,11 +187,11 @@ LONE_LISP_PRIMITIVE(bytes_write_##sign##bits##endian) \
 \
 	lone_lisp_bytes_check_write_arguments(bytes, offset, value); \
 \
-	integer = (lone_##sign##bits) value.as.integer; \
+	integer = (lone_##sign##bits) lone_lisp_value_to_integer(value); \
 \
 	success = lone_bytes_write_##sign##bits##endian( \
-		bytes.as.heap_value->as.bytes, \
-		offset.as.integer, \
+		lone_lisp_value_to_heap_value(bytes)->as.bytes, \
+		lone_lisp_value_to_integer(offset), \
 		integer \
 	); \
 \
