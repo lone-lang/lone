@@ -65,10 +65,10 @@ struct lone_bytes lone_lisp_join(struct lone_lisp *lone,
 
 		if (!is_valid(argument)) { linux_exit(-1); }
 
-		total += argument.as.heap_value->as.bytes.count;
+		total += lone_lisp_value_to_heap_value(argument)->as.bytes.count;
 
 		if (!lone_lisp_is_nil(separator) && !lone_lisp_is_nil(lone_lisp_list_rest(head))) {
-			total += separator.as.heap_value->as.bytes.count;
+			total += lone_lisp_value_to_heap_value(separator)->as.bytes.count;
 		}
 	}
 
@@ -77,15 +77,15 @@ struct lone_bytes lone_lisp_join(struct lone_lisp *lone,
 	for (head = arguments; !lone_lisp_is_nil(head); head = lone_lisp_list_rest(head)) {
 		argument = lone_lisp_list_first(head);
 
-		count = argument.as.heap_value->as.bytes.count;
-		from = argument.as.heap_value->as.bytes.pointer;
+		count = lone_lisp_value_to_heap_value(argument)->as.bytes.count;
+		from = lone_lisp_value_to_heap_value(argument)->as.bytes.pointer;
 		to = joined + position;
 		lone_memory_move(from, to, count);
 		position += count;
 
 		if (!lone_lisp_is_nil(separator) && !lone_lisp_is_nil(lone_lisp_list_rest(head))) {
-			count = separator.as.heap_value->as.bytes.count;
-			from = separator.as.heap_value->as.bytes.pointer;
+			count = lone_lisp_value_to_heap_value(separator)->as.bytes.count;
+			from = lone_lisp_value_to_heap_value(separator)->as.bytes.pointer;
 			to = joined + position;
 			lone_memory_move(from, to, count);
 			position += count;
