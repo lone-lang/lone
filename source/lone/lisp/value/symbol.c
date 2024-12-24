@@ -10,7 +10,7 @@ static struct lone_lisp_value lone_lisp_symbol_transfer(struct lone_lisp *lone,
 		unsigned char *text, size_t length, bool should_deallocate)
 {
 	struct lone_lisp_value value = lone_lisp_bytes_transfer(lone, text, length, should_deallocate);
-	value.as.heap_value->type = LONE_LISP_TYPE_SYMBOL;
+	lone_lisp_value_to_heap_value(value)->type = LONE_LISP_TYPE_SYMBOL;
 	return value;
 }
 
@@ -24,7 +24,7 @@ static struct lone_lisp_value lone_lisp_symbol_copy(struct lone_lisp *lone,
 		unsigned char *text, size_t length)
 {
 	struct lone_lisp_value value = lone_lisp_bytes_copy(lone, text, length);
-	value.as.heap_value->type = LONE_LISP_TYPE_SYMBOL;
+	lone_lisp_value_to_heap_value(value)->type = LONE_LISP_TYPE_SYMBOL;
 	return value;
 }
 
@@ -63,5 +63,5 @@ struct lone_lisp_value lone_lisp_intern_c_string(struct lone_lisp *lone, char *c
 
 struct lone_lisp_value lone_lisp_intern_text(struct lone_lisp *lone, struct lone_lisp_value text)
 {
-	return lone_lisp_intern_bytes(lone, text.as.heap_value->as.bytes, true);
+	return lone_lisp_intern_bytes(lone, lone_lisp_value_to_heap_value(text)->as.bytes, true);
 }
