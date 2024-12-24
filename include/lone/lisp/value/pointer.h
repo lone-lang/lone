@@ -11,14 +11,6 @@
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
 
-struct lone_lisp_value lone_lisp_pointer_create(void *pointer, enum lone_lisp_pointer_type type);
-
-/* ╭────────────────────────────────────────────────────────────────────────╮
-   │                                                                        │
-   │    Pointer dereferencing functions.                                    │
-   │                                                                        │
-   ╰────────────────────────────────────────────────────────────────────────╯ */
-
-struct lone_lisp_value lone_lisp_pointer_dereference(struct lone_lisp_value pointer);
+struct lone_lisp_value lone_lisp_pointer_create(void *pointer);
 
 #endif /* LONE_LISP_VALUE_POINTER_HEADER */

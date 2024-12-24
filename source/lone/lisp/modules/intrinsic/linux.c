@@ -69,28 +69,28 @@ static void lone_lisp_auxiliary_value_to_table(struct lone_lisp *lone,
 #ifdef AT_BASE
 	case AT_BASE:
 		key = lone_lisp_intern_c_string(lone, "interpreter-base-address");
-		value = lone_lisp_pointer_create(auxiliary->value.as.pointer, LONE_TO_UNKNOWN);
+		value = lone_lisp_pointer_create(auxiliary->value.as.pointer);
 		break;
 #endif
 
 #ifdef AT_ENTRY
 	case AT_ENTRY:
 		key = lone_lisp_intern_c_string(lone, "entry-point");
-		value = lone_lisp_pointer_create(auxiliary->value.as.pointer, LONE_TO_UNKNOWN);
+		value = lone_lisp_pointer_create(auxiliary->value.as.pointer);
 		break;
 #endif
 
 #ifdef AT_SYSINFO_EHDR
 	case AT_SYSINFO_EHDR:
 		key = lone_lisp_intern_c_string(lone, "vDSO");
-		value = lone_lisp_pointer_create(auxiliary->value.as.pointer, LONE_TO_UNKNOWN);
+		value = lone_lisp_pointer_create(auxiliary->value.as.pointer);
 		break;
 #endif
 
 #ifdef AT_PHDR
 	case AT_PHDR:
 		key = lone_lisp_intern_c_string(lone, "program-header-table-address");
-		value = lone_lisp_pointer_create(auxiliary->value.as.pointer, LONE_TO_UNKNOWN);
+		value = lone_lisp_pointer_create(auxiliary->value.as.pointer);
 		break;
 #endif
 

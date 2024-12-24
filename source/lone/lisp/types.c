@@ -37,7 +37,7 @@ lone_lisp_integer lone_lisp_value_to_integer(struct lone_lisp_value value)
 
 void *lone_lisp_value_to_pointer(struct lone_lisp_value value)
 {
-	return value.as.pointer.to_void;
+	return value.as.pointer;
 }
 
 bool lone_lisp_has_same_type(struct lone_lisp_value x, struct lone_lisp_value y)

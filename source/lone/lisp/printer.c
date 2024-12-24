@@ -45,11 +45,7 @@ static void lone_lisp_print_integer(int fd, long n)
 
 static void lone_lisp_print_pointer(struct lone_lisp *lone, struct lone_lisp_value pointer, int fd)
 {
-	if (pointer.pointer_type == LONE_TO_UNKNOWN) {
-		lone_lisp_print_integer(fd, (intptr_t) lone_lisp_value_to_pointer(pointer));
-	} else {
-		lone_lisp_print(lone, lone_lisp_pointer_dereference(pointer), fd);
-	}
+	lone_lisp_print_integer(fd, (intptr_t) lone_lisp_value_to_pointer(pointer));
 }
 
 static void lone_lisp_print_bytes(struct lone_lisp *lone, struct lone_lisp_value bytes, int fd)

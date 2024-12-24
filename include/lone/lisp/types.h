@@ -64,59 +64,15 @@ enum lone_lisp_heap_value_type {
 	LONE_LISP_TYPE_BYTES,
 };
 
-enum lone_lisp_pointer_type {
-	LONE_TO_UNKNOWN,
-
-	LONE_TO_U8,  LONE_TO_S8,
-	LONE_TO_U16, LONE_TO_S16,
-	LONE_TO_U32, LONE_TO_S32,
-	LONE_TO_U64, LONE_TO_S64,
-};
-
-union lone_lisp_pointer {
-	void *to_void;
-	char *to_char;
-
-	float  *to_float;
-	double *to_double;
-
-	signed char        *to_signed_char;
-	signed short       *to_signed_short;
-	signed int         *to_signed_int;
-	signed long        *to_signed_long;
-	signed long long   *to_signed_long_long;
-
-	unsigned char      *to_unsigned_char;
-	unsigned short     *to_unsigned_short;
-	unsigned int       *to_unsigned_int;
-	unsigned long      *to_unsigned_long;
-	unsigned long long *to_unsigned_long_long;
-
-	lone_s8  *to_s8;
-	lone_s16 *to_s16;
-	lone_s32 *to_s32;
-	lone_s64 *to_s64;
-
-	lone_u8  *to_u8;
-	lone_u16 *to_u16;
-	lone_u32 *to_u32;
-	lone_u64 *to_u64;
-
-	lone_lisp_integer *to_integer;
-};
-
 struct lone_lisp_heap_value;
 struct lone_lisp_value {
 	union {
 		struct lone_lisp_heap_value *heap_value;
-		union lone_lisp_pointer pointer;
 		lone_lisp_integer integer;
+		void *pointer;
 	} as;
 
-	struct {
-		enum lone_lisp_value_type type;
-		enum lone_lisp_pointer_type pointer_type;
-	};
+	enum lone_lisp_value_type type;
 };
 
 struct lone_lisp_module {
