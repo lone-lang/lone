@@ -27,12 +27,12 @@ struct lone_lisp_value lone_lisp_table_create(struct lone_lisp *lone,
 
 size_t lone_lisp_table_count(struct lone_lisp_value table)
 {
-	return table.as.heap_value->as.table.count;
+	return lone_lisp_value_to_heap_value(table)->as.table.count;
 }
 
 static double lone_lisp_table_load_factor(struct lone_lisp_value table, unsigned char added)
 {
-	struct lone_lisp_table *actual = &table.as.heap_value->as.table;
+	struct lone_lisp_table *actual = &lone_lisp_value_to_heap_value(table)->as.table;
 
 	double count = (double) (actual->count + added);
 	double capacity = (double) actual->capacity;
@@ -86,7 +86,7 @@ static void lone_lisp_table_resize(struct lone_lisp *lone, struct lone_lisp_valu
 	size_t old_capacity;
 	size_t i;
 
-	actual = &table.as.heap_value->as.table;
+	actual = &lone_lisp_value_to_heap_value(table)->as.table;
 
 	old_capacity = actual->capacity;
 	old_entries  = actual->entries;
@@ -122,7 +122,7 @@ void lone_lisp_table_set(struct lone_lisp *lone, struct lone_lisp_value table,
 	struct lone_lisp_table *actual;
 	bool is_new_table_entry;
 
-	actual = &table.as.heap_value->as.table;
+	actual = &lone_lisp_value_to_heap_value(table)->as.table;
 
 	if (lone_lisp_table_load_factor(table, 1) > LONE_LISP_TABLE_LOAD_FACTOR) {
 		lone_lisp_table_resize(lone, table, actual->capacity * LONE_LISP_TABLE_GROWTH_FACTOR);
@@ -151,7 +151,7 @@ struct lone_lisp_value lone_lisp_table_get(struct lone_lisp *lone,
 	struct lone_lisp_table_entry *entries;
 	size_t capacity, i;
 
-	actual = &table.as.heap_value->as.table;
+	actual = &lone_lisp_value_to_heap_value(table)->as.table;
 	indexes = actual->indexes;
 	entries = actual->entries;
 	capacity = actual->capacity;
@@ -176,7 +176,7 @@ void lone_lisp_table_delete(struct lone_lisp *lone,
 	size_t capacity, count;
 	size_t i, j, k, l;
 
-	actual = &table.as.heap_value->as.table;
+	actual = &lone_lisp_value_to_heap_value(table)->as.table;
 	indexes = actual->indexes;
 	entries = actual->entries;
 	capacity = actual->capacity;
@@ -223,10 +223,10 @@ void lone_lisp_table_delete(struct lone_lisp *lone,
 
 struct lone_lisp_value lone_lisp_table_key_at(struct lone_lisp_value table, lone_size i)
 {
-	return table.as.heap_value->as.table.entries[i].key;
+	return lone_lisp_value_to_heap_value(table)->as.table.entries[i].key;
 }
 
 struct lone_lisp_value lone_lisp_table_value_at(struct lone_lisp_value table, lone_size i)
 {
-	return table.as.heap_value->as.table.entries[i].value;
+	return lone_lisp_value_to_heap_value(table)->as.table.entries[i].value;
 }
