@@ -72,19 +72,31 @@ static struct lone_lisp_value lone_lisp_primitive_integer_operation(struct lone_
 	do {
 		argument = lone_lisp_list_first(arguments);
 
-		switch (argument.type) {
+		switch (lone_lisp_value_to_type(argument)) {
 		case LONE_LISP_TYPE_INTEGER:
-			switch (accumulator.type) {
+			switch (lone_lisp_value_to_type(accumulator)) {
 			case LONE_LISP_TYPE_INTEGER:
 				switch (operation) {
 				case '+':
-					accumulator.as.integer += argument.as.integer;
+					accumulator = lone_lisp_integer_create(
+						lone_lisp_value_to_integer(accumulator)
+						+
+						lone_lisp_value_to_integer(argument)
+					);
 					break;
 				case '-':
-					accumulator.as.integer -= argument.as.integer;
+					accumulator = lone_lisp_integer_create(
+						lone_lisp_value_to_integer(accumulator)
+						-
+						lone_lisp_value_to_integer(argument)
+					);
 					break;
 				case '*':
-					accumulator.as.integer *= argument.as.integer;
+					accumulator = lone_lisp_integer_create(
+						lone_lisp_value_to_integer(accumulator)
+						*
+						lone_lisp_value_to_integer(argument)
+					);
 					break;
 				default:
 					/* invalid primitive integer operation */ linux_exit(-1);
@@ -144,15 +156,15 @@ LONE_LISP_PRIMITIVE(math_divide)
 	dividend = lone_lisp_list_first(arguments);
 	arguments = lone_lisp_list_rest(arguments);
 
-	switch (dividend.type) {
+	switch (lone_lisp_value_to_type(dividend)) {
 	case LONE_LISP_TYPE_INTEGER:
 		if (lone_lisp_is_nil(arguments)) {
 			/* not given a divisor, return 1/x instead: (/ 2) = 1/2 */
-			return lone_lisp_integer_create(1 / dividend.as.integer);
+			return lone_lisp_integer_create(1 / lone_lisp_value_to_integer(dividend));
 		} else {
 			/* (/ x a b c ...) = x / (a * b * c * ...) */
 			divisor = lone_lisp_primitive_integer_operation(lone, arguments, '*', lone_lisp_one());
-			return lone_lisp_integer_create(dividend.as.integer / divisor.as.integer);
+			return lone_lisp_integer_create(lone_lisp_value_to_integer(dividend) / lone_lisp_value_to_integer(divisor));
 		}
 	case LONE_LISP_TYPE_NIL:
 	case LONE_LISP_TYPE_POINTER:
@@ -189,10 +201,10 @@ LONE_LISP_PRIMITIVE(math_sign)
 		/* wrong number of arguments */ linux_exit(-1);
 	}
 
-	switch (value.type) {
+	switch (lone_lisp_value_to_type(value)) {
 	case LONE_LISP_TYPE_INTEGER:
-		if (value.as.integer > 0) { return lone_lisp_one(); }
-		else if (value.as.integer < 0) { return lone_lisp_minus_one(); }
+		if (lone_lisp_value_to_integer(value) > 0) { return lone_lisp_one(); }
+		else if (lone_lisp_value_to_integer(value) < 0) { return lone_lisp_minus_one(); }
 		else { return lone_lisp_zero(); }
 	case LONE_LISP_TYPE_NIL:
 	case LONE_LISP_TYPE_POINTER:
@@ -204,20 +216,20 @@ LONE_LISP_PRIMITIVE(math_sign)
 LONE_LISP_PRIMITIVE(math_is_zero)
 {
 	struct lone_lisp_value value = lone_lisp_primitive_math_sign(lone, module, environment, arguments, closure);
-	if (value.as.integer == 0) { return value; }
+	if (lone_lisp_value_to_integer(value) == 0) { return value; }
 	else { return lone_lisp_nil(); }
 }
 
 LONE_LISP_PRIMITIVE(math_is_positive)
 {
 	struct lone_lisp_value value = lone_lisp_primitive_math_sign(lone, module, environment, arguments, closure);
-	if (value.as.integer > 0) { return value; }
+	if (lone_lisp_value_to_integer(value) > 0) { return value; }
 	else { return lone_lisp_nil(); }
 }
 
 LONE_LISP_PRIMITIVE(math_is_negative)
 {
 	struct lone_lisp_value value = lone_lisp_primitive_math_sign(lone, module, environment, arguments, closure);
-	if (value.as.integer < 0) { return value; }
+	if (lone_lisp_value_to_integer(value) < 0) { return value; }
 	else { return lone_lisp_nil(); }
 }
