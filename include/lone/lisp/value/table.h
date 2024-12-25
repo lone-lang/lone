@@ -28,8 +28,8 @@ struct lone_lisp_value lone_lisp_table_key_at(struct lone_lisp_value table, lone
 struct lone_lisp_value lone_lisp_table_value_at(struct lone_lisp_value table, lone_size i);
 
 #define LONE_LISP_TABLE_FOR_EACH(entry, table, i)                                                  \
-	for ((i) = 0, (entry) = &lone_lisp_value_to_heap_value(table)->as.table.entries[0];        \
-	     (i) < lone_lisp_value_to_heap_value(table)->as.table.count;                           \
-	     ++(i), (entry) = &lone_lisp_value_to_heap_value(table)->as.table.entries[i])
+	for ((i) = 0, (entry) = &lone_lisp_heap_value_of(table)->as.table.entries[0];              \
+	     (i) < lone_lisp_heap_value_of(table)->as.table.count;                                 \
+	     ++(i), (entry) = &lone_lisp_heap_value_of(table)->as.table.entries[i])
 
 #endif /* LONE_VALUE_TABLE_HEADER */

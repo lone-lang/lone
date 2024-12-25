@@ -11,7 +11,7 @@ struct lone_lisp_value lone_lisp_text_transfer(struct lone_lisp *lone,
 		unsigned char *text, size_t length, bool should_deallocate)
 {
 	struct lone_lisp_value value = lone_lisp_bytes_transfer(lone, text, length, should_deallocate);
-	lone_lisp_value_to_heap_value(value)->type = LONE_LISP_TYPE_TEXT;
+	lone_lisp_heap_value_of(value)->type = LONE_LISP_TYPE_TEXT;
 	return value;
 }
 
@@ -24,7 +24,7 @@ struct lone_lisp_value lone_lisp_text_transfer_bytes(struct lone_lisp *lone,
 struct lone_lisp_value lone_lisp_text_copy(struct lone_lisp *lone, unsigned char *text, size_t length)
 {
 	struct lone_lisp_value value = lone_lisp_bytes_copy(lone, text, length);
-	lone_lisp_value_to_heap_value(value)->type = LONE_LISP_TYPE_TEXT;
+	lone_lisp_heap_value_of(value)->type = LONE_LISP_TYPE_TEXT;
 	return value;
 }
 

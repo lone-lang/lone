@@ -48,13 +48,13 @@ static void lone_lisp_print_bytes(struct lone_lisp *lone, struct lone_lisp_value
 	unsigned char *text, *byte, low, high;
 	size_t size, count, i;
 
-	count = lone_lisp_value_to_heap_value(bytes)->as.bytes.count;
+	count = lone_lisp_heap_value_of(bytes)->as.bytes.count;
 
 	if (count == 0) { linux_write(fd, "bytes[]", 7); return; }
 
 	size = 2 + count * 2; /* "0x" + 2 characters per input byte */
 	text = lone_allocate_uninitialized(lone->system, size);
-	byte = lone_lisp_value_to_heap_value(bytes)->as.bytes.pointer;
+	byte = lone_lisp_heap_value_of(bytes)->as.bytes.pointer;
 
 	text[0] = '0';
 	text[1] = 'x';
@@ -119,7 +119,7 @@ static void lone_lisp_print_table(struct lone_lisp *lone, struct lone_lisp_value
 
 	if (count == 0) { linux_write(fd, "{}", 2); return; }
 
-	entries = lone_lisp_value_to_heap_value(table)->as.table.entries;
+	entries = lone_lisp_heap_value_of(table)->as.table.entries;
 
 	linux_write(fd, "{ ", 2);
 
@@ -137,8 +137,8 @@ static void lone_lisp_print_function(struct lone_lisp *lone, struct lone_lisp_va
 {
 	struct lone_lisp_value arguments, code;
 
-	arguments = lone_lisp_value_to_heap_value(function)->as.function.arguments;
-	code = lone_lisp_value_to_heap_value(function)->as.function.code;
+	arguments = lone_lisp_heap_value_of(function)->as.function.arguments;
+	code = lone_lisp_heap_value_of(function)->as.function.code;
 
 	linux_write(fd, "(𝛌 ", 6);
 	lone_lisp_print(lone, arguments, fd);
@@ -163,25 +163,25 @@ static void lone_lisp_print_hash_notation(struct lone_lisp *lone, char *descript
 
 void lone_lisp_print(struct lone_lisp *lone, struct lone_lisp_value value, int fd)
 {
-	switch (lone_lisp_value_to_type(value)) {
+	switch (lone_lisp_type_of(value)) {
 	case LONE_LISP_TYPE_NIL:
 		linux_write(fd, "nil", 3);
 		return;
 	case LONE_LISP_TYPE_INTEGER:
-		lone_lisp_print_integer(fd, lone_lisp_value_to_integer(value));
+		lone_lisp_print_integer(fd, lone_lisp_integer_of(value));
 		return;
 	case LONE_LISP_TYPE_HEAP_VALUE:
 		break;
 	}
 
-	switch (lone_lisp_value_to_heap_value(value)->type) {
+	switch (lone_lisp_heap_value_of(value)->type) {
 	case LONE_LISP_TYPE_MODULE:
 		lone_lisp_print_hash_notation(lone, "module",
-				lone_lisp_value_to_heap_value(value)->as.module.name, fd);
+				lone_lisp_heap_value_of(value)->as.module.name, fd);
 		break;
 	case LONE_LISP_TYPE_PRIMITIVE:
 		lone_lisp_print_hash_notation(lone, "primitive",
-				lone_lisp_value_to_heap_value(value)->as.primitive.name, fd);
+				lone_lisp_heap_value_of(value)->as.primitive.name, fd);
 		break;
 	case LONE_LISP_TYPE_FUNCTION:
 		lone_lisp_print_function(lone, value, fd);
@@ -202,14 +202,14 @@ void lone_lisp_print(struct lone_lisp *lone, struct lone_lisp_value value, int f
 		break;
 	case LONE_LISP_TYPE_SYMBOL:
 		linux_write(fd,
-				lone_lisp_value_to_heap_value(value)->as.bytes.pointer,
-				lone_lisp_value_to_heap_value(value)->as.bytes.count);
+				lone_lisp_heap_value_of(value)->as.bytes.pointer,
+				lone_lisp_heap_value_of(value)->as.bytes.count);
 		break;
 	case LONE_LISP_TYPE_TEXT:
 		linux_write(fd, "\"", 1);
 		linux_write(fd,
-				lone_lisp_value_to_heap_value(value)->as.bytes.pointer,
-				lone_lisp_value_to_heap_value(value)->as.bytes.count);
+				lone_lisp_heap_value_of(value)->as.bytes.pointer,
+				lone_lisp_heap_value_of(value)->as.bytes.count);
 		linux_write(fd, "\"", 1);
 		break;
 	}
