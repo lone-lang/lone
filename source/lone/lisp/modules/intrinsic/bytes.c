@@ -101,6 +101,8 @@ LONE_LISP_PRIMITIVE(bytes_new)
 		allocation = lone_lisp_integer_of(count);
 		break;
 	case LONE_LISP_TYPE_NIL:
+	case LONE_LISP_TYPE_FALSE:
+	case LONE_LISP_TYPE_TRUE:
 	case LONE_LISP_TYPE_HEAP_VALUE:
 		/* count not an integer: (new {}) */ linux_exit(-1);
 	}
@@ -120,7 +122,7 @@ LONE_LISP_PRIMITIVE(bytes_is_zero)
 		/* expected a bytes object: (zero? 0), (zero? "text") */ linux_exit(-1);
 	}
 
-	return lone_lisp_boolean_for(lone, lone_bytes_is_zero(lone_lisp_heap_value_of(bytes)->as.bytes));
+	return lone_lisp_boolean_for(lone_bytes_is_zero(lone_lisp_heap_value_of(bytes)->as.bytes));
 }
 
 

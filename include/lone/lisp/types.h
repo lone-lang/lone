@@ -61,6 +61,8 @@ enum lone_lisp_value_type {
 	LONE_LISP_TYPE_INTEGER    = (0 << 2) | (0 << 1) | (1 << 0), /* ??1 */
 	LONE_LISP_TYPE_HEAP_VALUE = (0 << 2) | (0 << 1) | (0 << 0), /* 000 */
 	LONE_LISP_TYPE_NIL        = (0 << 2) | (1 << 1) | (0 << 1), /* 010 */
+	LONE_LISP_TYPE_FALSE      = (1 << 2) | (0 << 1) | (0 << 1), /* 100 */
+	LONE_LISP_TYPE_TRUE       = (1 << 2) | (1 << 1) | (0 << 1), /* 110 */
 };
 
 struct lone_lisp_value {
@@ -184,7 +186,9 @@ typedef bool (*lone_lisp_comparator_function)(struct lone_lisp_value x, struct l
    ╰────────────────────────────────────────────────────────────────────────╯ */
 
 struct lone_lisp_value lone_lisp_nil(void);
-struct lone_lisp_value lone_lisp_boolean_for(struct lone_lisp *lisp, bool value);
+struct lone_lisp_value lone_lisp_false(void);
+struct lone_lisp_value lone_lisp_true(void);
+struct lone_lisp_value lone_lisp_boolean_for(bool value);
 
 /* ╭────────────────────────────────────────────────────────────────────────╮
    │                                                                        │
@@ -215,6 +219,11 @@ bool lone_lisp_is_text(struct lone_lisp_value value);
 bool lone_lisp_is_symbol(struct lone_lisp_value value);
 
 bool lone_lisp_is_nil(struct lone_lisp_value value);
+bool lone_lisp_is_false(struct lone_lisp_value value);
+bool lone_lisp_is_true(struct lone_lisp_value value);
+bool lone_lisp_is_falsy(struct lone_lisp_value value);
+bool lone_lisp_is_truthy(struct lone_lisp_value value);
+
 bool lone_lisp_is_integer(struct lone_lisp_value value);
 
 /* ╭────────────────────────────────────────────────────────────────────────╮
@@ -246,9 +255,6 @@ struct lone_lisp {
 	void *native_stack;
 	struct lone_lisp_heap *heaps;
 	struct lone_lisp_value symbol_table;
-	struct {
-		struct lone_lisp_value truth;
-	} constants;
 	struct {
 		struct lone_lisp_value loaded;
 		struct lone_lisp_value embedded;

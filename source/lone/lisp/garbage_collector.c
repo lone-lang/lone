@@ -13,6 +13,8 @@ static void lone_lisp_mark_value(struct lone_lisp_value value)
 {
 	switch (lone_lisp_type_of(value)) {
 	case LONE_LISP_TYPE_NIL:
+	case LONE_LISP_TYPE_FALSE:
+	case LONE_LISP_TYPE_TRUE:
 	case LONE_LISP_TYPE_INTEGER:
 		/* value types need not be marked */
 		return;
@@ -71,7 +73,6 @@ static void lone_lisp_mark_heap_value(struct lone_lisp_heap_value *value)
 static void lone_lisp_mark_known_roots(struct lone_lisp *lone)
 {
 	lone_lisp_mark_value(lone->symbol_table);
-	lone_lisp_mark_value(lone->constants.truth);
 	lone_lisp_mark_value(lone->modules.loaded);
 	lone_lisp_mark_value(lone->modules.embedded);
 	lone_lisp_mark_value(lone->modules.null);

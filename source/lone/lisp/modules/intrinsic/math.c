@@ -103,11 +103,15 @@ static struct lone_lisp_value lone_lisp_primitive_integer_operation(struct lone_
 				}
 				break;
 			case LONE_LISP_TYPE_NIL:
+			case LONE_LISP_TYPE_FALSE:
+			case LONE_LISP_TYPE_TRUE:
 			case LONE_LISP_TYPE_HEAP_VALUE:
 				/* accumulator is not a number */ linux_exit(-1);
 			}
 			break;
 		case LONE_LISP_TYPE_NIL:
+		case LONE_LISP_TYPE_FALSE:
+		case LONE_LISP_TYPE_TRUE:
 		case LONE_LISP_TYPE_HEAP_VALUE:
 			/* argument is not a number */ linux_exit(-1);
 		}
@@ -165,6 +169,8 @@ LONE_LISP_PRIMITIVE(math_divide)
 			return lone_lisp_integer_create(lone_lisp_integer_of(dividend) / lone_lisp_integer_of(divisor));
 		}
 	case LONE_LISP_TYPE_NIL:
+	case LONE_LISP_TYPE_FALSE:
+	case LONE_LISP_TYPE_TRUE:
 	case LONE_LISP_TYPE_HEAP_VALUE:
 		/* can't divide non-numbers: (/ "not a number") */ linux_exit(-1);
 	}
@@ -204,6 +210,8 @@ LONE_LISP_PRIMITIVE(math_sign)
 		else if (lone_lisp_integer_of(value) < 0) { return lone_lisp_minus_one(); }
 		else { return lone_lisp_zero(); }
 	case LONE_LISP_TYPE_NIL:
+	case LONE_LISP_TYPE_FALSE:
+	case LONE_LISP_TYPE_TRUE:
 	case LONE_LISP_TYPE_HEAP_VALUE:
 		/* value is not a number */ linux_exit(-1);
 	}
@@ -212,20 +220,17 @@ LONE_LISP_PRIMITIVE(math_sign)
 LONE_LISP_PRIMITIVE(math_is_zero)
 {
 	struct lone_lisp_value value = lone_lisp_primitive_math_sign(lone, module, environment, arguments, closure);
-	if (lone_lisp_integer_of(value) == 0) { return value; }
-	else { return lone_lisp_nil(); }
+	return lone_lisp_boolean_for(lone_lisp_integer_of(value) == 0);
 }
 
 LONE_LISP_PRIMITIVE(math_is_positive)
 {
 	struct lone_lisp_value value = lone_lisp_primitive_math_sign(lone, module, environment, arguments, closure);
-	if (lone_lisp_integer_of(value) > 0) { return value; }
-	else { return lone_lisp_nil(); }
+	return lone_lisp_boolean_for(lone_lisp_integer_of(value) > 0);
 }
 
 LONE_LISP_PRIMITIVE(math_is_negative)
 {
 	struct lone_lisp_value value = lone_lisp_primitive_math_sign(lone, module, environment, arguments, closure);
-	if (lone_lisp_integer_of(value) < 0) { return value; }
-	else { return lone_lisp_nil(); }
+	return lone_lisp_boolean_for(lone_lisp_integer_of(value) < 0);
 }

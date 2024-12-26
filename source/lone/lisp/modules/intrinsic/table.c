@@ -9,7 +9,6 @@
 #include <lone/lisp/value/integer.h>
 
 #include <lone/lisp/module.h>
-#include <lone/lisp/constants.h>
 #include <lone/lisp/evaluator.h>
 
 #include <lone/linux.h>

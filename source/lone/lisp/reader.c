@@ -583,6 +583,8 @@ static struct lone_lisp_value lone_lisp_parse(struct lone_lisp *lone,
 	/* lexer has already parsed atoms */
 	switch (lone_lisp_type_of(token)) {
 	case LONE_LISP_TYPE_NIL:
+	case LONE_LISP_TYPE_FALSE:
+	case LONE_LISP_TYPE_TRUE:
 	case LONE_LISP_TYPE_INTEGER:
 		return token;
 	case LONE_LISP_TYPE_HEAP_VALUE:

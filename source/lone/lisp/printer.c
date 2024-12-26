@@ -167,6 +167,12 @@ void lone_lisp_print(struct lone_lisp *lone, struct lone_lisp_value value, int f
 	case LONE_LISP_TYPE_NIL:
 		linux_write(fd, "nil", 3);
 		return;
+	case LONE_LISP_TYPE_FALSE:
+		linux_write(fd, "false", 5);
+		return;
+	case LONE_LISP_TYPE_TRUE:
+		linux_write(fd, "true", 4);
+		return;
 	case LONE_LISP_TYPE_INTEGER:
 		lone_lisp_print_integer(fd, lone_lisp_integer_of(value));
 		return;
