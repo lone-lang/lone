@@ -26,7 +26,6 @@ void lone_lisp_initialize(struct lone_lisp *lone, struct lone_system *system, vo
 	 */
 
 	lone->symbol_table = lone_lisp_table_create(lone, 256, lone_lisp_nil());
-	lone->constants.truth = lone_lisp_intern_c_string(lone, "true");
 
 	lone->modules.loaded = lone_lisp_table_create(lone, 32, lone_lisp_nil());
 	lone->modules.embedded = lone_lisp_nil();

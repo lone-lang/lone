@@ -5,7 +5,6 @@
 #include <lone/lisp/module.h>
 #include <lone/lisp/evaluator.h>
 #include <lone/lisp/printer.h>
-#include <lone/lisp/constants.h>
 #include <lone/lisp/utilities.h>
 
 #include <lone/lisp/value/function.h>
@@ -110,7 +109,7 @@ LONE_LISP_PRIMITIVE(lone_when)
 	test = lone_lisp_list_first(arguments);
 	arguments = lone_lisp_list_rest(arguments);
 
-	if (!lone_lisp_is_nil(lone_lisp_evaluate(lone, module, environment, test))) {
+	if (lone_lisp_is_truthy(lone_lisp_evaluate(lone, module, environment, test))) {
 		return lone_lisp_primitive_lone_begin(lone, module, environment, arguments, closure);
 	}
 
@@ -125,7 +124,7 @@ LONE_LISP_PRIMITIVE(lone_unless)
 	test = lone_lisp_list_first(arguments);
 	arguments = lone_lisp_list_rest(arguments);
 
-	if (lone_lisp_is_nil(lone_lisp_evaluate(lone, module, environment, test))) {
+	if (lone_lisp_is_falsy(lone_lisp_evaluate(lone, module, environment, test))) {
 		return lone_lisp_primitive_lone_begin(lone, module, environment, arguments, closure);
 	}
 
@@ -152,7 +151,7 @@ LONE_LISP_PRIMITIVE(lone_if)
 		if (!lone_lisp_is_nil(arguments)) { /* too many values (if test consequent alternative extra) */ linux_exit(-1); }
 	}
 
-	if (!lone_lisp_is_nil(lone_lisp_evaluate(lone, module, environment, value))) {
+	if (lone_lisp_is_truthy(lone_lisp_evaluate(lone, module, environment, value))) {
 		return lone_lisp_evaluate(lone, module, environment, consequent);
 	} else {
 		return lone_lisp_evaluate(lone, module, environment, alternative);

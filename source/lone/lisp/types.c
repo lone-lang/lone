@@ -11,12 +11,22 @@ struct lone_lisp_value lone_lisp_nil(void)
 	return (struct lone_lisp_value) { .tagged = LONE_LISP_TYPE_NIL };
 }
 
-struct lone_lisp_value lone_lisp_boolean_for(struct lone_lisp *lisp, bool value)
+struct lone_lisp_value lone_lisp_false(void)
+{
+	return (struct lone_lisp_value) { .tagged = LONE_LISP_TYPE_FALSE };
+}
+
+struct lone_lisp_value lone_lisp_true(void)
+{
+	return (struct lone_lisp_value) { .tagged = LONE_LISP_TYPE_TRUE };
+}
+
+struct lone_lisp_value lone_lisp_boolean_for(bool value)
 {
 	if (value) {
-		return lisp->constants.truth;
+		return lone_lisp_true();
 	} else {
-		return lone_lisp_nil();
+		return lone_lisp_false();
 	}
 }
 
@@ -74,6 +84,36 @@ bool lone_lisp_is_heap_value(struct lone_lisp_value value)
 bool lone_lisp_is_heap_value_of_type(struct lone_lisp_value value, enum lone_lisp_heap_value_type heap_value_type)
 {
 	return lone_lisp_is_heap_value(value) && lone_lisp_heap_value_of(value)->type == heap_value_type;
+}
+
+bool lone_lisp_is_integer(struct lone_lisp_value value)
+{
+	return lone_lisp_is_register_value_of_type(value, LONE_LISP_TYPE_INTEGER);
+}
+
+bool lone_lisp_is_nil(struct lone_lisp_value value)
+{
+	return lone_lisp_is_register_value_of_type(value, LONE_LISP_TYPE_NIL);
+}
+
+bool lone_lisp_is_false(struct lone_lisp_value value)
+{
+	return lone_lisp_is_register_value_of_type(value, LONE_LISP_TYPE_FALSE);
+}
+
+bool lone_lisp_is_true(struct lone_lisp_value value)
+{
+	return lone_lisp_is_register_value_of_type(value, LONE_LISP_TYPE_TRUE);
+}
+
+bool lone_lisp_is_falsy(struct lone_lisp_value value)
+{
+	return lone_lisp_is_nil(value) || lone_lisp_is_false(value);
+}
+
+bool lone_lisp_is_truthy(struct lone_lisp_value value)
+{
+	return !lone_lisp_is_falsy(value);
 }
 
 bool lone_lisp_is_module(struct lone_lisp_value value)
@@ -136,21 +176,13 @@ bool lone_lisp_is_symbol(struct lone_lisp_value value)
 	return lone_lisp_is_heap_value_of_type(value, LONE_LISP_TYPE_SYMBOL);
 }
 
-bool lone_lisp_is_nil(struct lone_lisp_value value)
-{
-	return lone_lisp_is_register_value_of_type(value, LONE_LISP_TYPE_NIL);
-}
-
-bool lone_lisp_is_integer(struct lone_lisp_value value)
-{
-	return lone_lisp_is_register_value_of_type(value, LONE_LISP_TYPE_INTEGER);
-}
-
 bool lone_lisp_is_identical(struct lone_lisp_value x, struct lone_lisp_value y)
 {
 	if (lone_lisp_has_same_type(x, y)) {
 		switch (lone_lisp_type_of(x)) {
 		case LONE_LISP_TYPE_NIL:
+		case LONE_LISP_TYPE_FALSE:
+		case LONE_LISP_TYPE_TRUE:
 			return true;
 		case LONE_LISP_TYPE_HEAP_VALUE:
 			return lone_lisp_heap_value_of(x) == lone_lisp_heap_value_of(y);
@@ -168,6 +200,8 @@ bool lone_lisp_is_equivalent(struct lone_lisp_value x, struct lone_lisp_value y)
 
 	switch (lone_lisp_type_of(x)) {
 	case LONE_LISP_TYPE_NIL:
+	case LONE_LISP_TYPE_FALSE:
+	case LONE_LISP_TYPE_TRUE:
 	case LONE_LISP_TYPE_INTEGER:
 		return lone_lisp_is_identical(x, y);
 	case LONE_LISP_TYPE_HEAP_VALUE:
@@ -227,6 +261,8 @@ bool lone_lisp_is_equal(struct lone_lisp_value x, struct lone_lisp_value y)
 
 	switch (lone_lisp_type_of(x)) {
 	case LONE_LISP_TYPE_NIL:
+	case LONE_LISP_TYPE_FALSE:
+	case LONE_LISP_TYPE_TRUE:
 	case LONE_LISP_TYPE_INTEGER:
 		return lone_lisp_is_identical(x, y);
 	case LONE_LISP_TYPE_HEAP_VALUE:

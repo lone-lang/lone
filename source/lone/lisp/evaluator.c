@@ -18,6 +18,8 @@ static struct lone_lisp_value lone_lisp_evaluate_form_index(struct lone_lisp *lo
 
 	switch (lone_lisp_type_of(collection)) {
 	case LONE_LISP_TYPE_NIL:
+	case LONE_LISP_TYPE_FALSE:
+	case LONE_LISP_TYPE_TRUE:
 	case LONE_LISP_TYPE_INTEGER:
 		linux_exit(-1);
 	case LONE_LISP_TYPE_HEAP_VALUE:
@@ -84,6 +86,8 @@ static struct lone_lisp_value lone_lisp_evaluate_form(struct lone_lisp *lone,
 
 	switch (lone_lisp_type_of(first)) {
 	case LONE_LISP_TYPE_NIL:
+	case LONE_LISP_TYPE_FALSE:
+	case LONE_LISP_TYPE_TRUE:
 	case LONE_LISP_TYPE_INTEGER:
 		/* first element not applicable */ linux_exit(-1);
 	case LONE_LISP_TYPE_HEAP_VALUE:
@@ -115,6 +119,8 @@ struct lone_lisp_value lone_lisp_evaluate(struct lone_lisp *lone,
 {
 	switch (lone_lisp_type_of(value)) {
 	case LONE_LISP_TYPE_NIL:
+	case LONE_LISP_TYPE_FALSE:
+	case LONE_LISP_TYPE_TRUE:
 	case LONE_LISP_TYPE_INTEGER:
 		return value;
 	case LONE_LISP_TYPE_HEAP_VALUE:
@@ -183,6 +189,8 @@ static struct lone_lisp_value lone_lisp_apply_function(struct lone_lisp *lone,
 			case LONE_LISP_TYPE_HEAP_VALUE:
 				break;
 			case LONE_LISP_TYPE_NIL:
+			case LONE_LISP_TYPE_FALSE:
+			case LONE_LISP_TYPE_TRUE:
 			case LONE_LISP_TYPE_INTEGER:
 				/* unexpected value */ linux_exit(-1);
 			}

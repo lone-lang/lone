@@ -1,7 +1,6 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later */
 
 #include <lone/lisp/utilities.h>
-#include <lone/lisp/constants.h>
 
 #include <lone/lisp/value/list.h>
 
@@ -17,7 +16,7 @@ struct lone_lisp_value lone_lisp_apply_predicate(struct lone_lisp *lone,
 		/* predicates accept exactly one argument */ linux_exit(-1);
 	}
 
-	return function(lone_lisp_list_first(arguments))? lone_lisp_true(lone) : lone_lisp_nil();
+	return function(lone_lisp_list_first(arguments))? lone_lisp_true() : lone_lisp_false();
 }
 
 struct lone_lisp_value lone_lisp_apply_comparator(struct lone_lisp *lone,
@@ -25,7 +24,7 @@ struct lone_lisp_value lone_lisp_apply_comparator(struct lone_lisp *lone,
 {
 	struct lone_lisp_value current, next;
 
-	if (lone_lisp_is_nil(arguments)) { return lone_lisp_true(lone); }
+	if (lone_lisp_is_nil(arguments)) { return lone_lisp_true(); }
 
 	while (1) {
 		if (!lone_lisp_list_has_rest(arguments)) { break; }
@@ -33,10 +32,10 @@ struct lone_lisp_value lone_lisp_apply_comparator(struct lone_lisp *lone,
 		arguments = lone_lisp_list_rest(arguments);
 		next = lone_lisp_list_first(arguments);
 
-		if (!function(current, next)) { return lone_lisp_nil(); }
+		if (!function(current, next)) { return lone_lisp_false(); }
 	}
 
-	return lone_lisp_true(lone);
+	return lone_lisp_true();
 }
 
 struct lone_bytes lone_lisp_join(struct lone_lisp *lone,

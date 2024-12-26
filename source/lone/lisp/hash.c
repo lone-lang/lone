@@ -23,6 +23,8 @@ static size_t lone_lisp_hash_value_recursively(struct lone_lisp_value value, uns
 
 	switch (type) {
 	case LONE_LISP_TYPE_NIL:
+	case LONE_LISP_TYPE_TRUE:
+	case LONE_LISP_TYPE_FALSE:
 		return hash;
 	case LONE_LISP_TYPE_HEAP_VALUE:
 		return lone_lisp_hash_heap_value_recursively(lone_lisp_heap_value_of(value), hash);

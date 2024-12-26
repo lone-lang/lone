@@ -328,6 +328,8 @@ static inline long lone_lisp_value_to_linux_system_call_number(struct lone_lisp 
 	case LONE_LISP_TYPE_INTEGER:
 		return lone_lisp_integer_of(value);
 	case LONE_LISP_TYPE_NIL:
+	case LONE_LISP_TYPE_FALSE:
+	case LONE_LISP_TYPE_TRUE:
 		linux_exit(-1);
 	case LONE_LISP_TYPE_HEAP_VALUE:
 		break;
@@ -354,6 +356,8 @@ static inline long lone_lisp_value_to_linux_system_call_number(struct lone_lisp 
 	case LONE_LISP_TYPE_INTEGER:
 		return lone_lisp_integer_of(number);
 	case LONE_LISP_TYPE_NIL:
+	case LONE_LISP_TYPE_FALSE:
+	case LONE_LISP_TYPE_TRUE:
 	case LONE_LISP_TYPE_HEAP_VALUE:
 		break;
 	}
