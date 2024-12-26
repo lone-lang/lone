@@ -1,0 +1,4 @@
+(import (lone set print quote) prefixed (vector set))
+(set v [])
+(vector.set v 5 "this comes after 5 nils")
+(print v)
