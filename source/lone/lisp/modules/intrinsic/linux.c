@@ -369,7 +369,10 @@ static inline long lone_lisp_value_to_linux_system_call_argument(struct lone_lis
 {
 	switch (lone_lisp_type_of(value)) {
 	case LONE_LISP_TYPE_NIL:
+	case LONE_LISP_TYPE_FALSE:
 		return 0;
+	case LONE_LISP_TYPE_TRUE:
+		return 1;
 	case LONE_LISP_TYPE_INTEGER:
 		return (long) lone_lisp_integer_of(value);
 	case LONE_LISP_TYPE_HEAP_VALUE:
