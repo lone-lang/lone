@@ -11,7 +11,7 @@ static void lone_lisp_mark_heap_value(struct lone_lisp_heap_value *);
 
 static void lone_lisp_mark_value(struct lone_lisp_value value)
 {
-	switch (lone_lisp_value_to_type(value)) {
+	switch (lone_lisp_type_of(value)) {
 	case LONE_LISP_TYPE_NIL:
 	case LONE_LISP_TYPE_INTEGER:
 		/* value types need not be marked */
@@ -20,7 +20,7 @@ static void lone_lisp_mark_value(struct lone_lisp_value value)
 		break;
 	}
 
-	lone_lisp_mark_heap_value(lone_lisp_value_to_heap_value(value));
+	lone_lisp_mark_heap_value(lone_lisp_heap_value_of(value));
 }
 
 static void lone_lisp_mark_heap_value(struct lone_lisp_heap_value *value)

@@ -45,13 +45,6 @@ struct lone_lisp_reader {
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
 
-enum lone_lisp_value_type {
-	LONE_LISP_TYPE_NIL = 0,
-	LONE_LISP_TYPE_HEAP_VALUE,
-	LONE_LISP_TYPE_INTEGER,
-	LONE_LISP_TYPE_POINTER,
-};
-
 enum lone_lisp_heap_value_type {
 	LONE_LISP_TYPE_MODULE,
 	LONE_LISP_TYPE_FUNCTION,
@@ -64,15 +57,14 @@ enum lone_lisp_heap_value_type {
 	LONE_LISP_TYPE_BYTES,
 };
 
-struct lone_lisp_heap_value;
-struct lone_lisp_value {
-	union {
-		struct lone_lisp_heap_value *heap_value;
-		lone_lisp_integer integer;
-		void *pointer;
-	} as;
+enum lone_lisp_value_type {
+	LONE_LISP_TYPE_INTEGER    = (0 << 2) | (0 << 1) | (1 << 0), /* ??1 */
+	LONE_LISP_TYPE_HEAP_VALUE = (0 << 2) | (0 << 1) | (0 << 0), /* 000 */
+	LONE_LISP_TYPE_NIL        = (0 << 2) | (1 << 1) | (0 << 1), /* 010 */
+};
 
-	enum lone_lisp_value_type type;
+struct lone_lisp_value {
+	long tagged;
 };
 
 struct lone_lisp_module {
@@ -200,9 +192,9 @@ struct lone_lisp_value lone_lisp_boolean_for(struct lone_lisp *lisp, bool value)
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
 
-enum lone_lisp_value_type lone_lisp_value_to_type(struct lone_lisp_value value);
-struct lone_lisp_heap_value *lone_lisp_value_to_heap_value(struct lone_lisp_value value);
-lone_lisp_integer lone_lisp_value_to_integer(struct lone_lisp_value value);
+enum lone_lisp_value_type lone_lisp_type_of(struct lone_lisp_value value);
+struct lone_lisp_heap_value *lone_lisp_heap_value_of(struct lone_lisp_value value);
+lone_lisp_integer lone_lisp_integer_of(struct lone_lisp_value value);
 
 bool lone_lisp_is_register_value(struct lone_lisp_value value);
 bool lone_lisp_is_heap_value(struct lone_lisp_value value);

@@ -16,7 +16,7 @@ static struct lone_lisp_value lone_lisp_evaluate_form_index(struct lone_lisp *lo
 	void (*set)(struct lone_lisp *, struct lone_lisp_value, struct lone_lisp_value, struct lone_lisp_value);
 	struct lone_lisp_value key, value;
 
-	switch (lone_lisp_value_to_type(collection)) {
+	switch (lone_lisp_type_of(collection)) {
 	case LONE_LISP_TYPE_NIL:
 	case LONE_LISP_TYPE_INTEGER:
 		linux_exit(-1);
@@ -24,7 +24,7 @@ static struct lone_lisp_value lone_lisp_evaluate_form_index(struct lone_lisp *lo
 		break;
 	}
 
-	switch (lone_lisp_value_to_heap_value(collection)->type) {
+	switch (lone_lisp_heap_value_of(collection)->type) {
 	case LONE_LISP_TYPE_VECTOR:
 		get = lone_lisp_vector_get;
 		set = lone_lisp_vector_set;
@@ -82,7 +82,7 @@ static struct lone_lisp_value lone_lisp_evaluate_form(struct lone_lisp *lone,
 	first = lone_lisp_list_first(list);
 	first = lone_lisp_evaluate(lone, module, environment, first);
 
-	switch (lone_lisp_value_to_type(first)) {
+	switch (lone_lisp_type_of(first)) {
 	case LONE_LISP_TYPE_NIL:
 	case LONE_LISP_TYPE_INTEGER:
 		/* first element not applicable */ linux_exit(-1);
@@ -93,7 +93,7 @@ static struct lone_lisp_value lone_lisp_evaluate_form(struct lone_lisp *lone,
 	rest = lone_lisp_list_rest(list);
 
 	/* apply arguments to the value */
-	switch (lone_lisp_value_to_heap_value(first)->type) {
+	switch (lone_lisp_heap_value_of(first)->type) {
 	case LONE_LISP_TYPE_FUNCTION:
 	case LONE_LISP_TYPE_PRIMITIVE:
 		return lone_lisp_apply(lone, module, environment, first, rest);
@@ -113,7 +113,7 @@ struct lone_lisp_value lone_lisp_evaluate(struct lone_lisp *lone,
 		struct lone_lisp_value module, struct lone_lisp_value environment,
 		struct lone_lisp_value value)
 {
-	switch (lone_lisp_value_to_type(value)) {
+	switch (lone_lisp_type_of(value)) {
 	case LONE_LISP_TYPE_NIL:
 	case LONE_LISP_TYPE_INTEGER:
 		return value;
@@ -121,7 +121,7 @@ struct lone_lisp_value lone_lisp_evaluate(struct lone_lisp *lone,
 		break;
 	}
 
-	switch (lone_lisp_value_to_heap_value(value)->type) {
+	switch (lone_lisp_heap_value_of(value)->type) {
 	case LONE_LISP_TYPE_LIST:
 		return lone_lisp_evaluate_form(lone, module, environment, value);
 	case LONE_LISP_TYPE_SYMBOL:
@@ -154,7 +154,7 @@ struct lone_lisp_value lone_lisp_evaluate_all(struct lone_lisp *lone,
 struct lone_lisp_value lone_lisp_evaluate_in_module(struct lone_lisp *lone,
 		struct lone_lisp_value module, struct lone_lisp_value value)
 {
-	return lone_lisp_evaluate(lone, module, lone_lisp_value_to_heap_value(module)->as.module.environment, value);
+	return lone_lisp_evaluate(lone, module, lone_lisp_heap_value_of(module)->as.module.environment, value);
 }
 
 static struct lone_lisp_value lone_lisp_apply_function(struct lone_lisp *lone,
@@ -163,15 +163,15 @@ static struct lone_lisp_value lone_lisp_apply_function(struct lone_lisp *lone,
 {
 	struct lone_lisp_value new_environment, names, code, value, current;
 
-	names = lone_lisp_value_to_heap_value(function)->as.function.arguments;
-	code = lone_lisp_value_to_heap_value(function)->as.function.code;
+	names = lone_lisp_heap_value_of(function)->as.function.arguments;
+	code = lone_lisp_heap_value_of(function)->as.function.code;
 	value = lone_lisp_nil();
 
 	new_environment = lone_lisp_table_create(lone, 16,
-		lone_lisp_value_to_heap_value(function)->as.function.environment);
+		lone_lisp_heap_value_of(function)->as.function.environment);
 
 	/* evaluate each argument if function is configured to do so */
-	if (lone_lisp_value_to_heap_value(function)->as.function.flags.evaluate_arguments) {
+	if (lone_lisp_heap_value_of(function)->as.function.flags.evaluate_arguments) {
 		arguments = lone_lisp_evaluate_all(lone, module, environment, arguments);
 	}
 
@@ -179,7 +179,7 @@ static struct lone_lisp_value lone_lisp_apply_function(struct lone_lisp *lone,
 		if (!lone_lisp_is_nil(names)) {
 			current = lone_lisp_list_first(names);
 
-			switch (lone_lisp_value_to_type(current)) {
+			switch (lone_lisp_type_of(current)) {
 			case LONE_LISP_TYPE_HEAP_VALUE:
 				break;
 			case LONE_LISP_TYPE_NIL:
@@ -187,7 +187,7 @@ static struct lone_lisp_value lone_lisp_apply_function(struct lone_lisp *lone,
 				/* unexpected value */ linux_exit(-1);
 			}
 
-			switch (lone_lisp_value_to_heap_value(current)->type) {
+			switch (lone_lisp_heap_value_of(current)->type) {
 			case LONE_LISP_TYPE_SYMBOL:
 				/* normal argument passing: (lambda (x y)) */
 
@@ -245,7 +245,7 @@ names_bound:
 	}
 
 	/* evaluate result if function is configured to do so */
-	if (lone_lisp_value_to_heap_value(function)->as.function.flags.evaluate_result) {
+	if (lone_lisp_heap_value_of(function)->as.function.flags.evaluate_result) {
 		value = lone_lisp_evaluate(lone, module, environment, value);
 	}
 
@@ -258,19 +258,19 @@ static struct lone_lisp_value lone_lisp_apply_primitive(struct lone_lisp *lone,
 {
 	struct lone_lisp_value result;
 
-	if (lone_lisp_value_to_heap_value(primitive)->as.primitive.flags.evaluate_arguments) {
+	if (lone_lisp_heap_value_of(primitive)->as.primitive.flags.evaluate_arguments) {
 		arguments = lone_lisp_evaluate_all(lone, module, environment, arguments);
 	}
 
-	result = lone_lisp_value_to_heap_value(primitive)->as.primitive.function(
+	result = lone_lisp_heap_value_of(primitive)->as.primitive.function(
 		lone,
 		module,
 		environment,
 		arguments,
-		lone_lisp_value_to_heap_value(primitive)->as.primitive.closure
+		lone_lisp_heap_value_of(primitive)->as.primitive.closure
 	);
 
-	if (lone_lisp_value_to_heap_value(primitive)->as.primitive.flags.evaluate_result) {
+	if (lone_lisp_heap_value_of(primitive)->as.primitive.flags.evaluate_result) {
 		result = lone_lisp_evaluate(lone, module, environment, result);
 	}
 
