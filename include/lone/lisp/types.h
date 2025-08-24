@@ -250,6 +250,56 @@ bool lone_lisp_integer_is_greater_than_or_equal_to(struct lone_lisp_value x, str
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
 
+enum lone_lisp_machine_step {
+	LONE_LISP_MACHINE_STEP_EXPRESSION_EVALUATION,
+	LONE_LISP_MACHINE_STEP_EVALUATED_OPERATOR,
+	LONE_LISP_MACHINE_STEP_OPERAND_EVALUATION,
+	LONE_LISP_MACHINE_STEP_OPERAND_ACCUMULATION,
+	LONE_LISP_MACHINE_STEP_LAST_OPERAND_ACCUMULATION,
+	LONE_LISP_MACHINE_STEP_APPLICATION,
+	LONE_LISP_MACHINE_STEP_SEQUENCE_EVALUATION,
+	LONE_LISP_MACHINE_STEP_SEQUENCE_EVALUATION_FROM_PRIMITIVE,
+	LONE_LISP_MACHINE_STEP_SEQUENCE_EVALUATION_NEXT,
+	LONE_LISP_MACHINE_STEP_SEQUENCE_EVALUATION_FROM_PRIMITIVE_NEXT,
+	LONE_LISP_MACHINE_STEP_RESUME_PRIMITIVE,
+	LONE_LISP_MACHINE_STEP_HALT,
+};
+
+struct lone_lisp_machine_stack_frame {
+	union {
+		struct lone_lisp_value value;
+		lone_lisp_integer integer;
+		enum lone_lisp_machine_step step;
+		long primitive_step;
+	} as;
+};
+
+struct lone_lisp_machine {
+	/* the machine's stack, where its registers and return steps are saved */
+	struct {
+		struct lone_lisp_machine_stack_frame *base;
+		struct lone_lisp_machine_stack_frame *top;
+		struct lone_lisp_machine_stack_frame *limit;
+	} stack;
+
+	/* where in the machine to return to after a computation step is done */
+	enum lone_lisp_machine_step step;
+
+	struct {
+		/* where to return in a primitive after a computation step is done */
+		long step;
+		struct lone_lisp_value closure;
+	} primitive;
+
+	struct lone_lisp_value module;      /* the module where evaluation is occurring */
+	struct lone_lisp_value expression;  /* expression to evaluate */
+	struct lone_lisp_value environment; /* environment to evaluate expression in */
+	struct lone_lisp_value value;       /* result of the last evaluation */
+	struct lone_lisp_value applicable;  /* value to which arguments will be applied */
+	struct lone_lisp_value list;        /* accumulated results of evaluation of multiple expressions */
+	struct lone_lisp_value unevaluated; /* remaining expressions queued for evaluation */
+};
+
 struct lone_lisp {
 	struct lone_system *system;
 	void *native_stack;
