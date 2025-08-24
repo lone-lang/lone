@@ -120,6 +120,48 @@ static bool should_evaluate_operands(struct lone_lisp_value applicable, struct l
 	}
 }
 
+static struct lone_lisp_value apply_to_collection(struct lone_lisp *lone,
+		struct lone_lisp_value collection, struct lone_lisp_value arguments,
+		struct lone_lisp_value (*get)(struct lone_lisp *, struct lone_lisp_value, struct lone_lisp_value),
+		void (*set)(struct lone_lisp *, struct lone_lisp_value, struct lone_lisp_value, struct lone_lisp_value))
+{
+	struct lone_lisp_value key, value;
+
+	if (lone_lisp_is_nil(arguments)) { /* need at least the key: (collection) */ linux_exit(-1); }
+
+	key = lone_lisp_list_first(arguments);
+	arguments = lone_lisp_list_rest(arguments);
+
+	if (lone_lisp_is_nil(arguments)) {
+		return get(lone, collection, key);
+	} else {
+		/* at least one argument */
+		value = lone_lisp_list_first(arguments);
+		arguments = lone_lisp_list_rest(arguments);
+
+		if (lone_lisp_is_nil(arguments)) {
+			/* collection set: (collection key value) */
+			set(lone, collection, key, value);
+			return value;
+		} else {
+			/* too many arguments given: (collection key value extra) */
+			linux_exit(-1);
+		}
+	}
+}
+
+static struct lone_lisp_value apply_to_vector(struct lone_lisp *lone,
+		struct lone_lisp_value vector, struct lone_lisp_value arguments)
+{
+	return apply_to_collection(lone, vector, arguments, lone_lisp_vector_get, lone_lisp_vector_set);
+}
+
+static struct lone_lisp_value apply_to_table(struct lone_lisp *lone,
+		struct lone_lisp_value table, struct lone_lisp_value arguments)
+{
+	return apply_to_collection(lone, table, arguments, lone_lisp_table_get, lone_lisp_table_set);
+}
+
 void lone_lisp_machine_reset(struct lone_lisp *lone,
 		struct lone_lisp_value module, struct lone_lisp_value expression)
 {
