@@ -303,6 +303,7 @@ struct lone_lisp_machine {
 struct lone_lisp {
 	struct lone_system *system;
 	void *native_stack;
+	struct lone_lisp_machine machine;
 	struct lone_lisp_heap *heaps;
 	struct lone_lisp_value symbol_table;
 	struct {
