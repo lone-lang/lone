@@ -162,6 +162,93 @@ static struct lone_lisp_value apply_to_table(struct lone_lisp *lone,
 	return apply_to_collection(lone, table, arguments, lone_lisp_table_get, lone_lisp_table_set);
 }
 
+static struct lone_lisp_value bind_arguments(struct lone_lisp *lone, struct lone_lisp_value environment,
+		struct lone_lisp_value function, struct lone_lisp_value arguments)
+{
+	struct lone_lisp_value new_environment, names, current;
+
+	names = lone_lisp_heap_value_of(function)->as.function.arguments;
+
+	new_environment = lone_lisp_table_create(
+		lone,
+		16,
+		lone_lisp_heap_value_of(function)->as.function.environment
+	);
+
+	while (1) {
+		if (!lone_lisp_is_nil(names)) {
+			current = lone_lisp_list_first(names);
+
+			switch (lone_lisp_type_of(current)) {
+			case LONE_LISP_TYPE_HEAP_VALUE:
+				break;
+			case LONE_LISP_TYPE_NIL:
+			case LONE_LISP_TYPE_FALSE:
+			case LONE_LISP_TYPE_TRUE:
+			case LONE_LISP_TYPE_INTEGER:
+				/* unexpected value */ linux_exit(-1);
+			}
+
+			switch (lone_lisp_heap_value_of(current)->type) {
+			case LONE_LISP_TYPE_SYMBOL:
+				/* normal argument passing: (lambda (x y)) */
+
+				if (!lone_lisp_is_nil(arguments)) {
+					/* argument matched to name, set name in environment */
+					lone_lisp_table_set(
+						lone,
+						new_environment,
+						current,
+						lone_lisp_list_first(arguments)
+					);
+				} else {
+					/* argument number mismatch: ((lambda (x y) y) 10) */ linux_exit(-1);
+				}
+
+				break;
+			case LONE_LISP_TYPE_LIST:
+				/* variadic argument passing: (lambda ((arguments))), (lambda (x y (rest))) */
+
+				if (!lone_lisp_is_symbol(lone_lisp_list_first(current))) {
+					/* no name given: (lambda (x y ())) */ linux_exit(-1);
+				} else if (lone_lisp_list_has_rest(current)) {
+					/* too many names given: (lambda (x y (rest extra))) */ linux_exit(-1);
+				} else {
+					/* match list of remaining arguments to name */
+					lone_lisp_table_set(
+						lone,
+						new_environment,
+						lone_lisp_list_first(current),
+						arguments
+					);
+
+					return new_environment;
+				}
+
+			case LONE_LISP_TYPE_MODULE:
+			case LONE_LISP_TYPE_FUNCTION:
+			case LONE_LISP_TYPE_PRIMITIVE:
+			case LONE_LISP_TYPE_BYTES:
+			case LONE_LISP_TYPE_TEXT:
+			case LONE_LISP_TYPE_VECTOR:
+			case LONE_LISP_TYPE_TABLE:
+				/* unexpected value */ linux_exit(-1);
+			}
+
+			names = lone_lisp_list_rest(names);
+			arguments = lone_lisp_list_rest(arguments);
+
+		} else if (!lone_lisp_is_nil(arguments)) {
+			/* argument number mismatch: ((lambda (x) x) 10 20) */ linux_exit(-1);
+		} else {
+			/* matching number of arguments */
+			break;
+		}
+	}
+
+	return new_environment;
+}
+
 void lone_lisp_machine_reset(struct lone_lisp *lone,
 		struct lone_lisp_value module, struct lone_lisp_value expression)
 {
