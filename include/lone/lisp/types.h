@@ -91,10 +91,11 @@ struct lone_lisp_function {
 };
 
 struct lone_lisp;
+struct lone_lisp_machine;
 
-typedef struct lone_lisp_value (*lone_lisp_primitive_function)(struct lone_lisp *lone,
-		struct lone_lisp_value module, struct lone_lisp_value environment,
-		struct lone_lisp_value arguments, struct lone_lisp_value closure);
+/* arguments are pushed as a list on the lone lisp machine stack
+ * return values are pushed on the lone lisp machine stack */
+typedef long (*lone_lisp_primitive_function)(struct lone_lisp *lone, struct lone_lisp_machine *machine, long step);
 
 struct lone_lisp_primitive {
 	struct lone_lisp_value name;

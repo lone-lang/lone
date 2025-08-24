@@ -28,13 +28,11 @@
 #endif
 
 #define LONE_LISP_PRIMITIVE(name)                       \
-struct lone_lisp_value lone_lisp_primitive_ ## name     \
+long lone_lisp_primitive_ ## name                       \
 (                                                       \
 	struct lone_lisp *lone,                         \
-	struct lone_lisp_value module,                  \
-	struct lone_lisp_value environment,             \
-	struct lone_lisp_value arguments,               \
-	struct lone_lisp_value closure                  \
+	struct lone_lisp_machine *machine,              \
+	long step                                       \
 )
 
 #endif /* LONE_LISP_DEFINITIONS_HEADER */
