@@ -11,6 +11,8 @@
 #include <lone/lisp/value/table.h>
 #include <lone/lisp/value/symbol.h>
 
+#include <lone/memory/array.h>
+
 void lone_lisp_initialize(struct lone_lisp *lone, struct lone_system *system, void *native_stack)
 {
 	struct lone_lisp_function_flags flags = { .evaluate_arguments = 0, .evaluate_result = 0 };
@@ -24,6 +26,9 @@ void lone_lisp_initialize(struct lone_lisp *lone, struct lone_system *system, vo
 	/* system, memory, stack and heap initialized
 	 * can now use lisp value creation functions
 	 */
+
+	lone->machine.stack.base = lone_memory_array(lone->system, 0, 1000, sizeof(*lone->machine.stack.base));
+	lone->machine.stack.limit = lone->machine.stack.base + 1000;
 
 	lone->symbol_table = lone_lisp_table_create(lone, 256, lone_lisp_nil());
 

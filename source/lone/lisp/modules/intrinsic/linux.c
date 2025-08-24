@@ -2,6 +2,7 @@
 
 #include <lone/lisp/modules/intrinsic/linux.h>
 
+#include <lone/lisp/machine.h>
 #include <lone/lisp/module.h>
 
 #include <lone/lisp/value/primitive.h>
@@ -397,11 +398,13 @@ static inline long lone_lisp_value_to_linux_system_call_argument(struct lone_lis
 
 LONE_LISP_PRIMITIVE(linux_system_call)
 {
-	struct lone_lisp_value linux_system_call_table, argument;
+	struct lone_lisp_value linux_system_call_table, arguments, argument;
 	long result, number, args[6];
 	unsigned char i;
 
-	linux_system_call_table = closure;
+	arguments = lone_lisp_machine_pop_value(lone, &lone->machine);
+
+	linux_system_call_table = lone->machine.primitive.closure;
 
 	if (lone_lisp_is_nil(arguments)) { /* need at least the system call number */ linux_exit(-1); }
 	argument = lone_lisp_list_first(arguments);
@@ -422,5 +425,6 @@ LONE_LISP_PRIMITIVE(linux_system_call)
 
 	result = linux_system_call_6(number, args[0], args[1], args[2], args[3], args[4], args[5]);
 
-	return lone_lisp_integer_create(result);
+	lone_lisp_machine_push_value(lone, &lone->machine, lone_lisp_integer_create(result));
+	return 0;
 }
