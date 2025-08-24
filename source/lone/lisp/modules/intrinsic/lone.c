@@ -3,7 +3,6 @@
 #include <lone/lisp/modules/intrinsic/lone.h>
 
 #include <lone/lisp/module.h>
-#include <lone/lisp/evaluator.h>
 #include <lone/lisp/printer.h>
 #include <lone/lisp/utilities.h>
 

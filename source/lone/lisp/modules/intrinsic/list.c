@@ -3,7 +3,6 @@
 #include <lone/lisp/modules/intrinsic/list.h>
 
 #include <lone/lisp/module.h>
-#include <lone/lisp/evaluator.h>
 
 #include <lone/lisp/value/primitive.h>
 #include <lone/lisp/value/list.h>
