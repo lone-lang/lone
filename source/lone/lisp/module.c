@@ -4,6 +4,7 @@
 
 #include <lone/lisp/reader.h>
 #include <lone/lisp/evaluator.h>
+#include <lone/lisp/machine.h>
 
 #include <lone/lisp/value/module.h>
 #include <lone/lisp/value/primitive.h>
@@ -247,15 +248,18 @@ void lone_lisp_module_export_primitive(struct lone_lisp *lone,
 
 LONE_LISP_PRIMITIVE(module_export)
 {
-	struct lone_lisp_value head, symbol;
+	struct lone_lisp_value arguments, head, symbol;
+
+	arguments = lone_lisp_machine_pop_value(lone, &lone->machine);
 
 	for (head = arguments; !lone_lisp_is_nil(head); head = lone_lisp_list_rest(head)) {
 		symbol = lone_lisp_list_first(head);
 
-		lone_lisp_module_export(lone, module, symbol);
+		lone_lisp_module_export(lone, lone->machine.module, symbol);
 	}
 
-	return lone_lisp_nil();
+	lone_lisp_machine_push_value(lone, &lone->machine, lone_lisp_nil());
+	return 0;
 }
 
 struct lone_lisp_import_specification {
@@ -355,14 +359,16 @@ static void lone_lisp_primitive_import_form(struct lone_lisp *lone,
 LONE_LISP_PRIMITIVE(module_import)
 {
 	struct lone_lisp_import_specification spec;
-	struct lone_lisp_value prefixed, unprefixed, argument;
+	struct lone_lisp_value arguments, argument, prefixed, unprefixed;
+
+	arguments = lone_lisp_machine_pop_value(lone, &lone->machine);
+
+	if (lone_lisp_is_nil(arguments)) { /* nothing to import: (import) */ linux_exit(-1); }
 
 	prefixed = lone_lisp_intern_c_string(lone, "prefixed");
 	unprefixed = lone_lisp_intern_c_string(lone, "unprefixed");
 
-	if (lone_lisp_is_nil(arguments)) { /* nothing to import: (import) */ linux_exit(-1); }
-
-	spec.environment = environment;
+	spec.environment = lone->machine.environment;
 	spec.prefixed = false;
 
 	for (/* argument */; !lone_lisp_is_nil(arguments); arguments = lone_lisp_list_rest(arguments)) {
@@ -377,7 +383,8 @@ LONE_LISP_PRIMITIVE(module_import)
 		}
 	}
 
-	return lone_lisp_nil();
+	lone_lisp_machine_push_value(lone, &lone->machine, lone_lisp_nil());
+	return 0;
 }
 
 void lone_lisp_module_path_push(struct lone_lisp *lone, struct lone_lisp_value directory)

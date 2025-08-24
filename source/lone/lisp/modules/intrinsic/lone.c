@@ -2,6 +2,7 @@
 
 #include <lone/lisp/modules/intrinsic/lone.h>
 
+#include <lone/lisp/machine.h>
 #include <lone/lisp/module.h>
 #include <lone/lisp/printer.h>
 #include <lone/lisp/utilities.h>
@@ -90,210 +91,421 @@ void lone_lisp_modules_intrinsic_lone_initialize(struct lone_lisp *lone)
 
 LONE_LISP_PRIMITIVE(lone_begin)
 {
-	struct lone_lisp_value value;
+	struct lone_lisp_value expressions;
 
-	for (value = lone_lisp_nil(); !lone_lisp_is_nil(arguments); arguments = lone_lisp_list_rest(arguments)) {
-		value = lone_lisp_list_first(arguments);
-		value = lone_lisp_evaluate(lone, module, environment, value);
+	switch (step) {
+	case 0: /* unpack arguments and setup */
+
+		expressions = lone_lisp_machine_pop_value(lone, machine);
+
+		machine->step = LONE_LISP_MACHINE_STEP_SEQUENCE_EVALUATION_FROM_PRIMITIVE;
+		machine->unevaluated = expressions;
+		return 1;
+
+	case 1: /* collect and return result */
+
+		lone_lisp_machine_push_value(lone, machine, machine->value);
+		return 0;
+
+	default:
+		break;
 	}
 
-	return value;
+	linux_exit(-1);
 }
 
 LONE_LISP_PRIMITIVE(lone_when)
 {
-	struct lone_lisp_value test;
+	struct lone_lisp_value arguments, condition, body;
 
-	if (lone_lisp_is_nil(arguments)) { /* test not specified: (when) */ linux_exit(-1); }
-	test = lone_lisp_list_first(arguments);
-	arguments = lone_lisp_list_rest(arguments);
+	switch (step) {
+	case 0: /* unpack and check arguments then evaluate condition */
 
-	if (lone_lisp_is_truthy(lone_lisp_evaluate(lone, module, environment, test))) {
-		return lone_lisp_primitive_lone_begin(lone, module, environment, arguments, closure);
+		arguments = lone_lisp_machine_pop_value(lone, machine);
+
+		if (lone_lisp_is_nil(arguments)) { /* condition not specified: (when) */ linux_exit(-1); }
+		condition = lone_lisp_list_first(arguments);
+		body = lone_lisp_list_rest(arguments);
+
+		lone_lisp_machine_push_value(lone, machine, body);
+
+		machine->step = LONE_LISP_MACHINE_STEP_EXPRESSION_EVALUATION;
+		machine->expression = condition;
+
+		return 1;
+
+	case 1: /* evaluate remaining expressions if condition true */
+
+		body = lone_lisp_machine_pop_value(lone, machine);
+
+		if (lone_lisp_is_truthy(machine->value)) {
+			machine->step = LONE_LISP_MACHINE_STEP_SEQUENCE_EVALUATION_FROM_PRIMITIVE;
+			machine->unevaluated = body;
+			return 2;
+		} else {
+			lone_lisp_machine_push_value(lone, machine, lone_lisp_nil());
+			return 0;
+		}
+
+	case 2: /* collect result of sequence evaluation and return it */
+		lone_lisp_machine_push_value(lone, machine, machine->value);
+		return 0;
+
+	default:
+		break;
 	}
 
-	return lone_lisp_nil();
+	linux_exit(-1);
 }
 
 LONE_LISP_PRIMITIVE(lone_unless)
 {
-	struct lone_lisp_value test;
+	struct lone_lisp_value arguments, condition, body;
 
-	if (lone_lisp_is_nil(arguments)) { /* test not specified: (unless) */ linux_exit(-1); }
-	test = lone_lisp_list_first(arguments);
-	arguments = lone_lisp_list_rest(arguments);
+	switch (step) {
+	case 0: /* unpack and check arguments then evaluate condition */
 
-	if (lone_lisp_is_falsy(lone_lisp_evaluate(lone, module, environment, test))) {
-		return lone_lisp_primitive_lone_begin(lone, module, environment, arguments, closure);
+		arguments = lone_lisp_machine_pop_value(lone, machine);
+
+		if (lone_lisp_is_nil(arguments)) { /* condition not specified: (unless) */ linux_exit(-1); }
+		condition = lone_lisp_list_first(arguments);
+		body = lone_lisp_list_rest(arguments);
+
+		lone_lisp_machine_push_value(lone, machine, body);
+
+		machine->step = LONE_LISP_MACHINE_STEP_EXPRESSION_EVALUATION;
+		machine->expression = condition;
+		return 1;
+
+	case 1: /* evaluate remaining expressions if condition false */
+
+		body = lone_lisp_machine_pop_value(lone, machine);
+
+		if (lone_lisp_is_falsy(machine->value)) {
+			machine->step = LONE_LISP_MACHINE_STEP_SEQUENCE_EVALUATION_FROM_PRIMITIVE;
+			machine->unevaluated = body;
+			return 2;
+		} else {
+			lone_lisp_machine_push_value(lone, machine, lone_lisp_nil());
+			return 0;
+		}
+
+	case 2: /* collect result of sequence evaluation and return it */
+		lone_lisp_machine_push_value(lone, machine, machine->value);
+		return 0;
+
+	default:
+		break;
 	}
 
-	return lone_lisp_nil();
+	linux_exit(-1);
 }
 
 LONE_LISP_PRIMITIVE(lone_if)
 {
-	struct lone_lisp_value value, consequent, alternative;
+	struct lone_lisp_value arguments, condition, consequent, alternative;
 
-	if (lone_lisp_is_nil(arguments)) { /* test not specified: (if) */ linux_exit(-1); }
-	value = lone_lisp_list_first(arguments);
-	arguments = lone_lisp_list_rest(arguments);
+	switch (step) {
+	case 0: /* unpack and check arguments, then evaluate condition */
 
-	if (lone_lisp_is_nil(arguments)) { /* consequent not specified: (if test) */ linux_exit(-1); }
-	consequent = lone_lisp_list_first(arguments);
-	arguments = lone_lisp_list_rest(arguments);
+		arguments = lone_lisp_machine_pop_value(lone, machine);
 
-	alternative = lone_lisp_nil();
-
-	if (!lone_lisp_is_nil(arguments)) {
-		alternative = lone_lisp_list_first(arguments);
+		if (lone_lisp_is_nil(arguments)) { /* test not specified: (if) */ linux_exit(-1); }
+		condition = lone_lisp_list_first(arguments);
 		arguments = lone_lisp_list_rest(arguments);
-		if (!lone_lisp_is_nil(arguments)) { /* too many values (if test consequent alternative extra) */ linux_exit(-1); }
+
+		if (lone_lisp_is_nil(arguments)) { /* consequent not specified: (if test) */ linux_exit(-1); }
+		consequent = lone_lisp_list_first(arguments);
+		arguments = lone_lisp_list_rest(arguments);
+
+		alternative = lone_lisp_nil();
+
+		if (!lone_lisp_is_nil(arguments)) {
+			alternative = lone_lisp_list_first(arguments);
+			arguments = lone_lisp_list_rest(arguments);
+			if (!lone_lisp_is_nil(arguments)) {
+				/* too many values (if test consequent alternative extra) */ linux_exit(-1);
+			}
+		}
+
+		lone_lisp_machine_push_value(lone, machine, alternative);
+		lone_lisp_machine_push_value(lone, machine, consequent);
+
+		machine->step = LONE_LISP_MACHINE_STEP_EXPRESSION_EVALUATION;
+		machine->expression = condition;
+		return 1;
+
+	case 1: /* check evaluated condition and then evaluate consequent or alternative */
+
+		consequent  = lone_lisp_machine_pop_value(lone, machine);
+		alternative = lone_lisp_machine_pop_value(lone, machine);
+
+		machine->step = LONE_LISP_MACHINE_STEP_EXPRESSION_EVALUATION;
+		machine->expression = lone_lisp_is_truthy(machine->value)? consequent : alternative;
+		return 2;
+
+	case 2: /* collect result and return the value */
+		lone_lisp_machine_push_value(lone, machine, machine->value);
+		return 0;
+
+	default:
+		break;
 	}
 
-	if (lone_lisp_is_truthy(lone_lisp_evaluate(lone, module, environment, value))) {
-		return lone_lisp_evaluate(lone, module, environment, consequent);
-	} else {
-		return lone_lisp_evaluate(lone, module, environment, alternative);
-	}
+	linux_exit(-1);
 }
 
 LONE_LISP_PRIMITIVE(lone_let)
 {
-	struct lone_lisp_value bindings, first, second, rest, value, new_environment;
+	struct lone_lisp_value arguments, bindings, body,
+	                       original_environment, new_environment,
+	                       first, second, rest, value;
 
-	if (lone_lisp_is_nil(arguments)) { /* no variables to bind: (let) */ linux_exit(-1); }
-	bindings = lone_lisp_list_first(arguments);
-	if (!lone_lisp_is_list(bindings)) { /* expected list but got something else: (let 10) */ linux_exit(-1); }
+	switch (step) {
+	case 0: /* unpack and check arguments, evaluate values and bind them to variables */
 
-	new_environment = lone_lisp_table_create(lone, 8, environment);
+		arguments = lone_lisp_machine_pop_value(lone, machine);
+		if (lone_lisp_is_nil(arguments)) { /* no variables to bind: (let) */ linux_exit(-1); }
 
-	while (1) {
-		if (lone_lisp_is_nil(bindings)) { break; }
-		first = lone_lisp_list_first(bindings);
-		if (!lone_lisp_is_symbol(first)) { /* variable names must be symbols: (let ("x")) */ linux_exit(-1); }
-		rest = lone_lisp_list_rest(bindings);
-		if (lone_lisp_is_nil(rest)) { /* incomplete variable/value list: (let (x 10 y)) */ linux_exit(-1); }
-		second = lone_lisp_list_first(rest);
-		value = lone_lisp_evaluate(lone, module, new_environment, second);
-		lone_lisp_table_set(lone, new_environment, first, value);
-		bindings = lone_lisp_list_rest(rest);
+		bindings = lone_lisp_list_first(arguments);
+		if (!lone_lisp_is_list(bindings)) { /* expected list but got something else: (let 10) */ linux_exit(-1); }
+
+		body = lone_lisp_list_rest(arguments);
+		original_environment = machine->environment;
+		new_environment = lone_lisp_table_create(lone, 8, original_environment);
+
+		while (1) {
+			if (lone_lisp_is_nil(bindings)) { break; }
+
+			first = lone_lisp_list_first(bindings);
+			if (!lone_lisp_is_symbol(first)) {
+				/* variable names must be symbols: (let ("x")) */ linux_exit(-1);
+			}
+
+			rest = lone_lisp_list_rest(bindings);
+			if (lone_lisp_is_nil(rest)) {
+				/* incomplete variable/value list: (let (x 10 y)) */ linux_exit(-1);
+			}
+
+			second = lone_lisp_list_first(rest);
+
+			lone_lisp_machine_push_value(lone, machine, rest);
+			lone_lisp_machine_push_value(lone, machine, first);
+			lone_lisp_machine_push_value(lone, machine, original_environment);
+			lone_lisp_machine_push_value(lone, machine, new_environment);
+			lone_lisp_machine_push_value(lone, machine, body);
+
+			machine->step = LONE_LISP_MACHINE_STEP_EXPRESSION_EVALUATION;
+			machine->expression = second;
+			machine->environment = new_environment;
+			return 1;
+
+	bind_value_to_variable:
+			lone_lisp_table_set(lone, new_environment, first, value);
+			bindings = lone_lisp_list_rest(rest);
+		}
+
+		lone_lisp_machine_push_value(lone, machine, original_environment);
+		machine->environment = new_environment;
+		machine->step = LONE_LISP_MACHINE_STEP_SEQUENCE_EVALUATION_FROM_PRIMITIVE;
+		machine->unevaluated = body;
+		return 2;
+
+	case 1: /* collect evaluated value for variable binding */
+
+		body                 = lone_lisp_machine_pop_value(lone, machine);
+		new_environment      = lone_lisp_machine_pop_value(lone, machine);
+		original_environment = lone_lisp_machine_pop_value(lone, machine);
+		first                = lone_lisp_machine_pop_value(lone, machine);
+		rest                 = lone_lisp_machine_pop_value(lone, machine);
+		value                = machine->value;
+
+		goto bind_value_to_variable;
+
+	case 2: /* restore environment; collect and return result of last evaluated expression */
+
+		machine->environment = lone_lisp_machine_pop_value(lone, machine);
+		lone_lisp_machine_push_value(lone, machine, machine->value);
+		return 0;
+
+	default:
+		break;
 	}
 
-	value = lone_lisp_nil();
-
-	while (!lone_lisp_is_nil(arguments = lone_lisp_list_rest(arguments))) {
-		value = lone_lisp_evaluate(lone, module, new_environment, lone_lisp_list_first(arguments));
-	}
-
-	return value;
+	linux_exit(-1);
 }
 
 LONE_LISP_PRIMITIVE(lone_set)
 {
-	struct lone_lisp_value variable, value;
+	struct lone_lisp_value arguments, variable, value;
 
-	if (lone_lisp_is_nil(arguments)) {
-		/* no variable to set: (set) */
-		linux_exit(-1);
-	}
+	switch (step) {
+	case 0: /* unpack and check arguments */
 
-	variable = lone_lisp_list_first(arguments);
-	if (!lone_lisp_is_symbol(variable)) {
-		/* variable names must be symbols: (set 10) */
-		linux_exit(-1);
-	}
+		arguments = lone_lisp_machine_pop_value(lone, machine);
+		if (lone_lisp_is_nil(arguments)) {
+			/* no variable to set: (set) */
+			linux_exit(-1);
+		}
 
-	arguments = lone_lisp_list_rest(arguments);
-	if (lone_lisp_is_nil(arguments)) {
-		/* value not specified: (set variable) */
-		value = lone_lisp_nil();
-	} else {
-		/* (set variable value) */
-		value = lone_lisp_list_first(arguments);
+		variable = lone_lisp_list_first(arguments);
+		if (!lone_lisp_is_symbol(variable)) {
+			/* variable names must be symbols: (set 10) */
+			linux_exit(-1);
+		}
+
 		arguments = lone_lisp_list_rest(arguments);
+		if (lone_lisp_is_nil(arguments)) {
+			/* value not specified: (set variable) */
+			value = lone_lisp_nil();
+			goto set_value;
+		} else {
+			/* (set variable value) */
+			value = lone_lisp_list_first(arguments);
+			arguments = lone_lisp_list_rest(arguments);
+		}
+
+		if (!lone_lisp_is_nil(arguments)) { /* too many arguments */ linux_exit(-1); }
+
+		lone_lisp_machine_push_value(lone, machine, variable);
+
+		machine->step = LONE_LISP_MACHINE_STEP_EXPRESSION_EVALUATION;
+		machine->expression = value;
+		return 1;
+
+	case 1: /* value has been evaluated */
+
+		variable = lone_lisp_machine_pop_value(lone, machine);
+		value    = machine->value;
+
+	set_value:
+		lone_lisp_table_set(lone, machine->environment, variable, value);
+		lone_lisp_machine_push_value(lone, machine, value);
+		return 0;
+
+	default:
+		break;
 	}
 
-	if (!lone_lisp_is_nil(arguments)) { /* too many arguments */ linux_exit(-1); }
-
-	value = lone_lisp_evaluate(lone, module, environment, value);
-	lone_lisp_table_set(lone, environment, variable, value);
-
-	return value;
+	linux_exit(-1);
 }
 
 LONE_LISP_PRIMITIVE(lone_quote)
 {
-	struct lone_lisp_value argument;
+	struct lone_lisp_value arguments, argument;
+
+	arguments = lone_lisp_machine_pop_value(lone, machine);
 
 	if (lone_lisp_list_destructure(arguments, 1, &argument)) {
 		/* wrong number of arguments: (quote), (quote x y) */ linux_exit(-1);
 	}
 
-	return argument;
+	lone_lisp_machine_push_value(lone, machine, argument);
+	return 0;
 }
 
 LONE_LISP_PRIMITIVE(lone_quasiquote)
 {
-	struct lone_lisp_value form, list, head, current, element, result, first, rest, unquote, splice;
-	bool escaping, splicing;
+	struct lone_lisp_value arguments, form, list, head, current, element, result, first, rest;
+	struct lone_lisp_value unquote, splice, escaping, splicing;
 
-	if (lone_lisp_list_destructure(arguments, 1, &form)) {
-		/* wrong number of arguments: (quasiquote), (quasiquote x y) */ linux_exit(-1);
-	}
+	switch (step) {
+	case 0: /* unpack and check arguments then loop */
 
-	unquote = lone_lisp_intern_c_string(lone, "unquote");
-	splice = lone_lisp_intern_c_string(lone, "unquote*");
-	list = head = lone_lisp_nil();
+		arguments = lone_lisp_machine_pop_value(lone, machine);
 
-	for (current = form; !lone_lisp_is_nil(current); current = lone_lisp_list_rest(current)) {
-		element = lone_lisp_list_first(current);
+		if (lone_lisp_list_destructure(arguments, 1, &form)) {
+			/* wrong number of arguments: (quasiquote), (quasiquote x y) */ linux_exit(-1);
+		}
 
-		if (lone_lisp_is_list(element)) {
-			first = lone_lisp_list_first(element);
-			rest = lone_lisp_list_rest(element);
+		unquote = lone_lisp_intern_c_string(lone, "unquote");
+		splice = lone_lisp_intern_c_string(lone, "unquote*");
+		list = head = lone_lisp_nil();
+		current = form;
 
-			if (lone_lisp_is_equivalent(first, unquote)) {
-				escaping = true;
-				splicing = false;
-			} else if (lone_lisp_is_equivalent(first, splice)) {
-				escaping = true;
-				splicing = true;
-			} else {
-				escaping = false;
-				splicing = false;
-			}
+		for (current = form; !lone_lisp_is_nil(current); current = lone_lisp_list_rest(current)) {
+			element = lone_lisp_list_first(current);
 
-			if (escaping) {
-				first = lone_lisp_list_first(rest);
-				rest = lone_lisp_list_rest(rest);
+			if (lone_lisp_is_list(element)) {
+				first = lone_lisp_list_first(element);
+				rest = lone_lisp_list_rest(element);
 
-				if (!lone_lisp_is_nil(rest)) { /* too many arguments: (quasiquote (unquote x y) (unquote* x y)) */ linux_exit(-1); }
+				if (lone_lisp_is_equivalent(first, unquote)) {
+					escaping = lone_lisp_true();
+					splicing = lone_lisp_false();
+				} else if (lone_lisp_is_equivalent(first, splice)) {
+					escaping = lone_lisp_true();
+					splicing = lone_lisp_true();
+				} else {
+					escaping = lone_lisp_false();
+					splicing = lone_lisp_false();
+				}
 
-				result = lone_lisp_evaluate(lone, module, environment, first);
+				if (lone_lisp_is_true(escaping)) {
+					first = lone_lisp_list_first(rest);
+					rest = lone_lisp_list_rest(rest);
 
-				if (splicing) {
-					if (lone_lisp_is_list(result)) {
-						for (/* result */; !lone_lisp_is_nil(result); result = lone_lisp_list_rest(result)) {
-							lone_lisp_list_append(lone, &list, &head, lone_lisp_list_first(result));
+					if (!lone_lisp_is_nil(rest)) {
+						/* too many arguments: (quasiquote (unquote x y) (unquote* x y)) */
+						linux_exit(-1);
+					}
+
+					lone_lisp_machine_push_value(lone, machine, unquote);
+					lone_lisp_machine_push_value(lone, machine, splice);
+					lone_lisp_machine_push_value(lone, machine, splicing);
+					lone_lisp_machine_push_value(lone, machine, current);
+					lone_lisp_machine_push_value(lone, machine, head);
+					lone_lisp_machine_push_value(lone, machine, list);
+
+					machine->step = LONE_LISP_MACHINE_STEP_EXPRESSION_EVALUATION;
+					machine->expression = first;
+					return 1;
+
+	after_evaluation:
+					if (lone_lisp_is_true(splicing)) {
+						if (lone_lisp_is_list(result)) {
+							for (/* result */;
+									!lone_lisp_is_nil(result);
+									result = lone_lisp_list_rest(result)) {
+								lone_lisp_list_append(lone, &list, &head,
+										lone_lisp_list_first(result));
+							}
+						} else {
+							lone_lisp_list_append(lone, &list, &head, result);
 						}
 					} else {
 						lone_lisp_list_append(lone, &list, &head, result);
 					}
-
 				} else {
-					lone_lisp_list_append(lone, &list, &head, result);
+					lone_lisp_list_append(lone, &list, &head, element);
 				}
-
 			} else {
 				lone_lisp_list_append(lone, &list, &head, element);
 			}
-
-		} else {
-			lone_lisp_list_append(lone, &list, &head, element);
 		}
+
+	early_exit:
+		lone_lisp_machine_push_value(lone, machine, list);
+		return 0;
+
+	case 1: /* collect result and resume loop */
+
+		list     = lone_lisp_machine_pop_value(lone, machine);
+		head     = lone_lisp_machine_pop_value(lone, machine);
+		current  = lone_lisp_machine_pop_value(lone, machine);
+		splicing = lone_lisp_machine_pop_value(lone, machine);
+		splice   = lone_lisp_machine_pop_value(lone, machine);
+		unquote  = lone_lisp_machine_pop_value(lone, machine);
+
+		result = machine->value;
+
+		goto after_evaluation;
+
+	default:
+		break;
 	}
 
-	return list;
+	linux_exit(-1);
 }
 
 static struct lone_lisp_value lone_lisp_primitive_lambda_with_flags(struct lone_lisp *lone, struct lone_lisp_value environment, struct lone_lisp_value arguments, struct lone_lisp_function_flags flags)
@@ -315,7 +527,10 @@ LONE_LISP_PRIMITIVE(lone_lambda)
 		.evaluate_result = 0,
 	};
 
-	return lone_lisp_primitive_lambda_with_flags(lone, environment, arguments, flags);
+	lone_lisp_machine_push_value(lone, machine,
+			lone_lisp_primitive_lambda_with_flags(lone,
+				machine->environment, lone_lisp_machine_pop_value(lone, machine), flags));
+	return 0;
 }
 
 LONE_LISP_PRIMITIVE(lone_lambda_bang)
@@ -325,61 +540,96 @@ LONE_LISP_PRIMITIVE(lone_lambda_bang)
 		.evaluate_result = 0,
 	};
 
-	return lone_lisp_primitive_lambda_with_flags(lone, environment, arguments, flags);
+	lone_lisp_machine_push_value(lone, machine,
+			lone_lisp_primitive_lambda_with_flags(lone,
+				machine->environment, lone_lisp_machine_pop_value(lone, machine), flags));
+	return 0;
 }
 
 LONE_LISP_PRIMITIVE(lone_is_list)
 {
-	return lone_lisp_apply_predicate(lone, arguments, lone_lisp_is_list);
+	lone_lisp_machine_push_value(lone, machine,
+			lone_lisp_apply_predicate(lone,
+				lone_lisp_machine_pop_value(lone, machine), lone_lisp_is_list));
+	return 0;
 }
 
 LONE_LISP_PRIMITIVE(lone_is_vector)
 {
-	return lone_lisp_apply_predicate(lone, arguments, lone_lisp_is_vector);
+	lone_lisp_machine_push_value(lone, machine,
+			lone_lisp_apply_predicate(lone,
+				lone_lisp_machine_pop_value(lone, machine), lone_lisp_is_vector));
+	return 0;
 }
 
 LONE_LISP_PRIMITIVE(lone_is_table)
 {
-	return lone_lisp_apply_predicate(lone, arguments, lone_lisp_is_table);
+	lone_lisp_machine_push_value(lone, machine,
+			lone_lisp_apply_predicate(lone,
+				lone_lisp_machine_pop_value(lone, machine), lone_lisp_is_table));
+	return 0;
 }
 
 LONE_LISP_PRIMITIVE(lone_is_symbol)
 {
-	return lone_lisp_apply_predicate(lone, arguments, lone_lisp_is_symbol);
+	lone_lisp_machine_push_value(lone, machine,
+			lone_lisp_apply_predicate(lone,
+				lone_lisp_machine_pop_value(lone, machine), lone_lisp_is_symbol));
+	return 0;
 }
 
 LONE_LISP_PRIMITIVE(lone_is_text)
 {
-	return lone_lisp_apply_predicate(lone, arguments, lone_lisp_is_text);
+	lone_lisp_machine_push_value(lone, machine,
+			lone_lisp_apply_predicate(lone,
+				lone_lisp_machine_pop_value(lone, machine), lone_lisp_is_text));
+	return 0;
 }
 
 LONE_LISP_PRIMITIVE(lone_is_integer)
 {
-	return lone_lisp_apply_predicate(lone, arguments, lone_lisp_is_integer);
+	lone_lisp_machine_push_value(lone, machine,
+			lone_lisp_apply_predicate(lone,
+				lone_lisp_machine_pop_value(lone, machine), lone_lisp_is_integer));
+	return 0;
 }
 
 LONE_LISP_PRIMITIVE(lone_is_identical)
 {
-	return lone_lisp_apply_comparator(lone, arguments, lone_lisp_is_identical);
+	lone_lisp_machine_push_value(lone, machine,
+			lone_lisp_apply_comparator(lone,
+				lone_lisp_machine_pop_value(lone, machine), lone_lisp_is_identical));
+	return 0;
 }
 
 LONE_LISP_PRIMITIVE(lone_is_equivalent)
 {
-	return lone_lisp_apply_comparator(lone, arguments, lone_lisp_is_equivalent);
+	lone_lisp_machine_push_value(lone, machine,
+			lone_lisp_apply_comparator(lone,
+				lone_lisp_machine_pop_value(lone, machine), lone_lisp_is_equivalent));
+	return 0;
 }
 
 LONE_LISP_PRIMITIVE(lone_is_equal)
 {
-	return lone_lisp_apply_comparator(lone, arguments, lone_lisp_is_equal);
+	lone_lisp_machine_push_value(lone, machine,
+			lone_lisp_apply_comparator(lone,
+				lone_lisp_machine_pop_value(lone, machine), lone_lisp_is_equal));
+	return 0;
 }
 
 LONE_LISP_PRIMITIVE(lone_print)
 {
+	struct lone_lisp_value arguments;
+
+	arguments = lone_lisp_machine_pop_value(lone, machine);
+
 	while (!lone_lisp_is_nil(arguments)) {
 		lone_lisp_print(lone, lone_lisp_list_first(arguments), 1);
 		linux_write(1, "\n", 1);
 		arguments = lone_lisp_list_rest(arguments);
 	}
 
-	return lone_lisp_nil();
+	lone_lisp_machine_push_value(lone, machine, lone_lisp_nil());
+	return 0;
 }

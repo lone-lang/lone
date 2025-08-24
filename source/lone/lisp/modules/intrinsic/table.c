@@ -8,6 +8,7 @@
 #include <lone/lisp/value/symbol.h>
 #include <lone/lisp/value/integer.h>
 
+#include <lone/lisp/machine.h>
 #include <lone/lisp/module.h>
 #include <lone/lisp/evaluator.h>
 
@@ -41,7 +42,9 @@ void lone_lisp_modules_intrinsic_table_initialize(struct lone_lisp *lone)
 
 LONE_LISP_PRIMITIVE(table_get)
 {
-	struct lone_lisp_value table, key;
+	struct lone_lisp_value arguments, table, key, value;
+
+	arguments = lone_lisp_machine_pop_value(lone, machine);
 
 	if (lone_lisp_list_destructure(arguments, 2, &table, &key)) {
 		/* wrong number of arguments */ linux_exit(-1);
@@ -49,12 +52,17 @@ LONE_LISP_PRIMITIVE(table_get)
 
 	if (!lone_lisp_is_table(table)) { /* table not given: (get []) */ linux_exit(-1); }
 
-	return lone_lisp_table_get(lone, table, key);
+	value = lone_lisp_table_get(lone, table, key);
+
+	lone_lisp_machine_push_value(lone, machine, value);
+	return 0;
 }
 
 LONE_LISP_PRIMITIVE(table_set)
 {
-	struct lone_lisp_value table, key, value;
+	struct lone_lisp_value arguments, table, key, value;
+
+	arguments = lone_lisp_machine_pop_value(lone, machine);
 
 	if (lone_lisp_list_destructure(arguments, 3, &table, &key, &value)) {
 		/* wrong number of arguments */ linux_exit(-1);
@@ -63,12 +71,16 @@ LONE_LISP_PRIMITIVE(table_set)
 	if (!lone_lisp_is_table(table)) { /* table not given: (set []) */ linux_exit(-1); }
 
 	lone_lisp_table_set(lone, table, key, value);
-	return lone_lisp_nil();
+
+	lone_lisp_machine_push_value(lone, machine, value);
+	return 0;
 }
 
 LONE_LISP_PRIMITIVE(table_delete)
 {
-	struct lone_lisp_value table, key;
+	struct lone_lisp_value arguments, table, key;
+
+	arguments = lone_lisp_machine_pop_value(lone, machine);
 
 	if (lone_lisp_list_destructure(arguments, 2, &table, &key)) {
 		/* wrong number of arguments */ linux_exit(-1);
@@ -77,35 +89,73 @@ LONE_LISP_PRIMITIVE(table_delete)
 	if (!lone_lisp_is_table(table)) { /* table not given: (delete []) */ linux_exit(-1); }
 
 	lone_lisp_table_delete(lone, table, key);
-	return lone_lisp_nil();
+
+	lone_lisp_machine_push_value(lone, machine, lone_lisp_nil());
+	return 0;
 }
 
 LONE_LISP_PRIMITIVE(table_each)
 {
-	struct lone_lisp_value result, table, f;
+	struct lone_lisp_value arguments, table, function, expression;
 	struct lone_lisp_table_entry *entry;
-	size_t i;
+	lone_lisp_integer i;
 
-	if (lone_lisp_list_destructure(arguments, 2, &table, &f)) {
-		/* wrong number of arguments */ linux_exit(-1);
+	switch (step) {
+	case 0: /* destructure arguments and initialize */
+
+		arguments = lone_lisp_machine_pop_value(lone, machine);
+
+		if (lone_lisp_list_destructure(arguments, 2, &table, &function)) {
+			/* wrong number of arguments */ linux_exit(-1);
+		}
+
+		if (!lone_lisp_is_table(table)) { /* table not given: (each []) */ linux_exit(-1); }
+		if (!lone_lisp_is_applicable(function)) { /* applicable not given: (each table []) */ linux_exit(-1); }
+
+		if (lone_lisp_heap_value_of(table)->as.table.count < 1) {
+			/* nothing to do */ break;
+		}
+
+		i = 0;
+
+	iteration:
+
+		entry = &lone_lisp_heap_value_of(table)->as.table.entries[i];
+		expression = lone_lisp_list_build(lone, 3, &function, &entry->key, &entry->value);
+
+		lone->machine.step = LONE_LISP_MACHINE_STEP_EXPRESSION_EVALUATION;
+		lone->machine.expression = expression;
+
+		lone_lisp_machine_push_integer(lone, machine, i);
+		lone_lisp_machine_push_value(lone, machine, function);
+		lone_lisp_machine_push_value(lone, machine, table);
+
+		return 1;
+
+	case 1: /* advance or finish iteration */
+
+		table    = lone_lisp_machine_pop_value(lone, machine);
+		function = lone_lisp_machine_pop_value(lone, machine);
+		i        = lone_lisp_machine_pop_integer(lone, machine);
+
+		++i;
+
+		if (i < lone_lisp_heap_value_of(table)->as.table.count) {
+			goto iteration;
+		} else {
+			break;
+		}
 	}
 
-	if (!lone_lisp_is_table(table)) { /* table not given: (each []) */ linux_exit(-1); }
-	if (!lone_lisp_is_applicable(f)) { /* applicable not given: (each table []) */ linux_exit(-1); }
-
-	result = lone_lisp_nil();
-
-	LONE_LISP_TABLE_FOR_EACH(entry, table, i) {
-		arguments = lone_lisp_list_build(lone, 2, &entry->key, &entry->value);
-		result = lone_lisp_apply(lone, module, environment, f, arguments);
-	}
-
-	return result;
+	lone_lisp_machine_push_value(lone, machine, lone_lisp_nil());
+	return 0;
 }
 
 LONE_LISP_PRIMITIVE(table_count)
 {
-	struct lone_lisp_value table;
+	struct lone_lisp_value arguments, table, count;
+
+	arguments = lone_lisp_machine_pop_value(lone, machine);
 
 	if (lone_lisp_list_destructure(arguments, 1, &table)) {
 		/* wrong number of arguments */ linux_exit(-1);
@@ -113,5 +163,8 @@ LONE_LISP_PRIMITIVE(table_count)
 
 	if (!lone_lisp_is_table(table)) { /* table not given: (count []) */ linux_exit(-1); }
 
-	return lone_lisp_integer_create(lone_lisp_table_count(table));
+	count = lone_lisp_integer_create(lone_lisp_table_count(table));
+
+	lone_lisp_machine_push_value(lone, machine, count);
+	return 0;
 }

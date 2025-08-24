@@ -2,6 +2,7 @@
 
 #include <lone/lisp/modules/intrinsic/list.h>
 
+#include <lone/lisp/machine.h>
 #include <lone/lisp/module.h>
 
 #include <lone/lisp/value/primitive.h>
@@ -43,80 +44,178 @@ void lone_lisp_modules_intrinsic_list_initialize(struct lone_lisp *lone)
 
 LONE_LISP_PRIMITIVE(list_construct)
 {
-	struct lone_lisp_value first, rest;
+	struct lone_lisp_value arguments, first, rest;
+
+	arguments = lone_lisp_machine_pop_value(lone, machine);
 
 	if (lone_lisp_list_destructure(arguments, 2, &first, &rest)) {
 		/* wrong number of arguments */ linux_exit(-1);
 	}
 
-	return lone_lisp_list_create(lone, first, rest);
+	lone_lisp_machine_push_value(lone, machine, lone_lisp_list_create(lone, first, rest));
+
+	return 0;
 }
 
 LONE_LISP_PRIMITIVE(list_first)
 {
-	struct lone_lisp_value argument;
+	struct lone_lisp_value arguments, argument;
+
+	arguments = lone_lisp_machine_pop_value(lone, machine);
 
 	if (lone_lisp_list_destructure(arguments, 1, &argument)) {
 		/* wrong number of arguments */ linux_exit(-1);
 	}
 
-	return lone_lisp_list_first(argument);
+	lone_lisp_machine_push_value(lone, machine, lone_lisp_list_first(argument));
+
+	return 0;
 }
 
 LONE_LISP_PRIMITIVE(list_rest)
 {
-	struct lone_lisp_value argument;
+	struct lone_lisp_value arguments, argument;
+
+	arguments = lone_lisp_machine_pop_value(lone, machine);
 
 	if (lone_lisp_list_destructure(arguments, 1, &argument)) {
 		/* wrong number of arguments */ linux_exit(-1);
 	}
 
-	return lone_lisp_list_rest(argument);
-}
+	lone_lisp_machine_push_value(lone, machine, lone_lisp_list_rest(argument));
 
-LONE_LISP_PRIMITIVE(list_map)
-{
-	struct lone_lisp_value function, list, results, head;
-
-	if (lone_lisp_list_destructure(arguments, 2, &function, &list)) {
-		/* wrong number of arguments */ linux_exit(-1);
-	}
-
-	if (!lone_lisp_is_applicable(function)) { /* not given an applicable value */ linux_exit(-1); }
-	if (lone_lisp_is_nil(list)) { /* mapping function to empty list */ return lone_lisp_nil(); }
-	if (!lone_lisp_is_list(list)) { /* can only map functions to lists */ linux_exit(-1); }
-
-	for (results = head = lone_lisp_nil(); !lone_lisp_is_nil(list); list = lone_lisp_list_rest(list)) {
-		arguments = lone_lisp_list_create(lone, lone_lisp_list_first(list), lone_lisp_nil());
-		lone_lisp_list_append(lone, &results, &head,
-				lone_lisp_apply(lone, module, environment, function, arguments));
-	}
-
-	return results;
-}
-
-LONE_LISP_PRIMITIVE(list_reduce)
-{
-	struct lone_lisp_value function, initial, list, result, head, current;
-
-	if (lone_lisp_list_destructure(arguments, 3, &function, &initial, &list)) {
-		/* wrong number of arguments */ linux_exit(-1);
-	}
-
-	if (!lone_lisp_is_applicable(function)) { /* not given an applicable value */ linux_exit(-1); }
-	if (lone_lisp_is_nil(list)) { /* mapping function to empty list */ return initial; }
-	if (!lone_lisp_is_list(list)) { /* can only reduce lists */ linux_exit(-1); }
-
-	for (result = initial, head = list; !lone_lisp_is_nil(head); head = lone_lisp_list_rest(head)) {
-		current = lone_lisp_list_first(head);
-		arguments = lone_lisp_list_build(lone, 2, &result, &current);
-		result = lone_lisp_apply(lone, module, environment, function, arguments);
-	}
-
-	return result;
+	return 0;
 }
 
 LONE_LISP_PRIMITIVE(list_flatten)
 {
-	return lone_lisp_list_flatten(lone, arguments);
+	struct lone_lisp_value arguments;
+
+	arguments = lone_lisp_machine_pop_value(lone, machine);
+	lone_lisp_machine_push_value(lone, machine, lone_lisp_list_flatten(lone, arguments));
+
+	return 0;
+}
+
+LONE_LISP_PRIMITIVE(list_map)
+{
+	struct lone_lisp_value arguments, function, list, head, results, result, entry, expression;
+
+	switch (step) {
+	case 0: /* unpack arguments and initialize */
+
+		arguments = lone_lisp_machine_pop_value(lone, machine);
+
+		if (lone_lisp_list_destructure(arguments, 2, &function, &list)) {
+			/* wrong number of arguments */ linux_exit(-1);
+		}
+
+		if (!lone_lisp_is_applicable(function)) { /* not given an applicable value */ linux_exit(-1); }
+
+		if (lone_lisp_is_nil(list)) {
+			/* mapping function to empty list */
+			lone_lisp_machine_push_value(lone, machine, lone_lisp_nil());
+			return 0;
+		}
+
+		if (!lone_lisp_is_list(list)) { /* can only map functions to lists */ linux_exit(-1); }
+
+		results = head = lone_lisp_nil();
+
+	application: /* apply value to function */
+
+		entry = lone_lisp_list_first(list);
+		expression = lone_lisp_list_build(lone, 2, &function, &entry);
+
+		lone->machine.step = LONE_LISP_MACHINE_STEP_EXPRESSION_EVALUATION;
+		lone->machine.expression = expression;
+
+		lone_lisp_machine_push_value(lone, machine, function);
+		lone_lisp_machine_push_value(lone, machine, list);
+		lone_lisp_machine_push_value(lone, machine, head);
+		lone_lisp_machine_push_value(lone, machine, results);
+
+		return 1;
+
+	case 1: /* collect resulting value into results list */
+
+		result   = machine->value;
+		results  = lone_lisp_machine_pop_value(lone, machine);
+		head     = lone_lisp_machine_pop_value(lone, machine);
+		list     = lone_lisp_machine_pop_value(lone, machine);
+		function = lone_lisp_machine_pop_value(lone, machine);
+
+		lone_lisp_list_append(lone, &results, &head, result);
+		list = lone_lisp_list_rest(list);
+
+		if (!lone_lisp_is_nil(list)) {
+			goto application;
+		} else {
+			lone_lisp_machine_push_value(lone, machine, results);
+			return 0;
+		}
+
+	default:
+		break;
+	}
+
+	linux_exit(-1);
+}
+
+LONE_LISP_PRIMITIVE(list_reduce)
+{
+	struct lone_lisp_value arguments, function, list, accumulator, entry;
+
+	switch (step) {
+	case 0: /* unpack and check arguments */
+
+		arguments = lone_lisp_machine_pop_value(lone, machine);
+
+		if (lone_lisp_list_destructure(arguments, 3, &function, &accumulator, &list)) {
+			/* wrong number of arguments */ linux_exit(-1);
+		}
+
+		if (!lone_lisp_is_applicable(function)) { /* not given an applicable value */ linux_exit(-1); }
+
+		if (lone_lisp_is_nil(list)) {
+			/* mapping function to empty list */
+			lone_lisp_machine_push_value(lone, machine, accumulator);
+			return 0;
+		}
+
+		if (!lone_lisp_is_list(list)) { /* can only reduce lists */ linux_exit(-1); }
+
+	application: /* apply accumulator and value to function */
+
+		entry = lone_lisp_list_first(list);
+
+		lone->machine.step = LONE_LISP_MACHINE_STEP_EXPRESSION_EVALUATION;
+		lone->machine.expression = lone_lisp_list_build(lone, 3, &function, &accumulator, &entry);
+
+		lone_lisp_machine_push_value(lone, machine, function);
+		lone_lisp_machine_push_value(lone, machine, list);
+		/* no need to push the accumulator because the result of the
+		 * function application will be its new value */
+
+		return 1;
+
+	case 1: /* collect result of function application */
+
+		accumulator = machine->value;
+		list        = lone_lisp_machine_pop_value(lone, machine);
+		function    = lone_lisp_machine_pop_value(lone, machine);
+
+		list = lone_lisp_list_rest(list);
+
+		if (!lone_lisp_is_nil(list)) {
+			goto application;
+		} else {
+			lone_lisp_machine_push_value(lone, machine, accumulator);
+			return 0;
+		}
+	default:
+		break;
+	}
+
+	linux_exit(-1);
 }

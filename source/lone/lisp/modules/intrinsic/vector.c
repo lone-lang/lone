@@ -9,6 +9,7 @@
 #include <lone/lisp/value/symbol.h>
 #include <lone/lisp/value/integer.h>
 
+#include <lone/lisp/machine.h>
 #include <lone/lisp/module.h>
 #include <lone/lisp/evaluator.h>
 
@@ -42,7 +43,9 @@ void lone_lisp_modules_intrinsic_vector_initialize(struct lone_lisp *lone)
 
 LONE_LISP_PRIMITIVE(vector_get)
 {
-	struct lone_lisp_value vector, index;
+	struct lone_lisp_value arguments, vector, index, value;
+
+	arguments = lone_lisp_machine_pop_value(lone, machine);
 
 	if (lone_lisp_list_destructure(arguments, 2, &vector, &index)) {
 		/* wrong number of arguments */ linux_exit(-1);
@@ -51,12 +54,17 @@ LONE_LISP_PRIMITIVE(vector_get)
 	if (!lone_lisp_is_vector(vector)) { /* vector not given: (get {}) */ linux_exit(-1); }
 	if (!lone_lisp_is_integer(index)) { /* integer index not given: (get [1 2 3] "invalid") */ linux_exit(-1); }
 
-	return lone_lisp_vector_get(lone, vector, index);
+	value = lone_lisp_vector_get(lone, vector, index);
+
+	lone_lisp_machine_push_value(lone, machine, value);
+	return 0;
 }
 
 LONE_LISP_PRIMITIVE(vector_set)
 {
-	struct lone_lisp_value vector, index, value;
+	struct lone_lisp_value arguments, vector, index, value;
+
+	arguments = lone_lisp_machine_pop_value(lone, machine);
 
 	if (lone_lisp_list_destructure(arguments, 3, &vector, &index, &value)) {
 		/* wrong number of arguments */ linux_exit(-1);
@@ -66,13 +74,17 @@ LONE_LISP_PRIMITIVE(vector_set)
 	if (!lone_lisp_is_integer(index)) { /* integer index not given: (set [1 2 3] "invalid") */ linux_exit(-1); }
 
 	lone_lisp_vector_set(lone, vector, index, value);
-	return lone_lisp_nil();
+
+	lone_lisp_machine_push_value(lone, machine, value);
+	return 0;
 }
 
 LONE_LISP_PRIMITIVE(vector_slice)
 {
-	struct lone_lisp_value vector, start, end, slice;
+	struct lone_lisp_value arguments, vector, start, end, slice;
 	size_t i, j, k;
+
+	arguments = lone_lisp_machine_pop_value(lone, machine);
 
 	if (lone_lisp_is_nil(arguments)) { /* arguments not given: (slice) */ linux_exit(-1); }
 
@@ -104,34 +116,70 @@ LONE_LISP_PRIMITIVE(vector_slice)
 		lone_lisp_vector_set_value_at(lone, slice, k, lone_lisp_vector_get_value_at(vector, i));
 	}
 
-	return slice;
+	lone_lisp_machine_push_value(lone, machine, slice);
+	return 0;
 }
 
 LONE_LISP_PRIMITIVE(vector_each)
 {
-	struct lone_lisp_value result, vector, f, entry;
-	size_t i;
+	struct lone_lisp_value arguments, vector, function, entry, expression;
+	lone_lisp_integer i;
 
-	if (lone_lisp_list_destructure(arguments, 2, &vector, &f)) {
-		/* wrong number of arguments */ linux_exit(-1);
+	switch (step) {
+	case 0:
+		arguments = lone_lisp_machine_pop_value(lone, machine);
+
+		if (lone_lisp_list_destructure(arguments, 2, &vector, &function)) {
+			/* wrong number of arguments */ linux_exit(-1);
+		}
+
+		if (!lone_lisp_is_vector(vector)) { /* vector not given: (each {}) */ linux_exit(-1); }
+		if (!lone_lisp_is_applicable(function)) { /* applicable not given: (each vector []) */ linux_exit(-1); }
+
+		if (lone_lisp_vector_count(vector) < 1) {
+			/* nothing to do */ break;
+		}
+
+		i = 0;
+
+	iteration:
+
+		entry = lone_lisp_vector_get_value_at(vector, i);
+		expression = lone_lisp_list_build(lone, 2, &function, &entry);
+
+		lone->machine.step = LONE_LISP_MACHINE_STEP_EXPRESSION_EVALUATION;
+		lone->machine.expression = expression;
+
+		lone_lisp_machine_push_integer(lone, machine, i);
+		lone_lisp_machine_push_value(lone, machine, function);
+		lone_lisp_machine_push_value(lone, machine, vector);
+
+		return 1;
+
+	case 1: /* advance or finish iteration */
+
+		vector   = lone_lisp_machine_pop_value(lone, machine);
+		function = lone_lisp_machine_pop_value(lone, machine);
+		i        = lone_lisp_machine_pop_integer(lone, machine);
+
+		++i;
+
+		if (i < lone_lisp_vector_count(vector)) {
+			goto iteration;
+		} else {
+			break;
+		}
 	}
 
-	if (!lone_lisp_is_vector(vector)) { /* vector not given: (each {}) */ linux_exit(-1); }
-	if (!lone_lisp_is_applicable(f)) { /* applicable not given: (each vector []) */ linux_exit(-1); }
-
-	result = lone_lisp_nil();
-
-	LONE_LISP_VECTOR_FOR_EACH(entry, vector, i) {
-		arguments = lone_lisp_list_build(lone, 1, &entry);
-		result = lone_lisp_apply(lone, module, environment, f, arguments);
-	}
-
-	return result;
+	lone_lisp_machine_push_value(lone, machine, lone_lisp_nil());
+	return 0;
 }
 
 LONE_LISP_PRIMITIVE(vector_count)
 {
-	struct lone_lisp_value vector;
+	struct lone_lisp_value arguments, vector, count;
+
+	arguments = lone_lisp_machine_pop_value(lone, machine);
 
 	if (lone_lisp_list_destructure(arguments, 1, &vector)) {
 		/* wrong number of arguments */ linux_exit(-1);
@@ -139,5 +187,8 @@ LONE_LISP_PRIMITIVE(vector_count)
 
 	if (!lone_lisp_is_vector(vector)) { /* vector not given: (count {}) */ linux_exit(-1); }
 
-	return lone_lisp_integer_create(lone_lisp_vector_count(vector));
+	count = lone_lisp_integer_create(lone_lisp_vector_count(vector));
+
+	lone_lisp_machine_push_value(lone, machine, count);
+	return 0;
 }
