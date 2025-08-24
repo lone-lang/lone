@@ -101,6 +101,25 @@ void lone_lisp_machine_restore_primitive_step(struct lone_lisp *lone, struct lon
 	machine->primitive.step = lone_lisp_machine_pop_primitive_step(lone, machine);
 }
 
+static bool should_evaluate_operands(struct lone_lisp_value applicable, struct lone_lisp_value operands)
+{
+	if (lone_lisp_is_nil(operands)) {
+		return false;
+	} else {
+		switch (lone_lisp_heap_value_of(applicable)->type) {
+		case LONE_LISP_TYPE_FUNCTION:
+			return lone_lisp_heap_value_of(applicable)->as.function.flags.evaluate_arguments;
+		case LONE_LISP_TYPE_PRIMITIVE:
+			return lone_lisp_heap_value_of(applicable)->as.primitive.flags.evaluate_arguments;
+		case LONE_LISP_TYPE_VECTOR:
+		case LONE_LISP_TYPE_TABLE:
+			return true;
+		default:
+			linux_exit(-1);
+		}
+	}
+}
+
 void lone_lisp_machine_reset(struct lone_lisp *lone,
 		struct lone_lisp_value module, struct lone_lisp_value expression)
 {
