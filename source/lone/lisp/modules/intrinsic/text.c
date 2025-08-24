@@ -8,6 +8,7 @@
 #include <lone/lisp/value/symbol.h>
 #include <lone/lisp/value/text.h>
 
+#include <lone/lisp/machine.h>
 #include <lone/lisp/module.h>
 #include <lone/lisp/utilities.h>
 
@@ -35,7 +36,9 @@ void lone_lisp_modules_intrinsic_text_initialize(struct lone_lisp *lone)
 
 LONE_LISP_PRIMITIVE(text_to_symbol)
 {
-	struct lone_lisp_value text;
+	struct lone_lisp_value arguments, text, symbol;
+
+	arguments = lone_lisp_machine_pop_value(lone, machine);
 
 	if (lone_lisp_list_destructure(arguments, 1, &text)) {
 		/* wrong number of arguments */ linux_exit(-1);
@@ -45,22 +48,38 @@ LONE_LISP_PRIMITIVE(text_to_symbol)
 		/* argument not a text value: (to-symbol 123) */ linux_exit(-1);
 	}
 
-	return lone_lisp_text_to_symbol(lone, text);
+	symbol = lone_lisp_text_to_symbol(lone, text);
+
+	lone_lisp_machine_push_value(lone, machine, symbol);
+	return 0;
 }
 
 LONE_LISP_PRIMITIVE(text_join)
 {
+	struct lone_lisp_value arguments, text;
 	struct lone_bytes joined;
+
+	arguments = lone_lisp_machine_pop_value(lone, machine);
 
 	joined = lone_lisp_join(lone,
 			lone_lisp_list_first(arguments),
 			lone_lisp_list_rest(arguments),
 			lone_lisp_is_text);
 
-	return lone_lisp_text_transfer_bytes(lone, joined, true);
+	text = lone_lisp_text_transfer_bytes(lone, joined, true);
+
+	lone_lisp_machine_push_value(lone, machine, text);
+	return 0;
 }
 
 LONE_LISP_PRIMITIVE(text_concatenate)
 {
-	return lone_lisp_text_transfer_bytes(lone, lone_lisp_concatenate(lone, arguments, lone_lisp_is_text), true);
+	struct lone_lisp_value arguments, text;
+
+	arguments = lone_lisp_machine_pop_value(lone, machine);
+
+	text = lone_lisp_text_transfer_bytes(lone, lone_lisp_concatenate(lone, arguments, lone_lisp_is_text), true);
+
+	lone_lisp_machine_push_value(lone, machine, text);
+	return 0;
 }

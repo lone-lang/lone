@@ -8,6 +8,7 @@
 #include <lone/lisp/value/symbol.h>
 #include <lone/lisp/value/integer.h>
 
+#include <lone/lisp/machine.h>
 #include <lone/lisp/module.h>
 #include <lone/lisp/utilities.h>
 
@@ -125,12 +126,21 @@ static struct lone_lisp_value lone_lisp_primitive_integer_operation(struct lone_
 
 LONE_LISP_PRIMITIVE(math_add)
 {
-	return lone_lisp_primitive_integer_operation(lone, arguments, '+', lone_lisp_zero());
+	struct lone_lisp_value arguments, result;
+
+	arguments = lone_lisp_machine_pop_value(lone, machine);
+
+	result = lone_lisp_primitive_integer_operation(lone, arguments, '+', lone_lisp_zero());
+
+	lone_lisp_machine_push_value(lone, machine, result);
+	return 0;
 }
 
 LONE_LISP_PRIMITIVE(math_subtract)
 {
-	struct lone_lisp_value first, accumulator;
+	struct lone_lisp_value arguments, first, accumulator, result;
+
+	arguments = lone_lisp_machine_pop_value(lone, machine);
 
 	if (!lone_lisp_is_nil(arguments) && !lone_lisp_is_nil(lone_lisp_list_rest(arguments))) {
 		/* at least two arguments, set initial value to the first argument: (- 100 58) */
@@ -142,17 +152,29 @@ LONE_LISP_PRIMITIVE(math_subtract)
 		accumulator = lone_lisp_zero();
 	}
 
-	return lone_lisp_primitive_integer_operation(lone, arguments, '-', accumulator);
+	result = lone_lisp_primitive_integer_operation(lone, arguments, '-', accumulator);
+
+	lone_lisp_machine_push_value(lone, machine, result);
+	return 0;
 }
 
 LONE_LISP_PRIMITIVE(math_multiply)
 {
-	return lone_lisp_primitive_integer_operation(lone, arguments, '*', lone_lisp_one());
+	struct lone_lisp_value arguments, result;
+
+	arguments = lone_lisp_machine_pop_value(lone, machine);
+
+	result = lone_lisp_primitive_integer_operation(lone, arguments, '*', lone_lisp_one());
+
+	lone_lisp_machine_push_value(lone, machine, result);
+	return 0;
 }
 
 LONE_LISP_PRIMITIVE(math_divide)
 {
-	struct lone_lisp_value dividend, divisor;
+	struct lone_lisp_value arguments, dividend, divisor, result;
+
+	arguments = lone_lisp_machine_pop_value(lone, machine);
 
 	if (lone_lisp_is_nil(arguments)) { /* at least the dividend is required, (/) is invalid */ linux_exit(-1); }
 	dividend = lone_lisp_list_first(arguments);
@@ -162,11 +184,13 @@ LONE_LISP_PRIMITIVE(math_divide)
 	case LONE_LISP_TYPE_INTEGER:
 		if (lone_lisp_is_nil(arguments)) {
 			/* not given a divisor, return 1/x instead: (/ 2) = 1/2 */
-			return lone_lisp_integer_create(1 / lone_lisp_integer_of(dividend));
+			result = lone_lisp_integer_create(1 / lone_lisp_integer_of(dividend));
+			break;
 		} else {
 			/* (/ x a b c ...) = x / (a * b * c * ...) */
 			divisor = lone_lisp_primitive_integer_operation(lone, arguments, '*', lone_lisp_one());
-			return lone_lisp_integer_create(lone_lisp_integer_of(dividend) / lone_lisp_integer_of(divisor));
+			result = lone_lisp_integer_create(lone_lisp_integer_of(dividend) / lone_lisp_integer_of(divisor));
+			break;
 		}
 	case LONE_LISP_TYPE_NIL:
 	case LONE_LISP_TYPE_FALSE:
@@ -174,31 +198,62 @@ LONE_LISP_PRIMITIVE(math_divide)
 	case LONE_LISP_TYPE_HEAP_VALUE:
 		/* can't divide non-numbers: (/ "not a number") */ linux_exit(-1);
 	}
+
+	lone_lisp_machine_push_value(lone, machine, result);
+	return 0;
+}
+
+static long apply_and_return(struct lone_lisp *lone, struct lone_lisp_machine *machine,
+		lone_lisp_comparator_function comparator)
+{
+	struct lone_lisp_value arguments, result;
+
+	arguments = lone_lisp_machine_pop_value(lone, machine);
+
+	result = lone_lisp_apply_comparator(lone, arguments, comparator);
+
+	lone_lisp_machine_push_value(lone, machine, result);
+	return 0;
 }
 
 LONE_LISP_PRIMITIVE(math_is_less_than)
 {
-	return lone_lisp_apply_comparator(lone, arguments, lone_lisp_integer_is_less_than);
+	return apply_and_return(lone, machine, lone_lisp_integer_is_less_than);
 }
 
 LONE_LISP_PRIMITIVE(math_is_less_than_or_equal_to)
 {
-	return lone_lisp_apply_comparator(lone, arguments, lone_lisp_integer_is_less_than_or_equal_to);
+	return apply_and_return(lone, machine, lone_lisp_integer_is_less_than_or_equal_to);
 }
 
 LONE_LISP_PRIMITIVE(math_is_greater_than)
 {
-	return lone_lisp_apply_comparator(lone, arguments, lone_lisp_integer_is_greater_than);
+	return apply_and_return(lone, machine, lone_lisp_integer_is_greater_than);
 }
 
 LONE_LISP_PRIMITIVE(math_is_greater_than_or_equal_to)
 {
-	return lone_lisp_apply_comparator(lone, arguments, lone_lisp_integer_is_greater_than_or_equal_to);
+	return apply_and_return(lone, machine, lone_lisp_integer_is_greater_than_or_equal_to);
 }
 
-LONE_LISP_PRIMITIVE(math_sign)
+static struct lone_lisp_value sign_of(struct lone_lisp_value value)
 {
-	struct lone_lisp_value value;
+	lone_lisp_integer x = lone_lisp_integer_of(value);
+
+	if (x > 0) {
+		return lone_lisp_one();
+	} else if (x < 0) {
+		return lone_lisp_minus_one();
+	} else {
+		return lone_lisp_zero();
+	}
+}
+
+static struct lone_lisp_value compute_sign(struct lone_lisp *lone, struct lone_lisp_machine *machine)
+{
+	struct lone_lisp_value arguments, value;
+
+	arguments = lone_lisp_machine_pop_value(lone, machine);
 
 	if (lone_lisp_list_destructure(arguments, 1, &value)) {
 		/* wrong number of arguments */ linux_exit(-1);
@@ -206,9 +261,8 @@ LONE_LISP_PRIMITIVE(math_sign)
 
 	switch (lone_lisp_type_of(value)) {
 	case LONE_LISP_TYPE_INTEGER:
-		if (lone_lisp_integer_of(value) > 0) { return lone_lisp_one(); }
-		else if (lone_lisp_integer_of(value) < 0) { return lone_lisp_minus_one(); }
-		else { return lone_lisp_zero(); }
+		return sign_of(value);
+
 	case LONE_LISP_TYPE_NIL:
 	case LONE_LISP_TYPE_FALSE:
 	case LONE_LISP_TYPE_TRUE:
@@ -217,20 +271,34 @@ LONE_LISP_PRIMITIVE(math_sign)
 	}
 }
 
+LONE_LISP_PRIMITIVE(math_sign)
+{
+	lone_lisp_machine_push_value(lone, machine, compute_sign(lone, machine));
+	return 0;
+}
+
+static long sign_predicate(struct lone_lisp *lone, struct lone_lisp_machine *machine, struct lone_lisp_value sign)
+{
+	lone_lisp_integer x, y;
+
+	x = lone_lisp_integer_of(compute_sign(lone, machine));
+	y = lone_lisp_integer_of(sign);
+
+	lone_lisp_machine_push_value(lone, machine, lone_lisp_boolean_for(x == y));
+	return 0;
+}
+
 LONE_LISP_PRIMITIVE(math_is_zero)
 {
-	struct lone_lisp_value value = lone_lisp_primitive_math_sign(lone, module, environment, arguments, closure);
-	return lone_lisp_boolean_for(lone_lisp_integer_of(value) == 0);
+	return sign_predicate(lone, machine, lone_lisp_zero());
 }
 
 LONE_LISP_PRIMITIVE(math_is_positive)
 {
-	struct lone_lisp_value value = lone_lisp_primitive_math_sign(lone, module, environment, arguments, closure);
-	return lone_lisp_boolean_for(lone_lisp_integer_of(value) > 0);
+	return sign_predicate(lone, machine, lone_lisp_one());
 }
 
 LONE_LISP_PRIMITIVE(math_is_negative)
 {
-	struct lone_lisp_value value = lone_lisp_primitive_math_sign(lone, module, environment, arguments, closure);
-	return lone_lisp_boolean_for(lone_lisp_integer_of(value) < 0);
+	return sign_predicate(lone, machine, lone_lisp_minus_one());
 }
