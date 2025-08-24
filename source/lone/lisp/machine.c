@@ -100,3 +100,21 @@ void lone_lisp_machine_restore_primitive_step(struct lone_lisp *lone, struct lon
 {
 	machine->primitive.step = lone_lisp_machine_pop_primitive_step(lone, machine);
 }
+
+void lone_lisp_machine_reset(struct lone_lisp *lone,
+		struct lone_lisp_value module, struct lone_lisp_value expression)
+{
+	struct lone_lisp_machine *machine;
+
+	machine = &lone->machine;
+
+	machine->stack.top = machine->stack.base;
+
+	machine->step = LONE_LISP_MACHINE_STEP_EXPRESSION_EVALUATION;
+	lone_lisp_machine_push_step(lone, machine, LONE_LISP_MACHINE_STEP_HALT);
+	machine->primitive.step = 0;
+
+	machine->expression = expression;
+	machine->module = module;
+	machine->environment = lone_lisp_heap_value_of(module)->as.module.environment;
+}
