@@ -98,10 +98,9 @@ static bool lone_lisp_points_to_heap(struct lone_lisp *lone, void *pointer)
 	return false;
 }
 
-static void lone_lisp_find_and_mark_stack_roots(struct lone_lisp *lone)
+static void lone_lisp_mark_stack_roots(struct lone_lisp *lone, void *bottom, void *top)
 {
-	void *bottom = lone->native_stack, *top = __builtin_frame_address(0), *tmp;
-	void **pointer;
+	void *tmp, **pointer;
 
 	if (top < bottom) {
 		tmp = bottom;
@@ -118,13 +117,22 @@ static void lone_lisp_find_and_mark_stack_roots(struct lone_lisp *lone)
 	}
 }
 
+static void lone_lisp_mark_native_stack_roots(struct lone_lisp *lone)
+{
+	lone_lisp_mark_stack_roots(
+		lone,
+		lone->native_stack,
+		__builtin_frame_address(0)
+	);
+}
+
 static void lone_lisp_mark_all_reachable_values(struct lone_lisp *lone)
 {
 	lone_registers registers;                     /* stack space for registers */
 	lone_save_registers(registers);               /* spill registers on stack */
 
-	lone_lisp_mark_known_roots(lone);             /* precise */
-	lone_lisp_find_and_mark_stack_roots(lone);    /* conservative */
+	lone_lisp_mark_known_roots(lone);           /* precise */
+	lone_lisp_mark_native_stack_roots(lone);    /* conservative */
 }
 
 static void lone_lisp_kill_all_unmarked_values(struct lone_lisp *lone)
