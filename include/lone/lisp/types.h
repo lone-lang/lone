@@ -58,8 +58,8 @@ enum lone_lisp_heap_value_type {
 };
 
 enum lone_lisp_value_type {
-	LONE_LISP_TYPE_INTEGER    = (0 << 2) | (0 << 1) | (1 << 0), /* ??1 */
 	LONE_LISP_TYPE_HEAP_VALUE = (0 << 2) | (0 << 1) | (0 << 0), /* 000 */
+	LONE_LISP_TYPE_INTEGER    = (0 << 2) | (0 << 1) | (1 << 0), /* 001 */
 	LONE_LISP_TYPE_NIL        = (0 << 2) | (1 << 1) | (0 << 1), /* 010 */
 	LONE_LISP_TYPE_FALSE      = (1 << 2) | (0 << 1) | (0 << 1), /* 100 */
 	LONE_LISP_TYPE_TRUE       = (1 << 2) | (1 << 1) | (0 << 1), /* 110 */

@@ -32,11 +32,7 @@ struct lone_lisp_value lone_lisp_boolean_for(bool value)
 
 enum lone_lisp_value_type lone_lisp_type_of(struct lone_lisp_value value)
 {
-	if (value.tagged & 1) {
-		return LONE_LISP_TYPE_INTEGER;
-	} else {
-		return value.tagged & 7;
-	}
+	return value.tagged & 7;
 }
 
 struct lone_lisp_heap_value *lone_lisp_heap_value_of(struct lone_lisp_value value)
@@ -46,7 +42,7 @@ struct lone_lisp_heap_value *lone_lisp_heap_value_of(struct lone_lisp_value valu
 
 lone_lisp_integer lone_lisp_integer_of(struct lone_lisp_value value)
 {
-	return value.tagged >> 1;
+	return value.tagged >> 3;
 }
 
 bool lone_lisp_has_same_type(struct lone_lisp_value x, struct lone_lisp_value y)
