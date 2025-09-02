@@ -30,9 +30,21 @@ struct lone_lisp_value lone_lisp_boolean_for(bool value)
 	}
 }
 
-enum lone_lisp_value_type lone_lisp_type_of(struct lone_lisp_value value)
+unsigned char lone_lisp_type_tag_of(struct lone_lisp_value value)
 {
 	return value.tagged & 7;
+}
+
+enum lone_lisp_value_type lone_lisp_type_of(struct lone_lisp_value value)
+{
+	unsigned char tag = lone_lisp_type_tag_of(value);
+
+	switch (tag) {
+	case 7:
+		return value.tagged & 31;
+	}
+
+	return tag;
 }
 
 struct lone_lisp_heap_value *lone_lisp_heap_value_of(struct lone_lisp_value value)
@@ -89,17 +101,17 @@ bool lone_lisp_is_integer(struct lone_lisp_value value)
 
 bool lone_lisp_is_nil(struct lone_lisp_value value)
 {
-	return lone_lisp_is_register_value_of_type(value, LONE_LISP_TYPE_NIL);
+	return lone_lisp_type_of(value) == LONE_LISP_TYPE_NIL;
 }
 
 bool lone_lisp_is_false(struct lone_lisp_value value)
 {
-	return lone_lisp_is_register_value_of_type(value, LONE_LISP_TYPE_FALSE);
+	return lone_lisp_type_of(value) == LONE_LISP_TYPE_FALSE;
 }
 
 bool lone_lisp_is_true(struct lone_lisp_value value)
 {
-	return lone_lisp_is_register_value_of_type(value, LONE_LISP_TYPE_TRUE);
+	return lone_lisp_type_of(value) == LONE_LISP_TYPE_TRUE;
 }
 
 bool lone_lisp_is_falsy(struct lone_lisp_value value)

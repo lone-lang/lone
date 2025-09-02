@@ -29,6 +29,7 @@ void lone_lisp_initialize(struct lone_lisp *lone, struct lone_system *system, vo
 
 	lone->machine.stack.base = lone_memory_array(lone->system, 0, 1000, sizeof(*lone->machine.stack.base));
 	lone->machine.stack.limit = lone->machine.stack.base + 1000;
+	lone->machine.stack.top = lone->machine.stack.base;
 
 	lone->symbol_table = lone_lisp_table_create(lone, 256, lone_lisp_nil());
 

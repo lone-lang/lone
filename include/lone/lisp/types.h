@@ -58,11 +58,11 @@ enum lone_lisp_heap_value_type {
 };
 
 enum lone_lisp_value_type {
-	LONE_LISP_TYPE_HEAP_VALUE = (0 << 2) | (0 << 1) | (0 << 0), /* 000 */
-	LONE_LISP_TYPE_INTEGER    = (0 << 2) | (0 << 1) | (1 << 0), /* 001 */
-	LONE_LISP_TYPE_NIL        = (0 << 2) | (1 << 1) | (0 << 1), /* 010 */
-	LONE_LISP_TYPE_FALSE      = (1 << 2) | (0 << 1) | (0 << 1), /* 100 */
-	LONE_LISP_TYPE_TRUE       = (1 << 2) | (1 << 1) | (0 << 1), /* 110 */
+	LONE_LISP_TYPE_HEAP_VALUE =                       (0 << 2) | (0 << 1) | (0 << 0), /*    000 */
+	LONE_LISP_TYPE_INTEGER    =                       (0 << 2) | (0 << 1) | (1 << 0), /*    001 */
+	LONE_LISP_TYPE_NIL        = (0 << 4) | (0 << 3) | (1 << 2) | (1 << 1) | (1 << 0), /* 00 111 */
+	LONE_LISP_TYPE_TRUE       = (0 << 4) | (1 << 3) | (1 << 2) | (1 << 1) | (1 << 0), /* 01 111 */
+	LONE_LISP_TYPE_FALSE      = (1 << 4) | (0 << 3) | (1 << 2) | (1 << 1) | (1 << 0), /* 10 111 */
 };
 
 struct lone_lisp_value {
@@ -197,6 +197,7 @@ struct lone_lisp_value lone_lisp_boolean_for(bool value);
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
 
+enum lone_lisp_value_type lone_lisp_type_tag_of(struct lone_lisp_value value);
 enum lone_lisp_value_type lone_lisp_type_of(struct lone_lisp_value value);
 struct lone_lisp_heap_value *lone_lisp_heap_value_of(struct lone_lisp_value value);
 lone_lisp_integer lone_lisp_integer_of(struct lone_lisp_value value);
