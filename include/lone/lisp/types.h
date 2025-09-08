@@ -197,7 +197,7 @@ struct lone_lisp_value lone_lisp_boolean_for(bool value);
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
 
-enum lone_lisp_value_type lone_lisp_type_tag_of(struct lone_lisp_value value);
+unsigned char lone_lisp_type_tag_of(struct lone_lisp_value value);
 enum lone_lisp_value_type lone_lisp_type_of(struct lone_lisp_value value);
 struct lone_lisp_heap_value *lone_lisp_heap_value_of(struct lone_lisp_value value);
 lone_lisp_integer lone_lisp_integer_of(struct lone_lisp_value value);

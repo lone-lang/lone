@@ -32,12 +32,7 @@ struct lone_lisp_value lone_lisp_boolean_for(bool value)
 
 unsigned char lone_lisp_type_tag_of(struct lone_lisp_value value)
 {
-	return value.tagged & 7;
-}
-
-enum lone_lisp_value_type lone_lisp_type_of(struct lone_lisp_value value)
-{
-	unsigned char tag = lone_lisp_type_tag_of(value);
+	unsigned char tag = value.tagged & 7;
 
 	switch (tag) {
 	case 7:
@@ -45,6 +40,11 @@ enum lone_lisp_value_type lone_lisp_type_of(struct lone_lisp_value value)
 	}
 
 	return tag;
+}
+
+enum lone_lisp_value_type lone_lisp_type_of(struct lone_lisp_value value)
+{
+	return lone_lisp_type_tag_of(value);
 }
 
 struct lone_lisp_heap_value *lone_lisp_heap_value_of(struct lone_lisp_value value)
