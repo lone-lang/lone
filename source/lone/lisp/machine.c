@@ -317,10 +317,11 @@ bool lone_lisp_machine_cycle(struct lone_lisp *lone)
 		return true;
 	case LONE_LISP_MACHINE_STEP_EVALUATED_OPERATOR:
 		/* Evaluated operator is in machine->value.
-		 * Stack holds the unevaluated operands,
-		 * the environment to evaluate them in
-		 * and the machine's next step after
-		 * the application is finished. */
+		 * Stack:
+		 * 	unevaluated-operands-list
+		 * 	environment
+		 * 	next-step
+		 */
 		machine->applicable = machine->value;
 		machine->unevaluated = lone_lisp_machine_pop_value(lone, machine);
 		machine->environment = lone_lisp_machine_pop_value(lone, machine);
@@ -358,10 +359,11 @@ bool lone_lisp_machine_cycle(struct lone_lisp *lone)
 	case LONE_LISP_MACHINE_STEP_OPERAND_EVALUATION:
 		/* Results are accumulated in machine->list.
 		 * Remaining operands are in machine->unevaluated.
-		 * Stack holds the evaluated operand list head
-		 * as well as the applicable value the results
-		 * will be applied to and the machine's next step
-		 * after the application is finished. */
+		 * Stack:
+		 * 	evaluated-operands-list-head
+		 * 	applicable
+		 * 	next-step
+		 */
 		lone_lisp_machine_push_value(lone, machine, machine->list);
 		machine->expression = lone_lisp_list_first(machine->unevaluated);
 		if (lone_lisp_list_has_rest(machine->unevaluated)) {
@@ -370,17 +372,20 @@ bool lone_lisp_machine_cycle(struct lone_lisp *lone)
 			lone_lisp_machine_push_step(lone, machine, LONE_LISP_MACHINE_STEP_OPERAND_ACCUMULATION);
 		} else {
 			/* Evlis tail recursion
-			 * Nothing is pushed onto the stack */
+			 * no new data is pushed onto the stack */
 			lone_lisp_machine_push_step(lone, machine, LONE_LISP_MACHINE_STEP_LAST_OPERAND_ACCUMULATION);
 		}
 		goto expression_evaluation;
 	case LONE_LISP_MACHINE_STEP_OPERAND_ACCUMULATION:
 		/* Evaluated operand is in machine->value.
-		 * Stack holds the environment to evaluate operands in,
-		 * the list of remaining unevaluated operands,
-		 * the list of all evaluated operands so far,
-		 * the applicable the results will be applied to
-		 * and the machine's next step after the application. */
+		 * Stack:
+		 * 	environment
+		 * 	unevaluated-operands-list
+		 * 	evaluated-operands-list
+		 * 	evaluated-operands-list-head
+		 * 	applicable
+		 * 	next-step
+		 */
 		machine->environment = lone_lisp_machine_pop_value(lone, machine);
 		machine->unevaluated = lone_lisp_list_rest(lone_lisp_machine_pop_value(lone, machine));
 		machine->list = lone_lisp_machine_pop_value(lone, machine);
@@ -391,9 +396,12 @@ bool lone_lisp_machine_cycle(struct lone_lisp *lone)
 		return true;
 	case LONE_LISP_MACHINE_STEP_LAST_OPERAND_ACCUMULATION:
 		/* Evaluated operand is in machine->value.
-		 * Stack holds the list of evaluated operands,
-		 * the applicable the results will be applied to
-		 * and the machine's next step after the application. */
+		 * Stack:
+		 * 	evaluated-operands-list
+		 * 	evaluated-operands-list-head
+		 * 	applicable
+		 * 	next-step
+		 */
 		machine->list = lone_lisp_machine_pop_value(lone, machine);
 		head = lone_lisp_machine_pop_value(lone, machine);
 		machine->applicable = lone_lisp_machine_pop_value(lone, machine);
@@ -403,7 +411,9 @@ bool lone_lisp_machine_cycle(struct lone_lisp *lone)
 	case LONE_LISP_MACHINE_STEP_APPLICATION:
 		/* Operator is in machine->applicable.
 		 * Operands, evaluated or not, are in machine->list.
-		 * Stack holds the machine's next step after the application. */
+		 * Stack:
+		 * 	next-step
+		 */
 		switch (lone_lisp_heap_value_of(machine->applicable)->type) {
 		case LONE_LISP_TYPE_FUNCTION:
 			machine->environment = bind_arguments(
@@ -458,7 +468,9 @@ bool lone_lisp_machine_cycle(struct lone_lisp *lone)
 		return true;
 	case LONE_LISP_MACHINE_STEP_SEQUENCE_EVALUATION:
 		/* Sequence is in machine->unevaluated.
-		 * Stack holds the machine's next step after the application. */
+		 * Stack:
+		 * 	next-step
+		 */
 		machine->expression = lone_lisp_list_first(machine->unevaluated);
 		if (lone_lisp_list_has_rest(machine->unevaluated)) {
 			lone_lisp_machine_push_value(lone, machine, machine->environment);
@@ -466,13 +478,15 @@ bool lone_lisp_machine_cycle(struct lone_lisp *lone)
 			lone_lisp_machine_push_step(lone, machine, LONE_LISP_MACHINE_STEP_SEQUENCE_EVALUATION_NEXT);
 		} else {
 			/* tail recursion optimization
-			 * nothing is saved on the stack */
+			 * no new data is saved on the stack */
 			lone_lisp_machine_restore_step(lone, machine);
 		}
 		goto expression_evaluation;
 	case LONE_LISP_MACHINE_STEP_SEQUENCE_EVALUATION_FROM_PRIMITIVE:
 		/* Sequence is in machine->unevaluated.
-		 * Stack holds the machine's next step after the application. */
+		 * Stack:
+		 * 	next-step
+		 */
 		machine->expression = lone_lisp_list_first(machine->unevaluated);
 		if (lone_lisp_list_has_rest(machine->unevaluated)) {
 			lone_lisp_machine_push_value(lone, machine, machine->environment);
@@ -486,28 +500,34 @@ bool lone_lisp_machine_cycle(struct lone_lisp *lone)
 		goto expression_evaluation;
 	case LONE_LISP_MACHINE_STEP_SEQUENCE_EVALUATION_NEXT:
 		/* Result of expression is in machine->value.
-		 * Stack holds the unevaluated expressions,
-		 * the environment they're being evaluated in
-		 * and the machine's next step after application. */
+		 * Stack:
+		 * 	unevaluated-expressions-list
+		 * 	environment
+		 * 	next-step
+		 */
 		machine->unevaluated = lone_lisp_list_rest(lone_lisp_machine_pop_value(lone, machine));
 		machine->environment = lone_lisp_machine_pop_value(lone, machine);
 		machine->step = LONE_LISP_MACHINE_STEP_SEQUENCE_EVALUATION;
 		return true;
 	case LONE_LISP_MACHINE_STEP_SEQUENCE_EVALUATION_FROM_PRIMITIVE_NEXT:
 		/* Result of expression is in machine->value.
-		 * Stack holds the unevaluated expressions,
-		 * the environment they're being evaluated in
-		 * and the machine's next step after application. */
+		 * Stack:
+		 * 	unevaluated-expressions-list
+		 * 	environment
+		 * 	next-step
+		 */
 		machine->unevaluated = lone_lisp_list_rest(lone_lisp_machine_pop_value(lone, machine));
 		machine->environment = lone_lisp_machine_pop_value(lone, machine);
 		machine->step = LONE_LISP_MACHINE_STEP_SEQUENCE_EVALUATION_FROM_PRIMITIVE;
 		return true;
 	case LONE_LISP_MACHINE_STEP_RESUME_PRIMITIVE:
-		/* Stack holds the environment,
-		 * the primitive to resume,
-		 * the primitive's current step value,
-		 * whatever data the primitive saved
-		 * and the machine's next step after application. */
+		/* Stack:
+		 * 	environment
+		 * 	primitive
+		 * 	primitive-step
+		 * 	primitive-data...
+		 * 	next-step
+		 */
 		machine->environment = lone_lisp_machine_pop_value(lone, machine);
 		machine->applicable = lone_lisp_machine_pop_value(lone, machine);
 		lone_lisp_machine_restore_primitive_step(lone, machine);
