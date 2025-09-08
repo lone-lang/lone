@@ -96,7 +96,7 @@ bool lone_lisp_is_heap_value_of_type(struct lone_lisp_value value, enum lone_lis
 
 bool lone_lisp_is_integer(struct lone_lisp_value value)
 {
-	return lone_lisp_is_register_value_of_type(value, LONE_LISP_TYPE_INTEGER);
+	return lone_lisp_type_of(value) == LONE_LISP_TYPE_INTEGER;
 }
 
 bool lone_lisp_is_nil(struct lone_lisp_value value)
