@@ -267,7 +267,15 @@ enum lone_lisp_machine_step {
 	LONE_LISP_MACHINE_STEP_HALT,
 };
 
+enum lone_lisp_machine_stack_frame_type {
+	LONE_LISP_MACHINE_STACK_FRAME_TYPE_VALUE,
+	LONE_LISP_MACHINE_STACK_FRAME_TYPE_INTEGER,
+	LONE_LISP_MACHINE_STACK_FRAME_TYPE_STEP,
+	LONE_LISP_MACHINE_STACK_FRAME_TYPE_PRIMITIVE_STEP,
+};
+
 struct lone_lisp_machine_stack_frame {
+	enum lone_lisp_machine_stack_frame_type type;
 	union {
 		struct lone_lisp_value value;
 		lone_lisp_integer integer;

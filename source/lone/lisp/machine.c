@@ -34,6 +34,7 @@ void lone_lisp_machine_push_value(struct lone_lisp *lone, struct lone_lisp_machi
 		struct lone_lisp_value value)
 {
 	lone_lisp_machine_push(lone, machine, (struct lone_lisp_machine_stack_frame) {
+		.type = LONE_LISP_MACHINE_STACK_FRAME_TYPE_VALUE,
 		.as.value = value,
 	});
 }
@@ -48,6 +49,7 @@ void lone_lisp_machine_push_integer(struct lone_lisp *lone, struct lone_lisp_mac
 		lone_lisp_integer integer)
 {
 	lone_lisp_machine_push(lone, machine, (struct lone_lisp_machine_stack_frame) {
+		.type = LONE_LISP_MACHINE_STACK_FRAME_TYPE_INTEGER,
 		.as.integer = integer,
 	});
 }
@@ -61,6 +63,7 @@ void lone_lisp_machine_push_step(struct lone_lisp *lone, struct lone_lisp_machin
 		enum lone_lisp_machine_step step)
 {
 	lone_lisp_machine_push(lone, machine, (struct lone_lisp_machine_stack_frame) {
+		.type = LONE_LISP_MACHINE_STACK_FRAME_TYPE_STEP,
 		.as.step = step,
 	});
 }
@@ -85,6 +88,7 @@ void lone_lisp_machine_push_primitive_step(struct lone_lisp *lone, struct lone_l
 		long primitive_step)
 {
 	lone_lisp_machine_push(lone, machine, (struct lone_lisp_machine_stack_frame) {
+		.type = LONE_LISP_MACHINE_STACK_FRAME_TYPE_PRIMITIVE_STEP,
 		.as.primitive_step = primitive_step,
 	});
 }
