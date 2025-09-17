@@ -439,11 +439,13 @@ bool lone_lisp_machine_cycle(struct lone_lisp *lone)
 				machine->applicable,
 				machine->list
 			);
+			lone_lisp_machine_push_function_delimiter(lone, machine);
 			machine->unevaluated = lone_lisp_heap_value_of(machine->applicable)->as.function.code;
 			machine->step = LONE_LISP_MACHINE_STEP_SEQUENCE_EVALUATION;
 			return true;
 		case LONE_LISP_TYPE_PRIMITIVE:
 			/* primitives pop the list of arguments from the stack */
+			lone_lisp_machine_push_function_delimiter(lone, machine);
 			lone_lisp_machine_push_value(lone, machine, machine->list);
 			machine->primitive.step = 0;
 		resume_primitive:
@@ -468,8 +470,7 @@ bool lone_lisp_machine_cycle(struct lone_lisp *lone)
 			} else {
 				/* primitives push the return value onto the stack */
 				machine->value = lone_lisp_machine_pop_value(lone, machine);
-				lone_lisp_machine_restore_step(lone, machine);
-				lone_lisp_machine_restore_step(lone, machine);
+				goto after_application;
 			}
 			return true;
 		case LONE_LISP_TYPE_VECTOR:
@@ -481,6 +482,18 @@ bool lone_lisp_machine_cycle(struct lone_lisp *lone)
 			lone_lisp_machine_restore_step(lone, machine);
 			break;
 		}
+		lone_lisp_machine_restore_step(lone, machine);
+		return true;
+	case LONE_LISP_MACHINE_STEP_AFTER_APPLICATION:
+		/* Result of function application is in machine->value.
+		 * Stack:
+		 * 	function-delimiter
+		 * 	next-step
+		 * 	next-step
+		 */
+	after_application:
+		lone_lisp_machine_pop_function_delimiter(lone, machine);
+		lone_lisp_machine_restore_step(lone, machine);
 		lone_lisp_machine_restore_step(lone, machine);
 		return true;
 	case LONE_LISP_MACHINE_STEP_SEQUENCE_EVALUATION:
@@ -496,7 +509,7 @@ bool lone_lisp_machine_cycle(struct lone_lisp *lone)
 		} else {
 			/* tail recursion optimization
 			 * no new data is saved on the stack */
-			lone_lisp_machine_restore_step(lone, machine);
+			lone_lisp_machine_push_step(lone, machine, LONE_LISP_MACHINE_STEP_AFTER_APPLICATION);
 		}
 		goto expression_evaluation;
 	case LONE_LISP_MACHINE_STEP_SEQUENCE_EVALUATION_NEXT:
@@ -543,6 +556,7 @@ bool lone_lisp_machine_cycle(struct lone_lisp *lone)
 		 * 	primitive
 		 * 	primitive-step
 		 * 	primitive-data...
+		 * 	function-delimiter
 		 * 	next-step
 		 */
 		machine->environment = lone_lisp_machine_pop_value(lone, machine);
