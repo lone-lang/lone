@@ -57,6 +57,9 @@ void lone_lisp_modules_intrinsic_lone_initialize(struct lone_lisp *lone)
 
 	flags = (struct lone_lisp_function_flags) { .evaluate_arguments = true, .evaluate_result = false };
 
+	lone_lisp_module_export_primitive(lone, module, "return",
+			"return", lone_lisp_primitive_lone_return, module, flags);
+
 	lone_lisp_module_export_primitive(lone, module, "print",
 			"print", lone_lisp_primitive_lone_print, module, flags);
 
@@ -543,6 +546,19 @@ LONE_LISP_PRIMITIVE(lone_lambda_bang)
 	lone_lisp_machine_push_value(lone, machine,
 			lone_lisp_primitive_lambda_with_flags(lone,
 				machine->environment, lone_lisp_machine_pop_value(lone, machine), flags));
+	return 0;
+}
+
+LONE_LISP_PRIMITIVE(lone_return)
+{
+	struct lone_lisp_value return_value;
+
+	return_value = lone_lisp_list_first(lone_lisp_machine_pop_value(lone, machine));
+
+	lone_lisp_machine_pop_function_delimiter(lone, machine); // this primitive's own delimiter
+	lone_lisp_machine_unwind_to_function_delimiter(lone);
+
+	lone_lisp_machine_push_value(lone, machine, return_value);
 	return 0;
 }
 
