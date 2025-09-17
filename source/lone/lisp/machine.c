@@ -39,10 +39,23 @@ void lone_lisp_machine_push_value(struct lone_lisp *lone, struct lone_lisp_machi
 	});
 }
 
+void lone_lisp_machine_push_function_delimiter(struct lone_lisp *lone, struct lone_lisp_machine *machine)
+{
+	lone_lisp_machine_push(lone, machine, (struct lone_lisp_machine_stack_frame) {
+		.type = LONE_LISP_MACHINE_STACK_FRAME_TYPE_FUNCTION_DELIMITER,
+		.as.value = lone_lisp_nil(),
+	});
+}
+
 struct lone_lisp_value lone_lisp_machine_pop_value(struct lone_lisp *lone, struct lone_lisp_machine *machine)
 {
 	struct lone_lisp_value value = lone_lisp_machine_pop(lone, machine).as.value;
 	return value;
+}
+
+void lone_lisp_machine_pop_function_delimiter(struct lone_lisp *lone, struct lone_lisp_machine *machine)
+{
+	lone_lisp_machine_pop(lone, machine);
 }
 
 void lone_lisp_machine_push_integer(struct lone_lisp *lone, struct lone_lisp_machine *machine,

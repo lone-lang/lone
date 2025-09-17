@@ -32,4 +32,7 @@ void lone_lisp_machine_restore_step(struct lone_lisp *lone, struct lone_lisp_mac
 void lone_lisp_machine_save_primitive_step(struct lone_lisp *lone, struct lone_lisp_machine *machine);
 void lone_lisp_machine_restore_primitive_step(struct lone_lisp *lone, struct lone_lisp_machine *machine);
 
+void lone_lisp_machine_push_function_delimiter(struct lone_lisp *lone, struct lone_lisp_machine *machine);
+void lone_lisp_machine_pop_function_delimiter(struct lone_lisp *lone, struct lone_lisp_machine *machine);
+
 #endif /* LONE_LISP_MACHINE_HEADER */
