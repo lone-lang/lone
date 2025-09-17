@@ -1,0 +1,7 @@
+(import (lone set lambda return print))
+
+(set answer (lambda ()
+  (return 42)
+  (print "unreachable")))
+
+(print (answer))
