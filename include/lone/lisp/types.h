@@ -272,7 +272,7 @@ struct lone_lisp_machine_stack_frame {
 		struct lone_lisp_value value;
 		lone_lisp_integer integer;
 		enum lone_lisp_machine_step step;
-		long primitive_step;
+		lone_lisp_integer primitive_step;
 	} as;
 };
 
