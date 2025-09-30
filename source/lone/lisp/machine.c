@@ -7,9 +7,14 @@
 #include <lone/stack.h>
 #include <lone/linux.h>
 
+static bool lone_lisp_machine_can_push_bytes(struct lone_lisp_machine *machine, size_t bytes)
+{
+	return lone_stack_can_push(machine->stack.top, machine->stack.limit, bytes);
+}
+
 static bool lone_lisp_machine_can_push(struct lone_lisp_machine *machine)
 {
-	return lone_stack_can_push(machine->stack.top, machine->stack.limit, sizeof(struct lone_lisp_machine_stack_frame));
+	return lone_lisp_machine_can_push_bytes(machine, sizeof(struct lone_lisp_machine_stack_frame));
 }
 
 static bool lone_lisp_machine_can_pop(struct lone_lisp_machine *machine)
