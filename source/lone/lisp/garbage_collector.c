@@ -46,6 +46,20 @@ static void lone_lisp_mark_heap_value(struct lone_lisp_heap_value *value)
 		lone_lisp_mark_value(value->as.primitive.name);
 		lone_lisp_mark_value(value->as.primitive.closure);
 		break;
+	case LONE_LISP_TYPE_CONTINUATION:
+		for (size_t i = 0; i < value->as.continuation.frame_count; ++i) {
+			switch (value->as.continuation.frames[i].type) {
+				case LONE_LISP_MACHINE_STACK_FRAME_TYPE_INTEGER:
+				case LONE_LISP_MACHINE_STACK_FRAME_TYPE_STEP:
+				case LONE_LISP_MACHINE_STACK_FRAME_TYPE_PRIMITIVE_STEP:
+					continue;
+				case LONE_LISP_MACHINE_STACK_FRAME_TYPE_VALUE:
+				case LONE_LISP_MACHINE_STACK_FRAME_TYPE_FUNCTION_DELIMITER:
+				case LONE_LISP_MACHINE_STACK_FRAME_TYPE_CONTINUATION_DELIMITER:
+					lone_lisp_mark_value(value->as.continuation.frames[i].as.value);
+			}
+		}
+		break;
 	case LONE_LISP_TYPE_LIST:
 		lone_lisp_mark_value(value->as.list.first);
 		lone_lisp_mark_value(value->as.list.rest);
@@ -172,6 +186,9 @@ static void lone_lisp_kill_all_unmarked_values(struct lone_lisp *lone)
 				case LONE_LISP_TYPE_TABLE:
 					lone_deallocate(lone->system, value->as.table.indexes);
 					lone_deallocate(lone->system, value->as.table.entries);
+					break;
+				case LONE_LISP_TYPE_CONTINUATION:
+					lone_deallocate(lone->system, value->as.continuation.frames);
 					break;
 				case LONE_LISP_TYPE_MODULE:
 				case LONE_LISP_TYPE_FUNCTION:
