@@ -55,6 +55,9 @@ void lone_lisp_modules_intrinsic_lone_initialize(struct lone_lisp *lone)
 	lone_lisp_module_export_primitive(lone, module, "lambda!",
 			"lambda_bang", lone_lisp_primitive_lone_lambda_bang, module, flags);
 
+	lone_lisp_module_export_primitive(lone, module, "control",
+			"control", lone_lisp_primitive_lone_control, module, flags);
+
 	flags = (struct lone_lisp_function_flags) { .evaluate_arguments = true, .evaluate_result = false };
 
 	lone_lisp_module_export_primitive(lone, module, "return",
@@ -560,6 +563,40 @@ LONE_LISP_PRIMITIVE(lone_return)
 
 	lone_lisp_machine_push_value(lone, machine, return_value);
 	return 0;
+}
+
+LONE_LISP_PRIMITIVE(lone_control)
+{
+	struct lone_lisp_value arguments, body, handler;
+
+	switch (step) {
+	case 0: /* unpack arguments then evaluate body */
+
+		arguments = lone_lisp_machine_pop_value(lone, machine);
+
+		if (lone_lisp_list_destructure(arguments, 2, &body, &handler)) {
+			/* wrong number of arguments: (control), (control body handler extra) */ linux_exit(-1);
+		}
+
+		lone_lisp_machine_push_value(lone, machine, handler);
+		lone_lisp_machine_push_continuation_delimiter(lone);
+
+		machine->step = LONE_LISP_MACHINE_STEP_EXPRESSION_EVALUATION;
+		machine->expression = body;
+		return 1;
+
+	case 1: /* body evaluated */
+
+		lone_lisp_machine_pop_continuation_delimiter(lone);
+		lone_lisp_machine_pop_value(lone, machine); /* handler */
+		lone_lisp_machine_push_value(lone, machine, machine->value); /* return value */
+		return 0;
+
+	default:
+		break;
+	}
+
+	linux_exit(-1);
 }
 
 LONE_LISP_PRIMITIVE(lone_is_list)
