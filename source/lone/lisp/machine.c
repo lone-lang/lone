@@ -351,6 +351,7 @@ bool lone_lisp_machine_cycle(struct lone_lisp *lone)
 			case LONE_LISP_TYPE_MODULE:
 			case LONE_LISP_TYPE_FUNCTION:
 			case LONE_LISP_TYPE_PRIMITIVE:
+			case LONE_LISP_TYPE_CONTINUATION:
 			case LONE_LISP_TYPE_VECTOR:
 			case LONE_LISP_TYPE_TABLE:
 			case LONE_LISP_TYPE_BYTES:
