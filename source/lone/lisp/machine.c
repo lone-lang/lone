@@ -172,6 +172,7 @@ static bool should_evaluate_operands(struct lone_lisp_value applicable, struct l
 			return lone_lisp_heap_value_of(applicable)->as.function.flags.evaluate_arguments;
 		case LONE_LISP_TYPE_PRIMITIVE:
 			return lone_lisp_heap_value_of(applicable)->as.primitive.flags.evaluate_arguments;
+		case LONE_LISP_TYPE_CONTINUATION:
 		case LONE_LISP_TYPE_VECTOR:
 		case LONE_LISP_TYPE_TABLE:
 			return true;
@@ -289,6 +290,7 @@ static struct lone_lisp_value bind_arguments(struct lone_lisp *lone, struct lone
 			case LONE_LISP_TYPE_MODULE:
 			case LONE_LISP_TYPE_FUNCTION:
 			case LONE_LISP_TYPE_PRIMITIVE:
+			case LONE_LISP_TYPE_CONTINUATION:
 			case LONE_LISP_TYPE_BYTES:
 			case LONE_LISP_TYPE_TEXT:
 			case LONE_LISP_TYPE_VECTOR:
@@ -400,6 +402,7 @@ bool lone_lisp_machine_cycle(struct lone_lisp *lone)
 				goto operator_not_applicable;
 			case LONE_LISP_TYPE_FUNCTION:
 			case LONE_LISP_TYPE_PRIMITIVE:
+			case LONE_LISP_TYPE_CONTINUATION:
 			case LONE_LISP_TYPE_VECTOR:
 			case LONE_LISP_TYPE_TABLE:
 				break;
@@ -514,6 +517,16 @@ bool lone_lisp_machine_cycle(struct lone_lisp *lone)
 				goto after_application;
 			}
 			return true;
+		case LONE_LISP_TYPE_CONTINUATION:
+			if (lone_lisp_list_has_rest(machine->list)) { goto too_many_arguments; }
+			lone_lisp_machine_push_frames(
+				lone,
+				lone_lisp_heap_value_of(machine->applicable)->as.continuation.frame_count,
+				lone_lisp_heap_value_of(machine->applicable)->as.continuation.frames
+			);
+			lone_lisp_machine_restore_step(lone, machine);
+			machine->value = lone_lisp_list_first(machine->list);
+			return true;
 		case LONE_LISP_TYPE_VECTOR:
 			machine->value = apply_to_vector(lone, machine->applicable, machine->list);
 			lone_lisp_machine_restore_step(lone, machine);
@@ -608,6 +621,7 @@ bool lone_lisp_machine_cycle(struct lone_lisp *lone)
 		return false;
 	}
 
+too_many_arguments:
 operator_not_applicable:
 	linux_exit(-1);
 }
