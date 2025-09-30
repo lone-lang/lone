@@ -347,6 +347,7 @@ static inline long lone_lisp_value_to_linux_system_call_number(struct lone_lisp 
 	case LONE_LISP_TYPE_MODULE:
 	case LONE_LISP_TYPE_FUNCTION:
 	case LONE_LISP_TYPE_PRIMITIVE:
+	case LONE_LISP_TYPE_CONTINUATION:
 	case LONE_LISP_TYPE_LIST:
 	case LONE_LISP_TYPE_VECTOR:
 	case LONE_LISP_TYPE_TABLE:
@@ -388,6 +389,7 @@ static inline long lone_lisp_value_to_linux_system_call_argument(struct lone_lis
 	case LONE_LISP_TYPE_PRIMITIVE:
 		return (long) lone_lisp_heap_value_of(value)->as.primitive.function;
 	case LONE_LISP_TYPE_FUNCTION:
+	case LONE_LISP_TYPE_CONTINUATION:
 	case LONE_LISP_TYPE_LIST:
 	case LONE_LISP_TYPE_VECTOR:
 	case LONE_LISP_TYPE_TABLE:

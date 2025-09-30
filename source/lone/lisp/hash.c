@@ -51,6 +51,7 @@ static size_t lone_lisp_hash_heap_value_recursively(struct lone_lisp_heap_value 
 	case LONE_LISP_TYPE_MODULE:
 	case LONE_LISP_TYPE_FUNCTION:
 	case LONE_LISP_TYPE_PRIMITIVE:
+	case LONE_LISP_TYPE_CONTINUATION:
 	case LONE_LISP_TYPE_VECTOR:
 	case LONE_LISP_TYPE_TABLE:
 		linux_exit(-1);

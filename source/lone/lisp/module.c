@@ -55,6 +55,7 @@ static struct lone_lisp_value lone_lisp_module_name_to_key(struct lone_lisp *lon
 		return lone_lisp_module_name_to_key(lone, lone_lisp_heap_value_of(name)->as.module.name);
 	case LONE_LISP_TYPE_FUNCTION:
 	case LONE_LISP_TYPE_PRIMITIVE:
+	case LONE_LISP_TYPE_CONTINUATION:
 	case LONE_LISP_TYPE_TEXT:
 	case LONE_LISP_TYPE_BYTES:
 	case LONE_LISP_TYPE_VECTOR:
@@ -340,6 +341,7 @@ static void lone_lisp_primitive_import_form(struct lone_lisp *lone,
 	case LONE_LISP_TYPE_MODULE:
 	case LONE_LISP_TYPE_FUNCTION:
 	case LONE_LISP_TYPE_PRIMITIVE:
+	case LONE_LISP_TYPE_CONTINUATION:
 	case LONE_LISP_TYPE_TEXT:
 	case LONE_LISP_TYPE_BYTES:
 	case LONE_LISP_TYPE_VECTOR:

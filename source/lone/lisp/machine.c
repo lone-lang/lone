@@ -4,12 +4,20 @@
 #include <lone/lisp/value/vector.h>
 #include <lone/lisp/value/table.h>
 
+#include <lone/memory/functions.h>
+#include <lone/memory/array.h>
+
 #include <lone/stack.h>
 #include <lone/linux.h>
 
+static bool lone_lisp_machine_can_push_bytes(struct lone_lisp_machine *machine, size_t bytes)
+{
+	return lone_stack_can_push(machine->stack.top, machine->stack.limit, bytes);
+}
+
 static bool lone_lisp_machine_can_push(struct lone_lisp_machine *machine)
 {
-	return lone_stack_can_push(machine->stack.top, machine->stack.limit, sizeof(struct lone_lisp_machine_stack_frame));
+	return lone_lisp_machine_can_push_bytes(machine, sizeof(struct lone_lisp_machine_stack_frame));
 }
 
 static bool lone_lisp_machine_can_pop(struct lone_lisp_machine *machine)
@@ -22,6 +30,15 @@ void lone_lisp_machine_push(struct lone_lisp *lone, struct lone_lisp_machine *ma
 {
 	if (!lone_lisp_machine_can_push(machine)) { linux_exit(-1); }
 	*machine->stack.top++ = frame;
+}
+
+void lone_lisp_machine_push_frames(struct lone_lisp *lone,
+		size_t frame_count, struct lone_lisp_machine_stack_frame *frames)
+{
+	size_t size = lone_memory_array_size_in_bytes(frame_count, sizeof(*frames));
+	if (!lone_lisp_machine_can_push_bytes(&lone->machine, size)) { linux_exit(-1); }
+	lone_memory_move(frames, lone->machine.stack.top, size);
+	lone->machine.stack.top += frame_count;
 }
 
 struct lone_lisp_machine_stack_frame lone_lisp_machine_pop(struct lone_lisp *lone, struct lone_lisp_machine *machine)
@@ -47,6 +64,14 @@ void lone_lisp_machine_push_function_delimiter(struct lone_lisp *lone, struct lo
 	});
 }
 
+void lone_lisp_machine_push_continuation_delimiter(struct lone_lisp *lone)
+{
+	lone_lisp_machine_push(lone, &lone->machine, (struct lone_lisp_machine_stack_frame) {
+		.type = LONE_LISP_MACHINE_STACK_FRAME_TYPE_CONTINUATION_DELIMITER,
+		.as.value = lone_lisp_nil(),
+	});
+}
+
 struct lone_lisp_value lone_lisp_machine_pop_value(struct lone_lisp *lone, struct lone_lisp_machine *machine)
 {
 	struct lone_lisp_value value = lone_lisp_machine_pop(lone, machine).as.value;
@@ -56,6 +81,11 @@ struct lone_lisp_value lone_lisp_machine_pop_value(struct lone_lisp *lone, struc
 void lone_lisp_machine_pop_function_delimiter(struct lone_lisp *lone, struct lone_lisp_machine *machine)
 {
 	lone_lisp_machine_pop(lone, machine);
+}
+
+void lone_lisp_machine_pop_continuation_delimiter(struct lone_lisp *lone)
+{
+	lone_lisp_machine_pop(lone, &lone->machine);
 }
 
 void lone_lisp_machine_push_integer(struct lone_lisp *lone, struct lone_lisp_machine *machine,
@@ -142,6 +172,7 @@ static bool should_evaluate_operands(struct lone_lisp_value applicable, struct l
 			return lone_lisp_heap_value_of(applicable)->as.function.flags.evaluate_arguments;
 		case LONE_LISP_TYPE_PRIMITIVE:
 			return lone_lisp_heap_value_of(applicable)->as.primitive.flags.evaluate_arguments;
+		case LONE_LISP_TYPE_CONTINUATION:
 		case LONE_LISP_TYPE_VECTOR:
 		case LONE_LISP_TYPE_TABLE:
 			return true;
@@ -259,6 +290,7 @@ static struct lone_lisp_value bind_arguments(struct lone_lisp *lone, struct lone
 			case LONE_LISP_TYPE_MODULE:
 			case LONE_LISP_TYPE_FUNCTION:
 			case LONE_LISP_TYPE_PRIMITIVE:
+			case LONE_LISP_TYPE_CONTINUATION:
 			case LONE_LISP_TYPE_BYTES:
 			case LONE_LISP_TYPE_TEXT:
 			case LONE_LISP_TYPE_VECTOR:
@@ -321,6 +353,7 @@ bool lone_lisp_machine_cycle(struct lone_lisp *lone)
 			case LONE_LISP_TYPE_MODULE:
 			case LONE_LISP_TYPE_FUNCTION:
 			case LONE_LISP_TYPE_PRIMITIVE:
+			case LONE_LISP_TYPE_CONTINUATION:
 			case LONE_LISP_TYPE_VECTOR:
 			case LONE_LISP_TYPE_TABLE:
 			case LONE_LISP_TYPE_BYTES:
@@ -369,6 +402,7 @@ bool lone_lisp_machine_cycle(struct lone_lisp *lone)
 				goto operator_not_applicable;
 			case LONE_LISP_TYPE_FUNCTION:
 			case LONE_LISP_TYPE_PRIMITIVE:
+			case LONE_LISP_TYPE_CONTINUATION:
 			case LONE_LISP_TYPE_VECTOR:
 			case LONE_LISP_TYPE_TABLE:
 				break;
@@ -483,6 +517,16 @@ bool lone_lisp_machine_cycle(struct lone_lisp *lone)
 				goto after_application;
 			}
 			return true;
+		case LONE_LISP_TYPE_CONTINUATION:
+			if (lone_lisp_list_has_rest(machine->list)) { goto too_many_arguments; }
+			lone_lisp_machine_push_frames(
+				lone,
+				lone_lisp_heap_value_of(machine->applicable)->as.continuation.frame_count,
+				lone_lisp_heap_value_of(machine->applicable)->as.continuation.frames
+			);
+			lone_lisp_machine_restore_step(lone, machine);
+			machine->value = lone_lisp_list_first(machine->list);
+			return true;
 		case LONE_LISP_TYPE_VECTOR:
 			machine->value = apply_to_vector(lone, machine->applicable, machine->list);
 			lone_lisp_machine_restore_step(lone, machine);
@@ -577,6 +621,7 @@ bool lone_lisp_machine_cycle(struct lone_lisp *lone)
 		return false;
 	}
 
+too_many_arguments:
 operator_not_applicable:
 	linux_exit(-1);
 }

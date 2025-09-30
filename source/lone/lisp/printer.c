@@ -2,6 +2,7 @@
 
 #include <lone/lisp/printer.h>
 
+#include <lone/lisp/value/integer.h>
 #include <lone/lisp/value/list.h>
 #include <lone/lisp/value/vector.h>
 #include <lone/lisp/value/table.h>
@@ -191,6 +192,10 @@ void lone_lisp_print(struct lone_lisp *lone, struct lone_lisp_value value, int f
 		break;
 	case LONE_LISP_TYPE_FUNCTION:
 		lone_lisp_print_function(lone, value, fd);
+		break;
+	case LONE_LISP_TYPE_CONTINUATION:
+		lone_lisp_print_hash_notation(lone, "continuation",
+				lone_lisp_integer_create(lone_lisp_heap_value_of(value)->as.continuation.frame_count), fd);
 		break;
 	case LONE_LISP_TYPE_LIST:
 		linux_write(fd, "(", 1);

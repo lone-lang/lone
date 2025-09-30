@@ -9,9 +9,13 @@
 
 #include <lone/lisp/value/function.h>
 #include <lone/lisp/value/primitive.h>
+#include <lone/lisp/value/continuation.h>
 #include <lone/lisp/value/list.h>
 #include <lone/lisp/value/table.h>
 #include <lone/lisp/value/symbol.h>
+
+#include <lone/memory/array.h>
+#include <lone/memory/functions.h>
 
 #include <lone/linux.h>
 
@@ -55,10 +59,16 @@ void lone_lisp_modules_intrinsic_lone_initialize(struct lone_lisp *lone)
 	lone_lisp_module_export_primitive(lone, module, "lambda!",
 			"lambda_bang", lone_lisp_primitive_lone_lambda_bang, module, flags);
 
+	lone_lisp_module_export_primitive(lone, module, "control",
+			"control", lone_lisp_primitive_lone_control, module, flags);
+
 	flags = (struct lone_lisp_function_flags) { .evaluate_arguments = true, .evaluate_result = false };
 
 	lone_lisp_module_export_primitive(lone, module, "return",
 			"return", lone_lisp_primitive_lone_return, module, flags);
+
+	lone_lisp_module_export_primitive(lone, module, "transfer",
+			"transfer", lone_lisp_primitive_lone_transfer, module, flags);
 
 	lone_lisp_module_export_primitive(lone, module, "print",
 			"print", lone_lisp_primitive_lone_print, module, flags);
@@ -560,6 +570,92 @@ LONE_LISP_PRIMITIVE(lone_return)
 
 	lone_lisp_machine_push_value(lone, machine, return_value);
 	return 0;
+}
+
+LONE_LISP_PRIMITIVE(lone_control)
+{
+	struct lone_lisp_value arguments, body, handler;
+
+	switch (step) {
+	case 0: /* unpack arguments then evaluate body */
+
+		arguments = lone_lisp_machine_pop_value(lone, machine);
+
+		if (lone_lisp_list_destructure(arguments, 2, &body, &handler)) {
+			/* wrong number of arguments: (control), (control body handler extra) */ linux_exit(-1);
+		}
+
+		lone_lisp_machine_push_value(lone, machine, handler);
+		lone_lisp_machine_push_continuation_delimiter(lone);
+
+		machine->step = LONE_LISP_MACHINE_STEP_EXPRESSION_EVALUATION;
+		machine->expression = body;
+		return 1;
+
+	case 1: /* body evaluated */
+
+		lone_lisp_machine_pop_continuation_delimiter(lone);
+		lone_lisp_machine_pop_value(lone, machine); /* handler */
+		lone_lisp_machine_push_value(lone, machine, machine->value); /* return value */
+		return 0;
+
+	default:
+		break;
+	}
+
+	linux_exit(-1);
+}
+
+LONE_LISP_PRIMITIVE(lone_transfer)
+{
+	struct lone_lisp_machine_stack_frame *delimiter, *frames;
+	struct lone_lisp_value arguments, value, continuation, handler;
+	size_t frame_count;
+
+	switch (step) {
+	case 0: /* unpack arguments, capture continuation, reset stack and evaluate handler */
+
+		arguments = lone_lisp_machine_pop_value(lone, machine);
+
+		if (lone_lisp_list_destructure(arguments, 1, &value)) {
+			/* wrong number of arguments: (transfer), (transfer value extra) */ linux_exit(-1);
+		}
+
+		/* skip primitive function delimiter and one step */
+		for (delimiter = lone->machine.stack.top - 1 - 2,
+		     frame_count = 0;
+		     delimiter >= machine->stack.base &&
+		     delimiter->type != LONE_LISP_MACHINE_STACK_FRAME_TYPE_CONTINUATION_DELIMITER;
+		     --delimiter, ++frame_count);
+
+		/* copy stack frames up to the continuation delimiter */
+		frames = lone_memory_array(lone->system, 0, frame_count, sizeof(*frames));
+		lone_memory_move(delimiter + 1, frames, lone_memory_array_size_in_bytes(frame_count, sizeof(*frames)));
+
+		/* reify current continuation */
+		continuation = lone_lisp_continuation_create(lone, frame_count, frames);
+
+		/* reset stack back to the continuation delimiter */
+		lone->machine.stack.top = delimiter;
+		handler = lone_lisp_machine_pop_value(lone, machine);
+
+		/* configure machine to evaluate handler function with value and continuation */
+		lone->machine.expression = lone_lisp_list_build(lone, 3, &handler, &value, &continuation);
+		lone->machine.step = LONE_LISP_MACHINE_STEP_EXPRESSION_EVALUATION;
+
+		return 1;
+
+	case 1:
+
+		/* handler has finished evaluation, return the value returned by it */
+		lone_lisp_machine_push_value(lone, machine, lone->machine.value);
+		return 0;
+
+	default:
+		break;
+	}
+
+	linux_exit(-1);
 }
 
 LONE_LISP_PRIMITIVE(lone_is_list)

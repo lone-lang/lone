@@ -49,6 +49,7 @@ enum lone_lisp_heap_value_type {
 	LONE_LISP_TYPE_MODULE,
 	LONE_LISP_TYPE_FUNCTION,
 	LONE_LISP_TYPE_PRIMITIVE,
+	LONE_LISP_TYPE_CONTINUATION,
 	LONE_LISP_TYPE_LIST,
 	LONE_LISP_TYPE_VECTOR,
 	LONE_LISP_TYPE_TABLE,
@@ -102,6 +103,14 @@ struct lone_lisp_primitive {
 	lone_lisp_primitive_function function;
 	struct lone_lisp_value closure;
 	struct lone_lisp_function_flags flags;
+};
+
+struct lone_lisp_machine_stack_frame;
+enum lone_lisp_machine_step;
+
+struct lone_lisp_continuation {
+	size_t frame_count;
+	struct lone_lisp_machine_stack_frame *frames;
 };
 
 struct lone_lisp_list {
@@ -170,6 +179,7 @@ struct lone_lisp_heap_value {
 		struct lone_lisp_module module;
 		struct lone_lisp_function function;
 		struct lone_lisp_primitive primitive;
+		struct lone_lisp_continuation continuation;
 		struct lone_lisp_list list;
 		struct lone_lisp_vector vector;
 		struct lone_lisp_table table;
@@ -274,6 +284,7 @@ enum lone_lisp_machine_stack_frame_type {
 	LONE_LISP_MACHINE_STACK_FRAME_TYPE_STEP,
 	LONE_LISP_MACHINE_STACK_FRAME_TYPE_PRIMITIVE_STEP,
 	LONE_LISP_MACHINE_STACK_FRAME_TYPE_FUNCTION_DELIMITER,
+	LONE_LISP_MACHINE_STACK_FRAME_TYPE_CONTINUATION_DELIMITER,
 };
 
 struct lone_lisp_machine_stack_frame {
