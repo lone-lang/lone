@@ -4,6 +4,9 @@
 #include <lone/lisp/value/vector.h>
 #include <lone/lisp/value/table.h>
 
+#include <lone/memory/functions.h>
+#include <lone/memory/array.h>
+
 #include <lone/stack.h>
 #include <lone/linux.h>
 
@@ -27,6 +30,15 @@ void lone_lisp_machine_push(struct lone_lisp *lone, struct lone_lisp_machine *ma
 {
 	if (!lone_lisp_machine_can_push(machine)) { linux_exit(-1); }
 	*machine->stack.top++ = frame;
+}
+
+void lone_lisp_machine_push_frames(struct lone_lisp *lone,
+		size_t frame_count, struct lone_lisp_machine_stack_frame *frames)
+{
+	size_t size = lone_memory_array_size_in_bytes(frame_count, sizeof(*frames));
+	if (!lone_lisp_machine_can_push_bytes(&lone->machine, size)) { linux_exit(-1); }
+	lone_memory_move(frames, lone->machine.stack.top, size);
+	lone->machine.stack.top += frame_count;
 }
 
 struct lone_lisp_machine_stack_frame lone_lisp_machine_pop(struct lone_lisp *lone, struct lone_lisp_machine *machine)

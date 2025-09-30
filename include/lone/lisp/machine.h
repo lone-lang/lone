@@ -10,6 +10,8 @@ bool lone_lisp_machine_cycle(struct lone_lisp *lone);
 
 void lone_lisp_machine_push(struct lone_lisp *lone, struct lone_lisp_machine *machine,
 		struct lone_lisp_machine_stack_frame frame);
+void lone_lisp_machine_push_frames(struct lone_lisp *lone,
+		size_t frame_count, struct lone_lisp_machine_stack_frame *frames);
 struct lone_lisp_machine_stack_frame lone_lisp_machine_pop(struct lone_lisp *lone, struct lone_lisp_machine *machine);
 
 void lone_lisp_machine_push_value(struct lone_lisp *lone, struct lone_lisp_machine *machine,
