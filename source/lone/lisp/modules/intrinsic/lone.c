@@ -623,21 +623,25 @@ LONE_LISP_PRIMITIVE(lone_transfer)
 
 		/* skip primitive function delimiter and one step */
 		for (frame = lone->machine.stack.top - 1 - 2,
-		     frame_count = 0;
+		     frame_count = 1;
 		     frame >= machine->stack.base &&
 		     frame->type != LONE_LISP_MACHINE_STACK_FRAME_TYPE_CONTINUATION_DELIMITER;
 		     --frame, ++frame_count);
 
-		/* copy stack frames up to the continuation delimiter */
+		/* recover the handler function */
+		--frame; ++frame_count;
+		handler = frame->as.value;
+
+		/* copy stack frames up to and including the control primitive's function delimiter */
+		--frame; ++frame_count;
 		frames = lone_memory_array(lone->system, 0, frame_count, sizeof(*frames));
-		lone_memory_move(frame + 1, frames, lone_memory_array_size_in_bytes(frame_count, sizeof(*frames)));
+		lone_memory_move(frame, frames, lone_memory_array_size_in_bytes(frame_count, sizeof(*frames)));
 
 		/* reify current continuation */
 		continuation = lone_lisp_continuation_create(lone, frame_count, frames);
 
-		/* reset stack back to the continuation delimiter */
-		lone->machine.stack.top = frame;
-		handler = lone_lisp_machine_pop_value(lone, machine);
+		/* reset stack back to the control primitive's function delimiter */
+		lone->machine.stack.top = frame + 1;
 
 		/* configure machine to evaluate handler function with value and continuation */
 		lone->machine.expression = lone_lisp_list_build(lone, 3, &handler, &value, &continuation);
