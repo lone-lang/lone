@@ -1,0 +1,11 @@
+(import
+  (lone print lambda control transfer)
+  (math +)
+  (vector each))
+
+(control
+  (each [10 20 30]
+    (lambda (x)
+      (print (transfer x))))
+  (lambda (x continuation)
+    (continuation (+ x 1))))
