@@ -152,14 +152,18 @@ void lone_lisp_machine_restore_primitive_step(struct lone_lisp *lone, struct lon
 	machine->primitive.step = lone_lisp_machine_pop_primitive_step(lone, machine);
 }
 
-void lone_lisp_machine_unwind_to_function_delimiter(struct lone_lisp *lone)
+void lone_lisp_machine_unwind_to(struct lone_lisp *lone, enum lone_lisp_machine_stack_frame_type frame_type)
 {
 	struct lone_lisp_machine_stack_frame frame;
 
-	while (LONE_LISP_MACHINE_STACK_FRAME_TYPE_FUNCTION_DELIMITER !=
-			(frame = lone_lisp_machine_pop(lone, &lone->machine)).type);
+	while (frame_type != (frame = lone_lisp_machine_pop(lone, &lone->machine)).type);
 
 	lone_lisp_machine_push(lone, &lone->machine, frame);
+}
+
+void lone_lisp_machine_unwind_to_function_delimiter(struct lone_lisp *lone)
+{
+	lone_lisp_machine_unwind_to(lone, LONE_LISP_MACHINE_STACK_FRAME_TYPE_FUNCTION_DELIMITER);
 }
 
 static bool should_evaluate_operands(struct lone_lisp_value applicable, struct lone_lisp_value operands)
