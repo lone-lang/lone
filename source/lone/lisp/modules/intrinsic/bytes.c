@@ -3,14 +3,6 @@
 #include <lone/lisp/modules/intrinsic/bytes.h>
 
 #include <lone/lisp/machine.h>
-
-#include <lone/lisp/value/primitive.h>
-#include <lone/lisp/value/list.h>
-#include <lone/lisp/value/table.h>
-#include <lone/lisp/value/symbol.h>
-#include <lone/lisp/value/bytes.h>
-#include <lone/lisp/value/integer.h>
-
 #include <lone/lisp/module.h>
 
 #include <lone/memory/allocator.h>

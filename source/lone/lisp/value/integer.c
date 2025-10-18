@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later */
 
-#include <lone/lisp/value/integer.h>
+#include <lone/lisp/types.h>
 
 struct lone_lisp_value lone_lisp_integer_create(lone_lisp_integer integer)
 {

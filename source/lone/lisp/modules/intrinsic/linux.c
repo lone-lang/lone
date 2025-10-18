@@ -5,15 +5,6 @@
 #include <lone/lisp/machine.h>
 #include <lone/lisp/module.h>
 
-#include <lone/lisp/value/primitive.h>
-#include <lone/lisp/value/list.h>
-#include <lone/lisp/value/vector.h>
-#include <lone/lisp/value/table.h>
-#include <lone/lisp/value/bytes.h>
-#include <lone/lisp/value/text.h>
-#include <lone/lisp/value/symbol.h>
-#include <lone/lisp/value/integer.h>
-
 #include <lone/linux.h>
 
 static void lone_lisp_auxiliary_value_to_table(struct lone_lisp *lone,

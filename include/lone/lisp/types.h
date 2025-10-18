@@ -247,10 +247,287 @@ bool lone_lisp_has_same_type(struct lone_lisp_value x, struct lone_lisp_value y)
 bool lone_lisp_is_identical(struct lone_lisp_value x, struct lone_lisp_value y);
 bool lone_lisp_is_equivalent(struct lone_lisp_value x, struct lone_lisp_value y);
 bool lone_lisp_is_equal(struct lone_lisp_value x, struct lone_lisp_value y);
+
+/* ╭────────────────────────────────────────────────────────────────────────╮
+   │                                                                        │
+   │    Lone integers are currently signed fixed-length integers.           │
+   │                                                                        │
+   ╰────────────────────────────────────────────────────────────────────────╯ */
+
+struct lone_lisp_value lone_lisp_integer_create(lone_lisp_integer integer);
+struct lone_lisp_value lone_lisp_integer_from_pointer(void *pointer);
+
+struct lone_lisp_value lone_lisp_integer_parse(struct lone_lisp *lone,
+		unsigned char *digits, size_t count);
+
+struct lone_lisp_value lone_lisp_zero(void);
+struct lone_lisp_value lone_lisp_one(void);
+struct lone_lisp_value lone_lisp_minus_one(void);
+
 bool lone_lisp_integer_is_less_than(struct lone_lisp_value x, struct lone_lisp_value y);
 bool lone_lisp_integer_is_less_than_or_equal_to(struct lone_lisp_value x, struct lone_lisp_value y);
 bool lone_lisp_integer_is_greater_than(struct lone_lisp_value x, struct lone_lisp_value y);
 bool lone_lisp_integer_is_greater_than_or_equal_to(struct lone_lisp_value x, struct lone_lisp_value y);
+
+/* ╭────────────────────────────────────────────────────────────────────────╮
+   │                                                                        │
+   │    General constructor for lone heap values.                           │
+   │    Meant for other constructors to use.                                │
+   │                                                                        │
+   ╰────────────────────────────────────────────────────────────────────────╯ */
+
+struct lone_lisp_value lone_lisp_value_from_heap_value(struct lone_lisp_heap_value *heap_value);
+
+/* ╭────────────────────────────────────────────────────────────────────────╮
+   │                                                                        │
+   │    Lone modules are named isolated environments for evaluation.        │
+   │                                                                        │
+   │    The lisp interpreter contains a top level environment.              │
+   │    This environment contains only the import/export primitives.        │
+   │    New modules have clean environments which inherit from it.          │
+   │    This allows complete control over the symbols and the namespace.    │
+   │                                                                        │
+   │    Each module corresponds roughly to one .ln file on disk.            │
+   │    These module files are text files containing lone lisp code         │
+   │    which may import or export symbols from or to other modules.        │
+   │    The lone interpreter's import primitive will search for files       │
+   │    to load in conventional locations, enabling library development.    │
+   │                                                                        │
+   │    A special nameless module known as the null module                  │
+   │    contains code read in from standard input.                          │
+   │                                                                        │
+   ╰────────────────────────────────────────────────────────────────────────╯ */
+
+struct lone_lisp_value lone_lisp_module_create(struct lone_lisp *lone, struct lone_lisp_value name);
+
+/* ╭────────────────────────────────────────────────────────────────────────╮
+   │                                                                        │
+   │    Lone functions represent a body of executable lone lisp code.       │
+   │    They have a list of argument names to be bound during function      │
+   │    application, a list of expressions to be evaluated when called      │
+   │    and a closure: a reference to the environment it was defined in.    │
+   │                                                                        │
+   │    To apply a function is to create a new environment with its         │
+   │    argument names bound to the given arguments and then evaluate       │
+   │    the function's expressions in the context of that environment.      │
+   │                                                                        │
+   │    The function flags control how the function is applied.             │
+   │    It may be configured to receive evaluated or unevaluated            │
+   │    arguments as well as to evaluate the result automatically.          │
+   │    These features allow code manipulation and generation.              │
+   │    It may also be configured to be variadic: all arguments             │
+   │    are collected into a list and passed as a single argument.          │
+   │                                                                        │
+   ╰────────────────────────────────────────────────────────────────────────╯ */
+
+struct lone_lisp_value lone_lisp_function_create(struct lone_lisp *lone,
+		struct lone_lisp_value arguments, struct lone_lisp_value code,
+		struct lone_lisp_value environment, struct lone_lisp_function_flags flags);
+
+/* ╭────────────────────────────────────────────────────────────────────────╮
+   │                                                                        │
+   │    Primitives are lone functions implemented in C.                     │
+   │    They are always variadic and must check their arguments.            │
+   │    All of them must follow the primitive function prototype.           │
+   │    They also have closures which are pointers to arbitrary data.       │
+   │                                                                        │
+   ╰────────────────────────────────────────────────────────────────────────╯ */
+
+struct lone_lisp_value lone_lisp_primitive_create(struct lone_lisp *lone, char *name,
+		lone_lisp_primitive_function function, struct lone_lisp_value closure,
+		struct lone_lisp_function_flags flags);
+
+/* ╭────────────────────────────────────────────────────────────────────────╮
+   │                                                                        │
+   │    Lone continuations reify segments of the lisp machine stack         │
+   │    into a callable that can be used to resume the computation          │
+   │    by plugging the argument into it.                                   │
+   │                                                                        │
+   ╰────────────────────────────────────────────────────────────────────────╯ */
+
+struct lone_lisp_value lone_lisp_continuation_create(struct lone_lisp *lone,
+		size_t frame_count, struct lone_lisp_machine_stack_frame *frames);
+
+/* ╭────────────────────────────────────────────────────────────────────────╮
+   │                                                                        │
+   │    Lone lists are pairs of lone values: first and rest.                │
+   │    Usually first is the element while rest is another pair.            │
+   │    This explains their names. Also called car and cdr.                 │
+   │                                                                        │
+   │    Although often the case, rest need not be another pair.             │
+   │    Any other object may be set: (1 . 2); first = 1, rest = 2.          │
+   │    So rest could also be named second.                                 │
+   │                                                                        │
+   │    A list with null first and rest pointers is known as nil.           │
+   │    It is provided as a constant by the lone interpreter.               │
+   │    Their presence in the rest of a list marks its end.                 │
+   │    New nil values may be created by C code that builds lists.          │
+   │                                                                        │
+   ╰────────────────────────────────────────────────────────────────────────╯ */
+
+struct lone_lisp_value lone_lisp_list_create(struct lone_lisp *lone,
+		struct lone_lisp_value first, struct lone_lisp_value rest);
+struct lone_lisp_value lone_lisp_list_create_nil(struct lone_lisp *lone);
+
+bool lone_lisp_list_has_rest(struct lone_lisp_value value);
+struct lone_lisp_value lone_lisp_list_first(struct lone_lisp_value value);
+struct lone_lisp_value lone_lisp_list_rest(struct lone_lisp_value value);
+
+struct lone_lisp_value lone_lisp_list_set_first(struct lone_lisp *lone,
+		struct lone_lisp_value list, struct lone_lisp_value value);
+struct lone_lisp_value lone_lisp_list_set_rest(struct lone_lisp *lone,
+		struct lone_lisp_value list, struct lone_lisp_value rest);
+
+struct lone_lisp_value lone_lisp_list_append(struct lone_lisp *lone,
+		struct lone_lisp_value *first, struct lone_lisp_value *head,
+		struct lone_lisp_value value);
+
+bool lone_lisp_list_destructure(struct lone_lisp_value list, size_t count, ...);
+struct lone_lisp_value lone_lisp_list_build(struct lone_lisp *lone, size_t count, ...);
+struct lone_lisp_value lone_lisp_list_flatten(struct lone_lisp *lone, struct lone_lisp_value list);
+struct lone_lisp_value lone_lisp_list_to_vector(struct lone_lisp *lone, struct lone_lisp_value list);
+
+/* ╭────────────────────────────────────────────────────────────────────────╮
+   │                                                                        │
+   │    Lone vectors are simple dynamic arrays of lone values.              │
+   │    They grow automatically as elements are added.                      │
+   │    Any index may be used regardless of current length:                 │
+   │    all the elements remain unset as the array grows.                   │
+   │    The array is zero filled which makes unset elements nil.            │
+   │                                                                        │
+   ╰────────────────────────────────────────────────────────────────────────╯ */
+
+struct lone_lisp_value lone_lisp_vector_create(struct lone_lisp *lone, size_t capacity);
+size_t lone_lisp_vector_count(struct lone_lisp_value vector);
+void lone_lisp_vector_resize(struct lone_lisp *lone, struct lone_lisp_value vector, size_t new_capacity);
+
+struct lone_lisp_value lone_lisp_vector_get_value_at(struct lone_lisp_value vector, size_t i);
+void lone_lisp_vector_set_value_at(struct lone_lisp *lone, struct lone_lisp_value vector, size_t i,
+		struct lone_lisp_value value);
+
+struct lone_lisp_value lone_lisp_vector_get(struct lone_lisp *lone, struct lone_lisp_value vector,
+		struct lone_lisp_value index);
+void lone_lisp_vector_set(struct lone_lisp *lone, struct lone_lisp_value vector,
+		struct lone_lisp_value index, struct lone_lisp_value value);
+
+bool lone_lisp_vector_contains(struct lone_lisp_value vector, struct lone_lisp_value value);
+
+void lone_lisp_vector_push(struct lone_lisp *lone, struct lone_lisp_value vector, struct lone_lisp_value value);
+void lone_lisp_vector_push_va_list(struct lone_lisp *lone, struct lone_lisp_value vector, size_t count, va_list arguments);
+void lone_lisp_vector_push_all(struct lone_lisp *lone, struct lone_lisp_value vector, size_t count, ...);
+struct lone_lisp_value lone_lisp_vector_build(struct lone_lisp *lone, size_t count, ...);
+
+#define LONE_LISP_VECTOR_FOR_EACH(entry, vector, i)                             \
+	for ((i) = 0, (entry) = lone_lisp_vector_get_value_at((vector), 0);     \
+	     (i) < lone_lisp_vector_count((vector));                            \
+	     ++(i), (entry) = lone_lisp_vector_get_value_at((vector), i))
+
+/* ╭────────────────────────────────────────────────────────────────────────╮
+   │                                                                        │
+   │    Hash table functions.                                               │
+   │                                                                        │
+   ╰────────────────────────────────────────────────────────────────────────╯ */
+
+struct lone_lisp_value lone_lisp_table_create(struct lone_lisp *lone,
+		size_t capacity, struct lone_lisp_value prototype);
+
+struct lone_lisp_value lone_lisp_table_get(struct lone_lisp *lone, struct lone_lisp_value table,
+		struct lone_lisp_value key);
+
+void lone_lisp_table_set(struct lone_lisp *lone, struct lone_lisp_value table,
+		struct lone_lisp_value key, struct lone_lisp_value value);
+
+void lone_lisp_table_delete(struct lone_lisp *lone,
+		struct lone_lisp_value table, struct lone_lisp_value key);
+
+size_t lone_lisp_table_count(struct lone_lisp_value table);
+struct lone_lisp_value lone_lisp_table_key_at(struct lone_lisp_value table, lone_size i);
+struct lone_lisp_value lone_lisp_table_value_at(struct lone_lisp_value table, lone_size i);
+
+#define LONE_LISP_TABLE_FOR_EACH(entry, table, i)                                                  \
+	for ((i) = 0, (entry) = &lone_lisp_heap_value_of(table)->as.table.entries[0];              \
+	     (i) < lone_lisp_heap_value_of(table)->as.table.count;                                 \
+	     ++(i), (entry) = &lone_lisp_heap_value_of(table)->as.table.entries[i])
+
+/* ╭────────────────────────────────────────────────────────────────────────╮
+   │                                                                        │
+   │    Lone symbols are like lone texts but are interned in a table.       │
+   │    Symbol table interning deduplicates them in memory,                 │
+   │    enabling fast identity-based comparisons via pointer equality.      │
+   │    However, this means they won't be garbage collected.                │
+   │                                                                        │
+   ╰────────────────────────────────────────────────────────────────────────╯ */
+
+struct lone_lisp_value lone_lisp_intern(struct lone_lisp *lone,
+		unsigned char *bytes, size_t count, bool should_deallocate);
+
+struct lone_lisp_value lone_lisp_intern_bytes(struct lone_lisp *lone,
+		struct lone_bytes bytes, bool should_deallocate);
+
+struct lone_lisp_value lone_lisp_intern_text(struct lone_lisp *lone,
+		struct lone_lisp_value text);
+
+struct lone_lisp_value lone_lisp_intern_c_string(struct lone_lisp *lone,
+		char *c_string);
+
+/* ╭────────────────────────────────────────────────────────────────────────╮
+   │                                                                        │
+   │    Lone texts are lone's strings and represent UTF-8 encoded text.     │
+   │    Transfer and creation functions work like lone bytes.               │
+   │                                                                        │
+   ╰────────────────────────────────────────────────────────────────────────╯ */
+
+struct lone_lisp_value lone_lisp_text_transfer(struct lone_lisp *lone,
+		unsigned char *text, size_t length, bool should_deallocate);
+
+struct lone_lisp_value lone_lisp_text_transfer_bytes(struct lone_lisp *lone,
+		struct lone_bytes bytes, bool should_deallocate);
+
+struct lone_lisp_value lone_lisp_text_copy(struct lone_lisp *lone,
+		unsigned char *text, size_t length);
+
+struct lone_lisp_value lone_lisp_text_from_c_string(struct lone_lisp *lone,
+		char *c_string);
+
+struct lone_lisp_value lone_lisp_text_to_symbol(struct lone_lisp *lone,
+		struct lone_lisp_value text);
+
+/* ╭────────────────────────────────────────────────────────────────────────╮
+   │                                                                        │
+   │    Lone bytes values can be created zero-filled for a given size       │
+   │    or they can be initialized with a pointer to a memory block         │
+   │    of known size.                                                      │
+   │                                                                        │
+   │    They can take ownership of arbitrary memory blocks via transfers    │
+   │    or make copies of their input data.                                 │
+   │                                                                        │
+   │    Transferring memory blocks allows control over deallocation.        │
+   │    Disabling deallocation on garbage collection allows pointing to     │
+   │    data such as statically allocated buffers and C string literals.    │
+   │    Enabling deallocation will cause the pointer to be deallocated      │
+   │    when the bytes object is garbage collected. Two bytes objects       │
+   │    cannot own the same memory block; it would lead to double free.     │
+   │    This mode of operation is suitable for memory allocated by lone.    │
+   │                                                                        │
+   │    Copies will automatically include a hidden trailing null            │
+   │    byte to ease compatibility with code expecting C strings.           │
+   │    It's impossible to escape from them since system calls use them.    │
+   │    Transferred buffers should also contain that null byte              │
+   │    but the lone bytes type currently has no way to enforce this.       │
+   │                                                                        │
+   ╰────────────────────────────────────────────────────────────────────────╯ */
+
+struct lone_lisp_value lone_lisp_bytes_transfer(struct lone_lisp *lone,
+		unsigned char *pointer, size_t count, bool should_deallocate);
+
+struct lone_lisp_value lone_lisp_bytes_transfer_bytes(struct lone_lisp *lone,
+		struct lone_bytes bytes, bool should_deallocate);
+
+struct lone_lisp_value lone_lisp_bytes_copy(struct lone_lisp *lone,
+		unsigned char *pointer, size_t count);
+
+struct lone_lisp_value lone_lisp_bytes_create(struct lone_lisp *lone,
+		size_t count);
 
 /* ╭───────────────────────┨ LONE LISP INTERPRETER ┠────────────────────────╮
    │                                                                        │

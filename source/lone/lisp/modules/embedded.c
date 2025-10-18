@@ -6,9 +6,6 @@
 #include <lone/lisp/segment.h>
 
 #include <lone/lisp/reader.h>
-#include <lone/lisp/value/list.h>
-#include <lone/lisp/value/table.h>
-#include <lone/lisp/value/symbol.h>
 
 #include <lone/linux.h>
 

@@ -1,8 +1,7 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later */
 
 #include <lone/lisp/types.h>
-
-#include <lone/lisp/value/vector.h>
+#include <lone/lisp/heap.h>
 
 #include <lone/linux.h>
 
@@ -240,7 +239,7 @@ static bool lone_lisp_list_is_equal(struct lone_lisp_value x, struct lone_lisp_v
 	                          lone_lisp_heap_value_of(y)->as.list.first)
 	       &&
 	       lone_lisp_is_equal(lone_lisp_heap_value_of(x)->as.list.rest,
-		                  lone_lisp_heap_value_of(y)->as.list.rest);
+	                          lone_lisp_heap_value_of(y)->as.list.rest);
 }
 
 static bool lone_lisp_vector_is_equal(struct lone_lisp_value x, struct lone_lisp_value y)
@@ -338,4 +337,11 @@ bool lone_lisp_integer_is_greater_than_or_equal_to(struct lone_lisp_value x, str
 	} else {
 		/* can't compare incompatible or non-integers integers */ linux_exit(-1);
 	}
+}
+
+struct lone_lisp_value lone_lisp_value_from_heap_value(struct lone_lisp_heap_value *heap_value)
+{
+	return (struct lone_lisp_value) {
+		.tagged = (long) heap_value,
+	};
 }

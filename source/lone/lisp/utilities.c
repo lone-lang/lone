@@ -2,8 +2,6 @@
 
 #include <lone/lisp/utilities.h>
 
-#include <lone/lisp/value/list.h>
-
 #include <lone/memory/allocator.h>
 #include <lone/memory/functions.h>
 

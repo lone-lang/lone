@@ -4,13 +4,6 @@
 #include <lone/lisp/heap.h>
 #include <lone/lisp/module.h>
 
-#include <lone/lisp/value/module.h>
-#include <lone/lisp/value/primitive.h>
-#include <lone/lisp/value/list.h>
-#include <lone/lisp/value/vector.h>
-#include <lone/lisp/value/table.h>
-#include <lone/lisp/value/symbol.h>
-
 #include <lone/memory/array.h>
 
 void lone_lisp_initialize(struct lone_lisp *lone, struct lone_system *system, void *native_stack)

@@ -1,8 +1,6 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later */
 
-#include <lone/lisp/value/symbol.h>
-#include <lone/lisp/value/bytes.h>
-#include <lone/lisp/value/table.h>
+#include <lone/lisp/types.h>
 
 #include <lone/memory/functions.h>
 

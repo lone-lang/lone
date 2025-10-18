@@ -2,11 +2,6 @@
 
 #include <lone/lisp/printer.h>
 
-#include <lone/lisp/value/integer.h>
-#include <lone/lisp/value/list.h>
-#include <lone/lisp/value/vector.h>
-#include <lone/lisp/value/table.h>
-
 #include <lone/memory/allocator.h>
 #include <lone/memory/functions.h>
 

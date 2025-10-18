@@ -2,12 +2,6 @@
 
 #include <lone/lisp/modules/intrinsic/text.h>
 
-#include <lone/lisp/value/primitive.h>
-#include <lone/lisp/value/list.h>
-#include <lone/lisp/value/table.h>
-#include <lone/lisp/value/symbol.h>
-#include <lone/lisp/value/text.h>
-
 #include <lone/lisp/machine.h>
 #include <lone/lisp/module.h>
 #include <lone/lisp/utilities.h>

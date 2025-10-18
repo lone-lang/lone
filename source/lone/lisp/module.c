@@ -6,14 +6,6 @@
 #include <lone/lisp/evaluator.h>
 #include <lone/lisp/machine.h>
 
-#include <lone/lisp/value/module.h>
-#include <lone/lisp/value/primitive.h>
-#include <lone/lisp/value/list.h>
-#include <lone/lisp/value/vector.h>
-#include <lone/lisp/value/table.h>
-#include <lone/lisp/value/text.h>
-#include <lone/lisp/value/symbol.h>
-
 #include <lone/lisp/garbage_collector.h>
 #include <lone/lisp/utilities.h>
 

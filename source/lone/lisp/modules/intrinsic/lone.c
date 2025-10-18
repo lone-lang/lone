@@ -7,13 +7,6 @@
 #include <lone/lisp/printer.h>
 #include <lone/lisp/utilities.h>
 
-#include <lone/lisp/value/function.h>
-#include <lone/lisp/value/primitive.h>
-#include <lone/lisp/value/continuation.h>
-#include <lone/lisp/value/list.h>
-#include <lone/lisp/value/table.h>
-#include <lone/lisp/value/symbol.h>
-
 #include <lone/memory/array.h>
 #include <lone/memory/functions.h>
 

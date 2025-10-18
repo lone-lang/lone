@@ -1,9 +1,6 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later */
 
-#include <lone/lisp/value.h>
-#include <lone/lisp/value/primitive.h>
-#include <lone/lisp/value/symbol.h>
-
+#include <lone/lisp/types.h>
 #include <lone/lisp/heap.h>
 
 struct lone_lisp_value lone_lisp_primitive_create(struct lone_lisp *lone,

@@ -5,10 +5,6 @@
 #include <lone/lisp/segment.h>
 #include <lone/lisp/reader.h>
 
-#include <lone/lisp/value/bytes.h>
-#include <lone/lisp/value/symbol.h>
-#include <lone/lisp/value/table.h>
-
 #include <lone/linux.h>
 
 struct lone_lisp_value lone_lisp_segment_read_descriptor(struct lone_lisp *lone, lone_elf_native_segment *segment)

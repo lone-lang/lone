@@ -5,11 +5,6 @@
 #include <lone/lisp/machine.h>
 #include <lone/lisp/module.h>
 
-#include <lone/lisp/value/primitive.h>
-#include <lone/lisp/value/list.h>
-#include <lone/lisp/value/table.h>
-#include <lone/lisp/value/symbol.h>
-
 #include <lone/linux.h>
 
 void lone_lisp_modules_intrinsic_list_initialize(struct lone_lisp *lone)

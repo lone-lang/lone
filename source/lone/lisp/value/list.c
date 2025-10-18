@@ -1,9 +1,6 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later */
 
-#include <lone/lisp/value.h>
-#include <lone/lisp/value/list.h>
-#include <lone/lisp/value/vector.h>
-
+#include <lone/lisp/types.h>
 #include <lone/lisp/heap.h>
 
 #include <lone/memory/allocator.h>
