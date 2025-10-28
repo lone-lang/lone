@@ -31,17 +31,20 @@ struct lone_lisp_reader {
    │    Lone implements dynamic data types as a tagged union.               │
    │    Supported types are:                                                │
    │                                                                        │
-   │        ◦ Module       the isolated programming environment type        │
-   │        ◦ Function     the reusable executable expressions type         │
-   │        ◦ Primitive    the built-in C subroutine type                   │
-   │        ◦ List         the linked list and tree type                    │
-   │        ◦ Vector       the contiguous array of values type              │
-   │        ◦ Table        the hash table, prototype and object type        │
-   │        ◦ Symbol       the keyword and interned string type             │
-   │        ◦ Text         the UTF-8 encoded text type                      │
-   │        ◦ Bytes        the binary data and low level string type        │
-   │        ◦ Pointer      the memory addressing and dereferencing type     │
-   │        ◦ Integer      the signed integer type                          │
+   │        ◦ Module          isolated programming environment type         │
+   │        ◦ Function        reusable executable expressions type          │
+   │        ◦ Primitive       built-in C subroutine type                    │
+   │        ◦ Continuation    callable captured stack frame type            │
+   │        ◦ List            linked list and tree type                     │
+   │        ◦ Vector          contiguous array of values type               │
+   │        ◦ Table           hash table, prototype and object type         │
+   │        ◦ Symbol          keyword and interned string type              │
+   │        ◦ Text            UTF-8 encoded text type                       │
+   │        ◦ Bytes           binary data and low level string type         │
+   │        ◦ Integer         signed integer type                           │
+   │        ◦ True            true constant                                 │
+   │        ◦ False           false constant                                │
+   │        ◦ Nil             nil constant                                  │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
 
