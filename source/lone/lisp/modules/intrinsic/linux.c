@@ -385,6 +385,7 @@ static inline long lone_lisp_value_to_linux_system_call_argument(struct lone_lis
 	case LONE_LISP_TYPE_VECTOR:
 	case LONE_LISP_TYPE_TABLE:
 	case LONE_LISP_TYPE_MODULE:
+	default:
 		linux_exit(-1);
 	}
 }

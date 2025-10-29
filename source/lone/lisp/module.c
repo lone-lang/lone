@@ -51,6 +51,7 @@ static struct lone_lisp_value lone_lisp_module_name_to_key(struct lone_lisp *lon
 	case LONE_LISP_TYPE_BYTES:
 	case LONE_LISP_TYPE_VECTOR:
 	case LONE_LISP_TYPE_TABLE:
+	default:
 		/* invalid module name component */ linux_exit(-1);
 	}
 }
