@@ -122,8 +122,8 @@ LONE_LISP_PRIMITIVE(list_map)
 		entry = lone_lisp_list_first(list);
 		expression = lone_lisp_list_build(lone, 2, &function, &entry);
 
-		lone->machine.step = LONE_LISP_MACHINE_STEP_EXPRESSION_EVALUATION;
-		lone->machine.expression = expression;
+		machine->step = LONE_LISP_MACHINE_STEP_EXPRESSION_EVALUATION;
+		machine->expression = expression;
 
 		lone_lisp_machine_push_value(lone, machine, function);
 		lone_lisp_machine_push_value(lone, machine, list);
@@ -184,8 +184,8 @@ LONE_LISP_PRIMITIVE(list_reduce)
 
 		entry = lone_lisp_list_first(list);
 
-		lone->machine.step = LONE_LISP_MACHINE_STEP_EXPRESSION_EVALUATION;
-		lone->machine.expression = lone_lisp_list_build(lone, 3, &function, &accumulator, &entry);
+		machine->step = LONE_LISP_MACHINE_STEP_EXPRESSION_EVALUATION;
+		machine->expression = lone_lisp_list_build(lone, 3, &function, &accumulator, &entry);
 
 		lone_lisp_machine_push_value(lone, machine, function);
 		lone_lisp_machine_push_value(lone, machine, list);

@@ -577,13 +577,15 @@ struct lone_lisp_machine_stack_frame {
 	} as;
 };
 
+struct lone_lisp_machine_stack {
+	struct lone_lisp_machine_stack_frame *base;
+	struct lone_lisp_machine_stack_frame *top;
+	struct lone_lisp_machine_stack_frame *limit;
+};
+
 struct lone_lisp_machine {
 	/* the machine's stack, where its registers and return steps are saved */
-	struct {
-		struct lone_lisp_machine_stack_frame *base;
-		struct lone_lisp_machine_stack_frame *top;
-		struct lone_lisp_machine_stack_frame *limit;
-	} stack;
+	struct lone_lisp_machine_stack stack;
 
 	/* where in the machine to return to after a computation step is done */
 	enum lone_lisp_machine_step step;
@@ -606,7 +608,6 @@ struct lone_lisp_machine {
 struct lone_lisp {
 	struct lone_system *system;
 	void *native_stack;
-	struct lone_lisp_machine machine;
 	struct lone_lisp_heap *heaps;
 	struct lone_lisp_value symbol_table;
 	struct {

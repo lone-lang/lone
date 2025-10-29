@@ -29,13 +29,13 @@ void lone_lisp_machine_push(struct lone_lisp *lone, struct lone_lisp_machine *ma
 	*machine->stack.top++ = frame;
 }
 
-void lone_lisp_machine_push_frames(struct lone_lisp *lone,
+void lone_lisp_machine_push_frames(struct lone_lisp *lone, struct lone_lisp_machine *machine,
 		size_t frame_count, struct lone_lisp_machine_stack_frame *frames)
 {
 	size_t size = lone_memory_array_size_in_bytes(frame_count, sizeof(*frames));
-	if (!lone_lisp_machine_can_push_bytes(&lone->machine, size)) { linux_exit(-1); }
-	lone_memory_move(frames, lone->machine.stack.top, size);
-	lone->machine.stack.top += frame_count;
+	if (!lone_lisp_machine_can_push_bytes(machine, size)) { linux_exit(-1); }
+	lone_memory_move(frames, machine->stack.top, size);
+	machine->stack.top += frame_count;
 }
 
 struct lone_lisp_machine_stack_frame lone_lisp_machine_pop(struct lone_lisp *lone, struct lone_lisp_machine *machine)
@@ -61,9 +61,9 @@ void lone_lisp_machine_push_function_delimiter(struct lone_lisp *lone, struct lo
 	});
 }
 
-void lone_lisp_machine_push_continuation_delimiter(struct lone_lisp *lone)
+void lone_lisp_machine_push_continuation_delimiter(struct lone_lisp *lone, struct lone_lisp_machine *machine)
 {
-	lone_lisp_machine_push(lone, &lone->machine, (struct lone_lisp_machine_stack_frame) {
+	lone_lisp_machine_push(lone, machine, (struct lone_lisp_machine_stack_frame) {
 		.type = LONE_LISP_MACHINE_STACK_FRAME_TYPE_CONTINUATION_DELIMITER,
 		.as.value = lone_lisp_nil(),
 	});
@@ -80,9 +80,9 @@ void lone_lisp_machine_pop_function_delimiter(struct lone_lisp *lone, struct lon
 	lone_lisp_machine_pop(lone, machine);
 }
 
-void lone_lisp_machine_pop_continuation_delimiter(struct lone_lisp *lone)
+void lone_lisp_machine_pop_continuation_delimiter(struct lone_lisp *lone, struct lone_lisp_machine *machine)
 {
-	lone_lisp_machine_pop(lone, &lone->machine);
+	lone_lisp_machine_pop(lone, machine);
 }
 
 void lone_lisp_machine_push_integer(struct lone_lisp *lone, struct lone_lisp_machine *machine,
@@ -149,18 +149,19 @@ void lone_lisp_machine_restore_primitive_step(struct lone_lisp *lone, struct lon
 	machine->primitive.step = lone_lisp_machine_pop_primitive_step(lone, machine);
 }
 
-void lone_lisp_machine_unwind_to(struct lone_lisp *lone, enum lone_lisp_machine_stack_frame_type frame_type)
+void lone_lisp_machine_unwind_to(struct lone_lisp *lone, struct lone_lisp_machine *machine,
+		enum lone_lisp_machine_stack_frame_type frame_type)
 {
 	struct lone_lisp_machine_stack_frame frame;
 
-	while (frame_type != (frame = lone_lisp_machine_pop(lone, &lone->machine)).type);
+	while (frame_type != (frame = lone_lisp_machine_pop(lone, machine)).type);
 
-	lone_lisp_machine_push(lone, &lone->machine, frame);
+	lone_lisp_machine_push(lone, machine, frame);
 }
 
-void lone_lisp_machine_unwind_to_function_delimiter(struct lone_lisp *lone)
+void lone_lisp_machine_unwind_to_function_delimiter(struct lone_lisp *lone, struct lone_lisp_machine *machine)
 {
-	lone_lisp_machine_unwind_to(lone, LONE_LISP_MACHINE_STACK_FRAME_TYPE_FUNCTION_DELIMITER);
+	lone_lisp_machine_unwind_to(lone, machine, LONE_LISP_MACHINE_STACK_FRAME_TYPE_FUNCTION_DELIMITER);
 }
 
 static bool should_evaluate_operands(struct lone_lisp_value applicable, struct lone_lisp_value operands)
@@ -313,14 +314,25 @@ static struct lone_lisp_value bind_arguments(struct lone_lisp *lone, struct lone
 	return new_environment;
 }
 
-void lone_lisp_machine_reset(struct lone_lisp *lone,
+struct lone_lisp_machine_stack lone_lisp_machine_allocate_stack(struct lone_lisp *lone, size_t stack_size)
+{
+	struct lone_lisp_machine_stack stack;
+
+	stack.base = lone_memory_array(lone->system, 0, stack_size, sizeof(*stack.base));
+	stack.limit = stack.base + stack_size;
+	stack.top = stack.base;
+
+	return stack;
+}
+
+void lone_lisp_machine_initialize(struct lone_lisp_machine *machine, struct lone_lisp_machine_stack stack)
+{
+	machine->stack = stack;
+}
+
+void lone_lisp_machine_reset(struct lone_lisp *lone, struct lone_lisp_machine *machine,
 		struct lone_lisp_value module, struct lone_lisp_value expression)
 {
-	struct lone_lisp_machine *machine;
-
-	machine = &lone->machine;
-
-	machine->stack.top = machine->stack.base;
 
 	machine->step = LONE_LISP_MACHINE_STEP_EXPRESSION_EVALUATION;
 	lone_lisp_machine_push_step(lone, machine, LONE_LISP_MACHINE_STEP_HALT);
@@ -331,12 +343,9 @@ void lone_lisp_machine_reset(struct lone_lisp *lone,
 	machine->environment = lone_lisp_heap_value_of(module)->as.module.environment;
 }
 
-bool lone_lisp_machine_cycle(struct lone_lisp *lone)
+bool lone_lisp_machine_cycle(struct lone_lisp *lone, struct lone_lisp_machine *machine)
 {
-	struct lone_lisp_machine *machine;
 	struct lone_lisp_value head;
-
-	machine = &lone->machine;
 
 	switch (machine->step) {
 	case LONE_LISP_MACHINE_STEP_EXPRESSION_EVALUATION:
@@ -522,6 +531,7 @@ bool lone_lisp_machine_cycle(struct lone_lisp *lone)
 			if (lone_lisp_list_has_rest(machine->list)) { goto too_many_arguments; }
 			lone_lisp_machine_push_frames(
 				lone,
+				machine,
 				lone_lisp_heap_value_of(machine->applicable)->as.continuation.frame_count,
 				lone_lisp_heap_value_of(machine->applicable)->as.continuation.frames
 			);

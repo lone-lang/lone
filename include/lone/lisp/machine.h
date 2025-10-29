@@ -5,12 +5,15 @@
 
 #include <lone/lisp/types.h>
 
-void lone_lisp_machine_reset(struct lone_lisp *lone, struct lone_lisp_value module, struct lone_lisp_value expression);
-bool lone_lisp_machine_cycle(struct lone_lisp *lone);
+struct lone_lisp_machine_stack lone_lisp_machine_allocate_stack(struct lone_lisp *lone, size_t stack_size);
+void lone_lisp_machine_initialize(struct lone_lisp_machine *machine, struct lone_lisp_machine_stack stack);
+void lone_lisp_machine_reset(struct lone_lisp *lone, struct lone_lisp_machine *machine,
+		struct lone_lisp_value module, struct lone_lisp_value expression);
+bool lone_lisp_machine_cycle(struct lone_lisp *lone, struct lone_lisp_machine *machine);
 
 void lone_lisp_machine_push(struct lone_lisp *lone, struct lone_lisp_machine *machine,
 		struct lone_lisp_machine_stack_frame frame);
-void lone_lisp_machine_push_frames(struct lone_lisp *lone,
+void lone_lisp_machine_push_frames(struct lone_lisp *lone, struct lone_lisp_machine *machine,
 		size_t frame_count, struct lone_lisp_machine_stack_frame *frames);
 struct lone_lisp_machine_stack_frame lone_lisp_machine_pop(struct lone_lisp *lone, struct lone_lisp_machine *machine);
 
@@ -37,10 +40,11 @@ void lone_lisp_machine_restore_primitive_step(struct lone_lisp *lone, struct lon
 void lone_lisp_machine_push_function_delimiter(struct lone_lisp *lone, struct lone_lisp_machine *machine);
 void lone_lisp_machine_pop_function_delimiter(struct lone_lisp *lone, struct lone_lisp_machine *machine);
 
-void lone_lisp_machine_push_continuation_delimiter(struct lone_lisp *lone);
-void lone_lisp_machine_pop_continuation_delimiter(struct lone_lisp *lone);
+void lone_lisp_machine_push_continuation_delimiter(struct lone_lisp *lone, struct lone_lisp_machine *machine);
+void lone_lisp_machine_pop_continuation_delimiter(struct lone_lisp *lone, struct lone_lisp_machine *machine);
 
-void lone_lisp_machine_unwind_to(struct lone_lisp *lone, enum lone_lisp_machine_stack_frame_type type);
-void lone_lisp_machine_unwind_to_function_delimiter(struct lone_lisp *lone);
+void lone_lisp_machine_unwind_to(struct lone_lisp *lone, struct lone_lisp_machine *machine,
+		enum lone_lisp_machine_stack_frame_type type);
+void lone_lisp_machine_unwind_to_function_delimiter(struct lone_lisp *lone, struct lone_lisp_machine *machine);
 
 #endif /* LONE_LISP_MACHINE_HEADER */

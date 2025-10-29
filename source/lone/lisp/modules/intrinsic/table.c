@@ -116,8 +116,8 @@ LONE_LISP_PRIMITIVE(table_each)
 		entry = &lone_lisp_heap_value_of(table)->as.table.entries[i];
 		expression = lone_lisp_list_build(lone, 3, &function, &entry->key, &entry->value);
 
-		lone->machine.step = LONE_LISP_MACHINE_STEP_EXPRESSION_EVALUATION;
-		lone->machine.expression = expression;
+		machine->step = LONE_LISP_MACHINE_STEP_EXPRESSION_EVALUATION;
+		machine->expression = expression;
 
 		lone_lisp_machine_push_integer(lone, machine, i);
 		lone_lisp_machine_push_value(lone, machine, function);

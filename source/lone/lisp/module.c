@@ -3,7 +3,6 @@
 #include <lone/lisp/module.h>
 
 #include <lone/lisp/reader.h>
-#include <lone/lisp/evaluator.h>
 #include <lone/lisp/machine.h>
 
 #include <lone/lisp/garbage_collector.h>
@@ -149,18 +148,24 @@ static int lone_lisp_module_search(struct lone_lisp *lone, struct lone_lisp_valu
 static void lone_lisp_module_load_from_reader(struct lone_lisp *lone,
 		struct lone_lisp_value module, struct lone_lisp_reader *reader)
 {
+	struct lone_lisp_machine machine;
 	struct lone_lisp_value value;
+
+	lone_lisp_machine_initialize(&machine, lone_lisp_machine_allocate_stack(lone, 1000));
 
 	while (1) {
 		value = lone_lisp_read(lone, reader);
 		if (reader->status.error) { linux_exit(-1); }
 		if (reader->status.end_of_input) { break; }
 
-		value = lone_lisp_evaluate_in_module(lone, module, value);
+		lone_lisp_machine_reset(lone, &machine, module, value);
+		while (lone_lisp_machine_cycle(lone, &machine));
+		lone_lisp_garbage_collector(lone, &machine);
 	}
 
 	lone_lisp_reader_finalize(lone, reader);
-	lone_lisp_garbage_collector(lone);
+	lone_lisp_garbage_collector(lone, &machine);
+	lone_deallocate(lone->system, machine.stack.base);
 }
 
 void lone_lisp_module_load_from_bytes(struct lone_lisp *lone,
@@ -243,15 +248,15 @@ LONE_LISP_PRIMITIVE(module_export)
 {
 	struct lone_lisp_value arguments, head, symbol;
 
-	arguments = lone_lisp_machine_pop_value(lone, &lone->machine);
+	arguments = lone_lisp_machine_pop_value(lone, machine);
 
 	for (head = arguments; !lone_lisp_is_nil(head); head = lone_lisp_list_rest(head)) {
 		symbol = lone_lisp_list_first(head);
 
-		lone_lisp_module_export(lone, lone->machine.module, symbol);
+		lone_lisp_module_export(lone, machine->module, symbol);
 	}
 
-	lone_lisp_machine_push_value(lone, &lone->machine, lone_lisp_nil());
+	lone_lisp_machine_push_value(lone, machine, lone_lisp_nil());
 	return 0;
 }
 
@@ -355,14 +360,14 @@ LONE_LISP_PRIMITIVE(module_import)
 	struct lone_lisp_import_specification spec;
 	struct lone_lisp_value arguments, argument, prefixed, unprefixed;
 
-	arguments = lone_lisp_machine_pop_value(lone, &lone->machine);
+	arguments = lone_lisp_machine_pop_value(lone, machine);
 
 	if (lone_lisp_is_nil(arguments)) { /* nothing to import: (import) */ linux_exit(-1); }
 
 	prefixed = lone_lisp_intern_c_string(lone, "prefixed");
 	unprefixed = lone_lisp_intern_c_string(lone, "unprefixed");
 
-	spec.environment = lone->machine.environment;
+	spec.environment = machine->environment;
 	spec.prefixed = false;
 
 	for (/* argument */; !lone_lisp_is_nil(arguments); arguments = lone_lisp_list_rest(arguments)) {
@@ -377,7 +382,7 @@ LONE_LISP_PRIMITIVE(module_import)
 		}
 	}
 
-	lone_lisp_machine_push_value(lone, &lone->machine, lone_lisp_nil());
+	lone_lisp_machine_push_value(lone, machine, lone_lisp_nil());
 	return 0;
 }
 

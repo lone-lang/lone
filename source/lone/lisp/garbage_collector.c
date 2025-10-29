@@ -153,19 +153,27 @@ static void lone_lisp_mark_lisp_stack_values(struct lone_lisp_machine_stack_fram
 	}
 }
 
-static void lone_lisp_mark_lisp_stack_roots(struct lone_lisp *lone)
+static void lone_lisp_mark_lisp_stack_roots_of(struct lone_lisp *lone, struct lone_lisp_machine_stack stack)
 {
-	lone_lisp_mark_lisp_stack_values(lone->machine.stack.base, lone->machine.stack.top);
+	lone_lisp_mark_lisp_stack_values(stack.base, stack.top);
 }
 
-static void lone_lisp_mark_all_reachable_values(struct lone_lisp *lone)
+static void lone_lisp_mark_lisp_stack_roots(struct lone_lisp *lone, struct lone_lisp_machine *machine)
 {
-	lone_registers registers;                   /* stack space for registers */
-	lone_save_registers(registers);             /* spill registers on stack */
+	lone_lisp_mark_lisp_stack_roots_of(lone, machine->stack);
+}
 
-	lone_lisp_mark_known_roots(lone);           /* precise */
-	lone_lisp_mark_lisp_stack_roots(lone);      /* precise */
-	lone_lisp_mark_native_stack_roots(lone);    /* conservative */
+static void lone_lisp_mark_all_reachable_values(struct lone_lisp *lone, struct lone_lisp_machine *machine)
+{
+	lone_registers registers;          /* stack space for registers */
+	lone_save_registers(registers);    /* spill registers on stack */
+
+	/* precise */
+	lone_lisp_mark_known_roots(lone);
+	lone_lisp_mark_lisp_stack_roots(lone, machine);
+
+	/* conservative */
+	lone_lisp_mark_native_stack_roots(lone);
 }
 
 static void lone_lisp_kill_all_unmarked_values(struct lone_lisp *lone)
@@ -215,9 +223,9 @@ static void lone_lisp_kill_all_unmarked_values(struct lone_lisp *lone)
 	}
 }
 
-void lone_lisp_garbage_collector(struct lone_lisp *lone)
+void lone_lisp_garbage_collector(struct lone_lisp *lone, struct lone_lisp_machine *machine)
 {
-	lone_lisp_mark_all_reachable_values(lone);
+	lone_lisp_mark_all_reachable_values(lone, machine);
 	lone_lisp_kill_all_unmarked_values(lone);
 	lone_lisp_deallocate_dead_heaps(lone);
 }

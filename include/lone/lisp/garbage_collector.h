@@ -5,6 +5,6 @@
 
 #include <lone/lisp/types.h>
 
-void lone_lisp_garbage_collector(struct lone_lisp *lone);
+void lone_lisp_garbage_collector(struct lone_lisp *lone, struct lone_lisp_machine *machine);
 
 #endif /* LONE_LISP_GARBAGE_COLLECTOR_HEADER */

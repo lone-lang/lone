@@ -559,7 +559,7 @@ LONE_LISP_PRIMITIVE(lone_return)
 	return_value = lone_lisp_list_first(lone_lisp_machine_pop_value(lone, machine));
 
 	lone_lisp_machine_pop_function_delimiter(lone, machine); // this primitive's own delimiter
-	lone_lisp_machine_unwind_to_function_delimiter(lone);
+	lone_lisp_machine_unwind_to_function_delimiter(lone, machine);
 
 	lone_lisp_machine_push_value(lone, machine, return_value);
 	return 0;
@@ -579,7 +579,7 @@ LONE_LISP_PRIMITIVE(lone_control)
 		}
 
 		lone_lisp_machine_push_value(lone, machine, handler);
-		lone_lisp_machine_push_continuation_delimiter(lone);
+		lone_lisp_machine_push_continuation_delimiter(lone, machine);
 
 		machine->step = LONE_LISP_MACHINE_STEP_EXPRESSION_EVALUATION;
 		machine->expression = body;
@@ -587,7 +587,7 @@ LONE_LISP_PRIMITIVE(lone_control)
 
 	case 1: /* body evaluated */
 
-		lone_lisp_machine_pop_continuation_delimiter(lone);
+		lone_lisp_machine_pop_continuation_delimiter(lone, machine);
 		lone_lisp_machine_pop_value(lone, machine); /* handler */
 		lone_lisp_machine_push_value(lone, machine, machine->value); /* return value */
 		return 0;
@@ -615,7 +615,7 @@ LONE_LISP_PRIMITIVE(lone_transfer)
 		}
 
 		/* skip primitive function delimiter and one step */
-		for (frame = lone->machine.stack.top - 1 - 2,
+		for (frame = machine->stack.top - 1 - 2,
 		     frame_count = 1;
 		     frame >= machine->stack.base &&
 		     frame->type != LONE_LISP_MACHINE_STACK_FRAME_TYPE_CONTINUATION_DELIMITER;
@@ -634,18 +634,18 @@ LONE_LISP_PRIMITIVE(lone_transfer)
 		continuation = lone_lisp_continuation_create(lone, frame_count, frames);
 
 		/* reset stack back to the control primitive's function delimiter */
-		lone->machine.stack.top = frame + 1;
+		machine->stack.top = frame + 1;
 
 		/* configure machine to evaluate handler function with value and continuation */
-		lone->machine.expression = lone_lisp_list_build(lone, 3, &handler, &value, &continuation);
-		lone->machine.step = LONE_LISP_MACHINE_STEP_EXPRESSION_EVALUATION;
+		machine->expression = lone_lisp_list_build(lone, 3, &handler, &value, &continuation);
+		machine->step = LONE_LISP_MACHINE_STEP_EXPRESSION_EVALUATION;
 
 		return 1;
 
 	case 1:
 
 		/* handler has finished evaluation, return the value returned by it */
-		lone_lisp_machine_push_value(lone, machine, lone->machine.value);
+		lone_lisp_machine_push_value(lone, machine, machine->value);
 		return 0;
 
 	default:

@@ -139,8 +139,8 @@ LONE_LISP_PRIMITIVE(vector_each)
 		entry = lone_lisp_vector_get_value_at(vector, i);
 		expression = lone_lisp_list_build(lone, 2, &function, &entry);
 
-		lone->machine.step = LONE_LISP_MACHINE_STEP_EXPRESSION_EVALUATION;
-		lone->machine.expression = expression;
+		machine->step = LONE_LISP_MACHINE_STEP_EXPRESSION_EVALUATION;
+		machine->expression = expression;
 
 		lone_lisp_machine_push_integer(lone, machine, i);
 		lone_lisp_machine_push_value(lone, machine, function);
