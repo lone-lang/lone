@@ -8,6 +8,8 @@
 #include <lone/architecture/garbage_collector.c>
 
 static void lone_lisp_mark_heap_value(struct lone_lisp_heap_value *);
+static void lone_lisp_mark_lisp_stack_values(struct lone_lisp_machine_stack_frame *base,
+		struct lone_lisp_machine_stack_frame *limit);
 
 static void lone_lisp_mark_value(struct lone_lisp_value value)
 {
@@ -47,18 +49,10 @@ static void lone_lisp_mark_heap_value(struct lone_lisp_heap_value *value)
 		lone_lisp_mark_value(value->as.primitive.closure);
 		break;
 	case LONE_LISP_TYPE_CONTINUATION:
-		for (size_t i = 0; i < value->as.continuation.frame_count; ++i) {
-			switch (value->as.continuation.frames[i].type) {
-				case LONE_LISP_MACHINE_STACK_FRAME_TYPE_INTEGER:
-				case LONE_LISP_MACHINE_STACK_FRAME_TYPE_STEP:
-				case LONE_LISP_MACHINE_STACK_FRAME_TYPE_PRIMITIVE_STEP:
-					continue;
-				case LONE_LISP_MACHINE_STACK_FRAME_TYPE_VALUE:
-				case LONE_LISP_MACHINE_STACK_FRAME_TYPE_FUNCTION_DELIMITER:
-				case LONE_LISP_MACHINE_STACK_FRAME_TYPE_CONTINUATION_DELIMITER:
-					lone_lisp_mark_value(value->as.continuation.frames[i].as.value);
-			}
-		}
+		lone_lisp_mark_lisp_stack_values(
+			value->as.continuation.frames,
+			value->as.continuation.frames + value->as.continuation.frame_count
+		);
 		break;
 	case LONE_LISP_TYPE_LIST:
 		lone_lisp_mark_value(value->as.list.first);
@@ -140,13 +134,28 @@ static void lone_lisp_mark_native_stack_roots(struct lone_lisp *lone)
 	);
 }
 
+static void lone_lisp_mark_lisp_stack_values(struct lone_lisp_machine_stack_frame *base,
+		struct lone_lisp_machine_stack_frame *limit)
+{
+	struct lone_lisp_machine_stack_frame *frame = base;
+
+	while (frame++ < limit) {
+		switch (frame->type) {
+		case LONE_LISP_MACHINE_STACK_FRAME_TYPE_INTEGER:
+		case LONE_LISP_MACHINE_STACK_FRAME_TYPE_STEP:
+		case LONE_LISP_MACHINE_STACK_FRAME_TYPE_PRIMITIVE_STEP:
+			continue;
+		case LONE_LISP_MACHINE_STACK_FRAME_TYPE_VALUE:
+		case LONE_LISP_MACHINE_STACK_FRAME_TYPE_FUNCTION_DELIMITER:
+		case LONE_LISP_MACHINE_STACK_FRAME_TYPE_CONTINUATION_DELIMITER:
+			lone_lisp_mark_value(frame->as.value);
+		}
+	}
+}
+
 static void lone_lisp_mark_lisp_stack_roots(struct lone_lisp *lone)
 {
-	lone_lisp_mark_stack_roots(
-		lone,
-		lone->machine.stack.base,
-		lone->machine.stack.top
-	);
+	lone_lisp_mark_lisp_stack_values(lone->machine.stack.base, lone->machine.stack.top);
 }
 
 static void lone_lisp_mark_all_reachable_values(struct lone_lisp *lone)
