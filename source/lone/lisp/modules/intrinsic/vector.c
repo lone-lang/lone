@@ -4,7 +4,6 @@
 
 #include <lone/lisp/machine.h>
 #include <lone/lisp/module.h>
-#include <lone/lisp/evaluator.h>
 
 #include <lone/linux.h>
 
