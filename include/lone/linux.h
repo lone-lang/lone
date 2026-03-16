@@ -51,4 +51,8 @@ int
 __attribute__((tainted_args))
 linux_munmap(void *address, size_t length);
 
+intptr_t
+__attribute__((tainted_args))
+linux_mremap(void *address, size_t old_length, size_t new_length, unsigned long flags, void *new_address);
+
 #endif /* LONE_LINUX_HEADER */
