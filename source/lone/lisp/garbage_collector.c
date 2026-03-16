@@ -91,7 +91,7 @@ static void lone_lisp_mark_known_roots(struct lone_lisp *lone)
 
 static bool lone_points_within_range(void *pointer, void *start, void *end)
 {
-	return start <= pointer && pointer < end;
+	return pointer >= start && pointer < end;
 }
 
 static bool lone_lisp_points_to_heap(struct lone_lisp *lone, void *pointer)
