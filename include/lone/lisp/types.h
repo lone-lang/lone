@@ -606,20 +606,6 @@ struct lone_lisp_machine {
 	struct lone_lisp_value unevaluated; /* remaining expressions queued for evaluation */
 };
 
-struct lone_lisp {
-	struct lone_system *system;
-	void *native_stack;
-	struct lone_lisp_heap *heaps;
-	struct lone_lisp_value symbol_table;
-	struct {
-		struct lone_lisp_value loaded;
-		struct lone_lisp_value embedded;
-		struct lone_lisp_value null;
-		struct lone_lisp_value top_level_environment;
-		struct lone_lisp_value path;
-	} modules;
-};
-
 /* ╭────────────────────┨ LONE LISP MEMORY ALLOCATION ┠─────────────────────╮
    │                                                                        │
    │    Lone is designed to work without any dependencies except Linux,     │
@@ -651,8 +637,23 @@ struct lone_lisp {
    ╰────────────────────────────────────────────────────────────────────────╯ */
 
 struct lone_lisp_heap {
-	struct lone_lisp_heap *next;
-	struct lone_lisp_heap_value values[LONE_LISP_HEAP_VALUE_COUNT];
+	size_t capacity;
+	size_t count;
+	struct lone_lisp_heap_value *values;
+};
+
+struct lone_lisp {
+	struct lone_system *system;
+	void *native_stack;
+	struct lone_lisp_heap heap;
+	struct lone_lisp_value symbol_table;
+	struct {
+		struct lone_lisp_value loaded;
+		struct lone_lisp_value embedded;
+		struct lone_lisp_value null;
+		struct lone_lisp_value top_level_environment;
+		struct lone_lisp_value path;
+	} modules;
 };
 
 #endif /* LONE_LISP_TYPES_HEADER */

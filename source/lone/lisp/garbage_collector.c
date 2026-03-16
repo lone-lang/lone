@@ -96,15 +96,11 @@ static bool lone_points_within_range(void *pointer, void *start, void *end)
 
 static bool lone_lisp_points_to_heap(struct lone_lisp *lone, void *pointer)
 {
-	struct lone_lisp_heap *heap;
-
-	for (heap = lone->heaps; heap; heap = heap->next) {
-		if (lone_points_within_range(pointer, heap->values, heap->values + LONE_LISP_HEAP_VALUE_COUNT)) {
-			return true;
-		}
-	}
-
-	return false;
+	return lone_points_within_range(
+		pointer,
+		lone->heap.values,
+		lone->heap.values + lone->heap.count
+	);
 }
 
 static void lone_lisp_mark_stack_roots(struct lone_lisp *lone, void *bottom, void *top)
@@ -180,47 +176,45 @@ static void lone_lisp_mark_all_reachable_values(struct lone_lisp *lone, struct l
 static void lone_lisp_kill_all_unmarked_values(struct lone_lisp *lone)
 {
 	struct lone_lisp_heap_value *value;
-	struct lone_lisp_heap *heap;
 	size_t i;
 
-	for (heap = lone->heaps; heap; heap = heap->next) {
-		for (i = 0; i < LONE_LISP_HEAP_VALUE_COUNT; ++i) {
-			value = &heap->values[i];
+	for (i = 0; i < lone->heap.count; ++i) {
+		value = &lone->heap.values[i];
 
-			if (!value->live) { continue; }
+		if (!value->live) { continue; }
 
-			if (!value->marked) {
-				switch (value->type) {
-				case LONE_LISP_TYPE_BYTES:
-				case LONE_LISP_TYPE_TEXT:
-				case LONE_LISP_TYPE_SYMBOL:
-					if (value->should_deallocate_bytes) {
-						lone_deallocate(lone->system, value->as.bytes.pointer);
-					}
-					break;
-				case LONE_LISP_TYPE_VECTOR:
-					lone_deallocate(lone->system, value->as.vector.values);
-					break;
-				case LONE_LISP_TYPE_TABLE:
-					lone_deallocate(lone->system, value->as.table.indexes);
-					lone_deallocate(lone->system, value->as.table.entries);
-					break;
-				case LONE_LISP_TYPE_CONTINUATION:
-					lone_deallocate(lone->system, value->as.continuation.frames);
-					break;
-				case LONE_LISP_TYPE_MODULE:
-				case LONE_LISP_TYPE_FUNCTION:
-				case LONE_LISP_TYPE_PRIMITIVE:
-				case LONE_LISP_TYPE_LIST:
-					/* these types do not own any additional memory */
-					break;
+		if (!value->marked) {
+
+			switch (value->type) {
+			case LONE_LISP_TYPE_BYTES:
+			case LONE_LISP_TYPE_TEXT:
+			case LONE_LISP_TYPE_SYMBOL:
+				if (value->should_deallocate_bytes) {
+					lone_deallocate(lone->system, value->as.bytes.pointer);
 				}
-
-				value->live = false;
+				break;
+			case LONE_LISP_TYPE_VECTOR:
+				lone_deallocate(lone->system, value->as.vector.values);
+				break;
+			case LONE_LISP_TYPE_TABLE:
+				lone_deallocate(lone->system, value->as.table.indexes);
+				lone_deallocate(lone->system, value->as.table.entries);
+				break;
+			case LONE_LISP_TYPE_CONTINUATION:
+				lone_deallocate(lone->system, value->as.continuation.frames);
+				break;
+			case LONE_LISP_TYPE_MODULE:
+			case LONE_LISP_TYPE_FUNCTION:
+			case LONE_LISP_TYPE_PRIMITIVE:
+			case LONE_LISP_TYPE_LIST:
+				/* these types do not own any additional memory */
+				break;
 			}
 
-			value->marked = false;
+			value->live = false;
 		}
+
+		value->marked = false;
 	}
 }
 
@@ -228,5 +222,4 @@ void lone_lisp_garbage_collector(struct lone_lisp *lone, struct lone_lisp_machin
 {
 	lone_lisp_mark_all_reachable_values(lone, machine);
 	lone_lisp_kill_all_unmarked_values(lone);
-	lone_lisp_deallocate_dead_heaps(lone);
 }

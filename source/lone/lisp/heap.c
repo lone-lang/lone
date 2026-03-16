@@ -4,54 +4,55 @@
 
 #include <lone/lisp/heap.h>
 
+#include <lone/linux.h>
+
 struct lone_lisp_heap_value *lone_lisp_heap_allocate_value(struct lone_lisp *lone)
 {
 	struct lone_lisp_heap_value *element;
-	struct lone_lisp_heap *heap, *prev;
 	size_t i;
 
-	for (prev = lone->heaps, heap = prev; heap; prev = heap, heap = heap->next) {
-		for (i = 0; i < LONE_LISP_HEAP_VALUE_COUNT; ++i) {
-			element = &heap->values[i];
+	for (i = 0; i < lone->heap.count; ++i) {
+		element = &lone->heap.values[i];
 
-			if (!element->live) {
-				goto resurrect;
-			}
+		if (!element->live) {
+			goto resurrect;
 		}
 	}
 
-	heap = lone_allocate(lone->system, sizeof(struct lone_lisp_heap));
-	prev->next = heap;
-	heap->next = 0;
-	element = &heap->values[0];
+	/* no dead values to resurrect */
+
+	if (lone->heap.count >= lone->heap.capacity) {
+		/* all available pages exhausted */
+		goto out_of_memory;
+	}
+
+	element = &lone->heap.values[lone->heap.count++];
 
 resurrect:
 	element->live = true;
 	return element;
-}
 
-void lone_lisp_deallocate_dead_heaps(struct lone_lisp *lone)
-{
-	struct lone_lisp_heap *prev = lone->heaps, *heap = prev->next;
-	size_t i;
-
-	while (heap) {
-		for (i = 0; i < LONE_LISP_HEAP_VALUE_COUNT; ++i) {
-			if (heap->values[i].live) { /* at least one live object */ goto next_heap; }
-		}
-
-		/* no live objects */
-		prev->next = heap->next;
-		lone_deallocate(lone->system, heap);
-		heap = prev->next;
-		continue;
-next_heap:
-		prev = heap;
-		heap = heap->next;
-	}
+out_of_memory:
+	linux_exit(-1);
 }
 
 void lone_lisp_heap_initialize(struct lone_lisp *lone)
 {
-	lone->heaps = lone_allocate(lone->system, sizeof(struct lone_lisp_heap));
+	intptr_t memory;
+	size_t size;
+
+	if (__builtin_mul_overflow(LONE_LISP_HEAP_CAPACITY, sizeof(struct lone_lisp_heap_value), &size)) { goto error; }
+
+	/* anonymous pages are zero-filled: live = 0 for all values */
+	memory = linux_mmap(0, size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+	if (memory < 0) { goto error; }
+
+	lone->heap.values = (struct lone_lisp_heap_value *) memory;
+	lone->heap.count = 0;
+	lone->heap.capacity = LONE_LISP_HEAP_CAPACITY;
+
+	return;
+
+error:
+	linux_exit(-1);
 }
