@@ -188,7 +188,7 @@ struct lone_lisp_heap_value {
 		struct lone_lisp_table table;
 		struct lone_bytes bytes;   /* also used by texts and symbols */
 	} as;
-};
+} __attribute__((aligned(64)));
 
 typedef bool (*lone_lisp_predicate_function)(struct lone_lisp *lone, struct lone_lisp_value value);
 typedef bool (*lone_lisp_comparator_function)(struct lone_lisp *lone, struct lone_lisp_value x, struct lone_lisp_value y);
