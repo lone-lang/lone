@@ -32,18 +32,18 @@ static struct lone_lisp_value lone_lisp_module_name_to_key(struct lone_lisp *lon
 		break;
 	}
 
-	switch (lone_lisp_heap_value_of(name)->type) {
+	switch (lone_lisp_heap_value_of(lone, name)->type) {
 	case LONE_LISP_TYPE_SYMBOL:
 		return lone_lisp_list_create(lone, name, lone_lisp_nil());
 	case LONE_LISP_TYPE_LIST:
-		for (head = name; !lone_lisp_is_nil(head); head = lone_lisp_list_rest(head)) {
-			if (!lone_lisp_is_symbol(lone_lisp_list_first(head))) {
+		for (head = name; !lone_lisp_is_nil(head); head = lone_lisp_list_rest(lone, head)) {
+			if (!lone_lisp_is_symbol(lone, lone_lisp_list_first(lone, head))) {
 				linux_exit(-1);
 			}
 		}
 		return name;
 	case LONE_LISP_TYPE_MODULE:
-		return lone_lisp_module_name_to_key(lone, lone_lisp_heap_value_of(name)->as.module.name);
+		return lone_lisp_module_name_to_key(lone, lone_lisp_heap_value_of(lone, name)->as.module.name);
 	case LONE_LISP_TYPE_FUNCTION:
 	case LONE_LISP_TYPE_PRIMITIVE:
 	case LONE_LISP_TYPE_CONTINUATION:
@@ -65,9 +65,9 @@ static bool lone_lisp_module_try_to_load_embedded(struct lone_lisp *lone,
 
 	embedded_module = lone_lisp_table_get(lone, lone->modules.embedded, name);
 	if (lone_lisp_is_nil(embedded_module)) { /* embedded module not found */ return false; }
-	if (!lone_lisp_has_bytes(embedded_module)) { /* invalid embedded module */ linux_exit(-1); }
+	if (!lone_lisp_has_bytes(lone, embedded_module)) { /* invalid embedded module */ linux_exit(-1); }
 
-	lone_lisp_module_load_from_bytes(lone, module, lone_lisp_heap_value_of(embedded_module)->as.bytes);
+	lone_lisp_module_load_from_bytes(lone, module, lone_lisp_heap_value_of(lone, embedded_module)->as.bytes);
 	lone_lisp_table_delete(lone, lone->modules.embedded, name);
 	return true;
 }
@@ -112,12 +112,12 @@ static int lone_lisp_module_search(struct lone_lisp *lone, struct lone_lisp_valu
 	size_t i;
 
 	symbols = lone_lisp_module_name_to_key(lone, symbols);
-	package = lone_lisp_list_first(symbols);
+	package = lone_lisp_list_first(lone, symbols);
 
 	slash = lone_lisp_intern_c_string(lone, "/");
 	ln = lone_lisp_intern_c_string(lone, ".ln");
 
-	LONE_LISP_VECTOR_FOR_EACH(search_path, lone->modules.path, i) {
+	LONE_LISP_VECTOR_FOR_EACH(lone, search_path, lone->modules.path, i) {
 		arguments = lone_lisp_list_build(lone, 3, &search_path, &package, &symbols);
 		arguments = lone_lisp_list_flatten(lone, arguments);
 		arguments = lone_lisp_text_transfer_bytes(lone, lone_lisp_join(lone, slash, arguments, lone_lisp_has_bytes), true);
@@ -217,15 +217,15 @@ void lone_lisp_module_load_null_from_standard_input(struct lone_lisp *lone)
 void lone_lisp_module_export(struct lone_lisp *lone,
 		struct lone_lisp_value module, struct lone_lisp_value symbol)
 {
-	if (!lone_lisp_is_symbol(symbol)) { /* only symbols can be exported */ linux_exit(-1); }
-	lone_lisp_vector_push(lone, lone_lisp_heap_value_of(module)->as.module.exports, symbol);
+	if (!lone_lisp_is_symbol(lone, symbol)) { /* only symbols can be exported */ linux_exit(-1); }
+	lone_lisp_vector_push(lone, lone_lisp_heap_value_of(lone, module)->as.module.exports, symbol);
 }
 
 void lone_lisp_module_set_and_export(struct lone_lisp *lone, struct lone_lisp_value module,
 		struct lone_lisp_value symbol, struct lone_lisp_value value)
 {
 	lone_lisp_module_export(lone, module, symbol);
-	lone_lisp_table_set(lone, lone_lisp_heap_value_of(module)->as.module.environment, symbol, value);
+	lone_lisp_table_set(lone, lone_lisp_heap_value_of(lone, module)->as.module.environment, symbol, value);
 }
 
 void lone_lisp_module_set_and_export_c_string(struct lone_lisp *lone,
@@ -251,8 +251,8 @@ LONE_LISP_PRIMITIVE(module_export)
 
 	arguments = lone_lisp_machine_pop_value(lone, machine);
 
-	for (head = arguments; !lone_lisp_is_nil(head); head = lone_lisp_list_rest(head)) {
-		symbol = lone_lisp_list_first(head);
+	for (head = arguments; !lone_lisp_is_nil(head); head = lone_lisp_list_rest(lone, head)) {
+		symbol = lone_lisp_list_first(lone, head);
 
 		lone_lisp_module_export(lone, machine->module, symbol);
 	}
@@ -275,7 +275,7 @@ static struct lone_lisp_value lone_prefix_module_name(struct lone_lisp *lone,
 	struct lone_lisp_value arguments, separator;
 
 	arguments = lone_lisp_list_flatten(lone, lone_lisp_list_build(lone, 2,
-				&lone_lisp_heap_value_of(module)->as.module.name, &symbol));
+				&lone_lisp_heap_value_of(lone, module)->as.module.name, &symbol));
 	separator = lone_lisp_intern_c_string(lone, ".");
 
 	return lone_lisp_intern_bytes(lone, lone_lisp_join(lone, separator, arguments, lone_lisp_has_bytes), true);
@@ -289,17 +289,17 @@ static void lone_lisp_import_specification(struct lone_lisp *lone, struct lone_l
 	module = spec->module;
 	symbols = spec->symbols;
 	environment = spec->environment;
-	exports = lone_lisp_heap_value_of(module)->as.module.exports;
+	exports = lone_lisp_heap_value_of(lone, module)->as.module.exports;
 
 	/* bind either the exported or the specified symbols: (import (module)), (import (module x f)) */
-	LONE_LISP_VECTOR_FOR_EACH(symbol, symbols, i) {
-		if (!lone_lisp_is_symbol(symbol)) { /* name not a symbol: (import (module 10)) */ linux_exit(-1); }
+	LONE_LISP_VECTOR_FOR_EACH(lone, symbol, symbols, i) {
+		if (!lone_lisp_is_symbol(lone, symbol)) { /* name not a symbol: (import (module 10)) */ linux_exit(-1); }
 
-		if (!lone_lisp_vector_contains(exports, symbol)) {
+		if (!lone_lisp_vector_contains(lone, exports, symbol)) {
 			/* attempt to import private symbol */ linux_exit(-1);
 		}
 
-		value = lone_lisp_table_get(lone, lone_lisp_heap_value_of(module)->as.module.environment, symbol);
+		value = lone_lisp_table_get(lone, lone_lisp_heap_value_of(lone, module)->as.module.environment, symbol);
 
 		if (spec->prefixed) {
 			symbol = lone_prefix_module_name(lone, spec->module, symbol);
@@ -325,7 +325,7 @@ static void lone_lisp_primitive_import_form(struct lone_lisp *lone,
 		break;
 	}
 
-	switch (lone_lisp_heap_value_of(argument)->type) {
+	switch (lone_lisp_heap_value_of(lone, argument)->type) {
 	case LONE_LISP_TYPE_SYMBOL:
 		/* (import module) */
 		name = argument;
@@ -333,8 +333,8 @@ static void lone_lisp_primitive_import_form(struct lone_lisp *lone,
 		break;
 	case LONE_LISP_TYPE_LIST:
 		/* (import (module)), (import (module symbol)) */
-		name = lone_lisp_list_first(argument);
-		argument = lone_lisp_list_rest(argument);
+		name = lone_lisp_list_first(lone, argument);
+		argument = lone_lisp_list_rest(lone, argument);
 		break;
 	case LONE_LISP_TYPE_MODULE:
 	case LONE_LISP_TYPE_FUNCTION:
@@ -351,7 +351,7 @@ static void lone_lisp_primitive_import_form(struct lone_lisp *lone,
 	if (lone_lisp_is_nil(spec->module)) { /* module not found: (import (non-existent)) */ linux_exit(-1); }
 
 	spec->symbols = lone_lisp_is_nil(argument)?
-		lone_lisp_heap_value_of(spec->module)->as.module.exports : lone_lisp_list_to_vector(lone, argument);
+		lone_lisp_heap_value_of(lone, spec->module)->as.module.exports : lone_lisp_list_to_vector(lone, argument);
 
 	lone_lisp_import_specification(lone, spec);
 }
@@ -371,13 +371,13 @@ LONE_LISP_PRIMITIVE(module_import)
 	spec.environment = machine->environment;
 	spec.prefixed = false;
 
-	for (/* argument */; !lone_lisp_is_nil(arguments); arguments = lone_lisp_list_rest(arguments)) {
-		argument = lone_lisp_list_first(arguments);
-		if (lone_lisp_is_list(argument)) {
+	for (/* argument */; !lone_lisp_is_nil(arguments); arguments = lone_lisp_list_rest(lone, arguments)) {
+		argument = lone_lisp_list_first(lone, arguments);
+		if (lone_lisp_is_list(lone, argument)) {
 			lone_lisp_primitive_import_form(lone, &spec, argument);
-		} else if (lone_lisp_is_symbol(argument)) {
-			if (lone_lisp_is_equivalent(argument, prefixed)) { spec.prefixed = true; }
-			else if (lone_lisp_is_equivalent(argument, unprefixed)) { spec.prefixed = false; }
+		} else if (lone_lisp_is_symbol(lone, argument)) {
+			if (lone_lisp_is_equivalent(lone, argument, prefixed)) { spec.prefixed = true; }
+			else if (lone_lisp_is_equivalent(lone, argument, unprefixed)) { spec.prefixed = false; }
 		} else {
 			/* invalid import argument */ linux_exit(-1);
 		}

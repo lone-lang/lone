@@ -39,12 +39,12 @@ LONE_LISP_PRIMITIVE(vector_get)
 
 	arguments = lone_lisp_machine_pop_value(lone, machine);
 
-	if (lone_lisp_list_destructure(arguments, 2, &vector, &index)) {
+	if (lone_lisp_list_destructure(lone, arguments, 2, &vector, &index)) {
 		/* wrong number of arguments */ linux_exit(-1);
 	}
 
-	if (!lone_lisp_is_vector(vector)) { /* vector not given: (get {}) */ linux_exit(-1); }
-	if (!lone_lisp_is_integer(index)) { /* integer index not given: (get [1 2 3] "invalid") */ linux_exit(-1); }
+	if (!lone_lisp_is_vector(lone, vector)) { /* vector not given: (get {}) */ linux_exit(-1); }
+	if (!lone_lisp_is_integer(lone, index)) { /* integer index not given: (get [1 2 3] "invalid") */ linux_exit(-1); }
 
 	value = lone_lisp_vector_get(lone, vector, index);
 
@@ -58,12 +58,12 @@ LONE_LISP_PRIMITIVE(vector_set)
 
 	arguments = lone_lisp_machine_pop_value(lone, machine);
 
-	if (lone_lisp_list_destructure(arguments, 3, &vector, &index, &value)) {
+	if (lone_lisp_list_destructure(lone, arguments, 3, &vector, &index, &value)) {
 		/* wrong number of arguments */ linux_exit(-1);
 	}
 
-	if (!lone_lisp_is_vector(vector)) { /* vector not given: (set {}) */ linux_exit(-1); }
-	if (!lone_lisp_is_integer(index)) { /* integer index not given: (set [1 2 3] "invalid") */ linux_exit(-1); }
+	if (!lone_lisp_is_vector(lone, vector)) { /* vector not given: (set {}) */ linux_exit(-1); }
+	if (!lone_lisp_is_integer(lone, index)) { /* integer index not given: (set [1 2 3] "invalid") */ linux_exit(-1); }
 
 	lone_lisp_vector_set(lone, vector, index, value);
 
@@ -80,24 +80,28 @@ LONE_LISP_PRIMITIVE(vector_slice)
 
 	if (lone_lisp_is_nil(arguments)) { /* arguments not given: (slice) */ linux_exit(-1); }
 
-	vector = lone_lisp_list_first(arguments);
-	arguments = lone_lisp_list_rest(arguments);
-	if (!lone_lisp_is_vector(vector)) { /* vector not given: (slice {}) */ linux_exit(-1); }
+	vector = lone_lisp_list_first(lone, arguments);
+	arguments = lone_lisp_list_rest(lone, arguments);
+	if (!lone_lisp_is_vector(lone, vector)) { /* vector not given: (slice {}) */ linux_exit(-1); }
 	if (lone_lisp_is_nil(arguments)) { /* start index not given: (slice vector) */ linux_exit(-1); }
 
-	start = lone_lisp_list_first(arguments);
-	arguments = lone_lisp_list_rest(arguments);
-	if (!lone_lisp_is_integer(start)) { /* start is not an integer: (slice vector "error") */ linux_exit(-1); }
+	start = lone_lisp_list_first(lone, arguments);
+	arguments = lone_lisp_list_rest(lone, arguments);
+	if (!lone_lisp_is_integer(lone, start)) { /* start is not an integer: (slice vector "error") */ linux_exit(-1); }
 
 	i = lone_lisp_integer_of(start);
 
 	if (lone_lisp_is_nil(arguments)) {
-		j = lone_lisp_vector_count(vector);
+		j = lone_lisp_vector_count(lone, vector);
 	} else {
-		end = lone_lisp_list_first(arguments);
-		arguments = lone_lisp_list_rest(arguments);
-		if (!lone_lisp_is_nil(arguments)) { /* too many arguments given: (slice vector start end extra) */ linux_exit(-1); }
-		if (!lone_lisp_is_integer(end)) { /* end is not an integer: (slice vector 10 "error") */ linux_exit(-1); }
+		end = lone_lisp_list_first(lone, arguments);
+		arguments = lone_lisp_list_rest(lone, arguments);
+		if (!lone_lisp_is_nil(arguments)) {
+			/* too many arguments given: (slice vector start end extra) */ linux_exit(-1);
+		}
+		if (!lone_lisp_is_integer(lone, end)) {
+			/* end is not an integer: (slice vector 10 "error") */ linux_exit(-1);
+		}
 
 		j = lone_lisp_integer_of(end);
 	}
@@ -105,7 +109,7 @@ LONE_LISP_PRIMITIVE(vector_slice)
 	slice = lone_lisp_vector_create(lone, j - i);
 
 	for (k = 0; i < j; ++i, ++k) {
-		lone_lisp_vector_set_value_at(lone, slice, k, lone_lisp_vector_get_value_at(vector, i));
+		lone_lisp_vector_set_value_at(lone, slice, k, lone_lisp_vector_get_value_at(lone, vector, i));
 	}
 
 	lone_lisp_machine_push_value(lone, machine, slice);
@@ -121,14 +125,16 @@ LONE_LISP_PRIMITIVE(vector_each)
 	case 0:
 		arguments = lone_lisp_machine_pop_value(lone, machine);
 
-		if (lone_lisp_list_destructure(arguments, 2, &vector, &function)) {
+		if (lone_lisp_list_destructure(lone, arguments, 2, &vector, &function)) {
 			/* wrong number of arguments */ linux_exit(-1);
 		}
 
-		if (!lone_lisp_is_vector(vector)) { /* vector not given: (each {}) */ linux_exit(-1); }
-		if (!lone_lisp_is_applicable(function)) { /* applicable not given: (each vector []) */ linux_exit(-1); }
+		if (!lone_lisp_is_vector(lone, vector)) { /* vector not given: (each {}) */ linux_exit(-1); }
+		if (!lone_lisp_is_applicable(lone, function)) {
+			/* applicable not given: (each vector []) */ linux_exit(-1);
+		}
 
-		if (lone_lisp_vector_count(vector) < 1) {
+		if (lone_lisp_vector_count(lone, vector) < 1) {
 			/* nothing to do */ break;
 		}
 
@@ -136,7 +142,7 @@ LONE_LISP_PRIMITIVE(vector_each)
 
 	iteration:
 
-		entry = lone_lisp_vector_get_value_at(vector, i);
+		entry = lone_lisp_vector_get_value_at(lone, vector, i);
 		expression = lone_lisp_list_build(lone, 2, &function, &entry);
 
 		machine->step = LONE_LISP_MACHINE_STEP_EXPRESSION_EVALUATION;
@@ -156,7 +162,7 @@ LONE_LISP_PRIMITIVE(vector_each)
 
 		++i;
 
-		if (i < lone_lisp_vector_count(vector)) {
+		if (i < lone_lisp_vector_count(lone, vector)) {
 			goto iteration;
 		} else {
 			break;
@@ -173,13 +179,13 @@ LONE_LISP_PRIMITIVE(vector_count)
 
 	arguments = lone_lisp_machine_pop_value(lone, machine);
 
-	if (lone_lisp_list_destructure(arguments, 1, &vector)) {
+	if (lone_lisp_list_destructure(lone, arguments, 1, &vector)) {
 		/* wrong number of arguments */ linux_exit(-1);
 	}
 
-	if (!lone_lisp_is_vector(vector)) { /* vector not given: (count {}) */ linux_exit(-1); }
+	if (!lone_lisp_is_vector(lone, vector)) { /* vector not given: (count {}) */ linux_exit(-1); }
 
-	count = lone_lisp_integer_create(lone_lisp_vector_count(vector));
+	count = lone_lisp_integer_create(lone_lisp_vector_count(lone, vector));
 
 	lone_lisp_machine_push_value(lone, machine, count);
 	return 0;

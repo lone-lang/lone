@@ -7,11 +7,11 @@
 
 #include <lone/architecture/garbage_collector.c>
 
-static void lone_lisp_mark_heap_value(struct lone_lisp_heap_value *);
-static void lone_lisp_mark_lisp_stack_values(struct lone_lisp_machine_stack_frame *base,
-		struct lone_lisp_machine_stack_frame *limit);
+static void lone_lisp_mark_heap_value(struct lone_lisp *lone, struct lone_lisp_heap_value *value);
+static void lone_lisp_mark_lisp_stack_values(struct lone_lisp *lone,
+		struct lone_lisp_machine_stack_frame *base, struct lone_lisp_machine_stack_frame *limit);
 
-static void lone_lisp_mark_value(struct lone_lisp_value value)
+static void lone_lisp_mark_value(struct lone_lisp *lone, struct lone_lisp_value value)
 {
 	switch (lone_lisp_type_of(value)) {
 	case LONE_LISP_TYPE_NIL:
@@ -24,10 +24,10 @@ static void lone_lisp_mark_value(struct lone_lisp_value value)
 		break;
 	}
 
-	lone_lisp_mark_heap_value(lone_lisp_heap_value_of(value));
+	lone_lisp_mark_heap_value(lone, lone_lisp_heap_value_of(lone, value));
 }
 
-static void lone_lisp_mark_heap_value(struct lone_lisp_heap_value *value)
+static void lone_lisp_mark_heap_value(struct lone_lisp *lone, struct lone_lisp_heap_value *value)
 {
 	if (!value || !value->live || value->marked) { return; }
 
@@ -35,39 +35,40 @@ static void lone_lisp_mark_heap_value(struct lone_lisp_heap_value *value)
 
 	switch (value->type) {
 	case LONE_LISP_TYPE_MODULE:
-		lone_lisp_mark_value(value->as.module.name);
-		lone_lisp_mark_value(value->as.module.environment);
-		lone_lisp_mark_value(value->as.module.exports);
+		lone_lisp_mark_value(lone, value->as.module.name);
+		lone_lisp_mark_value(lone, value->as.module.environment);
+		lone_lisp_mark_value(lone, value->as.module.exports);
 		break;
 	case LONE_LISP_TYPE_FUNCTION:
-		lone_lisp_mark_value(value->as.function.arguments);
-		lone_lisp_mark_value(value->as.function.code);
-		lone_lisp_mark_value(value->as.function.environment);
+		lone_lisp_mark_value(lone, value->as.function.arguments);
+		lone_lisp_mark_value(lone, value->as.function.code);
+		lone_lisp_mark_value(lone, value->as.function.environment);
 		break;
 	case LONE_LISP_TYPE_PRIMITIVE:
-		lone_lisp_mark_value(value->as.primitive.name);
-		lone_lisp_mark_value(value->as.primitive.closure);
+		lone_lisp_mark_value(lone, value->as.primitive.name);
+		lone_lisp_mark_value(lone, value->as.primitive.closure);
 		break;
 	case LONE_LISP_TYPE_CONTINUATION:
 		lone_lisp_mark_lisp_stack_values(
+			lone,
 			value->as.continuation.frames,
 			value->as.continuation.frames + value->as.continuation.frame_count
 		);
 		break;
 	case LONE_LISP_TYPE_LIST:
-		lone_lisp_mark_value(value->as.list.first);
-		lone_lisp_mark_value(value->as.list.rest);
+		lone_lisp_mark_value(lone, value->as.list.first);
+		lone_lisp_mark_value(lone, value->as.list.rest);
 		break;
 	case LONE_LISP_TYPE_VECTOR:
 		for (size_t i = 0; i < value->as.vector.count; ++i) {
-			lone_lisp_mark_value(value->as.vector.values[i]);
+			lone_lisp_mark_value(lone, value->as.vector.values[i]);
 		}
 		break;
 	case LONE_LISP_TYPE_TABLE:
-		lone_lisp_mark_value(value->as.table.prototype);
+		lone_lisp_mark_value(lone, value->as.table.prototype);
 		for (size_t i = 0; i < value->as.table.count; ++i) {
-			lone_lisp_mark_value(value->as.table.entries[i].key);
-			lone_lisp_mark_value(value->as.table.entries[i].value);
+			lone_lisp_mark_value(lone, value->as.table.entries[i].key);
+			lone_lisp_mark_value(lone, value->as.table.entries[i].value);
 		}
 		break;
 	case LONE_LISP_TYPE_SYMBOL:
@@ -80,12 +81,12 @@ static void lone_lisp_mark_heap_value(struct lone_lisp_heap_value *value)
 
 static void lone_lisp_mark_known_roots(struct lone_lisp *lone)
 {
-	lone_lisp_mark_value(lone->symbol_table);
-	lone_lisp_mark_value(lone->modules.loaded);
-	lone_lisp_mark_value(lone->modules.embedded);
-	lone_lisp_mark_value(lone->modules.null);
-	lone_lisp_mark_value(lone->modules.top_level_environment);
-	lone_lisp_mark_value(lone->modules.path);
+	lone_lisp_mark_value(lone, lone->symbol_table);
+	lone_lisp_mark_value(lone, lone->modules.loaded);
+	lone_lisp_mark_value(lone, lone->modules.embedded);
+	lone_lisp_mark_value(lone, lone->modules.null);
+	lone_lisp_mark_value(lone, lone->modules.top_level_environment);
+	lone_lisp_mark_value(lone, lone->modules.path);
 }
 
 static bool lone_points_within_range(void *pointer, void *start, void *end)
@@ -120,7 +121,7 @@ static void lone_lisp_mark_stack_roots(struct lone_lisp *lone, void *bottom, voi
 
 	while (pointer++ < top) {
 		if (lone_lisp_points_to_heap(lone, *pointer)) {
-			lone_lisp_mark_heap_value(*pointer);
+			lone_lisp_mark_heap_value(lone, *pointer);
 		}
 	}
 }
@@ -134,8 +135,8 @@ static void lone_lisp_mark_native_stack_roots(struct lone_lisp *lone)
 	);
 }
 
-static void lone_lisp_mark_lisp_stack_values(struct lone_lisp_machine_stack_frame *base,
-		struct lone_lisp_machine_stack_frame *limit)
+static void lone_lisp_mark_lisp_stack_values(struct lone_lisp *lone,
+		struct lone_lisp_machine_stack_frame *base, struct lone_lisp_machine_stack_frame *limit)
 {
 	struct lone_lisp_machine_stack_frame *frame = base;
 
@@ -148,14 +149,14 @@ static void lone_lisp_mark_lisp_stack_values(struct lone_lisp_machine_stack_fram
 		case LONE_LISP_MACHINE_STACK_FRAME_TYPE_VALUE:
 		case LONE_LISP_MACHINE_STACK_FRAME_TYPE_FUNCTION_DELIMITER:
 		case LONE_LISP_MACHINE_STACK_FRAME_TYPE_CONTINUATION_DELIMITER:
-			lone_lisp_mark_value(frame->as.value);
+			lone_lisp_mark_value(lone, frame->as.value);
 		}
 	}
 }
 
 static void lone_lisp_mark_lisp_stack_roots_of(struct lone_lisp *lone, struct lone_lisp_machine_stack stack)
 {
-	lone_lisp_mark_lisp_stack_values(stack.base, stack.top);
+	lone_lisp_mark_lisp_stack_values(lone, stack.base, stack.top);
 }
 
 static void lone_lisp_mark_lisp_stack_roots(struct lone_lisp *lone, struct lone_lisp_machine *machine)

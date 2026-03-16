@@ -39,11 +39,11 @@ LONE_LISP_PRIMITIVE(table_get)
 
 	arguments = lone_lisp_machine_pop_value(lone, machine);
 
-	if (lone_lisp_list_destructure(arguments, 2, &table, &key)) {
+	if (lone_lisp_list_destructure(lone, arguments, 2, &table, &key)) {
 		/* wrong number of arguments */ linux_exit(-1);
 	}
 
-	if (!lone_lisp_is_table(table)) { /* table not given: (get []) */ linux_exit(-1); }
+	if (!lone_lisp_is_table(lone, table)) { /* table not given: (get []) */ linux_exit(-1); }
 
 	value = lone_lisp_table_get(lone, table, key);
 
@@ -57,11 +57,11 @@ LONE_LISP_PRIMITIVE(table_set)
 
 	arguments = lone_lisp_machine_pop_value(lone, machine);
 
-	if (lone_lisp_list_destructure(arguments, 3, &table, &key, &value)) {
+	if (lone_lisp_list_destructure(lone, arguments, 3, &table, &key, &value)) {
 		/* wrong number of arguments */ linux_exit(-1);
 	}
 
-	if (!lone_lisp_is_table(table)) { /* table not given: (set []) */ linux_exit(-1); }
+	if (!lone_lisp_is_table(lone, table)) { /* table not given: (set []) */ linux_exit(-1); }
 
 	lone_lisp_table_set(lone, table, key, value);
 
@@ -75,11 +75,11 @@ LONE_LISP_PRIMITIVE(table_delete)
 
 	arguments = lone_lisp_machine_pop_value(lone, machine);
 
-	if (lone_lisp_list_destructure(arguments, 2, &table, &key)) {
+	if (lone_lisp_list_destructure(lone, arguments, 2, &table, &key)) {
 		/* wrong number of arguments */ linux_exit(-1);
 	}
 
-	if (!lone_lisp_is_table(table)) { /* table not given: (delete []) */ linux_exit(-1); }
+	if (!lone_lisp_is_table(lone, table)) { /* table not given: (delete []) */ linux_exit(-1); }
 
 	lone_lisp_table_delete(lone, table, key);
 
@@ -98,14 +98,16 @@ LONE_LISP_PRIMITIVE(table_each)
 
 		arguments = lone_lisp_machine_pop_value(lone, machine);
 
-		if (lone_lisp_list_destructure(arguments, 2, &table, &function)) {
+		if (lone_lisp_list_destructure(lone, arguments, 2, &table, &function)) {
 			/* wrong number of arguments */ linux_exit(-1);
 		}
 
-		if (!lone_lisp_is_table(table)) { /* table not given: (each []) */ linux_exit(-1); }
-		if (!lone_lisp_is_applicable(function)) { /* applicable not given: (each table []) */ linux_exit(-1); }
+		if (!lone_lisp_is_table(lone, table)) { /* table not given: (each []) */ linux_exit(-1); }
+		if (!lone_lisp_is_applicable(lone, function)) {
+			/* applicable not given: (each table []) */ linux_exit(-1);
+		}
 
-		if (lone_lisp_heap_value_of(table)->as.table.count < 1) {
+		if (lone_lisp_heap_value_of(lone, table)->as.table.count < 1) {
 			/* nothing to do */ break;
 		}
 
@@ -113,7 +115,7 @@ LONE_LISP_PRIMITIVE(table_each)
 
 	iteration:
 
-		entry = &lone_lisp_heap_value_of(table)->as.table.entries[i];
+		entry = &lone_lisp_heap_value_of(lone, table)->as.table.entries[i];
 		expression = lone_lisp_list_build(lone, 3, &function, &entry->key, &entry->value);
 
 		machine->step = LONE_LISP_MACHINE_STEP_EXPRESSION_EVALUATION;
@@ -133,7 +135,7 @@ LONE_LISP_PRIMITIVE(table_each)
 
 		++i;
 
-		if (i < lone_lisp_heap_value_of(table)->as.table.count) {
+		if (i < lone_lisp_heap_value_of(lone, table)->as.table.count) {
 			goto iteration;
 		} else {
 			break;
@@ -150,13 +152,13 @@ LONE_LISP_PRIMITIVE(table_count)
 
 	arguments = lone_lisp_machine_pop_value(lone, machine);
 
-	if (lone_lisp_list_destructure(arguments, 1, &table)) {
+	if (lone_lisp_list_destructure(lone, arguments, 1, &table)) {
 		/* wrong number of arguments */ linux_exit(-1);
 	}
 
-	if (!lone_lisp_is_table(table)) { /* table not given: (count []) */ linux_exit(-1); }
+	if (!lone_lisp_is_table(lone, table)) { /* table not given: (count []) */ linux_exit(-1); }
 
-	count = lone_lisp_integer_create(lone_lisp_table_count(table));
+	count = lone_lisp_integer_create(lone_lisp_table_count(lone, table));
 
 	lone_lisp_machine_push_value(lone, machine, count);
 	return 0;

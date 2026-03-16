@@ -130,8 +130,8 @@ LONE_LISP_PRIMITIVE(lone_when)
 		arguments = lone_lisp_machine_pop_value(lone, machine);
 
 		if (lone_lisp_is_nil(arguments)) { /* condition not specified: (when) */ linux_exit(-1); }
-		condition = lone_lisp_list_first(arguments);
-		body = lone_lisp_list_rest(arguments);
+		condition = lone_lisp_list_first(lone, arguments);
+		body = lone_lisp_list_rest(lone, arguments);
 
 		lone_lisp_machine_push_value(lone, machine, body);
 
@@ -174,8 +174,8 @@ LONE_LISP_PRIMITIVE(lone_unless)
 		arguments = lone_lisp_machine_pop_value(lone, machine);
 
 		if (lone_lisp_is_nil(arguments)) { /* condition not specified: (unless) */ linux_exit(-1); }
-		condition = lone_lisp_list_first(arguments);
-		body = lone_lisp_list_rest(arguments);
+		condition = lone_lisp_list_first(lone, arguments);
+		body = lone_lisp_list_rest(lone, arguments);
 
 		lone_lisp_machine_push_value(lone, machine, body);
 
@@ -217,18 +217,18 @@ LONE_LISP_PRIMITIVE(lone_if)
 		arguments = lone_lisp_machine_pop_value(lone, machine);
 
 		if (lone_lisp_is_nil(arguments)) { /* test not specified: (if) */ linux_exit(-1); }
-		condition = lone_lisp_list_first(arguments);
-		arguments = lone_lisp_list_rest(arguments);
+		condition = lone_lisp_list_first(lone, arguments);
+		arguments = lone_lisp_list_rest(lone, arguments);
 
 		if (lone_lisp_is_nil(arguments)) { /* consequent not specified: (if test) */ linux_exit(-1); }
-		consequent = lone_lisp_list_first(arguments);
-		arguments = lone_lisp_list_rest(arguments);
+		consequent = lone_lisp_list_first(lone, arguments);
+		arguments = lone_lisp_list_rest(lone, arguments);
 
 		alternative = lone_lisp_nil();
 
 		if (!lone_lisp_is_nil(arguments)) {
-			alternative = lone_lisp_list_first(arguments);
-			arguments = lone_lisp_list_rest(arguments);
+			alternative = lone_lisp_list_first(lone, arguments);
+			arguments = lone_lisp_list_rest(lone, arguments);
 			if (!lone_lisp_is_nil(arguments)) {
 				/* too many values (if test consequent alternative extra) */ linux_exit(-1);
 			}
@@ -273,27 +273,29 @@ LONE_LISP_PRIMITIVE(lone_let)
 		arguments = lone_lisp_machine_pop_value(lone, machine);
 		if (lone_lisp_is_nil(arguments)) { /* no variables to bind: (let) */ linux_exit(-1); }
 
-		bindings = lone_lisp_list_first(arguments);
-		if (!lone_lisp_is_list(bindings)) { /* expected list but got something else: (let 10) */ linux_exit(-1); }
+		bindings = lone_lisp_list_first(lone, arguments);
+		if (!lone_lisp_is_list(lone, bindings)) {
+			/* expected list but got something else: (let 10) */ linux_exit(-1);
+		}
 
-		body = lone_lisp_list_rest(arguments);
+		body = lone_lisp_list_rest(lone, arguments);
 		original_environment = machine->environment;
 		new_environment = lone_lisp_table_create(lone, 8, original_environment);
 
 		while (1) {
 			if (lone_lisp_is_nil(bindings)) { break; }
 
-			first = lone_lisp_list_first(bindings);
-			if (!lone_lisp_is_symbol(first)) {
+			first = lone_lisp_list_first(lone, bindings);
+			if (!lone_lisp_is_symbol(lone, first)) {
 				/* variable names must be symbols: (let ("x")) */ linux_exit(-1);
 			}
 
-			rest = lone_lisp_list_rest(bindings);
+			rest = lone_lisp_list_rest(lone, bindings);
 			if (lone_lisp_is_nil(rest)) {
 				/* incomplete variable/value list: (let (x 10 y)) */ linux_exit(-1);
 			}
 
-			second = lone_lisp_list_first(rest);
+			second = lone_lisp_list_first(lone, rest);
 
 			lone_lisp_machine_push_value(lone, machine, rest);
 			lone_lisp_machine_push_value(lone, machine, first);
@@ -308,7 +310,7 @@ LONE_LISP_PRIMITIVE(lone_let)
 
 	bind_value_to_variable:
 			lone_lisp_table_set(lone, new_environment, first, value);
-			bindings = lone_lisp_list_rest(rest);
+			bindings = lone_lisp_list_rest(lone, rest);
 		}
 
 		lone_lisp_machine_push_value(lone, machine, original_environment);
@@ -354,21 +356,21 @@ LONE_LISP_PRIMITIVE(lone_set)
 			linux_exit(-1);
 		}
 
-		variable = lone_lisp_list_first(arguments);
-		if (!lone_lisp_is_symbol(variable)) {
+		variable = lone_lisp_list_first(lone, arguments);
+		if (!lone_lisp_is_symbol(lone, variable)) {
 			/* variable names must be symbols: (set 10) */
 			linux_exit(-1);
 		}
 
-		arguments = lone_lisp_list_rest(arguments);
+		arguments = lone_lisp_list_rest(lone, arguments);
 		if (lone_lisp_is_nil(arguments)) {
 			/* value not specified: (set variable) */
 			value = lone_lisp_nil();
 			goto set_value;
 		} else {
 			/* (set variable value) */
-			value = lone_lisp_list_first(arguments);
-			arguments = lone_lisp_list_rest(arguments);
+			value = lone_lisp_list_first(lone, arguments);
+			arguments = lone_lisp_list_rest(lone, arguments);
 		}
 
 		if (!lone_lisp_is_nil(arguments)) { /* too many arguments */ linux_exit(-1); }
@@ -402,7 +404,7 @@ LONE_LISP_PRIMITIVE(lone_quote)
 
 	arguments = lone_lisp_machine_pop_value(lone, machine);
 
-	if (lone_lisp_list_destructure(arguments, 1, &argument)) {
+	if (lone_lisp_list_destructure(lone, arguments, 1, &argument)) {
 		/* wrong number of arguments: (quote), (quote x y) */ linux_exit(-1);
 	}
 
@@ -420,7 +422,7 @@ LONE_LISP_PRIMITIVE(lone_quasiquote)
 
 		arguments = lone_lisp_machine_pop_value(lone, machine);
 
-		if (lone_lisp_list_destructure(arguments, 1, &form)) {
+		if (lone_lisp_list_destructure(lone, arguments, 1, &form)) {
 			/* wrong number of arguments: (quasiquote), (quasiquote x y) */ linux_exit(-1);
 		}
 
@@ -429,17 +431,17 @@ LONE_LISP_PRIMITIVE(lone_quasiquote)
 		list = head = lone_lisp_nil();
 		current = form;
 
-		for (current = form; !lone_lisp_is_nil(current); current = lone_lisp_list_rest(current)) {
-			element = lone_lisp_list_first(current);
+		for (current = form; !lone_lisp_is_nil(current); current = lone_lisp_list_rest(lone, current)) {
+			element = lone_lisp_list_first(lone, current);
 
-			if (lone_lisp_is_list(element)) {
-				first = lone_lisp_list_first(element);
-				rest = lone_lisp_list_rest(element);
+			if (lone_lisp_is_list(lone, element)) {
+				first = lone_lisp_list_first(lone, element);
+				rest = lone_lisp_list_rest(lone, element);
 
-				if (lone_lisp_is_equivalent(first, unquote)) {
+				if (lone_lisp_is_equivalent(lone, first, unquote)) {
 					escaping = lone_lisp_true();
 					splicing = lone_lisp_false();
-				} else if (lone_lisp_is_equivalent(first, splice)) {
+				} else if (lone_lisp_is_equivalent(lone, first, splice)) {
 					escaping = lone_lisp_true();
 					splicing = lone_lisp_true();
 				} else {
@@ -448,8 +450,8 @@ LONE_LISP_PRIMITIVE(lone_quasiquote)
 				}
 
 				if (lone_lisp_is_true(escaping)) {
-					first = lone_lisp_list_first(rest);
-					rest = lone_lisp_list_rest(rest);
+					first = lone_lisp_list_first(lone, rest);
+					rest = lone_lisp_list_rest(lone, rest);
 
 					if (!lone_lisp_is_nil(rest)) {
 						/* too many arguments: (quasiquote (unquote x y) (unquote* x y)) */
@@ -469,12 +471,12 @@ LONE_LISP_PRIMITIVE(lone_quasiquote)
 
 	after_evaluation:
 					if (lone_lisp_is_true(splicing)) {
-						if (lone_lisp_is_list(result)) {
+						if (lone_lisp_is_list(lone, result)) {
 							for (/* result */;
 									!lone_lisp_is_nil(result);
-									result = lone_lisp_list_rest(result)) {
+									result = lone_lisp_list_rest(lone, result)) {
 								lone_lisp_list_append(lone, &list, &head,
-										lone_lisp_list_first(result));
+										lone_lisp_list_first(lone, result));
 							}
 						} else {
 							lone_lisp_list_append(lone, &list, &head, result);
@@ -518,10 +520,10 @@ static struct lone_lisp_value lone_lisp_primitive_lambda_with_flags(struct lone_
 {
 	struct lone_lisp_value bindings, code;
 
-	bindings = lone_lisp_list_first(arguments);
-	if (!lone_lisp_is_list_or_nil(bindings)) { /* parameters not a list: (lambda 10) */ linux_exit(-1); }
+	bindings = lone_lisp_list_first(lone, arguments);
+	if (!lone_lisp_is_list_or_nil(lone, bindings)) { /* parameters not a list: (lambda 10) */ linux_exit(-1); }
 
-	code = lone_lisp_list_rest(arguments);
+	code = lone_lisp_list_rest(lone, arguments);
 
 	return lone_lisp_function_create(lone, bindings, code, environment, flags);
 }
@@ -556,7 +558,7 @@ LONE_LISP_PRIMITIVE(lone_return)
 {
 	struct lone_lisp_value return_value;
 
-	return_value = lone_lisp_list_first(lone_lisp_machine_pop_value(lone, machine));
+	return_value = lone_lisp_list_first(lone, lone_lisp_machine_pop_value(lone, machine));
 
 	lone_lisp_machine_pop_function_delimiter(lone, machine); // this primitive's own delimiter
 	lone_lisp_machine_unwind_to_function_delimiter(lone, machine);
@@ -574,7 +576,7 @@ LONE_LISP_PRIMITIVE(lone_control)
 
 		arguments = lone_lisp_machine_pop_value(lone, machine);
 
-		if (lone_lisp_list_destructure(arguments, 2, &body, &handler)) {
+		if (lone_lisp_list_destructure(lone, arguments, 2, &body, &handler)) {
 			/* wrong number of arguments: (control), (control body handler extra) */ linux_exit(-1);
 		}
 
@@ -610,7 +612,7 @@ LONE_LISP_PRIMITIVE(lone_transfer)
 
 		arguments = lone_lisp_machine_pop_value(lone, machine);
 
-		if (lone_lisp_list_destructure(arguments, 1, &value)) {
+		if (lone_lisp_list_destructure(lone, arguments, 1, &value)) {
 			/* wrong number of arguments: (transfer), (transfer value extra) */ linux_exit(-1);
 		}
 
@@ -734,9 +736,9 @@ LONE_LISP_PRIMITIVE(lone_print)
 	arguments = lone_lisp_machine_pop_value(lone, machine);
 
 	while (!lone_lisp_is_nil(arguments)) {
-		lone_lisp_print(lone, lone_lisp_list_first(arguments), 1);
+		lone_lisp_print(lone, lone_lisp_list_first(lone, arguments), 1);
 		linux_write(1, "\n", 1);
-		arguments = lone_lisp_list_rest(arguments);
+		arguments = lone_lisp_list_rest(lone, arguments);
 	}
 
 	lone_lisp_machine_push_value(lone, machine, lone_lisp_nil());

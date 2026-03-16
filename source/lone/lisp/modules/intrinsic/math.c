@@ -65,7 +65,7 @@ static struct lone_lisp_value lone_lisp_primitive_integer_operation(struct lone_
 	}
 
 	do {
-		argument = lone_lisp_list_first(arguments);
+		argument = lone_lisp_list_first(lone, arguments);
 
 		switch (lone_lisp_type_of(argument)) {
 		case LONE_LISP_TYPE_INTEGER:
@@ -111,7 +111,7 @@ static struct lone_lisp_value lone_lisp_primitive_integer_operation(struct lone_
 			/* argument is not a number */ linux_exit(-1);
 		}
 
-		arguments = lone_lisp_list_rest(arguments);
+		arguments = lone_lisp_list_rest(lone, arguments);
 
 	} while (!lone_lisp_is_nil(arguments));
 
@@ -136,12 +136,12 @@ LONE_LISP_PRIMITIVE(math_subtract)
 
 	arguments = lone_lisp_machine_pop_value(lone, machine);
 
-	if (!lone_lisp_is_nil(arguments) && !lone_lisp_is_nil(lone_lisp_list_rest(arguments))) {
+	if (!lone_lisp_is_nil(arguments) && !lone_lisp_is_nil(lone_lisp_list_rest(lone, arguments))) {
 		/* at least two arguments, set initial value to the first argument: (- 100 58) */
-		first = lone_lisp_list_first(arguments);
-		if (!lone_lisp_is_integer(first)) { /* argument is not a number */ linux_exit(-1); }
+		first = lone_lisp_list_first(lone, arguments);
+		if (!lone_lisp_is_integer(lone, first)) { /* argument is not a number */ linux_exit(-1); }
 		accumulator = first;
-		arguments = lone_lisp_list_rest(arguments);
+		arguments = lone_lisp_list_rest(lone, arguments);
 	} else {
 		accumulator = lone_lisp_zero();
 	}
@@ -171,8 +171,8 @@ LONE_LISP_PRIMITIVE(math_divide)
 	arguments = lone_lisp_machine_pop_value(lone, machine);
 
 	if (lone_lisp_is_nil(arguments)) { /* at least the dividend is required, (/) is invalid */ linux_exit(-1); }
-	dividend = lone_lisp_list_first(arguments);
-	arguments = lone_lisp_list_rest(arguments);
+	dividend = lone_lisp_list_first(lone, arguments);
+	arguments = lone_lisp_list_rest(lone, arguments);
 
 	switch (lone_lisp_type_of(dividend)) {
 	case LONE_LISP_TYPE_INTEGER:
@@ -249,7 +249,7 @@ static struct lone_lisp_value compute_sign(struct lone_lisp *lone, struct lone_l
 
 	arguments = lone_lisp_machine_pop_value(lone, machine);
 
-	if (lone_lisp_list_destructure(arguments, 1, &value)) {
+	if (lone_lisp_list_destructure(lone, arguments, 1, &value)) {
 		/* wrong number of arguments */ linux_exit(-1);
 	}
 

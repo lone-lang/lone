@@ -377,13 +377,14 @@ error:
 	linux_exit(-1);
 }
 
-static bool lone_lisp_reader_is_expected_character_symbol(struct lone_lisp_value value, unsigned char expected)
+static bool lone_lisp_reader_is_expected_character_symbol(struct lone_lisp *lone,
+		struct lone_lisp_value value, unsigned char expected)
 {
 	struct lone_lisp_heap_value *actual;
 	unsigned char character;
 
-	if (lone_lisp_is_symbol(value)) {
-		actual = lone_lisp_heap_value_of(value);
+	if (lone_lisp_is_symbol(lone, value)) {
+		actual = lone_lisp_heap_value_of(lone, value);
 
 		if (actual->as.bytes.count != 1) {
 			return false;
@@ -414,7 +415,7 @@ static struct lone_lisp_value lone_lisp_parse_vector(struct lone_lisp *lone, str
 			goto error;
 		}
 
-		if (lone_lisp_reader_is_expected_character_symbol(value, ']')) {
+		if (lone_lisp_reader_is_expected_character_symbol(lone, value, ']')) {
 			/* complete vector: [], [ x ], [ x y ] */
 			break;
 		}
@@ -445,7 +446,7 @@ static struct lone_lisp_value lone_lisp_parse_table(struct lone_lisp *lone, stru
 			goto error;
 		}
 
-		if (lone_lisp_reader_is_expected_character_symbol(key, '}')) {
+		if (lone_lisp_reader_is_expected_character_symbol(lone, key, '}')) {
 			/* complete table: {}, { x y } */
 			break;
 		}
@@ -459,7 +460,7 @@ static struct lone_lisp_value lone_lisp_parse_table(struct lone_lisp *lone, stru
 			goto error;
 		}
 
-		if (lone_lisp_reader_is_expected_character_symbol(value, '}')) {
+		if (lone_lisp_reader_is_expected_character_symbol(lone, value, '}')) {
 			/* incomplete table: { x }, { x y z } */
 			goto error;
 		}
@@ -493,8 +494,8 @@ static struct lone_lisp_value lone_lisp_parse_list(struct lone_lisp *lone,
 			goto error;
 		}
 
-		if (lone_lisp_is_symbol(next)) {
-			if (lone_lisp_reader_is_expected_character_symbol(next, ')')) {
+		if (lone_lisp_is_symbol(lone, next)) {
+			if (lone_lisp_reader_is_expected_character_symbol(lone, next, ')')) {
 
 				if (at_least_one) {
 					/* complete list: (1 2 3) */
@@ -504,7 +505,7 @@ static struct lone_lisp_value lone_lisp_parse_list(struct lone_lisp *lone,
 					return lone_lisp_nil();
 				}
 
-			} else if (lone_lisp_reader_is_expected_character_symbol(next, '.')) {
+			} else if (lone_lisp_reader_is_expected_character_symbol(lone, next, '.')) {
 
 				if (!at_least_one) {
 					/* pair syntax without first: ( . 2) */
@@ -522,7 +523,7 @@ static struct lone_lisp_value lone_lisp_parse_list(struct lone_lisp *lone,
 
 				next = lone_lisp_lex(lone, reader);
 
-				if (!lone_lisp_reader_is_expected_character_symbol(next, ')')) {
+				if (!lone_lisp_reader_is_expected_character_symbol(lone, next, ')')) {
 					/* extra tokens in pair syntax: (1 2 . 3 4) */
 					goto error;
 				}
@@ -584,7 +585,7 @@ static struct lone_lisp_value lone_lisp_parse(struct lone_lisp *lone,
 		break;
 	}
 
-	actual = lone_lisp_heap_value_of(token);
+	actual = lone_lisp_heap_value_of(lone, token);
 
 	/* parser deals with nested structures */
 	switch (actual->type) {
