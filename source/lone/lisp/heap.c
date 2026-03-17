@@ -46,8 +46,8 @@ struct lone_lisp_heap_value *lone_lisp_heap_allocate_value(struct lone_lisp *lon
 	/* no dead values to resurrect */
 
 	if (lone->heap.count >= lone->heap.capacity) {
-		/* all available pages exhausted */
-		goto out_of_memory;
+		/* invalidates all pointers to lone_lisp_heap_values */
+		lone_lisp_heap_grow(lone);
 	}
 
 	element = &lone->heap.values[lone->heap.count++];
