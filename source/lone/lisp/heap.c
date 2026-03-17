@@ -55,9 +55,6 @@ struct lone_lisp_heap_value *lone_lisp_heap_allocate_value(struct lone_lisp *lon
 resurrect:
 	element->live = true;
 	return element;
-
-out_of_memory:
-	linux_exit(-1);
 }
 
 void lone_lisp_heap_initialize(struct lone_lisp *lone)
