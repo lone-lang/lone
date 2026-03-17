@@ -115,9 +115,7 @@ static void lone_lisp_mark_stack_roots(struct lone_lisp *lone, void *bottom, voi
 		top = tmp;
 	}
 
-	pointer = bottom;
-
-	while (pointer++ < top) {
+	for (pointer = bottom; pointer < top; ++pointer) {
 		if (lone_lisp_points_to_heap(lone, *pointer)) {
 			lone_lisp_mark_heap_value(lone, *pointer);
 		}
@@ -146,9 +144,9 @@ static void lone_lisp_mark_native_stack_roots(struct lone_lisp *lone)
 static void lone_lisp_mark_lisp_stack_values(struct lone_lisp *lone,
 		struct lone_lisp_machine_stack_frame *base, struct lone_lisp_machine_stack_frame *limit)
 {
-	struct lone_lisp_machine_stack_frame *frame = base;
+	struct lone_lisp_machine_stack_frame *frame;
 
-	while (frame++ < limit) {
+	for (frame = base; frame < limit; ++frame) {
 		switch (frame->type) {
 		case LONE_LISP_MACHINE_STACK_FRAME_TYPE_INTEGER:
 		case LONE_LISP_MACHINE_STACK_FRAME_TYPE_STEP:
