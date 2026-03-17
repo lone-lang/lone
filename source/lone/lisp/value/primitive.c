@@ -13,5 +13,5 @@ struct lone_lisp_value lone_lisp_primitive_create(struct lone_lisp *lone,
 	actual->as.primitive.function = function;
 	actual->as.primitive.closure = closure;
 	actual->as.primitive.flags = flags;
-	return lone_lisp_value_from_heap_value(actual);
+	return lone_lisp_value_from_heap_value(lone, actual);
 }

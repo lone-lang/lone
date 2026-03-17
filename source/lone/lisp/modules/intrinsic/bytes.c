@@ -84,7 +84,7 @@ LONE_LISP_PRIMITIVE(bytes_new)
 
 	arguments = lone_lisp_machine_pop_value(lone, machine);
 
-	if (lone_lisp_list_destructure(arguments, 1, &count)) {
+	if (lone_lisp_list_destructure(lone, arguments, 1, &count)) {
 		/* wrong number of arguments */ linux_exit(-1);
 	}
 
@@ -113,38 +113,38 @@ LONE_LISP_PRIMITIVE(bytes_is_zero)
 
 	arguments = lone_lisp_machine_pop_value(lone, machine);
 
-	if (lone_lisp_list_destructure(arguments, 1, &bytes)) {
+	if (lone_lisp_list_destructure(lone, arguments, 1, &bytes)) {
 		/* wrong number of arguments */ linux_exit(-1);
 	}
 
-	if (!lone_lisp_is_bytes(bytes)) {
+	if (!lone_lisp_is_bytes(lone, bytes)) {
 		/* expected a bytes object: (zero? 0), (zero? "text") */ linux_exit(-1);
 	}
 
 	lone_lisp_machine_push_value(lone, machine,
-			lone_lisp_boolean_for(lone_bytes_is_zero(lone_lisp_heap_value_of(bytes)->as.bytes)));
+			lone_lisp_boolean_for(lone_bytes_is_zero(lone_lisp_heap_value_of(lone, bytes)->as.bytes)));
 	return 0;
 }
 
 
-static void lone_lisp_bytes_check_read_arguments(struct lone_lisp_value bytes,
-		struct lone_lisp_value offset)
+static void lone_lisp_bytes_check_read_arguments(struct lone_lisp *lone,
+		struct lone_lisp_value bytes, struct lone_lisp_value offset)
 {
-	if (!lone_lisp_is_bytes(bytes)) {
+	if (!lone_lisp_is_bytes(lone, bytes)) {
 		/* invalid data source: (reader "text" 0), (reader {} 0) */ linux_exit(-1);
 	}
 
-	if (!lone_lisp_is_integer(offset)) {
+	if (!lone_lisp_is_integer(lone, offset)) {
 		/* invalid offset: (reader bytes "invalid"), (reader bytes []) */ linux_exit(-1);
 	}
 }
 
-static void lone_lisp_bytes_check_write_arguments(struct lone_lisp_value bytes,
-		struct lone_lisp_value offset, struct lone_lisp_value value)
+static void lone_lisp_bytes_check_write_arguments(struct lone_lisp *lone,
+		struct lone_lisp_value bytes, struct lone_lisp_value offset, struct lone_lisp_value value)
 {
-	lone_lisp_bytes_check_read_arguments(bytes, offset);
+	lone_lisp_bytes_check_read_arguments(lone, bytes, offset);
 
-	if (!lone_lisp_is_integer(value)) {
+	if (!lone_lisp_is_integer(lone, value)) {
 		/* invalid value: (writer bytes 0 "invalid"), (writer bytes 0 []) */ linux_exit(-1);
 	}
 }
@@ -160,13 +160,13 @@ LONE_LISP_PRIMITIVE(bytes_read_##sign##bits##endian) \
 \
 	arguments = lone_lisp_machine_pop_value(lone, machine); \
 \
-	if (lone_lisp_list_destructure(arguments, 2, &bytes, &offset)) { \
+	if (lone_lisp_list_destructure(lone, arguments, 2, &bytes, &offset)) { \
 		/* wrong number of arguments */ linux_exit(-1); \
 	} \
 \
-	lone_lisp_bytes_check_read_arguments(bytes, offset); \
+	lone_lisp_bytes_check_read_arguments(lone, bytes, offset); \
 \
-	integer = lone_bytes_read_##sign##bits##endian(lone_lisp_heap_value_of(bytes)->as.bytes, \
+	integer = lone_bytes_read_##sign##bits##endian(lone_lisp_heap_value_of(lone, bytes)->as.bytes, \
 			lone_lisp_integer_of(offset)); \
 \
 	if (integer.present) { \
@@ -190,16 +190,16 @@ LONE_LISP_PRIMITIVE(bytes_write_##sign##bits##endian) \
 \
 	arguments = lone_lisp_machine_pop_value(lone, machine); \
 \
-	if (lone_lisp_list_destructure(arguments, 3, &bytes, &offset, &value)) { \
+	if (lone_lisp_list_destructure(lone, arguments, 3, &bytes, &offset, &value)) { \
 		/* wrong number of arguments */ linux_exit(-1); \
 	} \
 \
-	lone_lisp_bytes_check_write_arguments(bytes, offset, value); \
+	lone_lisp_bytes_check_write_arguments(lone, bytes, offset, value); \
 \
 	integer = (lone_##sign##bits) lone_lisp_integer_of(value); \
 \
 	success = lone_bytes_write_##sign##bits##endian( \
-		lone_lisp_heap_value_of(bytes)->as.bytes, \
+		lone_lisp_heap_value_of(lone, bytes)->as.bytes, \
 		lone_lisp_integer_of(offset), \
 		integer \
 	); \

@@ -188,10 +188,10 @@ struct lone_lisp_heap_value {
 		struct lone_lisp_table table;
 		struct lone_bytes bytes;   /* also used by texts and symbols */
 	} as;
-};
+} __attribute__((aligned(64)));
 
-typedef bool (*lone_lisp_predicate_function)(struct lone_lisp_value value);
-typedef bool (*lone_lisp_comparator_function)(struct lone_lisp_value x, struct lone_lisp_value y);
+typedef bool (*lone_lisp_predicate_function)(struct lone_lisp *lone, struct lone_lisp_value value);
+typedef bool (*lone_lisp_comparator_function)(struct lone_lisp *lone, struct lone_lisp_value x, struct lone_lisp_value y);
 
 /* ╭────────────────────────────────────────────────────────────────────────╮
    │                                                                        │
@@ -212,26 +212,27 @@ struct lone_lisp_value lone_lisp_boolean_for(bool value);
 
 unsigned char lone_lisp_type_tag_of(struct lone_lisp_value value);
 enum lone_lisp_value_type lone_lisp_type_of(struct lone_lisp_value value);
-struct lone_lisp_heap_value *lone_lisp_heap_value_of(struct lone_lisp_value value);
+struct lone_lisp_heap_value *lone_lisp_heap_value_of(struct lone_lisp *lone, struct lone_lisp_value value);
 lone_lisp_integer lone_lisp_integer_of(struct lone_lisp_value value);
 
 bool lone_lisp_is_register_value(struct lone_lisp_value value);
 bool lone_lisp_is_heap_value(struct lone_lisp_value value);
 bool lone_lisp_is_register_value_of_type(struct lone_lisp_value value, enum lone_lisp_value_type register_value_type);
-bool lone_lisp_is_heap_value_of_type(struct lone_lisp_value value, enum lone_lisp_heap_value_type heap_value_type);
+bool lone_lisp_is_heap_value_of_type(struct lone_lisp *lone,
+		struct lone_lisp_value value, enum lone_lisp_heap_value_type heap_value_type);
 
-bool lone_lisp_is_module(struct lone_lisp_value value);
-bool lone_lisp_is_function(struct lone_lisp_value value);
-bool lone_lisp_is_primitive(struct lone_lisp_value value);
-bool lone_lisp_is_applicable(struct lone_lisp_value value);
-bool lone_lisp_is_list(struct lone_lisp_value value);
-bool lone_lisp_is_list_or_nil(struct lone_lisp_value value);
-bool lone_lisp_is_vector(struct lone_lisp_value value);
-bool lone_lisp_is_table(struct lone_lisp_value value);
-bool lone_lisp_has_bytes(struct lone_lisp_value value);
-bool lone_lisp_is_bytes(struct lone_lisp_value value);
-bool lone_lisp_is_text(struct lone_lisp_value value);
-bool lone_lisp_is_symbol(struct lone_lisp_value value);
+bool lone_lisp_is_module(struct lone_lisp *lone, struct lone_lisp_value value);
+bool lone_lisp_is_function(struct lone_lisp *lone, struct lone_lisp_value value);
+bool lone_lisp_is_primitive(struct lone_lisp *lone, struct lone_lisp_value value);
+bool lone_lisp_is_applicable(struct lone_lisp *lone, struct lone_lisp_value value);
+bool lone_lisp_is_list(struct lone_lisp *lone, struct lone_lisp_value value);
+bool lone_lisp_is_list_or_nil(struct lone_lisp *lone, struct lone_lisp_value value);
+bool lone_lisp_is_vector(struct lone_lisp *lone, struct lone_lisp_value value);
+bool lone_lisp_is_table(struct lone_lisp *lone, struct lone_lisp_value value);
+bool lone_lisp_has_bytes(struct lone_lisp *lone, struct lone_lisp_value value);
+bool lone_lisp_is_bytes(struct lone_lisp *lone, struct lone_lisp_value value);
+bool lone_lisp_is_text(struct lone_lisp *lone, struct lone_lisp_value value);
+bool lone_lisp_is_symbol(struct lone_lisp *lone, struct lone_lisp_value value);
 
 bool lone_lisp_is_nil(struct lone_lisp_value value);
 bool lone_lisp_is_false(struct lone_lisp_value value);
@@ -239,17 +240,17 @@ bool lone_lisp_is_true(struct lone_lisp_value value);
 bool lone_lisp_is_falsy(struct lone_lisp_value value);
 bool lone_lisp_is_truthy(struct lone_lisp_value value);
 
-bool lone_lisp_is_integer(struct lone_lisp_value value);
+bool lone_lisp_is_integer(struct lone_lisp *lone, struct lone_lisp_value value);
 
 /* ╭────────────────────────────────────────────────────────────────────────╮
    │                                                                        │
    │    Comparison and equality functions.                                  │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
-bool lone_lisp_has_same_type(struct lone_lisp_value x, struct lone_lisp_value y);
-bool lone_lisp_is_identical(struct lone_lisp_value x, struct lone_lisp_value y);
-bool lone_lisp_is_equivalent(struct lone_lisp_value x, struct lone_lisp_value y);
-bool lone_lisp_is_equal(struct lone_lisp_value x, struct lone_lisp_value y);
+bool lone_lisp_has_same_type(struct lone_lisp *lone, struct lone_lisp_value x, struct lone_lisp_value y);
+bool lone_lisp_is_identical(struct lone_lisp *lone, struct lone_lisp_value x, struct lone_lisp_value y);
+bool lone_lisp_is_equivalent(struct lone_lisp *lone, struct lone_lisp_value x, struct lone_lisp_value y);
+bool lone_lisp_is_equal(struct lone_lisp *lone, struct lone_lisp_value x, struct lone_lisp_value y);
 
 /* ╭────────────────────────────────────────────────────────────────────────╮
    │                                                                        │
@@ -267,10 +268,10 @@ struct lone_lisp_value lone_lisp_zero(void);
 struct lone_lisp_value lone_lisp_one(void);
 struct lone_lisp_value lone_lisp_minus_one(void);
 
-bool lone_lisp_integer_is_less_than(struct lone_lisp_value x, struct lone_lisp_value y);
-bool lone_lisp_integer_is_less_than_or_equal_to(struct lone_lisp_value x, struct lone_lisp_value y);
-bool lone_lisp_integer_is_greater_than(struct lone_lisp_value x, struct lone_lisp_value y);
-bool lone_lisp_integer_is_greater_than_or_equal_to(struct lone_lisp_value x, struct lone_lisp_value y);
+bool lone_lisp_integer_is_less_than(struct lone_lisp *lone, struct lone_lisp_value x, struct lone_lisp_value y);
+bool lone_lisp_integer_is_less_than_or_equal_to(struct lone_lisp *lone, struct lone_lisp_value x, struct lone_lisp_value y);
+bool lone_lisp_integer_is_greater_than(struct lone_lisp *lone, struct lone_lisp_value x, struct lone_lisp_value y);
+bool lone_lisp_integer_is_greater_than_or_equal_to(struct lone_lisp *lone, struct lone_lisp_value x, struct lone_lisp_value y);
 
 /* ╭────────────────────────────────────────────────────────────────────────╮
    │                                                                        │
@@ -279,7 +280,7 @@ bool lone_lisp_integer_is_greater_than_or_equal_to(struct lone_lisp_value x, str
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
 
-struct lone_lisp_value lone_lisp_value_from_heap_value(struct lone_lisp_heap_value *heap_value);
+struct lone_lisp_value lone_lisp_value_from_heap_value(struct lone_lisp *lone, struct lone_lisp_heap_value *heap_value);
 
 /* ╭────────────────────────────────────────────────────────────────────────╮
    │                                                                        │
@@ -372,9 +373,9 @@ struct lone_lisp_value lone_lisp_list_create(struct lone_lisp *lone,
 		struct lone_lisp_value first, struct lone_lisp_value rest);
 struct lone_lisp_value lone_lisp_list_create_nil(struct lone_lisp *lone);
 
-bool lone_lisp_list_has_rest(struct lone_lisp_value value);
-struct lone_lisp_value lone_lisp_list_first(struct lone_lisp_value value);
-struct lone_lisp_value lone_lisp_list_rest(struct lone_lisp_value value);
+bool lone_lisp_list_has_rest(struct lone_lisp *lone, struct lone_lisp_value value);
+struct lone_lisp_value lone_lisp_list_first(struct lone_lisp *lone, struct lone_lisp_value value);
+struct lone_lisp_value lone_lisp_list_rest(struct lone_lisp *lone, struct lone_lisp_value value);
 
 struct lone_lisp_value lone_lisp_list_set_first(struct lone_lisp *lone,
 		struct lone_lisp_value list, struct lone_lisp_value value);
@@ -385,7 +386,7 @@ struct lone_lisp_value lone_lisp_list_append(struct lone_lisp *lone,
 		struct lone_lisp_value *first, struct lone_lisp_value *head,
 		struct lone_lisp_value value);
 
-bool lone_lisp_list_destructure(struct lone_lisp_value list, size_t count, ...);
+bool lone_lisp_list_destructure(struct lone_lisp *lone, struct lone_lisp_value list, size_t count, ...);
 struct lone_lisp_value lone_lisp_list_build(struct lone_lisp *lone, size_t count, ...);
 struct lone_lisp_value lone_lisp_list_flatten(struct lone_lisp *lone, struct lone_lisp_value list);
 struct lone_lisp_value lone_lisp_list_to_vector(struct lone_lisp *lone, struct lone_lisp_value list);
@@ -401,10 +402,10 @@ struct lone_lisp_value lone_lisp_list_to_vector(struct lone_lisp *lone, struct l
    ╰────────────────────────────────────────────────────────────────────────╯ */
 
 struct lone_lisp_value lone_lisp_vector_create(struct lone_lisp *lone, size_t capacity);
-size_t lone_lisp_vector_count(struct lone_lisp_value vector);
+size_t lone_lisp_vector_count(struct lone_lisp *lone, struct lone_lisp_value vector);
 void lone_lisp_vector_resize(struct lone_lisp *lone, struct lone_lisp_value vector, size_t new_capacity);
 
-struct lone_lisp_value lone_lisp_vector_get_value_at(struct lone_lisp_value vector, size_t i);
+struct lone_lisp_value lone_lisp_vector_get_value_at(struct lone_lisp *lone, struct lone_lisp_value vector, size_t i);
 void lone_lisp_vector_set_value_at(struct lone_lisp *lone, struct lone_lisp_value vector, size_t i,
 		struct lone_lisp_value value);
 
@@ -413,17 +414,17 @@ struct lone_lisp_value lone_lisp_vector_get(struct lone_lisp *lone, struct lone_
 void lone_lisp_vector_set(struct lone_lisp *lone, struct lone_lisp_value vector,
 		struct lone_lisp_value index, struct lone_lisp_value value);
 
-bool lone_lisp_vector_contains(struct lone_lisp_value vector, struct lone_lisp_value value);
+bool lone_lisp_vector_contains(struct lone_lisp *lone, struct lone_lisp_value vector, struct lone_lisp_value value);
 
 void lone_lisp_vector_push(struct lone_lisp *lone, struct lone_lisp_value vector, struct lone_lisp_value value);
 void lone_lisp_vector_push_va_list(struct lone_lisp *lone, struct lone_lisp_value vector, size_t count, va_list arguments);
 void lone_lisp_vector_push_all(struct lone_lisp *lone, struct lone_lisp_value vector, size_t count, ...);
 struct lone_lisp_value lone_lisp_vector_build(struct lone_lisp *lone, size_t count, ...);
 
-#define LONE_LISP_VECTOR_FOR_EACH(entry, vector, i)                             \
-	for ((i) = 0, (entry) = lone_lisp_vector_get_value_at((vector), 0);     \
-	     (i) < lone_lisp_vector_count((vector));                            \
-	     ++(i), (entry) = lone_lisp_vector_get_value_at((vector), i))
+#define LONE_LISP_VECTOR_FOR_EACH(lone, entry, vector, i)                                \
+	for ((i) = 0, (entry) = lone_lisp_vector_get_value_at((lone), (vector), 0);      \
+	     (i) < lone_lisp_vector_count((lone), (vector));                             \
+	     ++(i), (entry) = lone_lisp_vector_get_value_at((lone), (vector), (i)))
 
 /* ╭────────────────────────────────────────────────────────────────────────╮
    │                                                                        │
@@ -443,14 +444,14 @@ void lone_lisp_table_set(struct lone_lisp *lone, struct lone_lisp_value table,
 void lone_lisp_table_delete(struct lone_lisp *lone,
 		struct lone_lisp_value table, struct lone_lisp_value key);
 
-size_t lone_lisp_table_count(struct lone_lisp_value table);
-struct lone_lisp_value lone_lisp_table_key_at(struct lone_lisp_value table, lone_size i);
-struct lone_lisp_value lone_lisp_table_value_at(struct lone_lisp_value table, lone_size i);
+size_t lone_lisp_table_count(struct lone_lisp *lone, struct lone_lisp_value table);
+struct lone_lisp_value lone_lisp_table_key_at(struct lone_lisp *lone, struct lone_lisp_value table, lone_size i);
+struct lone_lisp_value lone_lisp_table_value_at(struct lone_lisp *lone, struct lone_lisp_value table, lone_size i);
 
-#define LONE_LISP_TABLE_FOR_EACH(entry, table, i)                                                  \
-	for ((i) = 0, (entry) = &lone_lisp_heap_value_of(table)->as.table.entries[0];              \
-	     (i) < lone_lisp_heap_value_of(table)->as.table.count;                                 \
-	     ++(i), (entry) = &lone_lisp_heap_value_of(table)->as.table.entries[i])
+#define LONE_LISP_TABLE_FOR_EACH(lone, entry, table, i)                                            \
+	for ((i) = 0, (entry) = &lone_lisp_heap_value_of((lone), (table))->as.table.entries[0];    \
+	     (i) < lone_lisp_heap_value_of((lone), (table))->as.table.count;                       \
+	     ++(i), (entry) = &lone_lisp_heap_value_of((lone), (table))->as.table.entries[(i)])
 
 /* ╭────────────────────────────────────────────────────────────────────────╮
    │                                                                        │
@@ -605,20 +606,6 @@ struct lone_lisp_machine {
 	struct lone_lisp_value unevaluated; /* remaining expressions queued for evaluation */
 };
 
-struct lone_lisp {
-	struct lone_system *system;
-	void *native_stack;
-	struct lone_lisp_heap *heaps;
-	struct lone_lisp_value symbol_table;
-	struct {
-		struct lone_lisp_value loaded;
-		struct lone_lisp_value embedded;
-		struct lone_lisp_value null;
-		struct lone_lisp_value top_level_environment;
-		struct lone_lisp_value path;
-	} modules;
-};
-
 /* ╭────────────────────┨ LONE LISP MEMORY ALLOCATION ┠─────────────────────╮
    │                                                                        │
    │    Lone is designed to work without any dependencies except Linux,     │
@@ -650,8 +637,23 @@ struct lone_lisp {
    ╰────────────────────────────────────────────────────────────────────────╯ */
 
 struct lone_lisp_heap {
-	struct lone_lisp_heap *next;
-	struct lone_lisp_heap_value values[LONE_LISP_HEAP_VALUE_COUNT];
+	size_t capacity;
+	size_t count;
+	struct lone_lisp_heap_value *values;
+};
+
+struct lone_lisp {
+	struct lone_system *system;
+	void *native_stack;
+	struct lone_lisp_heap heap;
+	struct lone_lisp_value symbol_table;
+	struct {
+		struct lone_lisp_value loaded;
+		struct lone_lisp_value embedded;
+		struct lone_lisp_value null;
+		struct lone_lisp_value top_level_environment;
+		struct lone_lisp_value path;
+	} modules;
 };
 
 #endif /* LONE_LISP_TYPES_HEADER */

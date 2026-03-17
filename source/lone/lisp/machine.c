@@ -164,16 +164,17 @@ void lone_lisp_machine_unwind_to_function_delimiter(struct lone_lisp *lone, stru
 	lone_lisp_machine_unwind_to(lone, machine, LONE_LISP_MACHINE_STACK_FRAME_TYPE_FUNCTION_DELIMITER);
 }
 
-static bool should_evaluate_operands(struct lone_lisp_value applicable, struct lone_lisp_value operands)
+static bool should_evaluate_operands(struct lone_lisp *lone,
+		struct lone_lisp_value applicable, struct lone_lisp_value operands)
 {
 	if (lone_lisp_is_nil(operands)) {
 		return false;
 	} else {
-		switch (lone_lisp_heap_value_of(applicable)->type) {
+		switch (lone_lisp_heap_value_of(lone, applicable)->type) {
 		case LONE_LISP_TYPE_FUNCTION:
-			return lone_lisp_heap_value_of(applicable)->as.function.flags.evaluate_arguments;
+			return lone_lisp_heap_value_of(lone, applicable)->as.function.flags.evaluate_arguments;
 		case LONE_LISP_TYPE_PRIMITIVE:
-			return lone_lisp_heap_value_of(applicable)->as.primitive.flags.evaluate_arguments;
+			return lone_lisp_heap_value_of(lone, applicable)->as.primitive.flags.evaluate_arguments;
 		case LONE_LISP_TYPE_CONTINUATION:
 		case LONE_LISP_TYPE_VECTOR:
 		case LONE_LISP_TYPE_TABLE:
@@ -193,15 +194,15 @@ static struct lone_lisp_value apply_to_collection(struct lone_lisp *lone,
 
 	if (lone_lisp_is_nil(arguments)) { /* need at least the key: (collection) */ linux_exit(-1); }
 
-	key = lone_lisp_list_first(arguments);
-	arguments = lone_lisp_list_rest(arguments);
+	key = lone_lisp_list_first(lone, arguments);
+	arguments = lone_lisp_list_rest(lone, arguments);
 
 	if (lone_lisp_is_nil(arguments)) {
 		return get(lone, collection, key);
 	} else {
 		/* at least one argument */
-		value = lone_lisp_list_first(arguments);
-		arguments = lone_lisp_list_rest(arguments);
+		value = lone_lisp_list_first(lone, arguments);
+		arguments = lone_lisp_list_rest(lone, arguments);
 
 		if (lone_lisp_is_nil(arguments)) {
 			/* collection set: (collection key value) */
@@ -231,17 +232,17 @@ static struct lone_lisp_value bind_arguments(struct lone_lisp *lone, struct lone
 {
 	struct lone_lisp_value new_environment, names, current;
 
-	names = lone_lisp_heap_value_of(function)->as.function.arguments;
+	names = lone_lisp_heap_value_of(lone, function)->as.function.arguments;
 
 	new_environment = lone_lisp_table_create(
 		lone,
 		16,
-		lone_lisp_heap_value_of(function)->as.function.environment
+		lone_lisp_heap_value_of(lone, function)->as.function.environment
 	);
 
 	while (1) {
 		if (!lone_lisp_is_nil(names)) {
-			current = lone_lisp_list_first(names);
+			current = lone_lisp_list_first(lone, names);
 
 			switch (lone_lisp_type_of(current)) {
 			case LONE_LISP_TYPE_HEAP_VALUE:
@@ -253,7 +254,7 @@ static struct lone_lisp_value bind_arguments(struct lone_lisp *lone, struct lone
 				/* unexpected value */ linux_exit(-1);
 			}
 
-			switch (lone_lisp_heap_value_of(current)->type) {
+			switch (lone_lisp_heap_value_of(lone, current)->type) {
 			case LONE_LISP_TYPE_SYMBOL:
 				/* normal argument passing: (lambda (x y)) */
 
@@ -263,7 +264,7 @@ static struct lone_lisp_value bind_arguments(struct lone_lisp *lone, struct lone
 						lone,
 						new_environment,
 						current,
-						lone_lisp_list_first(arguments)
+						lone_lisp_list_first(lone, arguments)
 					);
 				} else {
 					/* argument number mismatch: ((lambda (x y) y) 10) */ linux_exit(-1);
@@ -273,16 +274,16 @@ static struct lone_lisp_value bind_arguments(struct lone_lisp *lone, struct lone
 			case LONE_LISP_TYPE_LIST:
 				/* variadic argument passing: (lambda ((arguments))), (lambda (x y (rest))) */
 
-				if (!lone_lisp_is_symbol(lone_lisp_list_first(current))) {
+				if (!lone_lisp_is_symbol(lone, lone_lisp_list_first(lone, current))) {
 					/* no name given: (lambda (x y ())) */ linux_exit(-1);
-				} else if (lone_lisp_list_has_rest(current)) {
+				} else if (lone_lisp_list_has_rest(lone, current)) {
 					/* too many names given: (lambda (x y (rest extra))) */ linux_exit(-1);
 				} else {
 					/* match list of remaining arguments to name */
 					lone_lisp_table_set(
 						lone,
 						new_environment,
-						lone_lisp_list_first(current),
+						lone_lisp_list_first(lone, current),
 						arguments
 					);
 
@@ -300,8 +301,8 @@ static struct lone_lisp_value bind_arguments(struct lone_lisp *lone, struct lone
 				/* unexpected value */ linux_exit(-1);
 			}
 
-			names = lone_lisp_list_rest(names);
-			arguments = lone_lisp_list_rest(arguments);
+			names = lone_lisp_list_rest(lone, names);
+			arguments = lone_lisp_list_rest(lone, arguments);
 
 		} else if (!lone_lisp_is_nil(arguments)) {
 			/* argument number mismatch: ((lambda (x) x) 10 20) */ linux_exit(-1);
@@ -340,7 +341,7 @@ void lone_lisp_machine_reset(struct lone_lisp *lone, struct lone_lisp_machine *m
 
 	machine->expression = expression;
 	machine->module = module;
-	machine->environment = lone_lisp_heap_value_of(module)->as.module.environment;
+	machine->environment = lone_lisp_heap_value_of(lone, module)->as.module.environment;
 }
 
 bool lone_lisp_machine_cycle(struct lone_lisp *lone, struct lone_lisp_machine *machine)
@@ -359,7 +360,7 @@ bool lone_lisp_machine_cycle(struct lone_lisp *lone, struct lone_lisp_machine *m
 			lone_lisp_machine_restore_step(lone, machine);
 			break;
 		case LONE_LISP_TYPE_HEAP_VALUE:
-			switch (lone_lisp_heap_value_of(machine->expression)->type) {
+			switch (lone_lisp_heap_value_of(lone, machine->expression)->type) {
 			case LONE_LISP_TYPE_MODULE:
 			case LONE_LISP_TYPE_FUNCTION:
 			case LONE_LISP_TYPE_PRIMITIVE:
@@ -378,8 +379,8 @@ bool lone_lisp_machine_cycle(struct lone_lisp *lone, struct lone_lisp_machine *m
 			case LONE_LISP_TYPE_LIST:
 				lone_lisp_machine_save_step(lone, machine);
 				lone_lisp_machine_push_value(lone, machine, machine->environment);
-				lone_lisp_machine_push_value(lone, machine, lone_lisp_list_rest(machine->expression));
-				machine->expression = lone_lisp_list_first(machine->expression);
+				lone_lisp_machine_push_value(lone, machine, lone_lisp_list_rest(lone, machine->expression));
+				machine->expression = lone_lisp_list_first(lone, machine->expression);
 				lone_lisp_machine_push_step(lone, machine, LONE_LISP_MACHINE_STEP_EVALUATED_OPERATOR);
 				goto expression_evaluation;
 			}
@@ -403,7 +404,7 @@ bool lone_lisp_machine_cycle(struct lone_lisp *lone, struct lone_lisp_machine *m
 		case LONE_LISP_TYPE_INTEGER:
 			goto operator_not_applicable;
 		case LONE_LISP_TYPE_HEAP_VALUE:
-			switch (lone_lisp_heap_value_of(machine->value)->type) {
+			switch (lone_lisp_heap_value_of(lone, machine->value)->type) {
 			case LONE_LISP_TYPE_MODULE:
 			case LONE_LISP_TYPE_LIST:
 			case LONE_LISP_TYPE_SYMBOL:
@@ -418,7 +419,7 @@ bool lone_lisp_machine_cycle(struct lone_lisp *lone, struct lone_lisp_machine *m
 				break;
 			}
 		}
-		if (should_evaluate_operands(machine->applicable, machine->unevaluated)) {
+		if (should_evaluate_operands(lone, machine->applicable, machine->unevaluated)) {
 			lone_lisp_machine_push_value(lone, machine, machine->applicable);
 			lone_lisp_machine_push_value(lone, machine, lone_lisp_nil()); // list head
 			machine->step = LONE_LISP_MACHINE_STEP_OPERAND_EVALUATION;
@@ -436,8 +437,8 @@ bool lone_lisp_machine_cycle(struct lone_lisp *lone, struct lone_lisp_machine *m
 		 * 	next-step
 		 */
 		lone_lisp_machine_push_value(lone, machine, machine->list);
-		machine->expression = lone_lisp_list_first(machine->unevaluated);
-		if (lone_lisp_list_has_rest(machine->unevaluated)) {
+		machine->expression = lone_lisp_list_first(lone, machine->unevaluated);
+		if (lone_lisp_list_has_rest(lone, machine->unevaluated)) {
 			lone_lisp_machine_push_value(lone, machine, machine->unevaluated);
 			lone_lisp_machine_push_value(lone, machine, machine->environment);
 			lone_lisp_machine_push_step(lone, machine, LONE_LISP_MACHINE_STEP_OPERAND_ACCUMULATION);
@@ -458,7 +459,7 @@ bool lone_lisp_machine_cycle(struct lone_lisp *lone, struct lone_lisp_machine *m
 		 * 	next-step
 		 */
 		machine->environment = lone_lisp_machine_pop_value(lone, machine);
-		machine->unevaluated = lone_lisp_list_rest(lone_lisp_machine_pop_value(lone, machine));
+		machine->unevaluated = lone_lisp_list_rest(lone, lone_lisp_machine_pop_value(lone, machine));
 		machine->list = lone_lisp_machine_pop_value(lone, machine);
 		head = lone_lisp_machine_pop_value(lone, machine);
 		lone_lisp_list_append(lone, &machine->list, &head, machine->value);
@@ -485,7 +486,7 @@ bool lone_lisp_machine_cycle(struct lone_lisp *lone, struct lone_lisp_machine *m
 		 * Stack:
 		 * 	next-step
 		 */
-		switch (lone_lisp_heap_value_of(machine->applicable)->type) {
+		switch (lone_lisp_heap_value_of(lone, machine->applicable)->type) {
 		case LONE_LISP_TYPE_FUNCTION:
 			machine->environment = bind_arguments(
 				lone,
@@ -494,7 +495,7 @@ bool lone_lisp_machine_cycle(struct lone_lisp *lone, struct lone_lisp_machine *m
 				machine->list
 			);
 			lone_lisp_machine_push_function_delimiter(lone, machine);
-			machine->unevaluated = lone_lisp_heap_value_of(machine->applicable)->as.function.code;
+			machine->unevaluated = lone_lisp_heap_value_of(lone, machine->applicable)->as.function.code;
 			machine->step = LONE_LISP_MACHINE_STEP_SEQUENCE_EVALUATION;
 			return true;
 		case LONE_LISP_TYPE_PRIMITIVE:
@@ -503,9 +504,9 @@ bool lone_lisp_machine_cycle(struct lone_lisp *lone, struct lone_lisp_machine *m
 			lone_lisp_machine_push_value(lone, machine, machine->list);
 			machine->primitive.step = 0;
 		resume_primitive:
-			machine->primitive.closure = lone_lisp_heap_value_of(machine->applicable)->as.primitive.closure;
+			machine->primitive.closure = lone_lisp_heap_value_of(lone, machine->applicable)->as.primitive.closure;
 			machine->primitive.step =
-				lone_lisp_heap_value_of(machine->applicable)->as.primitive.function(
+				lone_lisp_heap_value_of(lone, machine->applicable)->as.primitive.function(
 					lone,
 					machine,
 					machine->primitive.step
@@ -528,15 +529,15 @@ bool lone_lisp_machine_cycle(struct lone_lisp *lone, struct lone_lisp_machine *m
 			}
 			return true;
 		case LONE_LISP_TYPE_CONTINUATION:
-			if (lone_lisp_list_has_rest(machine->list)) { goto too_many_arguments; }
+			if (lone_lisp_list_has_rest(lone, machine->list)) { goto too_many_arguments; }
 			lone_lisp_machine_push_frames(
 				lone,
 				machine,
-				lone_lisp_heap_value_of(machine->applicable)->as.continuation.frame_count,
-				lone_lisp_heap_value_of(machine->applicable)->as.continuation.frames
+				lone_lisp_heap_value_of(lone, machine->applicable)->as.continuation.frame_count,
+				lone_lisp_heap_value_of(lone, machine->applicable)->as.continuation.frames
 			);
 			lone_lisp_machine_restore_step(lone, machine);
-			machine->value = lone_lisp_list_first(machine->list);
+			machine->value = lone_lisp_list_first(lone, machine->list);
 			return true;
 		case LONE_LISP_TYPE_VECTOR:
 			machine->value = apply_to_vector(lone, machine->applicable, machine->list);
@@ -566,8 +567,8 @@ bool lone_lisp_machine_cycle(struct lone_lisp *lone, struct lone_lisp_machine *m
 		 * Stack:
 		 * 	next-step
 		 */
-		machine->expression = lone_lisp_list_first(machine->unevaluated);
-		if (lone_lisp_list_has_rest(machine->unevaluated)) {
+		machine->expression = lone_lisp_list_first(lone, machine->unevaluated);
+		if (lone_lisp_list_has_rest(lone, machine->unevaluated)) {
 			lone_lisp_machine_push_value(lone, machine, machine->environment);
 			lone_lisp_machine_push_value(lone, machine, machine->unevaluated);
 			lone_lisp_machine_push_step(lone, machine, LONE_LISP_MACHINE_STEP_SEQUENCE_EVALUATION_NEXT);
@@ -584,7 +585,7 @@ bool lone_lisp_machine_cycle(struct lone_lisp *lone, struct lone_lisp_machine *m
 		 * 	environment
 		 * 	next-step
 		 */
-		machine->unevaluated = lone_lisp_list_rest(lone_lisp_machine_pop_value(lone, machine));
+		machine->unevaluated = lone_lisp_list_rest(lone, lone_lisp_machine_pop_value(lone, machine));
 		machine->environment = lone_lisp_machine_pop_value(lone, machine);
 		machine->step = LONE_LISP_MACHINE_STEP_SEQUENCE_EVALUATION;
 		return true;
@@ -593,8 +594,8 @@ bool lone_lisp_machine_cycle(struct lone_lisp *lone, struct lone_lisp_machine *m
 		 * Stack:
 		 * 	next-step
 		 */
-		machine->expression = lone_lisp_list_first(machine->unevaluated);
-		if (lone_lisp_list_has_rest(machine->unevaluated)) {
+		machine->expression = lone_lisp_list_first(lone, machine->unevaluated);
+		if (lone_lisp_list_has_rest(lone, machine->unevaluated)) {
 			lone_lisp_machine_push_value(lone, machine, machine->environment);
 			lone_lisp_machine_push_value(lone, machine, machine->unevaluated);
 			lone_lisp_machine_push_step(lone, machine,
@@ -611,7 +612,7 @@ bool lone_lisp_machine_cycle(struct lone_lisp *lone, struct lone_lisp_machine *m
 		 * 	environment
 		 * 	next-step
 		 */
-		machine->unevaluated = lone_lisp_list_rest(lone_lisp_machine_pop_value(lone, machine));
+		machine->unevaluated = lone_lisp_list_rest(lone, lone_lisp_machine_pop_value(lone, machine));
 		machine->environment = lone_lisp_machine_pop_value(lone, machine);
 		machine->step = LONE_LISP_MACHINE_STEP_SEQUENCE_EVALUATION_FROM_PRIMITIVE;
 		return true;

@@ -7,9 +7,11 @@
 
 #include <lone/linux.h>
 
-static size_t lone_lisp_hash_heap_value_recursively(struct lone_lisp_heap_value *value, unsigned long hash);
+static size_t lone_lisp_hash_heap_value_recursively(struct lone_lisp *lone,
+		struct lone_lisp_heap_value *value, unsigned long hash);
 
-static size_t lone_lisp_hash_value_recursively(struct lone_lisp_value value, unsigned long hash)
+static size_t lone_lisp_hash_value_recursively(struct lone_lisp *lone,
+		struct lone_lisp_value value, unsigned long hash)
 {
 	struct lone_bytes bytes;
 	enum lone_lisp_value_type type;
@@ -27,7 +29,7 @@ static size_t lone_lisp_hash_value_recursively(struct lone_lisp_value value, uns
 	case LONE_LISP_TYPE_FALSE:
 		return hash;
 	case LONE_LISP_TYPE_HEAP_VALUE:
-		return lone_lisp_hash_heap_value_recursively(lone_lisp_heap_value_of(value), hash);
+		return lone_lisp_hash_heap_value_recursively(lone, lone_lisp_heap_value_of(lone, value), hash);
 	case LONE_LISP_TYPE_INTEGER:
 		integer = lone_lisp_integer_of(value);
 		bytes.pointer = (unsigned char *) &integer;
@@ -39,7 +41,8 @@ static size_t lone_lisp_hash_value_recursively(struct lone_lisp_value value, uns
 	return hash;
 }
 
-static size_t lone_lisp_hash_heap_value_recursively(struct lone_lisp_heap_value *value, unsigned long hash)
+static size_t lone_lisp_hash_heap_value_recursively(struct lone_lisp *lone,
+		struct lone_lisp_heap_value *value, unsigned long hash)
 {
 	struct lone_bytes bytes;
 
@@ -56,8 +59,8 @@ static size_t lone_lisp_hash_heap_value_recursively(struct lone_lisp_heap_value 
 	case LONE_LISP_TYPE_TABLE:
 		linux_exit(-1);
 	case LONE_LISP_TYPE_LIST:
-		hash = lone_lisp_hash_value_recursively(value->as.list.first, hash);
-		hash = lone_lisp_hash_value_recursively(value->as.list.rest, hash);
+		hash = lone_lisp_hash_value_recursively(lone, value->as.list.first, hash);
+		hash = lone_lisp_hash_value_recursively(lone, value->as.list.rest, hash);
 		return hash;
 	case LONE_LISP_TYPE_SYMBOL:
 		bytes.pointer = (unsigned char *) &value;
@@ -75,5 +78,5 @@ static size_t lone_lisp_hash_heap_value_recursively(struct lone_lisp_heap_value 
 
 size_t lone_lisp_hash(struct lone_lisp *lone, struct lone_lisp_value value)
 {
-	return lone_lisp_hash_value_recursively(value, lone->system->hash.fnv_1a.offset_basis);
+	return lone_lisp_hash_value_recursively(lone, value, lone->system->hash.fnv_1a.offset_basis);
 }

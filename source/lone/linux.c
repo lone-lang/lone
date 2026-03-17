@@ -44,3 +44,15 @@ int linux_munmap(void *address, size_t length)
 {
 	return linux_system_call_2(__NR_munmap, (long) address, (long) length);
 }
+
+intptr_t linux_mremap(void *address, size_t old_length, size_t new_length, unsigned long flags, void *new_address)
+{
+	return linux_system_call_5(
+		__NR_mremap,
+		(long) address,
+		(long) old_length,
+		(long) new_length,
+		(long) flags,
+		(long) new_address
+	);
+}

@@ -15,7 +15,7 @@ struct lone_lisp_value lone_lisp_bytes_transfer(struct lone_lisp *lone,
 	actual->as.bytes.count = count;
 	actual->as.bytes.pointer = pointer;
 	actual->should_deallocate_bytes = should_deallocate;
-	return lone_lisp_value_from_heap_value(actual);
+	return lone_lisp_value_from_heap_value(lone, actual);
 }
 
 struct lone_lisp_value lone_lisp_bytes_transfer_bytes(struct lone_lisp *lone,

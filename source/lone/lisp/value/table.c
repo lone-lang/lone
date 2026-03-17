@@ -20,17 +20,17 @@ struct lone_lisp_value lone_lisp_table_create(struct lone_lisp *lone,
 	actual->indexes = lone_memory_array(lone->system, 0, actual->capacity, sizeof(*actual->indexes));
 	actual->entries = lone_memory_array(lone->system, 0, actual->capacity, sizeof(*actual->entries));
 
-	return lone_lisp_value_from_heap_value(heap_value);
+	return lone_lisp_value_from_heap_value(lone, heap_value);
 }
 
-size_t lone_lisp_table_count(struct lone_lisp_value table)
+size_t lone_lisp_table_count(struct lone_lisp *lone, struct lone_lisp_value table)
 {
-	return lone_lisp_heap_value_of(table)->as.table.count;
+	return lone_lisp_heap_value_of(lone, table)->as.table.count;
 }
 
-static double lone_lisp_table_load_factor(struct lone_lisp_value table, unsigned char added)
+static double lone_lisp_table_load_factor(struct lone_lisp *lone, struct lone_lisp_value table, unsigned char added)
 {
-	struct lone_lisp_table *actual = &lone_lisp_heap_value_of(table)->as.table;
+	struct lone_lisp_table *actual = &lone_lisp_heap_value_of(lone, table)->as.table;
 
 	double count = (double) (actual->count + added);
 	double capacity = (double) actual->capacity;
@@ -50,7 +50,7 @@ static size_t lone_lisp_table_entry_find_index_for(struct lone_lisp *lone, struc
 {
 	size_t i = lone_lisp_table_compute_hash_for(lone, key, capacity);
 
-	while (indexes[i].used && !lone_lisp_is_equal(entries[indexes[i].index].key, key)) {
+	while (indexes[i].used && !lone_lisp_is_equal(lone, entries[indexes[i].index].key, key)) {
 		i = (i + 1) % capacity;
 	}
 
@@ -84,7 +84,7 @@ static void lone_lisp_table_resize(struct lone_lisp *lone, struct lone_lisp_valu
 	size_t old_capacity;
 	size_t i;
 
-	actual = &lone_lisp_heap_value_of(table)->as.table;
+	actual = &lone_lisp_heap_value_of(lone, table)->as.table;
 
 	old_capacity = actual->capacity;
 	old_entries  = actual->entries;
@@ -120,9 +120,9 @@ void lone_lisp_table_set(struct lone_lisp *lone, struct lone_lisp_value table,
 	struct lone_lisp_table *actual;
 	bool is_new_table_entry;
 
-	actual = &lone_lisp_heap_value_of(table)->as.table;
+	actual = &lone_lisp_heap_value_of(lone, table)->as.table;
 
-	if (lone_lisp_table_load_factor(table, 1) > LONE_LISP_TABLE_LOAD_FACTOR) {
+	if (lone_lisp_table_load_factor(lone, table, 1) > LONE_LISP_TABLE_LOAD_FACTOR) {
 		lone_lisp_table_resize(lone, table, actual->capacity * LONE_LISP_TABLE_GROWTH_FACTOR);
 	}
 
@@ -149,7 +149,7 @@ struct lone_lisp_value lone_lisp_table_get(struct lone_lisp *lone,
 	struct lone_lisp_table_entry *entries;
 	size_t capacity, i;
 
-	actual = &lone_lisp_heap_value_of(table)->as.table;
+	actual = &lone_lisp_heap_value_of(lone, table)->as.table;
 	indexes = actual->indexes;
 	entries = actual->entries;
 	capacity = actual->capacity;
@@ -174,7 +174,7 @@ void lone_lisp_table_delete(struct lone_lisp *lone,
 	size_t capacity, count;
 	size_t i, j, k, l;
 
-	actual = &lone_lisp_heap_value_of(table)->as.table;
+	actual = &lone_lisp_heap_value_of(lone, table)->as.table;
 	indexes = actual->indexes;
 	entries = actual->entries;
 	capacity = actual->capacity;
@@ -219,12 +219,12 @@ void lone_lisp_table_delete(struct lone_lisp *lone,
 	--actual->count;
 }
 
-struct lone_lisp_value lone_lisp_table_key_at(struct lone_lisp_value table, lone_size i)
+struct lone_lisp_value lone_lisp_table_key_at(struct lone_lisp *lone, struct lone_lisp_value table, lone_size i)
 {
-	return lone_lisp_heap_value_of(table)->as.table.entries[i].key;
+	return lone_lisp_heap_value_of(lone, table)->as.table.entries[i].key;
 }
 
-struct lone_lisp_value lone_lisp_table_value_at(struct lone_lisp_value table, lone_size i)
+struct lone_lisp_value lone_lisp_table_value_at(struct lone_lisp *lone, struct lone_lisp_value table, lone_size i)
 {
-	return lone_lisp_heap_value_of(table)->as.table.entries[i].value;
+	return lone_lisp_heap_value_of(lone, table)->as.table.entries[i].value;
 }

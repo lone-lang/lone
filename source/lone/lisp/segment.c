@@ -22,7 +22,7 @@ struct lone_lisp_value lone_lisp_segment_read_descriptor(struct lone_lisp *lone,
 
 	lone_lisp_reader_for_bytes(lone, &reader, bytes);
 	descriptor = lone_lisp_read(lone, &reader);
-	if (reader.status.error || !lone_lisp_is_table(descriptor)) {
+	if (reader.status.error || !lone_lisp_is_table(lone, descriptor)) {
 		/* corrupt or invalid segment */ linux_exit(-1);
 	}
 

@@ -9,16 +9,16 @@
 
 #include <lone/linux.h>
 
-static struct lone_bytes slice(struct lone_bytes bytes, struct lone_lisp_value pair)
+static struct lone_bytes slice(struct lone_lisp *lone, struct lone_bytes bytes, struct lone_lisp_value pair)
 {
 	struct lone_lisp_value first, second;
 	size_t start, end, size;
 
-	if (!lone_lisp_is_list(pair)) { /* unexpected value type */ linux_exit(-1); }
-	first = lone_lisp_list_first(pair);
-	if (!lone_lisp_is_integer(first)) { /* unexpected value type */ linux_exit(-1); }
-	second = lone_lisp_list_rest(pair);
-	if (!lone_lisp_is_integer(second)) { /* unexpected value type */ linux_exit(-1); }
+	if (!lone_lisp_is_list(lone, pair)) { /* unexpected value type */ linux_exit(-1); }
+	first = lone_lisp_list_first(lone, pair);
+	if (!lone_lisp_is_integer(lone, first)) { /* unexpected value type */ linux_exit(-1); }
+	second = lone_lisp_list_rest(lone, pair);
+	if (!lone_lisp_is_integer(lone, second)) { /* unexpected value type */ linux_exit(-1); }
 
 	start = lone_lisp_integer_of(first);
 	size = lone_lisp_integer_of(second);
@@ -46,7 +46,7 @@ void lone_lisp_modules_embedded_load(struct lone_lisp *lone, lone_elf_native_seg
 
 	symbol = lone_lisp_intern_c_string(lone, "data");
 	data = lone_lisp_table_get(lone, descriptor, symbol);
-	bytes = lone_lisp_heap_value_of(data)->as.bytes;
+	bytes = lone_lisp_heap_value_of(lone, data)->as.bytes;
 
 	symbol = lone_lisp_intern_c_string(lone, "modules");
 	lone->modules.embedded = lone_lisp_table_get(lone, descriptor, symbol);
@@ -56,7 +56,7 @@ void lone_lisp_modules_embedded_load(struct lone_lisp *lone, lone_elf_native_seg
 
 	if (lone_lisp_is_nil(locations)) { /* no code to evaluate */ return; }
 
-	code = slice(bytes, locations);
+	code = slice(lone, bytes, locations);
 
 	module = lone_lisp_module_for_name(lone, symbol);
 	lone_lisp_module_load_from_bytes(lone, module, code);

@@ -10,11 +10,11 @@
 struct lone_lisp_value lone_lisp_apply_predicate(struct lone_lisp *lone,
 		struct lone_lisp_value arguments, lone_lisp_predicate_function function)
 {
-	if (lone_lisp_is_nil(arguments) || !lone_lisp_is_nil(lone_lisp_list_rest(arguments))) {
+	if (lone_lisp_is_nil(arguments) || !lone_lisp_is_nil(lone_lisp_list_rest(lone, arguments))) {
 		/* predicates accept exactly one argument */ linux_exit(-1);
 	}
 
-	return function(lone_lisp_list_first(arguments))? lone_lisp_true() : lone_lisp_false();
+	return function(lone, lone_lisp_list_first(lone, arguments))? lone_lisp_true() : lone_lisp_false();
 }
 
 struct lone_lisp_value lone_lisp_apply_comparator(struct lone_lisp *lone,
@@ -25,12 +25,12 @@ struct lone_lisp_value lone_lisp_apply_comparator(struct lone_lisp *lone,
 	if (lone_lisp_is_nil(arguments)) { return lone_lisp_true(); }
 
 	while (1) {
-		if (!lone_lisp_list_has_rest(arguments)) { break; }
-		current = lone_lisp_list_first(arguments);
-		arguments = lone_lisp_list_rest(arguments);
-		next = lone_lisp_list_first(arguments);
+		if (!lone_lisp_list_has_rest(lone, arguments)) { break; }
+		current = lone_lisp_list_first(lone, arguments);
+		arguments = lone_lisp_list_rest(lone, arguments);
+		next = lone_lisp_list_first(lone, arguments);
 
-		if (!function(current, next)) { return lone_lisp_false(); }
+		if (!function(lone, current, next)) { return lone_lisp_false(); }
 	}
 
 	return lone_lisp_true();
@@ -51,38 +51,38 @@ struct lone_bytes lone_lisp_join(struct lone_lisp *lone,
 	}
 
 	if (!lone_lisp_is_nil(separator)) {
-		if (!is_valid(separator)) { linux_exit(-1); }
+		if (!is_valid(lone, separator)) { linux_exit(-1); }
 	}
 
 	total = 0;
 	position = 0;
 
-	for (head = arguments; !lone_lisp_is_nil(head); head = lone_lisp_list_rest(head)) {
-		argument = lone_lisp_list_first(head);
+	for (head = arguments; !lone_lisp_is_nil(head); head = lone_lisp_list_rest(lone, head)) {
+		argument = lone_lisp_list_first(lone, head);
 
-		if (!is_valid(argument)) { linux_exit(-1); }
+		if (!is_valid(lone, argument)) { linux_exit(-1); }
 
-		total += lone_lisp_heap_value_of(argument)->as.bytes.count;
+		total += lone_lisp_heap_value_of(lone, argument)->as.bytes.count;
 
-		if (!lone_lisp_is_nil(separator) && !lone_lisp_is_nil(lone_lisp_list_rest(head))) {
-			total += lone_lisp_heap_value_of(separator)->as.bytes.count;
+		if (!lone_lisp_is_nil(separator) && !lone_lisp_is_nil(lone_lisp_list_rest(lone, head))) {
+			total += lone_lisp_heap_value_of(lone, separator)->as.bytes.count;
 		}
 	}
 
 	joined = lone_allocate_uninitialized(lone->system, total + 1);
 
-	for (head = arguments; !lone_lisp_is_nil(head); head = lone_lisp_list_rest(head)) {
-		argument = lone_lisp_list_first(head);
+	for (head = arguments; !lone_lisp_is_nil(head); head = lone_lisp_list_rest(lone, head)) {
+		argument = lone_lisp_list_first(lone, head);
 
-		count = lone_lisp_heap_value_of(argument)->as.bytes.count;
-		from = lone_lisp_heap_value_of(argument)->as.bytes.pointer;
+		count = lone_lisp_heap_value_of(lone, argument)->as.bytes.count;
+		from = lone_lisp_heap_value_of(lone, argument)->as.bytes.pointer;
 		to = joined + position;
 		lone_memory_move(from, to, count);
 		position += count;
 
-		if (!lone_lisp_is_nil(separator) && !lone_lisp_is_nil(lone_lisp_list_rest(head))) {
-			count = lone_lisp_heap_value_of(separator)->as.bytes.count;
-			from = lone_lisp_heap_value_of(separator)->as.bytes.pointer;
+		if (!lone_lisp_is_nil(separator) && !lone_lisp_is_nil(lone_lisp_list_rest(lone, head))) {
+			count = lone_lisp_heap_value_of(lone, separator)->as.bytes.count;
+			from = lone_lisp_heap_value_of(lone, separator)->as.bytes.pointer;
 			to = joined + position;
 			lone_memory_move(from, to, count);
 			position += count;

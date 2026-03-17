@@ -21,17 +21,17 @@ struct lone_lisp_value lone_lisp_vector_create(struct lone_lisp *lone, size_t ca
 		actual->values[i] = lone_lisp_nil();
 	}
 
-	return lone_lisp_value_from_heap_value(heap_value);
+	return lone_lisp_value_from_heap_value(lone, heap_value);
 }
 
-size_t lone_lisp_vector_count(struct lone_lisp_value vector)
+size_t lone_lisp_vector_count(struct lone_lisp *lone, struct lone_lisp_value vector)
 {
-	return lone_lisp_heap_value_of(vector)->as.vector.count;
+	return lone_lisp_heap_value_of(lone, vector)->as.vector.count;
 }
 
 void lone_lisp_vector_resize(struct lone_lisp *lone, struct lone_lisp_value vector, size_t new_capacity)
 {
-	struct lone_lisp_vector *actual = &lone_lisp_heap_value_of(vector)->as.vector;
+	struct lone_lisp_vector *actual = &lone_lisp_heap_value_of(lone, vector)->as.vector;
 
 	actual->capacity = new_capacity;
 	actual->values = lone_memory_array(lone->system, actual->values, actual->capacity, sizeof(*actual->values));
@@ -46,11 +46,11 @@ void lone_lisp_vector_resize(struct lone_lisp *lone, struct lone_lisp_value vect
 	}
 }
 
-struct lone_lisp_value lone_lisp_vector_get_value_at(struct lone_lisp_value vector, size_t i)
+struct lone_lisp_value lone_lisp_vector_get_value_at(struct lone_lisp *lone, struct lone_lisp_value vector, size_t i)
 {
 	struct lone_lisp_vector *actual;
 
-	actual = &lone_lisp_heap_value_of(vector)->as.vector;
+	actual = &lone_lisp_heap_value_of(lone, vector)->as.vector;
 
 	if (lone_memory_array_is_bounded(i, actual->capacity, sizeof(*actual->values))) {
 		return actual->values[i];
@@ -62,8 +62,8 @@ struct lone_lisp_value lone_lisp_vector_get_value_at(struct lone_lisp_value vect
 struct lone_lisp_value lone_lisp_vector_get(struct lone_lisp *lone,
 		struct lone_lisp_value vector, struct lone_lisp_value index)
 {
-	if (!lone_lisp_is_integer(index)) { /* only integer indexes supported */ linux_exit(-1); }
-	return lone_lisp_vector_get_value_at(vector, lone_lisp_integer_of(index));
+	if (!lone_lisp_is_integer(lone, index)) { /* only integer indexes supported */ linux_exit(-1); }
+	return lone_lisp_vector_get_value_at(lone, vector, lone_lisp_integer_of(index));
 }
 
 void lone_lisp_vector_set_value_at(struct lone_lisp *lone, struct lone_lisp_value vector,
@@ -71,7 +71,7 @@ void lone_lisp_vector_set_value_at(struct lone_lisp *lone, struct lone_lisp_valu
 {
 	struct lone_lisp_vector *actual;
 
-	actual = &lone_lisp_heap_value_of(vector)->as.vector;
+	actual = &lone_lisp_heap_value_of(lone, vector)->as.vector;
 
 	if (!lone_memory_array_is_bounded(i, actual->capacity, sizeof(*actual->values))) {
 		lone_lisp_vector_resize(lone, vector, 2 * (i + 1));
@@ -84,14 +84,14 @@ void lone_lisp_vector_set_value_at(struct lone_lisp *lone, struct lone_lisp_valu
 void lone_lisp_vector_set(struct lone_lisp *lone, struct lone_lisp_value vector,
 		struct lone_lisp_value index, struct lone_lisp_value value)
 {
-	if (!lone_lisp_is_integer(index)) { /* only integer indexes supported */ linux_exit(-1); }
+	if (!lone_lisp_is_integer(lone, index)) { /* only integer indexes supported */ linux_exit(-1); }
 	lone_lisp_vector_set_value_at(lone, vector, lone_lisp_integer_of(index), value);
 }
 
 void lone_lisp_vector_push(struct lone_lisp *lone,
 		struct lone_lisp_value vector, struct lone_lisp_value value)
 {
-	lone_lisp_vector_set_value_at(lone, vector, lone_lisp_vector_count(vector), value);
+	lone_lisp_vector_set_value_at(lone, vector, lone_lisp_vector_count(lone, vector), value);
 }
 
 void lone_lisp_vector_push_va_list(struct lone_lisp *lone,
@@ -128,13 +128,13 @@ struct lone_lisp_value lone_lisp_vector_build(struct lone_lisp *lone, size_t cou
 	return vector;
 }
 
-bool lone_lisp_vector_contains(struct lone_lisp_value vector, struct lone_lisp_value value)
+bool lone_lisp_vector_contains(struct lone_lisp *lone, struct lone_lisp_value vector, struct lone_lisp_value value)
 {
 	struct lone_lisp_value element;
 	size_t i;
 
-	LONE_LISP_VECTOR_FOR_EACH(element, vector, i) {
-		if (lone_lisp_is_equal(value, element)) {
+	LONE_LISP_VECTOR_FOR_EACH(lone, element, vector, i) {
+		if (lone_lisp_is_equal(lone, value, element)) {
 			return true;
 		}
 	}

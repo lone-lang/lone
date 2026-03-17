@@ -34,11 +34,11 @@ LONE_LISP_PRIMITIVE(text_to_symbol)
 
 	arguments = lone_lisp_machine_pop_value(lone, machine);
 
-	if (lone_lisp_list_destructure(arguments, 1, &text)) {
+	if (lone_lisp_list_destructure(lone, arguments, 1, &text)) {
 		/* wrong number of arguments */ linux_exit(-1);
 	}
 
-	if (!lone_lisp_is_text(text)) {
+	if (!lone_lisp_is_text(lone, text)) {
 		/* argument not a text value: (to-symbol 123) */ linux_exit(-1);
 	}
 
@@ -56,8 +56,8 @@ LONE_LISP_PRIMITIVE(text_join)
 	arguments = lone_lisp_machine_pop_value(lone, machine);
 
 	joined = lone_lisp_join(lone,
-			lone_lisp_list_first(arguments),
-			lone_lisp_list_rest(arguments),
+			lone_lisp_list_first(lone, arguments),
+			lone_lisp_list_rest(lone, arguments),
 			lone_lisp_is_text);
 
 	text = lone_lisp_text_transfer_bytes(lone, joined, true);
