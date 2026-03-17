@@ -57,10 +57,10 @@ static void lone_memory_coalesce(struct lone_memory *block)
 
 static struct lone_memory * lone_memory_find_free_block(struct lone_system *system, size_t requested_size, size_t alignment)
 {
-	size_t needed_size = requested_size + sizeof(struct lone_memory);
+	size_t needed_size;
 	struct lone_memory *block;
 
-	needed_size = lone_align(needed_size, alignment);
+	needed_size = lone_align(requested_size, alignment);
 
 	for (block = system->memory; block; block = block->next) {
 		if (block->free && block->size >= needed_size)
