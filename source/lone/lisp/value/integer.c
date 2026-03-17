@@ -24,19 +24,34 @@ struct lone_lisp_value lone_lisp_integer_from_pointer(void *pointer)
 
 struct lone_lisp_value lone_lisp_integer_parse(struct lone_lisp *lone, unsigned char *digits, size_t count)
 {
-	size_t i = 0;
-	long integer = 0;
+	size_t i;
+	long integer, digit;
+	bool negative;
 
-	switch (*digits) { case '+': case '-': ++i; break; }
+	i = 0;
+	integer = 0;
+	negative = false;
 
-	while (i < count) {
-		integer *= 10;
-		integer += digits[i++] - '0';
+	switch (*digits) {
+	case '-':
+		negative = true;
+		__attribute__((fallthrough));
+	case '+':
+		++i;
+		break;
 	}
 
-	if (*digits == '-') { integer *= -1; }
+	while (i < count) {
+		digit = digits[i++] - '0';
+		if (negative) { digit = -digit; }
+		if (__builtin_mul_overflow(integer, 10, &integer)) { goto overflow; }
+		if (__builtin_add_overflow(integer, digit, &integer)) { goto overflow; }
+	}
 
 	return lone_lisp_integer_create(integer);
+
+overflow:
+	linux_exit(-1);
 }
 
 struct lone_lisp_value lone_lisp_zero(void)
