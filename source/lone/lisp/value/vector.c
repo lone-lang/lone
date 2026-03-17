@@ -21,7 +21,7 @@ struct lone_lisp_value lone_lisp_vector_create(struct lone_lisp *lone, size_t ca
 		actual->values[i] = lone_lisp_nil();
 	}
 
-	return lone_lisp_value_from_heap_value(heap_value);
+	return lone_lisp_value_from_heap_value(lone, heap_value);
 }
 
 size_t lone_lisp_vector_count(struct lone_lisp *lone, struct lone_lisp_value vector)

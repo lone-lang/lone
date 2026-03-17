@@ -15,7 +15,7 @@ struct lone_lisp_value lone_lisp_list_create(struct lone_lisp *lone,
 	actual->type = LONE_LISP_TYPE_LIST;
 	actual->as.list.first = first;
 	actual->as.list.rest = rest;
-	return lone_lisp_value_from_heap_value(actual);
+	return lone_lisp_value_from_heap_value(lone, actual);
 }
 
 struct lone_lisp_value lone_lisp_list_create_nil(struct lone_lisp *lone)

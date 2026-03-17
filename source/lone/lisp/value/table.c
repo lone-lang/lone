@@ -20,7 +20,7 @@ struct lone_lisp_value lone_lisp_table_create(struct lone_lisp *lone,
 	actual->indexes = lone_memory_array(lone->system, 0, actual->capacity, sizeof(*actual->indexes));
 	actual->entries = lone_memory_array(lone->system, 0, actual->capacity, sizeof(*actual->entries));
 
-	return lone_lisp_value_from_heap_value(heap_value);
+	return lone_lisp_value_from_heap_value(lone, heap_value);
 }
 
 size_t lone_lisp_table_count(struct lone_lisp *lone, struct lone_lisp_value table)

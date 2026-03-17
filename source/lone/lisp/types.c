@@ -48,7 +48,11 @@ enum lone_lisp_value_type lone_lisp_type_of(struct lone_lisp_value value)
 
 struct lone_lisp_heap_value *lone_lisp_heap_value_of(struct lone_lisp *lone, struct lone_lisp_value value)
 {
-	return (struct lone_lisp_heap_value *) value.tagged;
+	size_t index;
+
+	index = ((unsigned long) value.tagged) >> 3;
+
+	return &lone->heap.values[index];
 }
 
 lone_lisp_integer lone_lisp_integer_of(struct lone_lisp_value value)
@@ -342,9 +346,13 @@ bool lone_lisp_integer_is_greater_than_or_equal_to(struct lone_lisp *lone, struc
 	}
 }
 
-struct lone_lisp_value lone_lisp_value_from_heap_value(struct lone_lisp_heap_value *heap_value)
+struct lone_lisp_value lone_lisp_value_from_heap_value(struct lone_lisp *lone, struct lone_lisp_heap_value *heap_value)
 {
+	size_t index;
+
+	index = (size_t) (heap_value - lone->heap.values);
+
 	return (struct lone_lisp_value) {
-		.tagged = (long) heap_value,
+		.tagged = (long) (index << 3),
 	};
 }

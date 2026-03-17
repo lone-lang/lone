@@ -106,6 +106,8 @@ static bool lone_lisp_points_to_heap(struct lone_lisp *lone, void *pointer)
 static void lone_lisp_mark_stack_roots(struct lone_lisp *lone, void *bottom, void *top)
 {
 	void *tmp, **pointer;
+	unsigned long word;
+	size_t index;
 
 	if (top < bottom) {
 		tmp = bottom;
@@ -118,6 +120,16 @@ static void lone_lisp_mark_stack_roots(struct lone_lisp *lone, void *bottom, voi
 	while (pointer++ < top) {
 		if (lone_lisp_points_to_heap(lone, *pointer)) {
 			lone_lisp_mark_heap_value(lone, *pointer);
+		}
+
+		word = (unsigned long) *pointer;
+
+		if ((word & 7) == LONE_LISP_TYPE_HEAP_VALUE) {
+			index = word >> 3;
+
+			if (index < lone->heap.count) {
+				lone_lisp_mark_heap_value(lone, &lone->heap.values[index]);
+			}
 		}
 	}
 }

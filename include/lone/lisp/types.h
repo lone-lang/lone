@@ -280,7 +280,7 @@ bool lone_lisp_integer_is_greater_than_or_equal_to(struct lone_lisp *lone, struc
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
 
-struct lone_lisp_value lone_lisp_value_from_heap_value(struct lone_lisp_heap_value *heap_value);
+struct lone_lisp_value lone_lisp_value_from_heap_value(struct lone_lisp *lone, struct lone_lisp_heap_value *heap_value);
 
 /* ╭────────────────────────────────────────────────────────────────────────╮
    │                                                                        │
