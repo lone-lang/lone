@@ -37,7 +37,7 @@ static void lone_memory_split(struct lone_memory *block, size_t used)
 		new->free = 1;
 		new->size = excess - sizeof(struct lone_memory);
 		block->next = new;
-		block->size -= excess + sizeof(struct lone_memory);
+		block->size = used;
 	}
 }
 
