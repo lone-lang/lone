@@ -41,7 +41,9 @@ void lone_lisp_heap_initialize(struct lone_lisp *lone)
 	intptr_t memory;
 	size_t size;
 
-	if (__builtin_mul_overflow(LONE_LISP_HEAP_CAPACITY, sizeof(struct lone_lisp_heap_value), &size)) { goto error; }
+	if (__builtin_mul_overflow(LONE_LISP_HEAP_INITIAL_CAPACITY, sizeof(struct lone_lisp_heap_value), &size)) {
+		goto error;
+	}
 
 	/* anonymous pages are zero-filled: live = 0 for all values */
 	memory = linux_mmap(0, size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
@@ -49,7 +51,7 @@ void lone_lisp_heap_initialize(struct lone_lisp *lone)
 
 	lone->heap.values = (struct lone_lisp_heap_value *) memory;
 	lone->heap.count = 0;
-	lone->heap.capacity = LONE_LISP_HEAP_CAPACITY;
+	lone->heap.capacity = LONE_LISP_HEAP_INITIAL_CAPACITY;
 
 	return;
 
