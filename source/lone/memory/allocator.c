@@ -102,10 +102,12 @@ void * lone_allocate_uninitialized(struct lone_system *system, size_t requested_
 
 void * lone_reallocate(struct lone_system *system, void *pointer, size_t size)
 {
-	struct lone_memory *old = ((struct lone_memory *) pointer) - 1,
-	                   *new = ((struct lone_memory *) lone_allocate(system, size)) - 1;
+	struct lone_memory *old, *new;
+
+	new = ((struct lone_memory *) lone_allocate(system, size)) - 1;
 
 	if (pointer) {
+		old =  ((struct lone_memory *) pointer) - 1;
 		lone_memory_move(old->pointer, new->pointer, lone_min(old->size, new->size));
 		lone_deallocate(system, pointer);
 	}
