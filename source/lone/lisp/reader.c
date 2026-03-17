@@ -251,11 +251,15 @@ static struct lone_lisp_value lone_lisp_reader_consume_text(struct lone_lisp *lo
 		++end;
 	}
 
+	if (!current) { /* unterminated string: no trailing " */ goto error; }
+
 	// skip trailing "
-	++current;
 	lone_lisp_reader_consume(reader);
 
-	if (!lone_lisp_reader_match_byte(*current, ')') && !lone_lisp_reader_match_byte(*current, ' ')) { goto error; }
+	current = lone_lisp_reader_peek(lone, reader);
+	if (     current
+	     && !lone_lisp_reader_match_byte(*current, ')')
+	     && !lone_lisp_reader_match_byte(*current, ' ')) { goto error; }
 
 	return lone_lisp_text_copy(lone, start, end);
 
