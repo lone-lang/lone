@@ -192,6 +192,14 @@ void lone_lisp_print(struct lone_lisp *lone, struct lone_lisp_value value, int f
 		lone_lisp_print_hash_notation(lone, "continuation",
 				lone_lisp_integer_create(lone_lisp_heap_value_of(lone, value)->as.continuation.frame_count), fd);
 		break;
+	case LONE_LISP_TYPE_GENERATOR:
+		lone_lisp_print_hash_notation(
+			lone,
+			"generator",
+			lone_lisp_heap_value_of(lone, value)->as.generator.function,
+			fd
+		);
+		break;
 	case LONE_LISP_TYPE_LIST:
 		linux_write(fd, "(", 1);
 		lone_lisp_print_list(lone, value, fd);
