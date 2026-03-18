@@ -10,6 +10,7 @@
 static void lone_lisp_mark_heap_value(struct lone_lisp *lone, struct lone_lisp_heap_value *value);
 static void lone_lisp_mark_lisp_stack_values(struct lone_lisp *lone,
 		struct lone_lisp_machine_stack_frame *base, struct lone_lisp_machine_stack_frame *limit);
+static void lone_lisp_mark_lisp_stack_roots_of(struct lone_lisp *lone, struct lone_lisp_machine_stack stack);
 
 static void lone_lisp_mark_value(struct lone_lisp *lone, struct lone_lisp_value value)
 {
@@ -54,6 +55,21 @@ static void lone_lisp_mark_heap_value(struct lone_lisp *lone, struct lone_lisp_h
 			value->as.continuation.frames,
 			value->as.continuation.frames + value->as.continuation.frame_count
 		);
+		break;
+	case LONE_LISP_TYPE_GENERATOR:
+		lone_lisp_mark_value(lone, value->as.generator.function);
+		if (value->as.generator.stacks.caller.base) {
+			/* generator is running */
+			lone_lisp_mark_lisp_stack_roots_of(lone, value->as.generator.stacks.caller);
+		} else {
+			/* generator is not running */
+			if (value->as.generator.stacks.own.top) {
+				/* generator is suspended */
+				lone_lisp_mark_lisp_stack_roots_of(lone, value->as.generator.stacks.own);
+			} else {
+				/* generator is finished */
+			}
+		}
 		break;
 	case LONE_LISP_TYPE_LIST:
 		lone_lisp_mark_value(lone, value->as.list.first);
@@ -155,6 +171,7 @@ static void lone_lisp_mark_lisp_stack_values(struct lone_lisp *lone,
 		case LONE_LISP_MACHINE_STACK_FRAME_TYPE_VALUE:
 		case LONE_LISP_MACHINE_STACK_FRAME_TYPE_FUNCTION_DELIMITER:
 		case LONE_LISP_MACHINE_STACK_FRAME_TYPE_CONTINUATION_DELIMITER:
+		case LONE_LISP_MACHINE_STACK_FRAME_TYPE_GENERATOR_DELIMITER:
 			lone_lisp_mark_value(lone, frame->as.value);
 		}
 	}
@@ -212,6 +229,9 @@ static void lone_lisp_kill_all_unmarked_values(struct lone_lisp *lone)
 				break;
 			case LONE_LISP_TYPE_CONTINUATION:
 				lone_deallocate(lone->system, value->as.continuation.frames);
+				break;
+			case LONE_LISP_TYPE_GENERATOR:
+				lone_deallocate(lone->system, value->as.generator.stacks.own.base);
 				break;
 			case LONE_LISP_TYPE_MODULE:
 			case LONE_LISP_TYPE_FUNCTION:
