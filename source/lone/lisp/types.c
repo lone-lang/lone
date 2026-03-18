@@ -230,6 +230,7 @@ bool lone_lisp_is_equivalent(struct lone_lisp *lone, struct lone_lisp_value x, s
 	case LONE_LISP_TYPE_FUNCTION:
 	case LONE_LISP_TYPE_PRIMITIVE:
 	case LONE_LISP_TYPE_CONTINUATION:
+	case LONE_LISP_TYPE_GENERATOR:
 	case LONE_LISP_TYPE_LIST:
 	case LONE_LISP_TYPE_VECTOR:
 	case LONE_LISP_TYPE_TABLE:
@@ -299,6 +300,7 @@ bool lone_lisp_is_equal(struct lone_lisp *lone, struct lone_lisp_value x, struct
 	case LONE_LISP_TYPE_FUNCTION:
 	case LONE_LISP_TYPE_PRIMITIVE:
 	case LONE_LISP_TYPE_CONTINUATION:
+	case LONE_LISP_TYPE_GENERATOR:
 	case LONE_LISP_TYPE_TEXT:
 	case LONE_LISP_TYPE_BYTES:
 		return lone_lisp_is_equivalent(lone, x, y);

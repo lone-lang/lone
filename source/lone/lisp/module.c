@@ -47,6 +47,7 @@ static struct lone_lisp_value lone_lisp_module_name_to_key(struct lone_lisp *lon
 	case LONE_LISP_TYPE_FUNCTION:
 	case LONE_LISP_TYPE_PRIMITIVE:
 	case LONE_LISP_TYPE_CONTINUATION:
+	case LONE_LISP_TYPE_GENERATOR:
 	case LONE_LISP_TYPE_TEXT:
 	case LONE_LISP_TYPE_BYTES:
 	case LONE_LISP_TYPE_VECTOR:
@@ -340,10 +341,12 @@ static void lone_lisp_primitive_import_form(struct lone_lisp *lone,
 	case LONE_LISP_TYPE_FUNCTION:
 	case LONE_LISP_TYPE_PRIMITIVE:
 	case LONE_LISP_TYPE_CONTINUATION:
+	case LONE_LISP_TYPE_GENERATOR:
 	case LONE_LISP_TYPE_TEXT:
 	case LONE_LISP_TYPE_BYTES:
 	case LONE_LISP_TYPE_VECTOR:
 	case LONE_LISP_TYPE_TABLE:
+	default:
 		/* not a supported import argument type */ linux_exit(-1);
 	}
 
