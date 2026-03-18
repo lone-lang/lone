@@ -66,6 +66,9 @@ void lone_lisp_modules_intrinsic_lone_initialize(struct lone_lisp *lone)
 	lone_lisp_module_export_primitive(lone, module, "generator",
 			"generator", lone_lisp_primitive_lone_generator, module, flags);
 
+	lone_lisp_module_export_primitive(lone, module, "yield",
+			"yield", lone_lisp_primitive_lone_yield, module, flags);
+
 	lone_lisp_module_export_primitive(lone, module, "print",
 			"print", lone_lisp_primitive_lone_print, module, flags);
 
@@ -689,6 +692,50 @@ LONE_LISP_PRIMITIVE(lone_generator)
 	linux_exit(-1);
 }
 
+LONE_LISP_PRIMITIVE(lone_yield)
+{
+	struct lone_lisp_machine_stack_frame *delimiter;
+	struct lone_lisp_value arguments, value;
+	struct lone_lisp_generator *generator;
+
+	switch (step) {
+	case 0: /* unpack arguments, find generator, swap stacks, return yielded value */
+
+		arguments = lone_lisp_machine_pop_value(lone, machine);
+
+		if (lone_lisp_list_destructure(lone, arguments, 1, &value)) {
+			value = arguments;
+		}
+
+		/* generator delimiter is in a fixed position on the generator's stack */
+		delimiter = &machine->stack.base[0];
+		if (delimiter->type != LONE_LISP_MACHINE_STACK_FRAME_TYPE_GENERATOR_DELIMITER) {
+			/* not inside a generator */ linux_exit(-1);
+		}
+		generator = &lone_lisp_heap_value_of(lone, delimiter->as.value)->as.generator;
+
+		/* save the generator's stack */
+		generator->stacks.own = machine->stack;
+
+		/* restore the caller's stack */
+		machine->stack = generator->stacks.caller;
+
+		/* mark generator as suspended by clearing the caller stack */
+		generator->stacks.caller = (struct lone_lisp_machine_stack) { 0 };
+
+		/* consumed by the lisp machine when primitives return */
+		lone_lisp_machine_push_function_delimiter(lone, machine);
+
+		/* return the yielded value */
+		lone_lisp_machine_push_value(lone, machine, value);
+		return 0;
+
+	default:
+		break;
+	}
+
+	linux_exit(-1);
+}
 LONE_LISP_PRIMITIVE(lone_is_list)
 {
 	lone_lisp_machine_push_value(lone, machine,
