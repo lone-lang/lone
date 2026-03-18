@@ -154,7 +154,14 @@ bool lone_lisp_list_destructure(struct lone_lisp *lone, struct lone_lisp_value l
 
 	va_start(arguments, count);
 
-	if (lone_lisp_is_nil(list)) { /* empty list, no values to extract */ return false; }
+	if (lone_lisp_is_nil(list)) {
+		if (count >= 1) {
+			/* empty list, values expected */ return true;
+		} else {
+			/* empty list, values not expected */ return false;
+		}
+	}
+
 	if (!lone_lisp_is_list(lone, list)) { /* expected a list */ linux_exit(-1); }
 
 	i = 0;
