@@ -63,6 +63,9 @@ void lone_lisp_modules_intrinsic_lone_initialize(struct lone_lisp *lone)
 	lone_lisp_module_export_primitive(lone, module, "transfer",
 			"transfer", lone_lisp_primitive_lone_transfer, module, flags);
 
+	lone_lisp_module_export_primitive(lone, module, "generator",
+			"generator", lone_lisp_primitive_lone_generator, module, flags);
+
 	lone_lisp_module_export_primitive(lone, module, "print",
 			"print", lone_lisp_primitive_lone_print, module, flags);
 
@@ -648,6 +651,35 @@ LONE_LISP_PRIMITIVE(lone_transfer)
 
 		/* handler has finished evaluation, return the value returned by it */
 		lone_lisp_machine_push_value(lone, machine, machine->value);
+		return 0;
+
+	default:
+		break;
+	}
+
+	linux_exit(-1);
+}
+
+LONE_LISP_PRIMITIVE(lone_generator)
+{
+	struct lone_lisp_value arguments, function, generator;
+
+	switch (step) {
+	case 0: /* unpack arguments then evaluate body */
+
+		arguments = lone_lisp_machine_pop_value(lone, machine);
+
+		if (lone_lisp_list_destructure(lone, arguments, 1, &function)) {
+			/* wrong number of arguments: (generator), (generator function extra) */ linux_exit(-1);
+		}
+
+		if (!lone_lisp_is_applicable(lone, function)) {
+			/* not passed a function: (generator 10) */ linux_exit(-1);
+		}
+
+		generator = lone_lisp_generator_create(lone, function, 500);
+
+		lone_lisp_machine_push_value(lone, machine, generator);
 		return 0;
 
 	default:
