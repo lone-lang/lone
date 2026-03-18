@@ -175,6 +175,12 @@ static bool should_evaluate_operands(struct lone_lisp *lone,
 			return lone_lisp_heap_value_of(lone, applicable)->as.function.flags.evaluate_arguments;
 		case LONE_LISP_TYPE_PRIMITIVE:
 			return lone_lisp_heap_value_of(lone, applicable)->as.primitive.flags.evaluate_arguments;
+		case LONE_LISP_TYPE_GENERATOR:
+			return should_evaluate_operands(
+				lone,
+				lone_lisp_heap_value_of(lone, applicable)->as.generator.function,
+				operands
+			);
 		case LONE_LISP_TYPE_CONTINUATION:
 		case LONE_LISP_TYPE_VECTOR:
 		case LONE_LISP_TYPE_TABLE:
@@ -294,6 +300,7 @@ static struct lone_lisp_value bind_arguments(struct lone_lisp *lone, struct lone
 			case LONE_LISP_TYPE_FUNCTION:
 			case LONE_LISP_TYPE_PRIMITIVE:
 			case LONE_LISP_TYPE_CONTINUATION:
+			case LONE_LISP_TYPE_GENERATOR:
 			case LONE_LISP_TYPE_BYTES:
 			case LONE_LISP_TYPE_TEXT:
 			case LONE_LISP_TYPE_VECTOR:
@@ -346,6 +353,7 @@ void lone_lisp_machine_reset(struct lone_lisp *lone, struct lone_lisp_machine *m
 
 bool lone_lisp_machine_cycle(struct lone_lisp *lone, struct lone_lisp_machine *machine)
 {
+	struct lone_lisp_generator *generator;
 	struct lone_lisp_value head;
 
 	switch (machine->step) {
@@ -365,6 +373,7 @@ bool lone_lisp_machine_cycle(struct lone_lisp *lone, struct lone_lisp_machine *m
 			case LONE_LISP_TYPE_FUNCTION:
 			case LONE_LISP_TYPE_PRIMITIVE:
 			case LONE_LISP_TYPE_CONTINUATION:
+			case LONE_LISP_TYPE_GENERATOR:
 			case LONE_LISP_TYPE_VECTOR:
 			case LONE_LISP_TYPE_TABLE:
 			case LONE_LISP_TYPE_BYTES:
@@ -414,6 +423,7 @@ bool lone_lisp_machine_cycle(struct lone_lisp *lone, struct lone_lisp_machine *m
 			case LONE_LISP_TYPE_FUNCTION:
 			case LONE_LISP_TYPE_PRIMITIVE:
 			case LONE_LISP_TYPE_CONTINUATION:
+			case LONE_LISP_TYPE_GENERATOR:
 			case LONE_LISP_TYPE_VECTOR:
 			case LONE_LISP_TYPE_TABLE:
 				break;
@@ -539,6 +549,29 @@ bool lone_lisp_machine_cycle(struct lone_lisp *lone, struct lone_lisp_machine *m
 			lone_lisp_machine_restore_step(lone, machine);
 			machine->value = lone_lisp_list_first(lone, machine->list);
 			return true;
+		case LONE_LISP_TYPE_GENERATOR:
+			generator = &lone_lisp_heap_value_of(lone, machine->applicable)->as.generator;
+			if (!generator->stacks.own.top) { /* generator is finished */ linux_exit(-1); }
+			if (generator->stacks.caller.base) { /* generator is already running */ linux_exit(-1); }
+			generator->stacks.caller = machine->stack;
+			if (generator->stacks.own.top == generator->stacks.own.base) {
+				/* generator not yet started, initialize its stack */
+				machine->stack = generator->stacks.own;
+				lone_lisp_machine_push(lone, machine, (struct lone_lisp_machine_stack_frame) {
+					.type = LONE_LISP_MACHINE_STACK_FRAME_TYPE_GENERATOR_DELIMITER,
+					.as.value = machine->applicable,
+				});
+				lone_lisp_machine_push_step(lone, machine, LONE_LISP_MACHINE_STEP_GENERATOR_RETURN);
+				machine->expression = lone_lisp_list_create(lone, generator->function, machine->list);
+				machine->step = LONE_LISP_MACHINE_STEP_EXPRESSION_EVALUATION;
+			} else {
+				/* generator has executed before */
+				if (lone_lisp_list_has_rest(lone, machine->list)) { goto too_many_arguments; }
+				machine->stack = generator->stacks.own;
+				machine->value = lone_lisp_list_first(lone, machine->list);
+				machine->step = LONE_LISP_MACHINE_STEP_AFTER_APPLICATION;
+			}
+			return true;
 		case LONE_LISP_TYPE_VECTOR:
 			machine->value = apply_to_vector(lone, machine->applicable, machine->list);
 			lone_lisp_machine_restore_step(lone, machine);
@@ -629,6 +662,17 @@ bool lone_lisp_machine_cycle(struct lone_lisp *lone, struct lone_lisp_machine *m
 		machine->applicable = lone_lisp_machine_pop_value(lone, machine);
 		lone_lisp_machine_restore_primitive_step(lone, machine);
 		goto resume_primitive;
+	case LONE_LISP_MACHINE_STEP_GENERATOR_RETURN:
+		/* Stack:
+		 * 	generator-delimiter
+		 */
+		generator = &lone_lisp_heap_value_of(lone, machine->stack.base[0].as.value)->as.generator;
+		generator->stacks.own.top = 0; /* generator has finished */
+		machine->stack = generator->stacks.caller;
+		generator->stacks.caller = (struct lone_lisp_machine_stack) { 0 };
+		lone_lisp_machine_restore_step(lone, machine);
+		lone_lisp_machine_restore_step(lone, machine);
+		return true;
 	case LONE_LISP_MACHINE_STEP_HALT:
 		return false;
 	}
