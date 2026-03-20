@@ -668,7 +668,7 @@ LONE_LISP_PRIMITIVE(lone_generator)
 	struct lone_lisp_value arguments, function, generator;
 
 	switch (step) {
-	case 0: /* unpack arguments then evaluate body */
+	case 0: /* unpack arguments then create generator */
 
 		arguments = lone_lisp_machine_pop_value(lone, machine);
 
@@ -736,6 +736,7 @@ LONE_LISP_PRIMITIVE(lone_yield)
 
 	linux_exit(-1);
 }
+
 LONE_LISP_PRIMITIVE(lone_is_list)
 {
 	lone_lisp_machine_push_value(lone, machine,
