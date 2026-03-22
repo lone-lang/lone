@@ -4,6 +4,7 @@
 #include <lone/lisp/heap.h>
 
 #include <lone/memory/allocator.h>
+#include <lone/memory/functions.h>
 
 #include <lone/bits.h>
 
@@ -261,9 +262,10 @@ static void lone_lisp_kill_all_unmarked_values(struct lone_lisp *lone)
 		} else {
 			last_live = i;
 		}
-
-		lone_bits_clear(lone->heap.bits.marked, i);
 	}
+
+	/* clear all mark bits in one shot */
+	lone_memory_zero(lone->heap.bits.marked, lone_lisp_heap_bitmap_size(lone->heap.capacity));
 
 	lone->heap.first_dead = first_dead;
 	if (last_live == 0 && !lone_bits_get(lone->heap.bits.live, 0)) {
