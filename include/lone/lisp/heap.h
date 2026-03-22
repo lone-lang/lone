@@ -8,5 +8,6 @@
 
 void lone_lisp_heap_initialize(struct lone_lisp *lone);
 struct lone_lisp_heap_value *lone_lisp_heap_allocate_value(struct lone_lisp *lone);
+size_t lone_lisp_heap_bitmap_size(size_t capacity);
 
 #endif /* LONE_LISP_HEAP_HEADER */

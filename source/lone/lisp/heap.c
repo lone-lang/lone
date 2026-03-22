@@ -16,7 +16,7 @@
    │    of the lone_bits_find_first_zero function.                          │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
-static size_t lone_lisp_heap_bitmap_size(size_t capacity)
+size_t lone_lisp_heap_bitmap_size(size_t capacity)
 {
 	size_t bytes = (capacity + CHAR_BIT - 1) / CHAR_BIT;
 	return (bytes + sizeof(unsigned long) - 1) & ~(sizeof(unsigned long) - 1);
