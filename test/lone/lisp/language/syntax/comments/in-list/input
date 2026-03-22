@@ -1,0 +1,6 @@
+(import (lone print)
+  ; this comment is inside the import form
+  (math +))
+
+(print (+ 1   ; adding one
+          2)) ; to two

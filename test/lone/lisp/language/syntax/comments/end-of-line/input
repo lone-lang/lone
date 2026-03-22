@@ -1,0 +1,3 @@
+(import (lone print)); import the print function
+
+(print 10); print the number ten

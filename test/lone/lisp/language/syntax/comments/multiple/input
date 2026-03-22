@@ -1,0 +1,10 @@
+; first comment
+(import (lone print))
+
+; second comment
+(print 1) ; inline comment
+
+; third comment
+(print 2)
+
+; trailing comment

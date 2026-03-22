@@ -181,10 +181,10 @@ static struct lone_lisp_value lone_lisp_reader_consume_number(struct lone_lisp *
 		++end;
 	}
 
-	if (current && !lone_lisp_reader_match_byte(*current, ')')
-			&& !lone_lisp_reader_match_byte(*current, ' ')) {
-		goto error;
-	}
+	if ( current                                    &&
+	    *current != ';'                             &&
+	    !lone_lisp_reader_match_byte(*current, ')') &&
+	    !lone_lisp_reader_match_byte(*current, ' ')) { goto error; }
 
 	return lone_lisp_integer_parse(lone, start, end);
 
@@ -211,9 +211,11 @@ static struct lone_lisp_value lone_lisp_reader_consume_symbol(struct lone_lisp *
 
 	end = 0;
 
-	while ((current = lone_lisp_reader_peek(lone, reader))
-			&& !lone_lisp_reader_match_byte(*current, ')')
-			&& !lone_lisp_reader_match_byte(*current, ' ')) {
+	while ((current = lone_lisp_reader_peek(lone, reader)) &&
+	       *current != ';'                                 &&
+	       !lone_lisp_reader_match_byte(*current, ')')     &&
+	       !lone_lisp_reader_match_byte(*current, ' ')) {
+
 		lone_lisp_reader_consume(reader);
 		++end;
 	}
@@ -256,8 +258,10 @@ static struct lone_lisp_value lone_lisp_reader_consume_text(struct lone_lisp *lo
 	// skip trailing "
 	lone_lisp_reader_consume(reader);
 
+	/* text must be followed by a delimiter, space, comment or the end of input */
 	current = lone_lisp_reader_peek(lone, reader);
 	if (     current
+	     && *current != ';'
 	     && !lone_lisp_reader_match_byte(*current, ')')
 	     && !lone_lisp_reader_match_byte(*current, ' ')) { goto error; }
 
@@ -320,6 +324,7 @@ error:
    │        ◦ If found digit then look for more digits and tokenize         │
    │        ◦ If found " then find the next " and tokenize                  │
    │        ◦ If found ( or ) just tokenize them as is without matching     │
+   │        ◦ If found ; skip everything until end of line/input            │
    │        ◦ Tokenize everything else unmodified as a symbol               │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
@@ -360,6 +365,13 @@ static struct lone_lisp_value lone_lisp_lex(struct lone_lisp *lone, struct lone_
 			case '.':
 				token = lone_lisp_reader_consume_character(lone, reader);
 				break;
+			case ';':
+				/* comment: skip until end of line or end of input */
+				while ((c = lone_lisp_reader_peek(lone, reader)) && *c != '\n') {
+					lone_lisp_reader_consume(reader);
+				}
+				found = false;
+				continue;
 			default:
 				token = lone_lisp_reader_consume_symbol(lone, reader);
 				break;

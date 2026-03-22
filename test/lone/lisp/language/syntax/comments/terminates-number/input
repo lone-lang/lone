@@ -1,0 +1,5 @@
+(import (lone print))
+
+(print
+  99;comment right after number
+  )

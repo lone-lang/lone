@@ -1,0 +1,4 @@
+(import (lone print))
+
+(print;this is a comment
+  42)
