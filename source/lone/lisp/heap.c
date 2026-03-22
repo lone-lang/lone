@@ -21,6 +21,16 @@ static size_t lone_lisp_heap_bitmap_size(size_t capacity)
 	return (bytes + sizeof(unsigned long) - 1) & ~(sizeof(unsigned long) - 1);
 }
 
+static intptr_t lone_lisp_heap_mmap(size_t size)
+{
+	return linux_mmap(0, size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+}
+
+static intptr_t lone_lisp_heap_mremap(void *address, size_t old_size, size_t new_size)
+{
+	return linux_mremap(address, old_size, new_size, MREMAP_MAYMOVE, 0);
+}
+
 static void lone_lisp_heap_grow(struct lone_lisp *lone)
 {
 	size_t new_size, new_capacity;
@@ -32,7 +42,7 @@ static void lone_lisp_heap_grow(struct lone_lisp *lone)
 
 	old_size = lone->heap.capacity * sizeof(struct lone_lisp_heap_value);
 
-	remapped = linux_mremap(lone->heap.values, old_size, new_size, MREMAP_MAYMOVE, 0);
+	remapped = lone_lisp_heap_mremap(lone->heap.values, old_values_size, new_values_size);
 	if (remapped < 0) { goto mremap_error; }
 
 	lone->heap.values = (struct lone_lisp_heap_value *) remapped;
@@ -82,8 +92,8 @@ void lone_lisp_heap_initialize(struct lone_lisp *lone)
 		goto error;
 	}
 
-	/* anonymous pages are zero-filled: live = 0 for all values */
-	memory = linux_mmap(0, size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+	/* anonymous pages are zero-filled: live = marked = 0 for all values */
+	memory = lone_lisp_heap_mmap(values_size);
 	if (memory < 0) { goto error; }
 
 	lone->heap.values = (struct lone_lisp_heap_value *) memory;
