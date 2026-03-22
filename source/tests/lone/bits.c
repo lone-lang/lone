@@ -55,8 +55,9 @@ static LONE_TEST_FUNCTION(test_lone_bits_find_first_zero)
 		255, /* 56 - 63 */
 	};
 
-	lone_size i = lone_bits_find_first_zero(bits, sizeof(bits));
-	lone_test_assert_true(suite, test, i == 51);
+	struct lone_optional_size result = lone_bits_find_first_zero(bits, sizeof(bits));
+	lone_test_assert_true(suite, test, result.present);
+	lone_test_assert_true(suite, test, result.value == 51);
 }
 
 static LONE_TEST_FUNCTION(test_lone_bits_find_first_one)
@@ -72,8 +73,9 @@ static LONE_TEST_FUNCTION(test_lone_bits_find_first_one)
 		0, /* 56 - 63 */
 	};
 
-	lone_size i = lone_bits_find_first_one(bits, sizeof(bits));
-	lone_test_assert_true(suite, test, i == 37);
+	struct lone_optional_size result = lone_bits_find_first_one(bits, sizeof(bits));
+	lone_test_assert_true(suite, test, result.present);
+	lone_test_assert_true(suite, test, result.value == 37);
 }
 
 long lone(int argc, char **argv, char **envp, struct lone_auxiliary_vector *auxv)

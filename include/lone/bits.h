@@ -47,17 +47,19 @@ void lone_bits_clear(void *bits, lone_size index);
    │    Finds the index of the first set bit.                               │
    │    Bit indexing order is left to right.                                │
    │    Size is total number of bytes that the bits span.                   │
+   │    Returns an absent optional if no set bit was found.                 │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
-lone_size lone_bits_find_first_zero(const void * restrict bits, lone_size size);
+struct lone_optional_size lone_bits_find_first_one(const void * restrict bits, lone_size size);
 
 /* ╭────────────────────────────────────────────────────────────────────────╮
    │                                                                        │
    │    Finds the index of the first clear bit.                             │
    │    Bit indexing order is left to right.                                │
    │    Size is total number of bytes that the bits span.                   │
+   │    Returns an absent optional if no clear bit was found.               │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
-lone_size lone_bits_find_first_one(const void * restrict bits, lone_size size);
+struct lone_optional_size lone_bits_find_first_zero(const void * restrict bits, lone_size size);
 
 #endif /* LONE_BITS_HEADER */

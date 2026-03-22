@@ -55,7 +55,7 @@ void lone_bits_clear(void *bits, lone_size index)
 	lone_bits_set(bits, index, false);
 }
 
-lone_size lone_bits_find_first_one(const void * restrict bits, lone_size size)
+struct lone_optional_size lone_bits_find_first_one(const void * restrict bits, lone_size size)
 {
 	lone_size bit_offset, bit_position, i;
 	const unsigned char * restrict bytes;
@@ -71,16 +71,16 @@ lone_size lone_bits_find_first_one(const void * restrict bits, lone_size size)
 			/* integer promotion adds leading bits */
 			bit_position -= ((sizeof(int) - 1) * 8);
 
-			return bit_offset + bit_position;
+			return LONE_OPTIONAL_PRESENT_VALUE(size, bit_offset + bit_position);
 		} else {
 			continue;
 		}
 	}
 
-	return -1;
+	return LONE_OPTIONAL_ABSENT_VALUE(size);
 }
 
-lone_size lone_bits_find_first_zero(const void * restrict bits, lone_size size)
+struct lone_optional_size lone_bits_find_first_zero(const void * restrict bits, lone_size size)
 {
 	lone_size bit_offset, bit_position, i;
 	const unsigned char * restrict bytes;
@@ -98,11 +98,11 @@ lone_size lone_bits_find_first_zero(const void * restrict bits, lone_size size)
 			/* integer promotion adds leading bits */
 			bit_position -= ((sizeof(int) - 1) * 8);
 
-			return bit_offset + bit_position;
+			return LONE_OPTIONAL_PRESENT_VALUE(size, bit_offset + bit_position);
 		} else {
 			continue;
 		}
 	}
 
-	return -1;
+	return LONE_OPTIONAL_ABSENT_VALUE(size);
 }
