@@ -120,24 +120,32 @@ static void lone_lisp_reader_consume(struct lone_lisp_reader *reader)
 	lone_lisp_reader_consume_k(reader, 1);
 }
 
-static int lone_lisp_reader_match_byte(unsigned char byte, unsigned char target)
+static inline bool lone_lisp_reader_is_whitespace(unsigned char character)
 {
-	if (target == ' ') {
-		switch (byte) {
-		case ' ':
-		case '\t':
-		case '\n':
-			return 1;
-		default:
-			return 0;
-		}
-	} else if (target == ')' || target == ']' || target == '}') {
-		return byte == ')' || byte == ']' || byte == '}';
-	} else if (target >= '0' && target <= '9') {
-		return byte >= '0' && byte <= '9';
-	} else {
-		return byte == target;
+	switch (character) {
+	case ' ': case '\t': case '\n': return true;
+	default:                        return false;
 	}
+}
+
+static inline bool lone_lisp_reader_is_digit(unsigned char character)
+{
+	return character >= '0' && character <= '9';
+}
+
+static inline bool lone_lisp_reader_is_closing_bracket(unsigned char character)
+{
+	switch (character) {
+	case ')': case ']': case '}': return true;
+	default:                      return false;
+	}
+}
+
+static inline bool lone_lisp_reader_is_token_separator(unsigned char character)
+{
+	return    lone_lisp_reader_is_whitespace(character)
+	       || lone_lisp_reader_is_closing_bracket(character)
+	       || character == ';';
 }
 
 /* ╭────────────────────────────────────────────────────────────────────────╮
@@ -167,24 +175,19 @@ static struct lone_lisp_value lone_lisp_reader_consume_number(struct lone_lisp *
 		break;
 	}
 
-	if ((current = lone_lisp_reader_peek(lone, reader))
-			&& lone_lisp_reader_match_byte(*current, '1')) {
+	if ((current = lone_lisp_reader_peek(lone, reader)) && lone_lisp_reader_is_digit(*current)) {
 		lone_lisp_reader_consume(reader);
 		++end;
 	} else {
 		goto error;
 	}
 
-	while ((current = lone_lisp_reader_peek(lone, reader))
-			&& lone_lisp_reader_match_byte(*current, '1')) {
+	while ((current = lone_lisp_reader_peek(lone, reader)) && lone_lisp_reader_is_digit(*current)) {
 		lone_lisp_reader_consume(reader);
 		++end;
 	}
 
-	if ( current                                    &&
-	    *current != ';'                             &&
-	    !lone_lisp_reader_match_byte(*current, ')') &&
-	    !lone_lisp_reader_match_byte(*current, ' ')) { goto error; }
+	if (current && !lone_lisp_reader_is_token_separator(*current)) { goto error; }
 
 	return lone_lisp_integer_parse(lone, start, end);
 
@@ -212,9 +215,7 @@ static struct lone_lisp_value lone_lisp_reader_consume_symbol(struct lone_lisp *
 	end = 0;
 
 	while ((current = lone_lisp_reader_peek(lone, reader)) &&
-	       *current != ';'                                 &&
-	       !lone_lisp_reader_match_byte(*current, ')')     &&
-	       !lone_lisp_reader_match_byte(*current, ' ')) {
+	       !lone_lisp_reader_is_token_separator(*current)) {
 
 		lone_lisp_reader_consume(reader);
 		++end;
@@ -307,10 +308,7 @@ static struct lone_lisp_value lone_lisp_reader_consume_text(struct lone_lisp *lo
 
 	/* text must be followed by a delimiter, space, comment or the end of input */
 	current = lone_lisp_reader_peek(lone, reader);
-	if (     current
-	     && *current != ';'
-	     && !lone_lisp_reader_match_byte(*current, ')')
-	     && !lone_lisp_reader_match_byte(*current, ' ')) { goto deallocate_and_error; }
+	if (current && !lone_lisp_reader_is_token_separator(*current)) { goto deallocate_and_error; }
 
 	return lone_lisp_text_transfer(lone, output, output_length, true);
 
@@ -387,14 +385,14 @@ static struct lone_lisp_value lone_lisp_lex(struct lone_lisp *lone, struct lone_
 	found = false;
 
 	while ((c = lone_lisp_reader_peek(lone, reader))) {
-		if (lone_lisp_reader_match_byte(*c, ' ')) {
+		if (lone_lisp_reader_is_whitespace(*c)) {
 			lone_lisp_reader_consume(reader);
 			continue;
 		} else {
 			found = true;
 			switch (*c) {
 			case '+': case '-':
-				if ((c1 = lone_lisp_reader_peek_k(lone, reader, 1)) && lone_lisp_reader_match_byte(*c1, '1')) {
+				if ((c1 = lone_lisp_reader_peek_k(lone, reader, 1)) && lone_lisp_reader_is_digit(*c1)) {
 					token = lone_lisp_reader_consume_number(lone, reader);
 				} else {
 					token = lone_lisp_reader_consume_symbol(lone, reader);
