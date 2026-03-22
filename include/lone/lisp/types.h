@@ -186,8 +186,6 @@ struct lone_lisp_table {
 
 struct lone_lisp_heap_value {
 	struct {
-		bool live: 1;
-		bool marked: 1;
 		bool should_deallocate_bytes: 1;
 	};
 
