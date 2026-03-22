@@ -35,15 +35,46 @@ bool lone_memory_is_equal(void *a, void *b, size_t count)
 
 bool lone_memory_is_zero(void *x, size_t count)
 {
+	size_t misalignment, leading, words, trailing, offset, i;
+	const unsigned long *wp;
 	unsigned char *p;
-	lone_size i;
+
+	p = x;
 
 	if (!x) {
 		return true;
 	}
 
-	for (i = 0, p = x; i < count; ++i) {
+	/* less than one word: just check it */
+	if (count < sizeof(unsigned long)) {
+		for (i = 0; i < count; ++i) {
+			if (p[i]) { return false; }
+		}
+		return true;
+	}
+
+	/* check leading bytes */
+	misalignment = ((uintptr_t) p) % sizeof(unsigned long);
+	leading = misalignment? sizeof(unsigned long) - misalignment : 0;
+
+	for (i = 0; i < leading; ++i) {
 		if (p[i]) { return false; }
+	}
+
+	/* check aligned words */
+	words = (count - leading) / sizeof(unsigned long);
+	wp = (const unsigned long *) (p + leading);
+
+	for (i = 0; i < words; ++i) {
+		if (wp[i]) { return false; }
+	}
+
+	/* check trailing bytes */
+	offset = leading + words * sizeof(unsigned long);
+	trailing = count - offset;
+
+	for (i = 0; i < trailing; ++i) {
+		if (p[offset + i]) { return false; }
 	}
 
 	return true;
