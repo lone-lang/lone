@@ -129,6 +129,14 @@ static inline bool lone_lisp_reader_is_digit(unsigned char character)
 	return character >= '0' && character <= '9';
 }
 
+static inline bool lone_lisp_reader_is_opening_bracket(unsigned char character)
+{
+	switch (character) {
+	case '(': case '[': case '{': return true;
+	default:                      return false;
+	}
+}
+
 static inline bool lone_lisp_reader_is_closing_bracket(unsigned char character)
 {
 	switch (character) {
@@ -142,6 +150,13 @@ static inline bool lone_lisp_reader_is_token_separator(unsigned char character)
 	return    lone_lisp_reader_is_whitespace(character)
 	       || lone_lisp_reader_is_closing_bracket(character)
 	       || character == ';';
+}
+
+static inline bool lone_lisp_reader_is_symbol_terminator(unsigned char character)
+{
+	return    lone_lisp_reader_is_token_separator(character)
+	       || lone_lisp_reader_is_opening_bracket(character)
+	       || character == '"';
 }
 
 /* ╭────────────────────────────────────────────────────────────────────────╮
@@ -196,7 +211,7 @@ error:
    │                                                                        │
    │    Analyzes a symbol and adds it to the tokens list if valid.          │
    │                                                                        │
-   │    (.*)[)]} \n\t]                                                      │
+   │    [^ \t\n()[\]{};"]+[)}\] \t\n]                                       │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
 static struct lone_lisp_value lone_lisp_reader_consume_symbol(struct lone_lisp *lone, struct lone_lisp_reader *reader)
@@ -211,13 +226,18 @@ static struct lone_lisp_value lone_lisp_reader_consume_symbol(struct lone_lisp *
 	end = 0;
 
 	while ((current = lone_lisp_reader_peek(lone, reader)) &&
-	       !lone_lisp_reader_is_token_separator(*current)) {
+	       !lone_lisp_reader_is_symbol_terminator(*current)) {
 
 		lone_lisp_reader_consume(reader);
 		++end;
 	}
 
 	if (end == 0) { /* zero length symbols shouldn't occur normally */ goto error; }
+
+	/* symbols must be followed by space, a closing bracket or end of input
+	 * they have no inherent visual delimiter so the grammar is stricter */
+	if (current && !lone_lisp_reader_is_whitespace(*current)
+	            && !lone_lisp_reader_is_closing_bracket(*current)) { goto error; }
 
 	return lone_lisp_intern(lone, start, end, true);
 
