@@ -1,4 +1,5 @@
 #include <lone/bits.h>
+#include <limits.h>
 
 struct bit_position {
 	unsigned char *byte;
@@ -11,8 +12,8 @@ bit_position(void *bits, lone_size index)
 	unsigned char *bytes = bits;
 
 	return (struct bit_position) {
-		.byte = bytes + (index / 8),
-		.bit  = 8 - (index % 8) - 1,
+		.byte = bytes + (index / CHAR_BIT),
+		.bit  = (CHAR_BIT - 1) - (index % CHAR_BIT),
 	};
 }
 
