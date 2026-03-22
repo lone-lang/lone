@@ -51,15 +51,83 @@ bool lone_memory_is_zero(void *x, size_t count)
 
 void lone_memory_move(void *from, void *to, size_t count)
 {
-	unsigned char *source = from, *destination = to;
+	size_t misalignment, leading, trailing, words, i, offset;
+	const unsigned long *aligned_source;
+	unsigned long *aligned_destination;
+	unsigned char *source, *destination;
+
+	source = from;
+	destination = to;
+
+	if (source == destination || count == 0) {
+		return;
+	}
+
+	/* less than one word: just move the memory */
+	if (count < sizeof(unsigned long)) {
+		if (source >= destination) {
+			/* destination is at or behind source, copy forwards */
+			for (i = 0; i < count; ++i) {
+				destination[i] = source[i];
+			}
+		} else {
+			/* destination is ahead of source, copy backwards */
+			for (i = count; i > 0; --i) {
+				destination[i - 1] = source[i - 1];
+			}
+		}
+		return;
+	}
 
 	if (source >= destination) {
-		/* destination is at or behind source, copy forwards */
-		while (count--) { *destination++ = *source++; }
+		/* forward copy: leading bytes, aligned words, trailing bytes */
+
+		/* move leading unaligned segment */
+		misalignment = ((uintptr_t) destination) % sizeof(unsigned long);
+		leading = misalignment? sizeof(unsigned long) - misalignment : 0;
+
+		for (i = 0; i < leading; ++i) {
+			destination[i] = source[i];
+		}
+
+		words               = (count - leading) / sizeof(unsigned long);
+
+		aligned_source      = ((const unsigned long *) (source      + leading));
+		aligned_destination = ((      unsigned long *) (destination + leading));
+
+		for (i = 0; i < words; ++i) {
+			aligned_destination[i] = aligned_source[i];
+		}
+
+		offset = leading + words * sizeof(unsigned long);
+		trailing = count - offset;
+
+		for (i = 0; i < trailing; ++i) {
+			destination[offset + i] = source[offset + i];
+		}
 	} else {
-		/* destination is ahead of source, copy backwards */
-		source += count; destination += count;
-		while (count--) { *--destination = *--source; }
+		/* backward copy: leading bytes, aligned words, trailing bytes */
+
+		/* align the end of the destination for word stores */
+		trailing = ((uintptr_t) (destination + count)) % sizeof(unsigned long);
+
+		for (i = 0; i < trailing; ++i) {
+			destination[count - 1 - i] = source[count - 1 - i];
+		}
+
+		words = (count - trailing) / sizeof(unsigned long);
+		leading = (count - trailing) % sizeof(unsigned long);
+
+		aligned_source      = ((const unsigned long *) (source      + leading));
+		aligned_destination = ((      unsigned long *) (destination + leading));
+
+		for (i = words; i > 0; --i) {
+			aligned_destination[i - 1] = aligned_source[i - 1];
+		}
+
+		for (i = leading; i > 0; --i) {
+			destination[i - 1] = source[i - 1];
+		}
 	}
 }
 
