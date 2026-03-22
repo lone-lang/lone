@@ -45,6 +45,16 @@ bool lone_bits_set(void *bits, lone_size index, bool bit)
 	return set_bit(bit_position(bits, index), bit);
 }
 
+void lone_bits_mark(void *bits, lone_size index)
+{
+	lone_bits_set(bits, index, true);
+}
+
+void lone_bits_clear(void *bits, lone_size index)
+{
+	lone_bits_set(bits, index, false);
+}
+
 lone_size lone_bits_find_first_one(const void * restrict bits, lone_size size)
 {
 	lone_size bit_offset, bit_position, i;

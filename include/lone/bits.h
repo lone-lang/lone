@@ -35,6 +35,15 @@ bool lone_bits_set(void *bits, lone_size index, bool bit);
 
 /* ╭────────────────────────────────────────────────────────────────────────╮
    │                                                                        │
+   │    Sets the index-th bit to one or zero respectively.                  │
+   │    Bounds are not checked.                                             │
+   │                                                                        │
+   ╰────────────────────────────────────────────────────────────────────────╯ */
+void lone_bits_mark(void *bits, lone_size index);
+void lone_bits_clear(void *bits, lone_size index);
+
+/* ╭────────────────────────────────────────────────────────────────────────╮
+   │                                                                        │
    │    Finds the index of the first set bit.                               │
    │    Bit indexing order is left to right.                                │
    │    Size is total number of bytes that the bits span.                   │
