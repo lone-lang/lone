@@ -219,7 +219,6 @@ static void lone_lisp_kill_all_unmarked_values(struct lone_lisp *lone)
 	last_live = 0;
 
 	for (i = 0; i < lone->heap.count; ++i) {
-		value = &lone->heap.values[i];
 
 		if (!lone_bits_get(lone->heap.bits.live, i)) {
 			if (i < first_dead) { first_dead = i; }
@@ -227,6 +226,8 @@ static void lone_lisp_kill_all_unmarked_values(struct lone_lisp *lone)
 		}
 
 		if (!lone_bits_get(lone->heap.bits.marked, i)) {
+
+			value = &lone->heap.values[i];
 
 			switch (value->type) {
 			case LONE_LISP_TYPE_BYTES:
