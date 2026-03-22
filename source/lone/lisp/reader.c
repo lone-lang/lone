@@ -674,6 +674,9 @@ static struct lone_lisp_value lone_lisp_parse(struct lone_lisp *lone,
 			goto error;
 		}
 
+		__builtin_unreachable();
+		break;
+
 	case LONE_LISP_TYPE_MODULE:
 	case LONE_LISP_TYPE_FUNCTION:
 	case LONE_LISP_TYPE_PRIMITIVE:
