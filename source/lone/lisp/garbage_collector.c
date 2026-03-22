@@ -5,6 +5,8 @@
 
 #include <lone/memory/allocator.h>
 
+#include <lone/bits.h>
+
 #include <lone/architecture/garbage_collector.c>
 
 static void lone_lisp_mark_heap_value(struct lone_lisp *lone, struct lone_lisp_heap_value *value);
@@ -30,9 +32,16 @@ static void lone_lisp_mark_value(struct lone_lisp *lone, struct lone_lisp_value 
 
 static void lone_lisp_mark_heap_value(struct lone_lisp *lone, struct lone_lisp_heap_value *value)
 {
-	if (!value || !value->live || value->marked) { return; }
+	size_t index;
 
-	value->marked = true;
+	if (!value) { return; }
+
+	index = value - lone->heap.values;
+
+	if (!lone_bits_get(lone->heap.bits.live, index)) { return; }
+	if (lone_bits_get(lone->heap.bits.marked, index)) { return; }
+
+	lone_bits_mark(lone->heap.bits.marked, index);
 
 	switch (value->type) {
 	case LONE_LISP_TYPE_MODULE:
@@ -211,12 +220,12 @@ static void lone_lisp_kill_all_unmarked_values(struct lone_lisp *lone)
 	for (i = 0; i < lone->heap.count; ++i) {
 		value = &lone->heap.values[i];
 
-		if (!value->live) {
+		if (!lone_bits_get(lone->heap.bits.live, i)) {
 			if (i < first_dead) { first_dead = i; }
 			continue;
 		}
 
-		if (!value->marked) {
+		if (!lone_bits_get(lone->heap.bits.marked, i)) {
 
 			switch (value->type) {
 			case LONE_LISP_TYPE_BYTES:
@@ -247,17 +256,17 @@ static void lone_lisp_kill_all_unmarked_values(struct lone_lisp *lone)
 				break;
 			}
 
-			value->live = false;
+			lone_bits_clear(lone->heap.bits.live, i);
 			if (i < first_dead) { first_dead = i; }
 		} else {
 			last_live = i;
 		}
 
-		value->marked = false;
+		lone_bits_clear(lone->heap.bits.marked, i);
 	}
 
 	lone->heap.first_dead = first_dead;
-	if (last_live == 0 && !lone->heap.values[0].live) {
+	if (last_live == 0 && !lone_bits_get(lone->heap.bits.live, 0)) {
 		lone->heap.count = 0;
 	} else if (last_live + 1 < lone->heap.count) {
 		lone->heap.count = last_live + 1;

@@ -4,6 +4,7 @@
 
 #include <lone/lisp/heap.h>
 
+#include <lone/bits.h>
 #include <lone/linux.h>
 
 #include <limits.h>
@@ -75,9 +76,8 @@ struct lone_lisp_heap_value *lone_lisp_heap_allocate_value(struct lone_lisp *lon
 	size_t i;
 
 	for (i = lone->heap.first_dead; i < lone->heap.count; ++i) {
-		element = &lone->heap.values[i];
-
-		if (!element->live) {
+		if (!lone_bits_get(lone->heap.bits.live, i)) {
+			element = &lone->heap.values[i];
 			goto resurrect;
 		}
 	}
@@ -89,10 +89,11 @@ struct lone_lisp_heap_value *lone_lisp_heap_allocate_value(struct lone_lisp *lon
 		lone_lisp_heap_grow(lone);
 	}
 
-	element = &lone->heap.values[lone->heap.count++];
+	i = lone->heap.count++;
+	element = &lone->heap.values[i];
 
 resurrect:
-	element->live = true;
+	lone_bits_mark(lone->heap.bits.live, i);
 	lone->heap.first_dead = i + 1;
 	return element;
 }
