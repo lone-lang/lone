@@ -203,12 +203,18 @@ static void lone_lisp_mark_all_reachable_values(struct lone_lisp *lone, struct l
 static void lone_lisp_kill_all_unmarked_values(struct lone_lisp *lone)
 {
 	struct lone_lisp_heap_value *value;
-	size_t i;
+	size_t first_dead, last_live, i;
+
+	first_dead = lone->heap.count;
+	last_live = 0;
 
 	for (i = 0; i < lone->heap.count; ++i) {
 		value = &lone->heap.values[i];
 
-		if (!value->live) { continue; }
+		if (!value->live) {
+			if (i < first_dead) { first_dead = i; }
+			continue;
+		}
 
 		if (!value->marked) {
 
@@ -242,9 +248,19 @@ static void lone_lisp_kill_all_unmarked_values(struct lone_lisp *lone)
 			}
 
 			value->live = false;
+			if (i < first_dead) { first_dead = i; }
+		} else {
+			last_live = i;
 		}
 
 		value->marked = false;
+	}
+
+	lone->heap.first_dead = first_dead;
+	if (last_live == 0 && !lone->heap.values[0].live) {
+		lone->heap.count = 0;
+	} else if (last_live + 1 < lone->heap.count) {
+		lone->heap.count = last_live + 1;
 	}
 }
 

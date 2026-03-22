@@ -35,7 +35,7 @@ struct lone_lisp_heap_value *lone_lisp_heap_allocate_value(struct lone_lisp *lon
 	struct lone_lisp_heap_value *element;
 	size_t i;
 
-	for (i = 0; i < lone->heap.count; ++i) {
+	for (i = lone->heap.first_dead; i < lone->heap.count; ++i) {
 		element = &lone->heap.values[i];
 
 		if (!element->live) {
@@ -54,6 +54,7 @@ struct lone_lisp_heap_value *lone_lisp_heap_allocate_value(struct lone_lisp *lon
 
 resurrect:
 	element->live = true;
+	lone->heap.first_dead = i + 1;
 	return element;
 }
 
@@ -73,6 +74,7 @@ void lone_lisp_heap_initialize(struct lone_lisp *lone)
 	lone->heap.values = (struct lone_lisp_heap_value *) memory;
 	lone->heap.count = 0;
 	lone->heap.capacity = LONE_LISP_HEAP_INITIAL_CAPACITY;
+	lone->heap.first_dead = 0;
 
 	return;
 
