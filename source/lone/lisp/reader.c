@@ -60,7 +60,7 @@ static size_t lone_lisp_reader_fill_buffer(struct lone_lisp *lone, struct lone_l
 		position += bytes_read;
 
 		if (bytes_read == size) {
-			allocated += size;
+			allocated *= 2;
 			buffer = lone_reallocate(lone->system, buffer, allocated);
 		} else {
 			break;
