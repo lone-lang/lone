@@ -221,6 +221,8 @@ static struct lone_lisp_value lone_lisp_reader_consume_symbol(struct lone_lisp *
 		++end;
 	}
 
+	if (end == 0) { /* zero length symbols shouldn't occur normally */ goto error; }
+
 	return lone_lisp_intern(lone, start, end, true);
 
 error:
