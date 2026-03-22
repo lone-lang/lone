@@ -72,30 +72,38 @@ mremap_error:
 
 struct lone_lisp_heap_value *lone_lisp_heap_allocate_value(struct lone_lisp *lone)
 {
-	struct lone_lisp_heap_value *element;
-	size_t i;
+	size_t bitmap_bytes, byte_offset, i;
+	struct lone_optional_size result;
+	unsigned char *start;
 
-	for (i = lone->heap.first_dead; i < lone->heap.count; ++i) {
-		if (!lone_bits_get(lone->heap.bits.live, i)) {
-			element = &lone->heap.values[i];
-			goto resurrect;
-		}
-	}
+	bitmap_bytes = lone_lisp_heap_bitmap_size(lone->heap.capacity);
+	byte_offset = lone->heap.first_dead / CHAR_BIT;
 
-	/* no dead values to resurrect */
+retry:
 
-	if (lone->heap.count >= lone->heap.capacity) {
-		/* invalidates all pointers to lone_lisp_heap_values */
+	start = (unsigned char *) lone->heap.bits.live + byte_offset;
+
+	result = lone_bits_find_first_zero(start, bitmap_bytes - byte_offset);
+
+	if (!result.present) {
+		/* all bits from first_dead to capacity are set: heap is full */
 		lone_lisp_heap_grow(lone);
+		bitmap_bytes = lone_lisp_heap_bitmap_size(lone->heap.capacity);
+		/* new pages are zero filled: live = 0
+		 * next scan will find those values */
+		goto retry;
 	}
 
-	i = lone->heap.count++;
-	element = &lone->heap.values[i];
+	i = byte_offset * CHAR_BIT + result.value;
 
-resurrect:
+	if (i >= lone->heap.count) {
+		lone->heap.count = i + 1;
+	}
+
 	lone_bits_mark(lone->heap.bits.live, i);
 	lone->heap.first_dead = i + 1;
-	return element;
+
+	return &lone->heap.values[i];
 }
 
 void lone_lisp_heap_initialize(struct lone_lisp *lone)
