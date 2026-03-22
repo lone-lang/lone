@@ -675,6 +675,11 @@ struct lone_lisp_heap {
 	size_t count;
 	size_t first_dead;
 	struct lone_lisp_heap_value *values;
+
+	struct {
+		void *live;
+		void *marked;
+	} bits;
 };
 
 struct lone_lisp {

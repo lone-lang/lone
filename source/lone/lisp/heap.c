@@ -33,19 +33,33 @@ static intptr_t lone_lisp_heap_mremap(void *address, size_t old_size, size_t new
 
 static void lone_lisp_heap_grow(struct lone_lisp *lone)
 {
-	size_t new_size, new_capacity;
-	size_t old_size;
+	size_t old_values_size, new_values_size;
+	size_t old_bitmap_size, new_bitmap_size;
+	size_t new_capacity;
 	intptr_t remapped;
 
 	if (__builtin_mul_overflow(lone->heap.capacity, LONE_LISP_HEAP_GROWTH_FACTOR, &new_capacity)) { goto overflow; }
-	if (__builtin_mul_overflow(new_capacity, sizeof(struct lone_lisp_heap_value), &new_size)) { goto overflow; }
+	if (__builtin_mul_overflow(new_capacity, sizeof(struct lone_lisp_heap_value), &new_values_size)) { goto overflow; }
 
-	old_size = lone->heap.capacity * sizeof(struct lone_lisp_heap_value);
+	old_values_size = lone->heap.capacity * sizeof(struct lone_lisp_heap_value);
+	old_bitmap_size = lone_lisp_heap_bitmap_size(lone->heap.capacity);
+	new_bitmap_size = lone_lisp_heap_bitmap_size(new_capacity);
 
+	/* grow the values array */
 	remapped = lone_lisp_heap_mremap(lone->heap.values, old_values_size, new_values_size);
 	if (remapped < 0) { goto mremap_error; }
-
 	lone->heap.values = (struct lone_lisp_heap_value *) remapped;
+
+	/* grow the live bitmap */
+	remapped = lone_lisp_heap_mremap(lone->heap.bits.live, old_bitmap_size, new_bitmap_size);
+	if (remapped < 0) { goto mremap_error; }
+	lone->heap.bits.live = (void *) remapped;
+
+	/* grow the marked bitmap */
+	remapped = lone_lisp_heap_mremap(lone->heap.bits.marked, old_bitmap_size, new_bitmap_size);
+	if (remapped < 0) { goto mremap_error; }
+	lone->heap.bits.marked = (void *) remapped;
+
 	lone->heap.capacity = new_capacity;
 
 	return;
@@ -85,18 +99,28 @@ resurrect:
 
 void lone_lisp_heap_initialize(struct lone_lisp *lone)
 {
+	size_t values_size, bitmap_size;
 	intptr_t memory;
-	size_t size;
 
-	if (__builtin_mul_overflow(LONE_LISP_HEAP_INITIAL_CAPACITY, sizeof(struct lone_lisp_heap_value), &size)) {
+	if (__builtin_mul_overflow(LONE_LISP_HEAP_INITIAL_CAPACITY, sizeof(struct lone_lisp_heap_value), &values_size)) {
 		goto error;
 	}
+
+	bitmap_size = lone_lisp_heap_bitmap_size(LONE_LISP_HEAP_INITIAL_CAPACITY);
 
 	/* anonymous pages are zero-filled: live = marked = 0 for all values */
 	memory = lone_lisp_heap_mmap(values_size);
 	if (memory < 0) { goto error; }
-
 	lone->heap.values = (struct lone_lisp_heap_value *) memory;
+
+	memory = lone_lisp_heap_mmap(bitmap_size);
+	if (memory < 0) { goto error; }
+	lone->heap.bits.live = (void *) memory;
+
+	memory = lone_lisp_heap_mmap(bitmap_size);
+	if (memory < 0) { goto error; }
+	lone->heap.bits.marked = (void *) memory;
+
 	lone->heap.count = 0;
 	lone->heap.capacity = LONE_LISP_HEAP_INITIAL_CAPACITY;
 	lone->heap.first_dead = 0;
