@@ -4,25 +4,62 @@
 
 int lone_memory_compare(void *a, void *b, size_t count)
 {
-	size_t i;
-	unsigned char *p, *q, x, y;
+	size_t misalignment, leading, words, trailing, offset, i, j;
+	const unsigned long *wp, *wq;
+	unsigned char *p, *q;
+
+	p = a;
+	q = b;
 
 	if (a == b || count == 0) {
 		return 0;
 	}
 
-	p = a;
-	q = b;
-
-	for (i = 0; i < count; ++i) {
-		x = p[i];
-		y = q[i];
-
-		if (x == y) {
-			continue;
+	/* less than one word: just compare the bytes */
+	if (count < sizeof(unsigned long)) {
+		for (i = 0; i < count; ++i) {
+			if (p[i] != q[i]) {
+				return p[i] - q[i];
+			}
 		}
+		return 0;
+	}
 
-		return x - y;
+	/* compare leading bytes */
+	misalignment = ((uintptr_t) p) % sizeof(unsigned long);
+	leading = misalignment? sizeof(unsigned long) - misalignment : 0;
+
+	for (i = 0; i < leading; ++i) {
+		if (p[i] != q[i]) {
+			return p[i] - q[i];
+		}
+	}
+
+	/* compare aligned words */
+	words = (count - leading) / sizeof(unsigned long);
+	wp = (const unsigned long *) (p + leading);
+	wq = (const unsigned long *) (q + leading);
+
+	for (i = 0; i < words; ++i) {
+		if (wp[i] != wq[i]) {
+			/* found mismatched word, now find mismatched byte */
+			offset = leading + i * sizeof(unsigned long);
+			for (j = 0; j < sizeof(unsigned long); ++j) {
+				if (p[offset + j] != q[offset + j]) {
+					return p[offset + j] - q[offset + j];
+				}
+			}
+		}
+	}
+
+	/* compare trailing bytes */
+	offset = leading + words * sizeof(unsigned long);
+	trailing = count - offset;
+
+	for (i = 0; i < trailing; ++i) {
+		if (p[offset + i] != q[offset + i]) {
+			return p[offset + i] - q[offset + i];
+		}
 	}
 
 	return 0;
