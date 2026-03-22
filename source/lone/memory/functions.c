@@ -65,11 +65,45 @@ void lone_memory_move(void *from, void *to, size_t count)
 
 void lone_memory_set(void *to, unsigned char byte, size_t count)
 {
-	unsigned char *memory = to;
-	size_t i;
+	size_t misalignment, leading, trailing, words, i;
+	unsigned char *destination;
+	unsigned long *aligned, word;
 
-	for (i = 0; i < count; ++i) {
-		memory[i] = byte;
+	destination = to;
+
+	/* less than one word: just fill it up */
+	if (count < sizeof(unsigned long)) {
+		for (i = 0; i < count; ++i) {
+			destination[i] = byte;
+		}
+		return;
+	}
+
+	/* replicate byte across all lanes of the word
+	 * 0xAB * 0x0101010101010101 = 0xABABABABABABABAB */
+	word = ((unsigned long) byte) * (~0UL / 0xFF);
+
+	/* fill leading bytes to realign pointer */
+	misalignment = ((uintptr_t) destination) % sizeof(unsigned long);
+	leading = misalignment? sizeof(unsigned long) - misalignment : 0;
+
+	for (i = 0; i < leading; ++i) {
+		destination[i] = byte;
+	}
+
+	/* aligned word fill */
+	words = (count - leading) / sizeof(unsigned long);
+	aligned = ((unsigned long *) (destination + leading));
+
+	for (i = 0; i < words; ++i) {
+		aligned[i] = word;
+	}
+
+	/* fill trailing bytes */
+	trailing = (count - leading) % sizeof(unsigned long);
+
+	for (i = 0; i < trailing; ++i) {
+		destination[leading + words * sizeof(unsigned long) + i] = byte;
 	}
 }
 
