@@ -148,7 +148,7 @@ static inline bool lone_lisp_reader_is_token_separator(unsigned char character)
    │                                                                        │
    │    Analyzes a number and adds it to the tokens list if valid.          │
    │                                                                        │
-   │    ([+-]?[0-9]+)[)]} \n\t]                                             │
+   │    ([+-]?[0-9]+)[)}\]; \t\n]                                           │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
 static struct lone_lisp_value lone_lisp_reader_consume_number(struct lone_lisp *lone, struct lone_lisp_reader *reader)
@@ -237,7 +237,7 @@ error:
    │        ◦ \t                                                            │
    │        ◦ \0                                                            │
    │                                                                        │
-   │    (".*")[;)]} \n\t]                                                   │
+   │    ("(\\[\\\"nt0]|[^"\\])*")[)}\]; \t\n]                               │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
 static struct lone_lisp_value lone_lisp_reader_consume_text(struct lone_lisp *lone, struct lone_lisp_reader *reader)
