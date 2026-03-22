@@ -6,6 +6,21 @@
 
 #include <lone/linux.h>
 
+#include <limits.h>
+
+/* ╭────────────────────────────────────────────────────────────────────────╮
+   │                                                                        │
+   │    Calculates bitmap size for a given heap value capacity.             │
+   │    Aligns to unsigned long to maximize performance                     │
+   │    of the lone_bits_find_first_zero function.                          │
+   │                                                                        │
+   ╰────────────────────────────────────────────────────────────────────────╯ */
+static size_t lone_lisp_heap_bitmap_size(size_t capacity)
+{
+	size_t bytes = (capacity + CHAR_BIT - 1) / CHAR_BIT;
+	return (bytes + sizeof(unsigned long) - 1) & ~(sizeof(unsigned long) - 1);
+}
+
 static void lone_lisp_heap_grow(struct lone_lisp *lone)
 {
 	size_t new_size, new_capacity;
