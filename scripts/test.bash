@@ -5,6 +5,9 @@ suite="${1}"
 prefix="${2}"
 name="${3}"
 
+tmp="${TMPDIR:-/dev/shm}/lone/test"
+rm -rf "${tmp}"
+
 code=0
 
 declare -A styles tests
@@ -35,24 +38,32 @@ remove-prefix() {
 
 compare() {
   [[ ! -r "${1}" ]] && return 0
+  [[ ! -r "${2}" ]] && return 2
   diff \
     --color \
     --new-file --side-by-side --suppress-common-lines \
     --label=expected "${1}" \
-    --label=got      <(echo -E "${2}")
+    --label=got      "${2}"
 }
 
 compare-status() {
   local expected=0
-
   if [[ -r "${1}" ]]; then
     expected="$(< "${1}")"
   fi
 
-  if [[ "${2}" -eq "${expected}" ]]; then
+  local got
+  if [[ -r "${2}" ]]; then
+    got="$(< "${2}")"
+  else
+    >&2 printf "Unreadable status file: %s\n" "${2}"
+    return 2
+  fi
+
+  if [[ "${expected}" -eq "${got}" ]]; then
     return 0
   else
-    printf "Expected status: %d\tReturned status: %d\n" "${expected}" "${2}"
+    printf "Expected status: %d\tReturned status: %d\n" "${expected}" "${got}"
     return 1
   fi
 }
@@ -155,25 +166,17 @@ test-executable() {
 
   local -a command=(env --argv0 "${program_name}" --ignore-environment "${environment[@]}" "${executable}" "${arguments[@]}")
 
-  # https://stackoverflow.com/a/59592881
-  {
-    IFS=$'\n' read -r -d '' error;
-    IFS=$'\n' read -r -d '' output;
-    IFS=$'\n' read -r -d '' status;
-  } < <(                                                                                                     \
-                                                                                                             \
-         (printf '\0%s\0%d\0'                                                                                \
-                 "$("${command[@]}" < "${input}")"                                                           \
-                 "${?}"                                                                                      \
-                                                                                                             \
-       1>&2) 2>&1)
+  local actual="${tmp}/${name}"
+  mkdir -p "${actual}"
 
+  "${command[@]}" < "${input}" > "${actual}/output" 2> "${actual}/error"
+  printf '%d\n' "${?}" > "${actual}/status"
 
   result=PASS
 
-  compare        "${test}/output" "${output}" || result=FAIL
-  compare        "${test}/error"  "${error}"  || result=FAIL
-  compare-status "${test}/status" "${status}" || result=FAIL
+  compare        "${test}"/output "${actual}"/output  || result=FAIL
+  compare        "${test}"/error  "${actual}"/error   || result=FAIL
+  compare-status "${test}"/status "${actual}"/status  || result=FAIL
 
   report-test-result "${name}" "${executable}" "${result}"
 
