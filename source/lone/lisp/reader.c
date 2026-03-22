@@ -231,31 +231,78 @@ error:
    │                                                                        │
    │    Analyzes a string and adds it to the tokens list if valid.          │
    │                                                                        │
-   │    (".*")[)]} \n\t]                                                    │
+   │    Supported escape sequences:                                         │
+   │        ◦ \\                                                            │
+   │        ◦ \"                                                            │
+   │        ◦ \n                                                            │
+   │        ◦ \t                                                            │
+   │        ◦ \0                                                            │
+   │                                                                        │
+   │    (".*")[;)]} \n\t]                                                   │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
 static struct lone_lisp_value lone_lisp_reader_consume_text(struct lone_lisp *lone, struct lone_lisp_reader *reader)
 {
-	unsigned char *start, *current;
-	size_t end;
+	unsigned char *current, *output, character;
+	size_t input_length, output_length, escapes;
 
-	start = lone_lisp_reader_peek(lone, reader);
-	if (!start || *start != '"') { goto error; }
+	current = lone_lisp_reader_peek(lone, reader);
+	if (!current || *current != '"') { goto error; }
 
-	end = 0;
-
-	// skip leading "
-	++start;
+	/* skip leading " */
 	lone_lisp_reader_consume(reader);
 
-	while ((current = lone_lisp_reader_peek(lone, reader)) && *current != '"') {
-		lone_lisp_reader_consume(reader);
-		++end;
+	/* determine input size before allocating buffer */
+	input_length = 0;
+	escapes = 0;
+	while ((current = lone_lisp_reader_peek_k(lone, reader, input_length)) &&
+	       *current != '"') {
+
+		++input_length;
+		if (*current == '\\') {
+			/* skip past escaped character */
+			if (!lone_lisp_reader_peek_k(lone, reader, input_length)) {
+				/* backslash before end of input */ goto error;
+			}
+			++input_length;
+			++escapes;
+		}
 	}
 
 	if (!current) { /* unterminated string: no trailing " */ goto error; }
 
-	// skip trailing "
+	/* escape sequences squeeze two characters into one
+	 * also don't forget the hidden null terminator */
+	output = lone_allocate_uninitialized(lone->system, input_length - escapes + 1);
+	output_length = 0;
+
+	/* consume input and process escape sequences */
+	while ((current = lone_lisp_reader_peek(lone, reader)) && *current != '"') {
+		if (*current == '\\') {
+			lone_lisp_reader_consume(reader);
+			current = lone_lisp_reader_peek(lone, reader);
+			/* current cannot be null */
+
+			switch (*current) {
+			case '\\': character = '\\'; break;
+			case '"':  character = '"';  break;
+			case 'n':  character = '\n'; break;
+			case 't':  character = '\t'; break;
+			case '0':  character = '\0'; break;
+			default:   goto deallocate_and_error; /* unknown escape sequence */
+			}
+		} else {
+			character = *current;
+		}
+
+		output[output_length++] = character;
+		lone_lisp_reader_consume(reader);
+	}
+
+	/* null terminate for C string compatibility */
+	output[output_length] = '\0';
+
+	/* skip trailing " */
 	lone_lisp_reader_consume(reader);
 
 	/* text must be followed by a delimiter, space, comment or the end of input */
@@ -263,10 +310,12 @@ static struct lone_lisp_value lone_lisp_reader_consume_text(struct lone_lisp *lo
 	if (     current
 	     && *current != ';'
 	     && !lone_lisp_reader_match_byte(*current, ')')
-	     && !lone_lisp_reader_match_byte(*current, ' ')) { goto error; }
+	     && !lone_lisp_reader_match_byte(*current, ' ')) { goto deallocate_and_error; }
 
-	return lone_lisp_text_copy(lone, start, end);
+	return lone_lisp_text_transfer(lone, output, output_length, true);
 
+deallocate_and_error:
+	lone_deallocate(lone->system, output);
 error:
 	reader->status.error = true;
 	return lone_lisp_nil();
