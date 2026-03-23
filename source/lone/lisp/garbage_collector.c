@@ -155,7 +155,7 @@ static void lone_lisp_mark_native_stack_roots_in_range(struct lone_lisp *lone, v
 
 	for (pointer = bottom; pointer < top; ++pointer) {
 		if (lone_lisp_points_to_heap(lone, *pointer)) {
-			lone_lisp_mark_heap_value(lone, *pointer);
+			lone_lisp_pin_and_mark_heap_value(lone, *pointer);
 		}
 
 		word = (unsigned long) *pointer;
@@ -164,7 +164,7 @@ static void lone_lisp_mark_native_stack_roots_in_range(struct lone_lisp *lone, v
 			index = word >> 3;
 
 			if (index < lone->heap.count) {
-				lone_lisp_mark_heap_value(lone, &lone->heap.values[index]);
+				lone_lisp_pin_and_mark_heap_value(lone, &lone->heap.values[index]);
 			}
 		}
 	}
