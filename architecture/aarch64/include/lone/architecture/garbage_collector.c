@@ -4,10 +4,11 @@
  * Registers may contain pointers to garbage collector roots.
  * They must be spilled onto the stack so that they can be marked.
  * Link register is the only architectural register, others are conventional.
+ * The compiler may still repurpose it for other uses though.
  * Nearly all of arm64's registers may be used as scratch or result registers.
- * Probably best to just save all 30 of them just in case.
+ * Probably best to just save all of them just in case.
  **/
-typedef long lone_registers[30];
+typedef long lone_registers[31];
 extern void lone_save_registers(lone_registers);
 
 __asm__
@@ -32,6 +33,7 @@ __asm__
 "stp x24, x25, [x0, #192]"               "\n"
 "stp x26, x27, [x0, #208]"               "\n"
 "stp x28, x29, [x0, #224]"               "\n"
+"str x30,      [x0, #240]"               "\n"
 "ret"                                    "\n"
 
 );
