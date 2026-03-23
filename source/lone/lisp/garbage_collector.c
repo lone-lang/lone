@@ -265,7 +265,6 @@ static void lone_lisp_kill_all_unmarked_values(struct lone_lisp *lone)
 		}
 	}
 
-	/* clear all mark bits in one shot */
 	lone_memory_zero(lone->heap.bits.marked, lone_lisp_heap_bitmap_size(lone->heap.capacity));
 
 	lone->heap.first_dead = first_dead;
