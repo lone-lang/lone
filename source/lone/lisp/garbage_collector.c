@@ -291,6 +291,24 @@ static void lone_lisp_kill_all_unmarked_values(struct lone_lisp *lone)
 	}
 }
 
+static struct lone_optional_size lone_lisp_find_first_dead(struct lone_lisp *lone, size_t start)
+{
+	struct lone_optional_size index;
+	unsigned char *bits;
+	size_t bitmap_bytes, byte_offset;
+
+	bitmap_bytes = (lone->heap.count + CHAR_BIT - 1) / CHAR_BIT;
+	byte_offset = start / CHAR_BIT;
+	bits = ((unsigned char *) lone->heap.bits.live) + byte_offset;
+
+	index = lone_bits_find_first_zero(bits, bitmap_bytes - byte_offset);
+	if (index.present) {
+		index.value = byte_offset * CHAR_BIT + index.value;
+	}
+
+	return index;
+}
+
 void lone_lisp_garbage_collector(struct lone_lisp *lone, struct lone_lisp_machine *machine)
 {
 	lone_lisp_mark_all_reachable_values(lone, machine);
