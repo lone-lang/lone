@@ -677,6 +677,7 @@ struct lone_lisp_heap {
 	struct {
 		void *live;
 		void *marked;
+		void *pinned;
 	} bits;
 };
 

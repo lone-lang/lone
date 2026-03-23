@@ -54,6 +54,9 @@ static intptr_t lone_lisp_heap_remap_bitmaps(struct lone_lisp_heap *heap, size_t
 	remapped = lone_lisp_heap_remap_bitmap(&heap->bits.marked, old_size, new_size);
 	if (remapped < 0) { return remapped; }
 
+	remapped = lone_lisp_heap_remap_bitmap(&heap->bits.pinned, old_size, new_size);
+	if (remapped < 0) { return remapped; }
+
 	return remapped;
 }
 
@@ -170,6 +173,9 @@ static intptr_t lone_lisp_heap_initialize_bitmaps(struct lone_lisp_heap *heap, s
 	if (mapped < 0) { return mapped; }
 
 	mapped = lone_lisp_heap_initialize_bitmap(&heap->bits.marked, size);
+	if (mapped < 0) { return mapped; }
+
+	mapped = lone_lisp_heap_initialize_bitmap(&heap->bits.pinned, size);
 	if (mapped < 0) { return mapped; }
 
 	return mapped;
