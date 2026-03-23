@@ -465,6 +465,21 @@ static void lone_lisp_rewrite_all_references(struct lone_lisp *lone, struct lone
 	}
 }
 
+static void lone_lisp_recalculate_heap_bounds(struct lone_lisp *lone)
+{
+	struct lone_optional_size first;
+	size_t new_count;
+
+	first = lone_lisp_find_first_dead(lone, 0);
+	lone->heap.first_dead = first.present? first.value : lone->heap.count;
+
+	new_count = lone->heap.count;
+	while (new_count > 0 && !lone_lisp_is_alive(lone, new_count - 1)) {
+		--new_count;
+	}
+	lone->heap.count = new_count;
+}
+
 void lone_lisp_garbage_collector(struct lone_lisp *lone, struct lone_lisp_machine *machine)
 {
 	lone_lisp_mark_all_reachable_values(lone, machine);
