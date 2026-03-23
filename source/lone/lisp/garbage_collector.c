@@ -297,6 +297,10 @@ static struct lone_optional_size lone_lisp_find_first_dead(struct lone_lisp *lon
 	unsigned char *bits;
 	size_t bitmap_bytes, byte_offset;
 
+	if (start >= lone->heap.count) {
+		return LONE_OPTIONAL_ABSENT_VALUE(size);
+	}
+
 	bitmap_bytes = (lone->heap.count + CHAR_BIT - 1) / CHAR_BIT;
 	byte_offset = start / CHAR_BIT;
 	bits = ((unsigned char *) lone->heap.bits.live) + byte_offset;
