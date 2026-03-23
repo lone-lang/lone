@@ -528,5 +528,5 @@ void lone_lisp_garbage_collector(struct lone_lisp *lone, struct lone_lisp_machin
 {
 	lone_lisp_mark_all_reachable_values(lone, machine);
 	lone_lisp_kill_all_unmarked_values(lone);
-	lone_memory_zero(lone->heap.bits.pinned, lone_lisp_heap_bitmap_size(lone->heap.capacity));
+	lone_lisp_compact_heap(lone, machine);
 }
