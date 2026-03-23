@@ -100,6 +100,8 @@ static void lone_lisp_mark_heap_value(struct lone_lisp *lone, struct lone_lisp_h
 		}
 		break;
 	case LONE_LISP_TYPE_SYMBOL:
+		lone_bits_mark(lone->heap.bits.pinned, index);
+		break;
 	case LONE_LISP_TYPE_TEXT:
 	case LONE_LISP_TYPE_BYTES:
 		/* these types do not contain any other values to mark */
