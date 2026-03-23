@@ -141,7 +141,7 @@ static bool lone_lisp_points_to_heap(struct lone_lisp *lone, void *pointer)
 	);
 }
 
-static void lone_lisp_mark_stack_roots(struct lone_lisp *lone, void *bottom, void *top)
+static void lone_lisp_mark_native_stack_roots_in_range(struct lone_lisp *lone, void *bottom, void *top)
 {
 	void *tmp, **pointer;
 	unsigned long word;
@@ -172,7 +172,7 @@ static void lone_lisp_mark_stack_roots(struct lone_lisp *lone, void *bottom, voi
 
 static void lone_lisp_mark_native_stack_roots(struct lone_lisp *lone)
 {
-	lone_lisp_mark_stack_roots(
+	lone_lisp_mark_native_stack_roots_in_range(
 		lone,
 		lone->native_stack,
 		__builtin_frame_address(0)
