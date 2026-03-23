@@ -135,10 +135,49 @@ retry:
 	return &lone->heap.values[i];
 }
 
+static intptr_t lone_lisp_heap_initialize_values(struct lone_lisp_heap_value **values, size_t size)
+{
+	intptr_t mapped;
+
+	if (!values) { return -1; }
+
+	/* anonymous pages are zero-filled: live = marked = 0 for all values */
+	mapped = lone_lisp_heap_mmap(size);
+	if (mapped < 0) { return mapped; }
+	*values = (struct lone_lisp_heap_value *) mapped;
+
+	return mapped;
+}
+
+static intptr_t lone_lisp_heap_initialize_bitmap(void **bitmap, size_t size)
+{
+	intptr_t mapped;
+
+	if (!bitmap) { return -1; }
+
+	mapped = lone_lisp_heap_mmap(size);
+	if (mapped < 0) { return mapped; }
+	*bitmap = (void *) mapped;
+
+	return mapped;
+}
+
+static intptr_t lone_lisp_heap_initialize_bitmaps(struct lone_lisp_heap *heap, size_t size)
+{
+	intptr_t mapped;
+
+	mapped = lone_lisp_heap_initialize_bitmap(&heap->bits.live, size);
+	if (mapped < 0) { return mapped; }
+
+	mapped = lone_lisp_heap_initialize_bitmap(&heap->bits.marked, size);
+	if (mapped < 0) { return mapped; }
+
+	return mapped;
+}
+
 void lone_lisp_heap_initialize(struct lone_lisp *lone)
 {
 	size_t values_size, bitmap_size;
-	intptr_t memory;
 
 	if (__builtin_mul_overflow(LONE_LISP_HEAP_INITIAL_CAPACITY, sizeof(struct lone_lisp_heap_value), &values_size)) {
 		goto error;
@@ -146,18 +185,14 @@ void lone_lisp_heap_initialize(struct lone_lisp *lone)
 
 	bitmap_size = lone_lisp_heap_bitmap_size(LONE_LISP_HEAP_INITIAL_CAPACITY);
 
-	/* anonymous pages are zero-filled: live = marked = 0 for all values */
-	memory = lone_lisp_heap_mmap(values_size);
-	if (memory < 0) { goto error; }
-	lone->heap.values = (struct lone_lisp_heap_value *) memory;
+	if (lone_lisp_heap_initialize_values(&lone->heap.values, values_size) < 0) {
+		goto error;
+	}
 
-	memory = lone_lisp_heap_mmap(bitmap_size);
-	if (memory < 0) { goto error; }
-	lone->heap.bits.live = (void *) memory;
 
-	memory = lone_lisp_heap_mmap(bitmap_size);
-	if (memory < 0) { goto error; }
-	lone->heap.bits.marked = (void *) memory;
+	if (lone_lisp_heap_initialize_bitmaps(&lone->heap, bitmap_size) < 0) {
+		goto error;
+	}
 
 	lone->heap.count = 0;
 	lone->heap.capacity = LONE_LISP_HEAP_INITIAL_CAPACITY;
