@@ -435,6 +435,36 @@ static void lone_lisp_rewrite_heap_value_interior(struct lone_lisp *lone, struct
 	}
 }
 
+static void lone_lisp_rewrite_all_references(struct lone_lisp *lone, struct lone_lisp_machine *machine)
+{
+	/* known roots */
+	lone->symbol_table = lone_lisp_forward_value(lone, lone->symbol_table);
+	lone->modules.loaded = lone_lisp_forward_value(lone, lone->modules.loaded);
+	lone->modules.embedded = lone_lisp_forward_value(lone, lone->modules.embedded);
+	lone->modules.null = lone_lisp_forward_value(lone, lone->modules.null);
+	lone->modules.top_level_environment = lone_lisp_forward_value(lone, lone->modules.top_level_environment);
+	lone->modules.path = lone_lisp_forward_value(lone, lone->modules.path);
+
+	/* lisp machine registers */
+	machine->value = lone_lisp_forward_value(lone, machine->value);
+	machine->environment = lone_lisp_forward_value(lone, machine->environment);
+	machine->expression = lone_lisp_forward_value(lone, machine->expression);
+	machine->applicable = lone_lisp_forward_value(lone, machine->applicable);
+	machine->unevaluated = lone_lisp_forward_value(lone, machine->unevaluated);
+	machine->list = lone_lisp_forward_value(lone, machine->list);
+	machine->module = lone_lisp_forward_value(lone, machine->module);
+	machine->primitive.closure = lone_lisp_forward_value(lone, machine->primitive.closure);
+
+	/* lisp machine stack */
+	lone_lisp_rewrite_stack_frames(lone, machine->stack.base, machine->stack.top);
+
+	/* interior of every live heap value */
+	for (size_t i = 0; i < lone->heap.count; ++i) {
+		if (!lone_lisp_is_alive(lone, i)) { continue; }
+		lone_lisp_rewrite_heap_value_interior(lone, &lone->heap.values[i]);
+	}
+}
+
 void lone_lisp_garbage_collector(struct lone_lisp *lone, struct lone_lisp_machine *machine)
 {
 	lone_lisp_mark_all_reachable_values(lone, machine);
