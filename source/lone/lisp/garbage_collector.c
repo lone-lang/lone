@@ -319,6 +319,11 @@ static bool lone_lisp_is_pinned(struct lone_lisp *lone, size_t index)
 	return lone_bits_get(lone->heap.bits.pinned, index);
 }
 
+static bool lone_lisp_is_moveable(struct lone_lisp *lone, size_t index)
+{
+	return lone_lisp_is_alive(lone, index) && !lone_lisp_is_pinned(lone, index);
+}
+
 void lone_lisp_garbage_collector(struct lone_lisp *lone, struct lone_lisp_machine *machine)
 {
 	lone_lisp_mark_all_reachable_values(lone, machine);
