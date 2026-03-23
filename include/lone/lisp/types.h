@@ -644,31 +644,46 @@ struct lone_lisp_machine {
 
 /* ╭────────────────────┨ LONE LISP MEMORY ALLOCATION ┠─────────────────────╮
    │                                                                        │
-   │    Lone is designed to work without any dependencies except Linux,     │
-   │    so it does not make use of even the system's C library.             │
-   │    In order to bootstrap itself in such harsh conditions,              │
-   │    the underlying lone system must be initialized with a pointer       │
-   │    to a readable and writable memory area of reasonable size,          │
-   │    usually a statically allocated byte array.                          │
+   │    Lone lisp values are allocated from a flat and contiguous heap.     │
+   │    This heap is a single mmap'd array of lone_lisp_heap_value          │
+   │    structures, indexed by position. Tagged lone_lisp_value words       │
+   │    encode a shifted index into this array rather than a pointer.       │
+   │    By making lisp values position independent, memory management       │
+   │    is greatly simplified to the point efficient reallocation is        │
+   │    provided by Linux itself via mremap.                                │
    │                                                                        │
-   │    All allocated lone lisp values are placed in the value heap,        │
-   │    essentially a linked list of arrays of contiguous lone values.      │
+   │    Three separate bitmaps track per-value metadata:                    │
    │                                                                        │
-   │    Lone employs a very simple mark-and-sweep garbage collector.        │
-   │    It walks through the whole interpreter, including the processor     │
-   │    stack and registers, looking for pointers that fall within the      │
-   │    ranges of each allocated value heap and marking them as used.       │
-   │    The purpose of the heap is to enable more efficient pointer         │
-   │    ranging computations so as to avoid the need to quadratically       │
-   │    check every discovered pointer against every managed pointer.       │
-   │    Once all reachable pointers are marked, the garbage collector       │
-   │    sweeps through the value heap, killing all unmarked values          │
-   │    by marking them as unused. Future lone value allocations            │
-   │    may simply return these objects, thereby resurrecting them.         │
+   │      ◦ live   - whether the value is allocated and in use              │
+   │      ◦ marked - whether the value is reachable                         │
+   │      ◦ pinned - whether the value cannot move during compaction        │
    │                                                                        │
-   │    When a value heap is allocated, all values within it are dead.      │
-   │    After each garbage collection cycle, completely dead heaps          │
-   │    are deallocated, thereby freeing up memory for other uses.          │
+   │    The bitmaps are word-aligned mmap'd pages that grow                 │
+   │    in tandem with the values array via mremap.                         │
+   │                                                                        │
+   │    first_dead is the lowest value index thought to be dead.            │
+   │    Allocation scans the live bitmap starting from first_dead           │
+   │    looking for the index of the first zero bit. When found,            │
+   │    the dead value at the corresponding index is allocated.             │
+   │    When not found, heap capacity grows via mremap with MAYMOVE.        │
+   │                                                                        │
+   │    Garbage collection proceeds in three phases:                        │
+   │                                                                        │
+   │      ◦ Mark    - walks the object graph starting from known roots:     │
+   │                  lisp stack, generator stacks, native stack,           │
+   │                  native registers, lisp registers, internal values;    │
+   │                  sets the mark bit for every reachable value           │
+   │      ◦ Sweep   - deallocates resources owned by unmarked values,       │
+   │                  clears their live bits and recalculates heap bounds   │
+   │      ◦ Compact - moves unpinned live values downward into the heap,    │
+   │                  records forwarding indices where they used to be      │
+   │                  and rewrites all value references across the entire   │
+   │                  interpreter to reflect their new positions            │
+   │                                                                        │
+   │    The conservative native stack scanner recognizes both raw           │
+   │    pointers into the heap values array and tagged index values.        │
+   │    The precise lisp stack scanner uses typed frames to avoid           │
+   │    false positives.                                                    │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
 
