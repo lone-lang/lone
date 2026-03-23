@@ -105,6 +105,18 @@ static void lone_lisp_mark_heap_value(struct lone_lisp *lone, struct lone_lisp_h
 	}
 }
 
+static void lone_lisp_pin_and_mark_heap_value(struct lone_lisp *lone, struct lone_lisp_heap_value *value)
+{
+	size_t index;
+
+	if (!value) { return; }
+	index = value - lone->heap.values;
+	if (!lone_bits_get(lone->heap.bits.live, index)) { return; }
+
+	lone_bits_mark(lone->heap.bits.pinned, index);
+	lone_lisp_mark_heap_value(lone, value);
+}
+
 static void lone_lisp_mark_known_roots(struct lone_lisp *lone)
 {
 	lone_lisp_mark_value(lone, lone->symbol_table);
