@@ -201,6 +201,10 @@ struct lone_lisp_heap_value {
 		struct lone_lisp_vector vector;
 		struct lone_lisp_table table;
 		struct lone_bytes bytes;   /* also used by texts and symbols */
+
+		struct {
+			long forwarding_index;
+		} metadata;
 	} as;
 } __attribute__((aligned(64)));
 
