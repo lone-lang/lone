@@ -309,6 +309,11 @@ static struct lone_optional_size lone_lisp_find_first_dead(struct lone_lisp *lon
 	return index;
 }
 
+static bool lone_lisp_is_alive(struct lone_lisp *lone, size_t index)
+{
+	return lone_bits_get(lone->heap.bits.live, index);
+}
+
 void lone_lisp_garbage_collector(struct lone_lisp *lone, struct lone_lisp_machine *machine)
 {
 	lone_lisp_mark_all_reachable_values(lone, machine);
