@@ -372,6 +372,69 @@ static void lone_lisp_rewrite_stack_frames(struct lone_lisp *lone,
 	}
 }
 
+static void lone_lisp_rewrite_heap_value_interior(struct lone_lisp *lone, struct lone_lisp_heap_value *value)
+{
+	switch (value->type) {
+	case LONE_LISP_TYPE_MODULE:
+		value->as.module.name = lone_lisp_forward_value(lone, value->as.module.name);
+		value->as.module.environment = lone_lisp_forward_value(lone, value->as.module.environment);
+		value->as.module.exports = lone_lisp_forward_value(lone, value->as.module.exports);
+		break;
+	case LONE_LISP_TYPE_FUNCTION:
+		value->as.function.arguments = lone_lisp_forward_value(lone, value->as.function.arguments);
+		value->as.function.code = lone_lisp_forward_value(lone, value->as.function.code);
+		value->as.function.environment = lone_lisp_forward_value(lone, value->as.function.environment);
+		break;
+	case LONE_LISP_TYPE_PRIMITIVE:
+		value->as.primitive.name = lone_lisp_forward_value(lone, value->as.primitive.name);
+		value->as.primitive.closure = lone_lisp_forward_value(lone, value->as.primitive.closure);
+		break;
+	case LONE_LISP_TYPE_CONTINUATION:
+		lone_lisp_rewrite_stack_frames(
+			lone,
+			value->as.continuation.frames,
+			value->as.continuation.frames + value->as.continuation.frame_count
+		);
+		break;
+	case LONE_LISP_TYPE_GENERATOR:
+		value->as.generator.function = lone_lisp_forward_value(lone, value->as.generator.function);
+		if (value->as.generator.stacks.caller.base) {
+			lone_lisp_rewrite_stack_frames(
+				lone,
+				value->as.generator.stacks.caller.base,
+				value->as.generator.stacks.caller.top
+			);
+		} else if (value->as.generator.stacks.own.top) {
+			lone_lisp_rewrite_stack_frames(
+				lone,
+				value->as.generator.stacks.own.base,
+				value->as.generator.stacks.own.top
+			);
+		}
+		break;
+	case LONE_LISP_TYPE_LIST:
+		value->as.list.first = lone_lisp_forward_value(lone, value->as.list.first);
+		value->as.list.rest = lone_lisp_forward_value(lone, value->as.list.rest);
+		break;
+	case LONE_LISP_TYPE_VECTOR:
+		for (size_t i = 0; i < value->as.vector.count; ++i) {
+			value->as.vector.values[i] = lone_lisp_forward_value(lone, value->as.vector.values[i]);
+		}
+		break;
+	case LONE_LISP_TYPE_TABLE:
+		value->as.table.prototype = lone_lisp_forward_value(lone, value->as.table.prototype);
+		for (size_t i = 0; i < value->as.table.count; ++i) {
+			value->as.table.entries[i].key = lone_lisp_forward_value(lone, value->as.table.entries[i].key);
+			value->as.table.entries[i].value = lone_lisp_forward_value(lone, value->as.table.entries[i].value);
+		}
+		break;
+	case LONE_LISP_TYPE_SYMBOL:
+	case LONE_LISP_TYPE_TEXT:
+	case LONE_LISP_TYPE_BYTES:
+		break;
+	}
+}
+
 void lone_lisp_garbage_collector(struct lone_lisp *lone, struct lone_lisp_machine *machine)
 {
 	lone_lisp_mark_all_reachable_values(lone, machine);
