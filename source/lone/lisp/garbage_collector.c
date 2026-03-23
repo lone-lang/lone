@@ -334,6 +334,23 @@ static void lone_lisp_move_heap_value(struct lone_lisp *lone, size_t from, size_
 	lone->heap.values[from].as.metadata.forwarding_index = to;
 }
 
+static struct lone_lisp_value lone_lisp_forward_value(struct lone_lisp *lone, struct lone_lisp_value value)
+{
+	size_t old_index;
+
+	if (!lone_lisp_is_heap_value(value)) { return value; }
+
+	old_index = ((unsigned long) value.tagged) >> 3;
+
+	if (old_index >= lone->heap.count) { return value; }
+
+	if (lone_lisp_is_alive(lone, old_index)) { return value; }
+
+	return (struct lone_lisp_value) {
+		.tagged = (long) (lone->heap.values[old_index].as.metadata.forwarding_index << 3),
+	};
+}
+
 void lone_lisp_garbage_collector(struct lone_lisp *lone, struct lone_lisp_machine *machine)
 {
 	lone_lisp_mark_all_reachable_values(lone, machine);
