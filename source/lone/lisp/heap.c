@@ -32,12 +32,48 @@ static intptr_t lone_lisp_heap_mremap(void *address, size_t old_size, size_t new
 	return linux_mremap(address, old_size, new_size, MREMAP_MAYMOVE, 0);
 }
 
+static intptr_t lone_lisp_heap_remap_bitmap(void **pointer, size_t old_size, size_t new_size)
+{
+	intptr_t remapped;
+
+	if (!pointer || !*pointer) { return -1; }
+
+	remapped = lone_lisp_heap_mremap(*pointer, old_size, new_size);
+	if (remapped < 0) { return remapped; }
+	*pointer = (void *) remapped;
+	return remapped;
+}
+
+static intptr_t lone_lisp_heap_remap_bitmaps(struct lone_lisp_heap *heap, size_t old_size, size_t new_size)
+{
+	intptr_t remapped;
+
+	remapped = lone_lisp_heap_remap_bitmap(&heap->bits.live, old_size, new_size);
+	if (remapped < 0) { return remapped; }
+
+	remapped = lone_lisp_heap_remap_bitmap(&heap->bits.marked, old_size, new_size);
+	if (remapped < 0) { return remapped; }
+
+	return remapped;
+}
+
+static intptr_t lone_lisp_heap_remap_values(struct lone_lisp_heap_value **values, size_t old_size, size_t new_size)
+{
+	intptr_t remapped;
+
+	if (!values || !*values) { return -1; }
+
+	remapped = lone_lisp_heap_mremap(*values, old_size, new_size);
+	if (remapped < 0) { return remapped; }
+	*values = (struct lone_lisp_heap_value *) remapped;
+	return remapped;
+}
+
 static void lone_lisp_heap_grow(struct lone_lisp *lone)
 {
 	size_t old_values_size, new_values_size;
 	size_t old_bitmap_size, new_bitmap_size;
 	size_t new_capacity;
-	intptr_t remapped;
 
 	if (__builtin_mul_overflow(lone->heap.capacity, LONE_LISP_HEAP_GROWTH_FACTOR, &new_capacity)) { goto overflow; }
 	if (__builtin_mul_overflow(new_capacity, sizeof(struct lone_lisp_heap_value), &new_values_size)) { goto overflow; }
@@ -46,27 +82,20 @@ static void lone_lisp_heap_grow(struct lone_lisp *lone)
 	old_bitmap_size = lone_lisp_heap_bitmap_size(lone->heap.capacity);
 	new_bitmap_size = lone_lisp_heap_bitmap_size(new_capacity);
 
-	/* grow the values array */
-	remapped = lone_lisp_heap_mremap(lone->heap.values, old_values_size, new_values_size);
-	if (remapped < 0) { goto mremap_error; }
-	lone->heap.values = (struct lone_lisp_heap_value *) remapped;
+	if (lone_lisp_heap_remap_values(&lone->heap.values, old_values_size, new_values_size) < 0) {
+		goto remap_error;
+	}
 
-	/* grow the live bitmap */
-	remapped = lone_lisp_heap_mremap(lone->heap.bits.live, old_bitmap_size, new_bitmap_size);
-	if (remapped < 0) { goto mremap_error; }
-	lone->heap.bits.live = (void *) remapped;
-
-	/* grow the marked bitmap */
-	remapped = lone_lisp_heap_mremap(lone->heap.bits.marked, old_bitmap_size, new_bitmap_size);
-	if (remapped < 0) { goto mremap_error; }
-	lone->heap.bits.marked = (void *) remapped;
+	if (lone_lisp_heap_remap_bitmaps(&lone->heap, old_bitmap_size, new_bitmap_size) < 0) {
+		goto remap_error;
+	}
 
 	lone->heap.capacity = new_capacity;
 
 	return;
 
 overflow:
-mremap_error:
+remap_error:
 	linux_exit(-1);
 }
 
