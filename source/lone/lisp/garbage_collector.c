@@ -324,6 +324,16 @@ static bool lone_lisp_is_moveable(struct lone_lisp *lone, size_t index)
 	return lone_lisp_is_alive(lone, index) && !lone_lisp_is_pinned(lone, index);
 }
 
+static void lone_lisp_move_heap_value(struct lone_lisp *lone, size_t from, size_t to)
+{
+	lone->heap.values[to] = lone->heap.values[from];
+
+	lone_bits_mark(lone->heap.bits.live, to);
+	lone_bits_clear(lone->heap.bits.live, from);
+
+	lone->heap.values[from].as.metadata.forwarding_index = to;
+}
+
 void lone_lisp_garbage_collector(struct lone_lisp *lone, struct lone_lisp_machine *machine)
 {
 	lone_lisp_mark_all_reachable_values(lone, machine);
