@@ -480,6 +480,50 @@ static void lone_lisp_recalculate_heap_bounds(struct lone_lisp *lone)
 	lone->heap.count = new_count;
 }
 
+static void lone_lisp_compact_heap(struct lone_lisp *lone, struct lone_lisp_machine *machine)
+{
+	struct lone_optional_size index;
+	size_t low, high;
+	bool moved;
+
+	low = lone->heap.first_dead; /* scans up for dead values */
+	high = lone->heap.count; /* scans down for unpinned live values */
+	moved = false;
+
+	if ((low == 0 && high == 0) || low >= high) { goto zero_pinned; }
+
+	--high;
+
+	while (low < high) {
+
+		/* find next dead slot from the bottom */
+		index = lone_lisp_find_first_dead(lone, low);
+		if (!index.present) { /* no dead values to compact into */ break; }
+		low = index.value;
+
+		/* find next live unpinned value from the top */
+		while (low < high && !lone_lisp_is_moveable(lone, high)) {
+			--high;
+		}
+
+		if (low < high) {
+			lone_lisp_move_heap_value(lone, high, low);
+			moved = true;
+			++low;
+			--high;
+		}
+	}
+
+	if (moved) {
+		lone_lisp_rewrite_all_references(lone, machine);
+	}
+
+	lone_lisp_recalculate_heap_bounds(lone);
+
+zero_pinned:
+	lone_memory_zero(lone->heap.bits.pinned, lone_lisp_heap_bitmap_size(lone->heap.capacity));
+}
+
 void lone_lisp_garbage_collector(struct lone_lisp *lone, struct lone_lisp_machine *machine)
 {
 	lone_lisp_mark_all_reachable_values(lone, machine);
