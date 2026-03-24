@@ -170,7 +170,7 @@ LONE_LISP_PRIMITIVE(math_divide)
 
 	arguments = lone_lisp_machine_pop_value(lone, machine);
 
-	if (lone_lisp_is_nil(arguments)) { /* at least the dividend is required, (/) is invalid */ linux_exit(-1); }
+	if (lone_lisp_is_nil(arguments)) { /* at least the dividend is required, (/) is invalid */ goto no_arguments; }
 	dividend = lone_lisp_list_first(lone, arguments);
 	arguments = lone_lisp_list_rest(lone, arguments);
 
@@ -190,12 +190,16 @@ LONE_LISP_PRIMITIVE(math_divide)
 	case LONE_LISP_TYPE_FALSE:
 	case LONE_LISP_TYPE_TRUE:
 	case LONE_LISP_TYPE_HEAP_VALUE:
-		/* can't divide non-numbers: (/ "not a number") */ linux_exit(-1);
+		/* can't divide non-numbers: (/ "not a number") */ goto not_a_number;
 	}
 
 	result = lone_lisp_integer_create(lone_lisp_integer_of(dividend) / lone_lisp_integer_of(divisor));
 	lone_lisp_machine_push_value(lone, machine, result);
 	return 0;
+
+no_arguments:
+not_a_number:
+		linux_exit(-1);
 }
 
 static long apply_and_return(struct lone_lisp *lone, struct lone_lisp_machine *machine,
