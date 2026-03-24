@@ -65,6 +65,34 @@ static void lone_memory_coalesce(struct lone_memory *block)
 	}
 }
 
+static struct lone_memory *lone_memory_map(struct lone_memory *block, size_t needed_size)
+{
+	size_t block_size, segment_size;
+	struct lone_memory *new;
+	intptr_t mapped;
+
+	block_size = needed_size + sizeof(struct lone_memory);
+
+	segment_size = block_size < LONE_MEMORY_SEGMENT_MINIMUM_SIZE
+	             ? LONE_MEMORY_SEGMENT_MINIMUM_SIZE
+	             : block_size;
+
+	mapped = linux_mmap(0, segment_size, PROT_READ | PROT_WRITE,
+	                    MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+
+	if (mapped < 0) { return 0; }
+
+	new = (struct lone_memory *) mapped;
+	new->prev = block;
+	new->next = 0;
+	new->free = 1;
+	new->size = segment_size - sizeof(struct lone_memory);
+
+	block->next = new;
+
+	return new;
+}
+
 static struct lone_memory * lone_memory_find_free_block(struct lone_system *system, size_t requested_size, size_t alignment)
 {
 	size_t needed_size;
