@@ -162,7 +162,7 @@ bool lone_lisp_list_destructure(struct lone_lisp *lone, struct lone_lisp_value l
 		}
 	}
 
-	if (!lone_lisp_is_list(lone, list)) { /* expected a list */ linux_exit(-1); }
+	if (!lone_lisp_is_list(lone, list)) { /* expected a list */ goto error; }
 
 	i = 0;
 	while (!lone_lisp_is_nil(list)) {
@@ -183,4 +183,7 @@ bool lone_lisp_list_destructure(struct lone_lisp *lone, struct lone_lisp_value l
 	va_end(arguments);
 
 	return false;
+
+error:
+	linux_exit(-1);
 }
