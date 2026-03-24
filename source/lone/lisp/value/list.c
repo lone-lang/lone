@@ -151,14 +151,15 @@ bool lone_lisp_list_destructure(struct lone_lisp *lone, struct lone_lisp_value l
 {
 	va_list arguments;
 	size_t i;
+	bool result;
 
 	va_start(arguments, count);
 
 	if (lone_lisp_is_nil(list)) {
 		if (count >= 1) {
-			/* empty list, values expected */ return true;
+			/* empty list, values expected */ result = true; goto return_result;
 		} else {
-			/* empty list, values not expected */ return false;
+			/* empty list, values not expected */ result = false; goto return_result;
 		}
 	}
 
@@ -171,18 +172,24 @@ bool lone_lisp_list_destructure(struct lone_lisp *lone, struct lone_lisp_value l
 
 		if (i < count) {
 			/* expect more values */
-			if (!lone_lisp_list_has_rest(lone, list)) { /* less values than expected */ return true; }
+			if (!lone_lisp_list_has_rest(lone, list)) {
+				/* less values than expected */ result = true; goto return_result;
+			}
 		} else {
 			/* expect end of list */
-			if (lone_lisp_list_has_rest(lone, list)) { /* more values than expected */ return true; }
+			if (lone_lisp_list_has_rest(lone, list)) {
+				/* more values than expected */ result = true; goto return_result;
+			}
 		}
 
 		list = lone_lisp_list_rest(lone, list);
 	}
 
-	va_end(arguments);
+	result = false;
 
-	return false;
+return_result:
+	va_end(arguments);
+	return result;
 
 error:
 	linux_exit(-1);
