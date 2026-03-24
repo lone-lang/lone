@@ -200,10 +200,15 @@ bool lone_lisp_is_identical(struct lone_lisp *lone, struct lone_lisp_value x, st
 			return lone_lisp_heap_value_of(lone, x) == lone_lisp_heap_value_of(lone, y);
 		case LONE_LISP_TYPE_INTEGER:
 			return lone_lisp_integer_of(x) == lone_lisp_integer_of(y);
+		default:
+			goto invalid_type;
 		}
 	} else {
 		return false;
 	}
+
+invalid_type:
+	linux_exit(-1);
 }
 
 bool lone_lisp_is_equivalent(struct lone_lisp *lone, struct lone_lisp_value x, struct lone_lisp_value y)
@@ -218,6 +223,8 @@ bool lone_lisp_is_equivalent(struct lone_lisp *lone, struct lone_lisp_value x, s
 		return lone_lisp_is_identical(lone, x, y);
 	case LONE_LISP_TYPE_HEAP_VALUE:
 		break;
+	default:
+		goto invalid_type;
 	}
 
 	switch (lone_lisp_heap_value_of(lone, x)->type) {
@@ -236,7 +243,12 @@ bool lone_lisp_is_equivalent(struct lone_lisp *lone, struct lone_lisp_value x, s
 	case LONE_LISP_TYPE_TABLE:
 	case LONE_LISP_TYPE_SYMBOL:
 		return lone_lisp_is_identical(lone, x, y);
+	default:
+		goto invalid_type;
 	}
+
+invalid_type:
+	linux_exit(-1);
 }
 
 static bool lone_lisp_list_is_equal(struct lone_lisp *lone, struct lone_lisp_value x, struct lone_lisp_value y)
@@ -283,6 +295,8 @@ bool lone_lisp_is_equal(struct lone_lisp *lone, struct lone_lisp_value x, struct
 		return lone_lisp_is_identical(lone, x, y);
 	case LONE_LISP_TYPE_HEAP_VALUE:
 		break;
+	default:
+		goto invalid_type;
 	}
 
 	switch (lone_lisp_heap_value_of(lone, x)->type) {
@@ -304,7 +318,12 @@ bool lone_lisp_is_equal(struct lone_lisp *lone, struct lone_lisp_value x, struct
 	case LONE_LISP_TYPE_TEXT:
 	case LONE_LISP_TYPE_BYTES:
 		return lone_lisp_is_equivalent(lone, x, y);
+	default:
+		goto invalid_type;
 	}
+
+invalid_type:
+	linux_exit(-1);
 }
 
 static bool integers(struct lone_lisp *lone, struct lone_lisp_value x, struct lone_lisp_value y)
