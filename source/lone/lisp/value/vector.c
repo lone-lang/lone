@@ -97,7 +97,7 @@ void lone_lisp_vector_set(struct lone_lisp *lone, struct lone_lisp_value vector,
 	i = lone_lisp_integer_of(index);
 	if (i < 0) { /* negative indexes not supported */ linux_exit(-1); }
 
-	lone_lisp_vector_set_value_at(lone, vector, i, (size_t) value);
+	lone_lisp_vector_set_value_at(lone, vector, (size_t) i, value);
 }
 
 void lone_lisp_vector_push(struct lone_lisp *lone,
