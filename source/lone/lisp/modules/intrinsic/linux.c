@@ -227,12 +227,13 @@ static struct lone_lisp_value lone_lisp_environment_to_table(struct lone_lisp *l
 		c_string_key = c_string;
 		c_string_value = "";
 
-		while (*c_string++) {
+		while (*c_string) {
 			if (*c_string == '=') {
 				*c_string = '\0';
 				c_string_value = c_string + 1;
 				break;
 			}
+			++c_string;
 		}
 
 		key = lone_lisp_text_from_c_string(lone, c_string_key);
