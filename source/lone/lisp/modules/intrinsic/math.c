@@ -178,12 +178,12 @@ LONE_LISP_PRIMITIVE(math_divide)
 	case LONE_LISP_TYPE_INTEGER:
 		if (lone_lisp_is_nil(arguments)) {
 			/* not given a divisor, return 1/x instead: (/ 2) = 1/2 */
-			result = lone_lisp_integer_create(1 / lone_lisp_integer_of(dividend));
+			divisor = dividend;
+			dividend = lone_lisp_one();
 			break;
 		} else {
 			/* (/ x a b c ...) = x / (a * b * c * ...) */
 			divisor = lone_lisp_primitive_integer_operation(lone, arguments, '*', lone_lisp_one());
-			result = lone_lisp_integer_create(lone_lisp_integer_of(dividend) / lone_lisp_integer_of(divisor));
 			break;
 		}
 	case LONE_LISP_TYPE_NIL:
@@ -193,6 +193,7 @@ LONE_LISP_PRIMITIVE(math_divide)
 		/* can't divide non-numbers: (/ "not a number") */ linux_exit(-1);
 	}
 
+	result = lone_lisp_integer_create(lone_lisp_integer_of(dividend) / lone_lisp_integer_of(divisor));
 	lone_lisp_machine_push_value(lone, machine, result);
 	return 0;
 }
