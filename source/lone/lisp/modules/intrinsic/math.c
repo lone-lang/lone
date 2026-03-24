@@ -193,10 +193,13 @@ LONE_LISP_PRIMITIVE(math_divide)
 		/* can't divide non-numbers: (/ "not a number") */ goto not_a_number;
 	}
 
+	if (lone_lisp_integer_of(divisor) == 0) { /* division by zero: (/ 1 0) */ goto division_by_zero; }
+
 	result = lone_lisp_integer_create(lone_lisp_integer_of(dividend) / lone_lisp_integer_of(divisor));
 	lone_lisp_machine_push_value(lone, machine, result);
 	return 0;
 
+division_by_zero:
 no_arguments:
 not_a_number:
 		linux_exit(-1);
