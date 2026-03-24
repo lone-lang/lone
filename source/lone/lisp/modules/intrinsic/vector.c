@@ -75,6 +75,7 @@ LONE_LISP_PRIMITIVE(vector_slice)
 {
 	struct lone_lisp_value arguments, vector, start, end, slice;
 	size_t i, j, k;
+	lone_lisp_integer index;
 
 	arguments = lone_lisp_machine_pop_value(lone, machine);
 
@@ -89,21 +90,27 @@ LONE_LISP_PRIMITIVE(vector_slice)
 	arguments = lone_lisp_list_rest(lone, arguments);
 	if (!lone_lisp_is_integer(lone, start)) { /* start is not an integer: (slice vector "error") */ linux_exit(-1); }
 
-	i = lone_lisp_integer_of(start);
+	index = lone_lisp_integer_of(start);
+	if (index < 0) { /* negative indexes not supported: (slice vector -10) */ linux_exit(-1); }
+	i = (size_t) index;
 
 	if (lone_lisp_is_nil(arguments)) {
 		j = lone_lisp_vector_count(lone, vector);
 	} else {
 		end = lone_lisp_list_first(lone, arguments);
 		arguments = lone_lisp_list_rest(lone, arguments);
+
 		if (!lone_lisp_is_nil(arguments)) {
 			/* too many arguments given: (slice vector start end extra) */ linux_exit(-1);
 		}
+
 		if (!lone_lisp_is_integer(lone, end)) {
 			/* end is not an integer: (slice vector 10 "error") */ linux_exit(-1);
 		}
 
-		j = lone_lisp_integer_of(end);
+		index = lone_lisp_integer_of(end);
+		if (index < 0) { /* negative indexes not supported: (slice vector 0 -10) */ linux_exit(-1); }
+		j = (size_t) index;
 	}
 
 	slice = lone_lisp_vector_create(lone, j - i);

@@ -62,8 +62,14 @@ struct lone_lisp_value lone_lisp_vector_get_value_at(struct lone_lisp *lone, str
 struct lone_lisp_value lone_lisp_vector_get(struct lone_lisp *lone,
 		struct lone_lisp_value vector, struct lone_lisp_value index)
 {
+	lone_lisp_integer i;
+
 	if (!lone_lisp_is_integer(lone, index)) { /* only integer indexes supported */ linux_exit(-1); }
-	return lone_lisp_vector_get_value_at(lone, vector, lone_lisp_integer_of(index));
+
+	i = lone_lisp_integer_of(index);
+	if (i < 0) { /* negative indexes not supported */ linux_exit(-1); }
+
+	return lone_lisp_vector_get_value_at(lone, vector, (size_t) i);
 }
 
 void lone_lisp_vector_set_value_at(struct lone_lisp *lone, struct lone_lisp_value vector,
@@ -84,8 +90,14 @@ void lone_lisp_vector_set_value_at(struct lone_lisp *lone, struct lone_lisp_valu
 void lone_lisp_vector_set(struct lone_lisp *lone, struct lone_lisp_value vector,
 		struct lone_lisp_value index, struct lone_lisp_value value)
 {
+	lone_lisp_integer i;
+
 	if (!lone_lisp_is_integer(lone, index)) { /* only integer indexes supported */ linux_exit(-1); }
-	lone_lisp_vector_set_value_at(lone, vector, lone_lisp_integer_of(index), value);
+
+	i = lone_lisp_integer_of(index);
+	if (i < 0) { /* negative indexes not supported */ linux_exit(-1); }
+
+	lone_lisp_vector_set_value_at(lone, vector, i, (size_t) value);
 }
 
 void lone_lisp_vector_push(struct lone_lisp *lone,
