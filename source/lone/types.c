@@ -24,12 +24,12 @@ bool lone_bytes_is_zero(struct lone_bytes b)
 
 bool lone_bytes_contains_offset(struct lone_bytes bytes, lone_size offset)
 {
-	return offset >= 0 && offset < bytes.count;
+	return offset < bytes.count;
 }
 
 bool lone_bytes_contains_block(struct lone_bytes bytes, lone_size offset, lone_size size)
 {
-	return offset >= 0 && (offset + size) <= bytes.count;
+	return (offset + size) <= bytes.count;
 }
 
 bool lone_bytes_contains_address(struct lone_bytes bytes, void *pointer)
