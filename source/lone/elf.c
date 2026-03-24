@@ -556,7 +556,6 @@ bool lone_elf_header_machine_is_reserved(lone_u16 machine)
 	       is_within_u16(machine,  24,  35)      ||
 	       is_within_u16(machine, 121, 130)      ||
 	       is_within_u16(machine, 145, 159)      ||
-	       is_within_u16(machine, 145, 159)      ||
 	       is_within_u16(machine, 225, 242);
 }
 
