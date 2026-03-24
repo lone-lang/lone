@@ -96,16 +96,19 @@ static struct lone_memory *lone_memory_map(struct lone_memory *block, size_t nee
 static struct lone_memory * lone_memory_find_free_block(struct lone_system *system, size_t requested_size, size_t alignment)
 {
 	size_t needed_size;
-	struct lone_memory *block;
+	struct lone_memory *block, *last;
 
 	needed_size = lone_align(requested_size, alignment);
 
-	for (block = system->memory; block; block = block->next) {
-		if (block->free && block->size >= needed_size)
-			break;
+	for (last = block = system->memory; block; block = block->next) {
+		if (block->free && block->size >= needed_size) { break; }
+		last = block;
 	}
 
-	if (!block) { linux_exit(-1); }
+	if (!block) {
+		block = lone_memory_map(last, needed_size);
+		if (!block) { linux_exit(-1); }
+	}
 
 	block->free = 0;
 	lone_memory_split(block, needed_size);
