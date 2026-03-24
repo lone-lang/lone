@@ -45,13 +45,19 @@ static void lone_memory_split(struct lone_memory *block, size_t used)
 	}
 }
 
+static bool lone_memory_is_contiguous(struct lone_memory *block, struct lone_memory *next)
+{
+	return block->pointer + block->size == (unsigned char *) next;
+}
+
 static void lone_memory_coalesce(struct lone_memory *block)
 {
 	struct lone_memory *next;
 
 	if (block && block->free) {
 		next = block->next;
-		if (next && next->free) {
+		/* only coalesce physically adjacent blocks within the same segment */
+		if (next && next->free && lone_memory_is_contiguous(block, next)) {
 			block->size += next->size + sizeof(struct lone_memory);
 			next = block->next = next->next;
 			if (next) { next->prev = block; }
