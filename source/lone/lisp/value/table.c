@@ -213,8 +213,8 @@ void lone_lisp_table_delete(struct lone_lisp *lone,
 		}
 	}
 
-	entries[count].key = lone_lisp_nil();
-	entries[count].value = lone_lisp_nil();
+	entries[count - 1].key = lone_lisp_nil();
+	entries[count - 1].value = lone_lisp_nil();
 
 	--actual->count;
 }
