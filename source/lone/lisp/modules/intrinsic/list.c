@@ -94,7 +94,8 @@ LONE_LISP_PRIMITIVE(list_flatten)
 
 LONE_LISP_PRIMITIVE(list_map)
 {
-	struct lone_lisp_value arguments, function, list, head, results, result, entry, expression;
+	struct lone_lisp_value arguments, function, list, entry, expression;
+	lone_lisp_integer count, i;
 
 	switch (step) {
 	case 0: /* unpack arguments and initialize */
@@ -115,7 +116,7 @@ LONE_LISP_PRIMITIVE(list_map)
 
 		if (!lone_lisp_is_list(lone, list)) { /* can only map functions to lists */ linux_exit(-1); }
 
-		results = head = lone_lisp_nil();
+		count = 0;
 
 	application: /* apply value to function */
 
@@ -127,26 +128,32 @@ LONE_LISP_PRIMITIVE(list_map)
 
 		lone_lisp_machine_push_value(lone, machine, function);
 		lone_lisp_machine_push_value(lone, machine, list);
-		lone_lisp_machine_push_value(lone, machine, head);
-		lone_lisp_machine_push_value(lone, machine, results);
+		lone_lisp_machine_push_integer(lone, machine, count);
 
 		return 1;
 
 	case 1: /* collect resulting value into results list */
 
-		result   = machine->value;
-		results  = lone_lisp_machine_pop_value(lone, machine);
-		head     = lone_lisp_machine_pop_value(lone, machine);
+		count    = lone_lisp_machine_pop_integer(lone, machine);
 		list     = lone_lisp_machine_pop_value(lone, machine);
 		function = lone_lisp_machine_pop_value(lone, machine);
 
-		lone_lisp_list_append(lone, &results, &head, result);
-		list = lone_lisp_list_rest(lone, list);
+		lone_lisp_machine_push_value(lone, machine, machine->value);
+		++count;
 
+		list = lone_lisp_list_rest(lone, list);
 		if (!lone_lisp_is_nil(list)) {
 			goto application;
 		} else {
-			lone_lisp_machine_push_value(lone, machine, results);
+			for (i = 0; i < count; ++i) {
+				list =
+					lone_lisp_list_create(
+						lone,
+						lone_lisp_machine_pop_value(lone, machine),
+						list
+					);
+			}
+			lone_lisp_machine_push_value(lone, machine, list);
 			return 0;
 		}
 

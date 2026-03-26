@@ -420,8 +420,9 @@ LONE_LISP_PRIMITIVE(lone_quote)
 
 LONE_LISP_PRIMITIVE(lone_quasiquote)
 {
-	struct lone_lisp_value arguments, form, list, head, current, element, result, first, rest;
+	struct lone_lisp_value arguments, form, list, current, element, result, first, rest;
 	struct lone_lisp_value unquote, splice, escaping, splicing;
+	lone_lisp_integer count, i;
 
 	switch (step) {
 	case 0: /* unpack and check arguments then loop */
@@ -434,8 +435,8 @@ LONE_LISP_PRIMITIVE(lone_quasiquote)
 
 		unquote = lone_lisp_intern_c_string(lone, "unquote");
 		splice = lone_lisp_intern_c_string(lone, "unquote*");
-		list = head = lone_lisp_nil();
 		current = form;
+		count = 0;
 
 		for (current = form; !lone_lisp_is_nil(current); current = lone_lisp_list_rest(lone, current)) {
 			element = lone_lisp_list_first(lone, current);
@@ -464,12 +465,11 @@ LONE_LISP_PRIMITIVE(lone_quasiquote)
 						linux_exit(-1);
 					}
 
+					lone_lisp_machine_push_integer(lone, machine, count);
 					lone_lisp_machine_push_value(lone, machine, unquote);
 					lone_lisp_machine_push_value(lone, machine, splice);
 					lone_lisp_machine_push_value(lone, machine, splicing);
 					lone_lisp_machine_push_value(lone, machine, current);
-					lone_lisp_machine_push_value(lone, machine, head);
-					lone_lisp_machine_push_value(lone, machine, list);
 
 					machine->step = LONE_LISP_MACHINE_STEP_EXPRESSION_EVALUATION;
 					machine->expression = first;
@@ -481,35 +481,67 @@ LONE_LISP_PRIMITIVE(lone_quasiquote)
 							for (/* result */;
 									!lone_lisp_is_nil(result);
 									result = lone_lisp_list_rest(lone, result)) {
-								lone_lisp_list_append(lone, &list, &head,
-										lone_lisp_list_first(lone, result));
+								lone_lisp_machine_push_value(
+									lone,
+									machine,
+									lone_lisp_list_first(lone, result)
+								);
+								++count;
 							}
 						} else {
-							lone_lisp_list_append(lone, &list, &head, result);
+							lone_lisp_machine_push_value(
+								lone,
+								machine,
+								result
+							);
+							++count;
 						}
 					} else {
-						lone_lisp_list_append(lone, &list, &head, result);
+						lone_lisp_machine_push_value(
+							lone,
+							machine,
+							result
+						);
+						++count;
 					}
 				} else {
-					lone_lisp_list_append(lone, &list, &head, element);
+					lone_lisp_machine_push_value(
+						lone,
+						machine,
+						element
+					);
+					++count;
 				}
 			} else {
-				lone_lisp_list_append(lone, &list, &head, element);
+				lone_lisp_machine_push_value(
+					lone,
+					machine,
+					element
+				);
+				++count;
 			}
 		}
 
-	early_exit:
+		list = lone_lisp_nil();
+		for (i = 0; i < count; ++i) {
+			list =
+				lone_lisp_list_create(
+					lone,
+					lone_lisp_machine_pop_value(lone, machine),
+					list
+				);
+		}
+
 		lone_lisp_machine_push_value(lone, machine, list);
 		return 0;
 
 	case 1: /* collect result and resume loop */
 
-		list     = lone_lisp_machine_pop_value(lone, machine);
-		head     = lone_lisp_machine_pop_value(lone, machine);
 		current  = lone_lisp_machine_pop_value(lone, machine);
 		splicing = lone_lisp_machine_pop_value(lone, machine);
 		splice   = lone_lisp_machine_pop_value(lone, machine);
 		unquote  = lone_lisp_machine_pop_value(lone, machine);
+		count    = lone_lisp_machine_pop_integer(lone, machine);
 
 		result = machine->value;
 

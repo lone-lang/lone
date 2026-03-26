@@ -354,7 +354,7 @@ void lone_lisp_machine_reset(struct lone_lisp *lone, struct lone_lisp_machine *m
 bool lone_lisp_machine_cycle(struct lone_lisp *lone, struct lone_lisp_machine *machine)
 {
 	struct lone_lisp_generator *generator;
-	struct lone_lisp_value head;
+	lone_lisp_integer count, i;
 
 	switch (machine->step) {
 	case LONE_LISP_MACHINE_STEP_EXPRESSION_EVALUATION:
@@ -431,7 +431,7 @@ bool lone_lisp_machine_cycle(struct lone_lisp *lone, struct lone_lisp_machine *m
 		}
 		if (should_evaluate_operands(lone, machine->applicable, machine->unevaluated)) {
 			lone_lisp_machine_push_value(lone, machine, machine->applicable);
-			lone_lisp_machine_push_value(lone, machine, lone_lisp_nil()); // list head
+			lone_lisp_machine_push_integer(lone, machine, 0); /* argument count */
 			machine->step = LONE_LISP_MACHINE_STEP_OPERAND_EVALUATION;
 		} else {
 			machine->list = machine->unevaluated;
@@ -439,14 +439,14 @@ bool lone_lisp_machine_cycle(struct lone_lisp *lone, struct lone_lisp_machine *m
 		}
 		return true;
 	case LONE_LISP_MACHINE_STEP_OPERAND_EVALUATION:
-		/* Results are accumulated in machine->list.
+		/* Results of evaluation are pushed onto the stack.
 		 * Remaining operands are in machine->unevaluated.
 		 * Stack:
-		 * 	evaluated-operands-list-head
+		 * 	argument-count
+		 * 	arguments...
 		 * 	applicable
 		 * 	next-step
 		 */
-		lone_lisp_machine_push_value(lone, machine, machine->list);
 		machine->expression = lone_lisp_list_first(lone, machine->unevaluated);
 		if (lone_lisp_list_has_rest(lone, machine->unevaluated)) {
 			lone_lisp_machine_push_value(lone, machine, machine->unevaluated);
@@ -463,31 +463,38 @@ bool lone_lisp_machine_cycle(struct lone_lisp *lone, struct lone_lisp_machine *m
 		 * Stack:
 		 * 	environment
 		 * 	unevaluated-operands-list
-		 * 	evaluated-operands-list
-		 * 	evaluated-operands-list-head
+		 * 	argument-count
+		 * 	arguments...
 		 * 	applicable
 		 * 	next-step
 		 */
 		machine->environment = lone_lisp_machine_pop_value(lone, machine);
 		machine->unevaluated = lone_lisp_list_rest(lone, lone_lisp_machine_pop_value(lone, machine));
-		machine->list = lone_lisp_machine_pop_value(lone, machine);
-		head = lone_lisp_machine_pop_value(lone, machine);
-		lone_lisp_list_append(lone, &machine->list, &head, machine->value);
-		lone_lisp_machine_push_value(lone, machine, head);
+		count = lone_lisp_machine_pop_integer(lone, machine);
+		lone_lisp_machine_push_value(lone, machine, machine->value);
+		lone_lisp_machine_push_integer(lone, machine, count + 1);
 		machine->step = LONE_LISP_MACHINE_STEP_OPERAND_EVALUATION;
 		return true;
 	case LONE_LISP_MACHINE_STEP_LAST_OPERAND_ACCUMULATION:
-		/* Evaluated operand is in machine->value.
+		/* Last evaluated operand is in machine->value.
+		 * Rest are on the stack.
 		 * Stack:
-		 * 	evaluated-operands-list
-		 * 	evaluated-operands-list-head
+		 * 	argument-count
+		 * 	arguments...
 		 * 	applicable
 		 * 	next-step
 		 */
-		machine->list = lone_lisp_machine_pop_value(lone, machine);
-		head = lone_lisp_machine_pop_value(lone, machine);
+		count = lone_lisp_machine_pop_integer(lone, machine);
+		machine->list = lone_lisp_list_create(lone, machine->value, lone_lisp_nil());
+		for (i = 0; i < count; ++i) {
+			machine->list =
+				lone_lisp_list_create(
+					lone,
+					lone_lisp_machine_pop_value(lone, machine),
+					machine->list
+				);
+		}
 		machine->applicable = lone_lisp_machine_pop_value(lone, machine);
-		lone_lisp_list_append(lone, &machine->list, &head, machine->value);
 		machine->step = LONE_LISP_MACHINE_STEP_APPLICATION;
 		return true;
 	case LONE_LISP_MACHINE_STEP_APPLICATION:

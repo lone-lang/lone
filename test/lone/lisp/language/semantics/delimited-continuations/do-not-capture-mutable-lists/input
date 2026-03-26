@@ -1,0 +1,28 @@
+(import (lone set print control transfer lambda))
+
+(set box [])
+
+;; return all arguments as a list
+(set f (lambda ((args)) args))
+
+(set first-result
+  (control
+    (f 1 (transfer 0) 3); capture the partially evaluated arguments list
+    (lambda (value continuation)
+      (box 0 continuation)
+      (continuation 2))))
+
+(set continuation (box 0))
+
+;; should be (1 2 3)
+(print first-result)
+
+;; replay the stack frames
+(set second-result (continuation 42))
+
+;; should print (1 42 3)
+(print second-result)
+
+;; should still print (1 2 3), not (1 42 3)
+;; result should not have been mutated
+(print first-result)
