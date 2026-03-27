@@ -17,7 +17,6 @@
 #define LONE_TOOLS_EMBED_EXIT_INVALID_ELF           8
 #define LONE_TOOLS_EMBED_EXIT_MISSING_NULL_ENTRY    9
 #define LONE_TOOLS_EMBED_EXIT_MULTIPLE_PHDR_ENTRIES 10
-#define LONE_TOOLS_EMBED_EXIT_MISSING_PHDR_ENTRY    11
 #define LONE_TOOLS_EMBED_EXIT_OVERFLOW              250
 
 struct elf {
@@ -43,6 +42,7 @@ struct elf {
 		struct lone_elf_segments table;
 		lone_elf_umax offset;
 		lone_u16 nulls_count;
+		bool has_phdr;
 	} segments;
 
 	struct {
@@ -61,12 +61,6 @@ static struct lone_elf_header *
 hdr(struct elf *elf)
 {
 	return (struct lone_elf_header *) elf->header.pointer;
-}
-
-static struct lone_elf_segment *
-segs(struct elf *elf)
-{
-	return (struct lone_elf_segment *) elf->segments.memory.pointer;
 }
 
 static size_t pht_size_for(struct elf *elf, size_t entry_count)
@@ -244,7 +238,7 @@ static void load_program_header_table(struct elf *elf)
 	elf->segments.table.segment.size = entry_size.value;
 	elf->segments.table.segment.count = entry_count.value;
 
-	size = pht_size_for(elf, entry_count.value + REQUIRED_PT_NULLS + 1);
+	size = pht_size_for(elf, entry_count.value + REQUIRED_PT_NULLS + 2);
 	address = map(size);
 
 	elf->segments.table.segments = address;
@@ -320,6 +314,7 @@ static void analyze(struct elf *elf)
 	elf->limits.end.virtual = 0;
 	elf->limits.end.physical = 0;
 	elf->segments.nulls_count = 0;
+	elf->segments.has_phdr = false;
 
 	for (i = 0; i < entry_count; ++i) {
 		segment = lone_elf_segment_at(elf->segments.table, i);
@@ -345,6 +340,8 @@ static void analyze(struct elf *elf)
 			              segment_read_umax(header, segment, lone_elf_segment_read_size_in_memory),
 			              8);
 
+		} else if (type.value == LONE_ELF_SEGMENT_TYPE_PHDR) {
+			elf->segments.has_phdr = true;
 		} else if (type.value == LONE_ELF_SEGMENT_TYPE_NULL) {
 			++elf->segments.nulls_count;
 		}
@@ -357,15 +354,16 @@ static void adjust_phdr_entry(struct elf *elf)
 {
 	size_t entry_count, i;
 	struct lone_elf_header *header;
-	struct lone_elf_segment *segments, *segment, *phdr, *load;
+	struct lone_elf_segment *segment, *phdr, *load, *null_1, *null_2;
 	lone_elf_umax alignment, size, size_aligned, offset, virtual, physical;
 	lone_u32 type;
+	bool created_phdr;
 
 	header = hdr(elf);
-	segments = segs(elf);
 	entry_count = elf->segments.table.segment.count;
 	phdr = 0;
-	load = 0;
+	null_1 = 0;
+	null_2 = 0;
 
 	for (i = 0; i < entry_count; ++i) {
 		segment = lone_elf_segment_at(elf->segments.table, i);
@@ -380,16 +378,26 @@ static void adjust_phdr_entry(struct elf *elf)
 				phdr = segment;
 			}
 		} else if (type == LONE_ELF_SEGMENT_TYPE_NULL) {
-			load = segment;
-			break;
+			if (!null_1) {
+				null_1 = segment;
+			} else if (!null_2) {
+				null_2 = segment;
+			}
 		}
 	}
 
-	if (!phdr) {
-		linux_exit(LONE_TOOLS_EMBED_EXIT_MISSING_PHDR_ENTRY);
+	if (phdr) {
+		/* PT_PHDR exists, use first NULL for PT_LOAD */
+		load = null_1;
+		created_phdr = false;
+	} else {
+		/* No PT_PHDR, create one from first NULL, use second for PT_LOAD */
+		phdr = null_1;
+		load = null_2;
+		created_phdr = true;
 	}
 
-	if (!load) { not_enough_nulls(); }
+	if (!phdr || !load) { not_enough_nulls(); }
 
 	alignment = elf->page_size;
 	size = pht_size(elf);
@@ -397,6 +405,27 @@ static void adjust_phdr_entry(struct elf *elf)
 	offset = elf->segments.offset;
 	virtual = align_to_page(elf, elf->limits.end.virtual);
 	physical = align_to_page(elf, elf->limits.end.physical);
+
+	if (created_phdr) {
+		segment_write_u32(
+			header,
+			phdr,
+			lone_elf_segment_write_type,
+			LONE_ELF_SEGMENT_TYPE_PHDR
+		);
+		segment_write_u32(
+			header,
+			phdr,
+			lone_elf_segment_write_flags,
+			LONE_ELF_SEGMENT_FLAGS_R
+		);
+		segment_write_umax(
+			header,
+			phdr,
+			lone_elf_segment_write_alignment,
+			elf->class == LONE_ELF_IDENT_CLASS_64BIT ? 8 : 4
+		);
+	}
 
 	segment_write_umax(header, phdr, lone_elf_segment_write_file_offset, offset);
 	segment_write_umax(header, phdr, lone_elf_segment_write_virtual_address, virtual);
@@ -417,16 +446,20 @@ static void adjust_phdr_entry(struct elf *elf)
 static void move_and_expand_pht_if_needed(struct elf *elf)
 {
 	void *new_nulls;
+	lone_u16 extra;
 
 	if (has_required_null_segments(elf)) { return; }
+
+	extra = REQUIRED_PT_NULLS + 1;
+	if (!elf->segments.has_phdr) { extra += 1; }
 
 	new_nulls = pht_end(elf);
 
 	elf->segments.offset = elf->data.offset;
-	elf->segments.table.segment.count += REQUIRED_PT_NULLS + 1;
+	elf->segments.table.segment.count += extra;
 	elf->file.size = elf->segments.offset + pht_size(elf);
 
-	lone_memory_zero(new_nulls, pht_size_for(elf, REQUIRED_PT_NULLS + 1));
+	lone_memory_zero(new_nulls, pht_size_for(elf, extra));
 	adjust_phdr_entry(elf);
 	analyze(elf);
 }
