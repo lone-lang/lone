@@ -56,10 +56,6 @@ static_assert(LONE_MEMORY_SLAB_SIZE >= LONE_MEMORY_SLAB_MAX, "Slab size must be 
 
 #define LONE_MINIMUM_ALIGNMENT LONE_MEMORY_SLAB_MIN
 
-#ifndef LONE_MEMORY_SEGMENT_MINIMUM_SIZE
-	#define LONE_MEMORY_SEGMENT_MINIMUM_SIZE (1024 * 1024)
-#endif
-
 #ifndef PT_LONE
 //      PT_LONE   l o n e
 #define PT_LONE 0x6c6f6e65
