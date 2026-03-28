@@ -9,7 +9,7 @@
 #include <lone/memory/functions.h>
 
 #ifndef IO_BUFFER_SIZE
-#define IO_BUFFER_SIZE 1024 * 4096
+#define IO_BUFFER_SIZE (1024 * 4096)
 #endif
 
 #define REQUIRED_PT_NULLS 2
