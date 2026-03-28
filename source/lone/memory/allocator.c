@@ -17,6 +17,11 @@ static inline size_t lone_memory_size_class(size_t size)
 	return log2_ceil - __builtin_ctzl(LONE_MEMORY_SLAB_MIN);
 }
 
+static inline size_t lone_memory_round_up_to_page(size_t size, size_t page_size)
+{
+	return (size + page_size - 1) & ~(page_size - 1);
+}
+
 static size_t __attribute__((const)) lone_next_power_of_2(size_t n)
 {
 	size_t next = 1;
