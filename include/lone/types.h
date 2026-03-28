@@ -314,22 +314,6 @@ bool lone_bytes_write_s32be(struct lone_bytes bytes, lone_size offset, lone_s32 
 bool lone_bytes_write_u64be(struct lone_bytes bytes, lone_size offset, lone_u64 u64);
 bool lone_bytes_write_s64be(struct lone_bytes bytes, lone_size offset, lone_s64 s64);
 
-/* ╭────────────────────────────────────────────────────────────────────────╮
-   │                                                                        │
-   │    The lone system structure represents low level system state         │
-   │    such as allocated memory and hash function state.                   │
-   │                                                                        │
-   ╰────────────────────────────────────────────────────────────────────────╯ */
-
-struct lone_system {
-	struct lone_memory *memory;
-	struct {
-		struct {
-			unsigned long offset_basis;
-		} fnv_1a;
-	} hash;
-};
-
 /* ╭────────────────────┨ LONE LISP MEMORY ALLOCATION ┠─────────────────────╮
    │                                                                        │
    │    Lone implements a block-based memory allocator.                     │
@@ -361,6 +345,23 @@ struct lone_memory {
 	int free;
 	size_t size;
 	unsigned char pointer[];
+};
+
+/* ╭────────────────────────────────────────────────────────────────────────╮
+   │                                                                        │
+   │    The lone system structure represents low level system state         │
+   │    such as allocated memory and hash function state.                   │
+   │                                                                        │
+   ╰────────────────────────────────────────────────────────────────────────╯ */
+
+struct lone_system {
+	struct lone_memory_allocator allocator;
+	struct lone_memory *memory;
+	struct {
+		struct {
+			unsigned long offset_basis;
+		} fnv_1a;
+	} hash;
 };
 
 #endif /* LONE_TYPES_HEADER */
