@@ -351,6 +351,11 @@ struct lone_memory_slab {
 	unsigned char *end;
 };
 
+struct lone_memory_allocator {
+	struct lone_memory_slab slabs[LONE_MEMORY_SLAB_CLASSES];
+	size_t page_size;
+};
+
 struct lone_memory {
 	struct lone_memory *prev, *next;
 	int free;
