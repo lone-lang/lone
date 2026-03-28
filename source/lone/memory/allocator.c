@@ -111,6 +111,46 @@ overflow:
 	linux_exit(-1);
 }
 
+void *lone_memory_reallocate(struct lone_system *system,
+                             void *pointer,
+                             size_t old_count, size_t old_size,
+                             size_t new_count, size_t new_size,
+                             size_t alignment,
+                             enum lone_memory_allocation_flags flags)
+{
+	size_t old_total, new_total, old_class, new_class, old_pages, new_pages, page_size, copy_size;
+	void *block;
+
+	if (__builtin_mul_overflow(old_count, old_size, &old_total)) { goto overflow; }
+	if (__builtin_mul_overflow(new_count, new_size, &new_total)) { goto overflow; }
+
+	old_class = lone_memory_effective_class(old_total, alignment);
+	new_class = lone_memory_effective_class(new_total, alignment);
+
+	if (old_total <= LONE_MEMORY_SLAB_MAX && new_total <= LONE_MEMORY_SLAB_MAX
+	    && old_class < LONE_MEMORY_SLAB_CLASSES && new_class < LONE_MEMORY_SLAB_CLASSES
+	    && old_class == new_class) {
+		return pointer;
+	}
+
+	if (old_total > LONE_MEMORY_SLAB_MAX && new_total > LONE_MEMORY_SLAB_MAX) {
+		page_size = system->allocator.page_size;
+		old_pages = lone_memory_round_up_to_page(old_total, page_size);
+		new_pages = lone_memory_round_up_to_page(new_total, page_size);
+		if (old_pages == new_pages) { return pointer; }
+		return lone_memory_mremap(pointer, old_pages, new_pages);
+	}
+
+	block = lone_memory_allocate(system, new_count, new_size, alignment, flags);
+	copy_size = old_total < new_total ? old_total : new_total;
+	lone_memory_move(pointer, block, copy_size);
+	lone_memory_deallocate(system, pointer, old_count, old_size, alignment);
+	return block;
+
+overflow:
+	linux_exit(-1);
+}
+
 static size_t __attribute__((const)) lone_next_power_of_2(size_t n)
 {
 	size_t next = 1;
