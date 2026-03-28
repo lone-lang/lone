@@ -9,9 +9,11 @@ void lone_system_initialize(struct lone_system *system, struct lone_auxiliary_ve
 )
 {
 	struct lone_bytes random_bytes;
+	size_t page_size;
 
 	random_bytes = lone_auxiliary_vector_random(auxiliary_vector);
+	page_size = lone_auxiliary_vector_page_size(auxiliary_vector);
 
-	lone_memory_initialize(system, initial_static_memory);
+	lone_memory_initialize(system, page_size, initial_static_memory);
 	lone_hash_initialize(system, random_bytes);
 }
