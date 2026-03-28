@@ -54,9 +54,7 @@ static_assert((LONE_MEMORY_SLAB_MAX & (LONE_MEMORY_SLAB_MAX - 1)) == 0, "LONE_ME
 static_assert(LONE_MEMORY_SLAB_MAX >= 4096, "Size classes must cover at least 4096 bytes (minimum Linux page size)");
 static_assert(LONE_MEMORY_SLAB_SIZE >= LONE_MEMORY_SLAB_MAX, "Slab size must be at least as large as the maximum size class");
 
-#ifndef LONE_ALIGNMENT
-	#define LONE_ALIGNMENT 16
-#endif
+#define LONE_MINIMUM_ALIGNMENT LONE_MEMORY_SLAB_MIN
 
 #ifndef LONE_MEMORY_SEGMENT_MINIMUM_SIZE
 	#define LONE_MEMORY_SEGMENT_MINIMUM_SIZE (1024 * 1024)
