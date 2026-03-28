@@ -77,6 +77,11 @@ munmap_failed:
 	linux_exit(-1);
 }
 
+static void lone_memory_munmap_rounded(void *pointer, size_t size, size_t page_size)
+{
+	lone_memory_munmap(pointer, lone_memory_round_up_to_page(size, page_size));
+}
+
 void *lone_memory_allocate(struct lone_system *system,
                            size_t count, size_t size,
                            size_t alignment,
