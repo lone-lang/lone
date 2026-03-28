@@ -8,32 +8,6 @@
 
 #include <stdalign.h>
 
-size_t
-__attribute__((const))
-lone_align(size_t size, size_t alignment);
-
-void *
-__attribute__((malloc, alloc_size(2), alloc_align(3)))
-lone_allocate_aligned(struct lone_system *system, size_t requested_size, size_t alignment);
-
-void *
-__attribute__((malloc, alloc_size(2), alloc_align(3)))
-lone_allocate_aligned_uninitialized(struct lone_system *system, size_t requested_size, size_t alignment);
-
-void *
-__attribute__((malloc, alloc_size(2), assume_aligned(LONE_ALIGNMENT)))
-lone_allocate(struct lone_system *system, size_t requested_size);
-
-void *
-__attribute__((malloc, alloc_size(2), assume_aligned(LONE_ALIGNMENT)))
-lone_allocate_uninitialized(struct lone_system *system, size_t requested_size);
-
-void *
-__attribute__((alloc_size(3)))
-lone_reallocate(struct lone_system *system, void *pointer, size_t size);
-
-void lone_deallocate(struct lone_system *system, void *pointer);
-
 void *lone_memory_allocate(struct lone_system *system,
                            size_t count, size_t size,
                            size_t alignment,
