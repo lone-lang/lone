@@ -43,6 +43,11 @@
 	((n) & 0x10000) ? 16 : -1  \
 )
 
+#define LONE_MEMORY_SLAB_MIN        sizeof(void *)
+#define LONE_MEMORY_SLAB_MAX        4096
+#define LONE_MEMORY_SLAB_SIZE       65536
+#define LONE_MEMORY_SLAB_CLASSES    (LONE_LOG2(LONE_MEMORY_SLAB_MAX) - LONE_LOG2(LONE_MEMORY_SLAB_MIN) + 1)
+
 #ifndef LONE_ALIGNMENT
 	#define LONE_ALIGNMENT 16
 #endif
