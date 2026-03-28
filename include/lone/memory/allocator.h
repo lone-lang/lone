@@ -6,6 +6,8 @@
 #include <lone/definitions.h>
 #include <lone/types.h>
 
+#include <stdalign.h>
+
 size_t
 __attribute__((const))
 lone_align(size_t size, size_t alignment);
