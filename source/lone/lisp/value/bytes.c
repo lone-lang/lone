@@ -26,7 +26,7 @@ struct lone_lisp_value lone_lisp_bytes_transfer_bytes(struct lone_lisp *lone,
 
 struct lone_lisp_value lone_lisp_bytes_copy(struct lone_lisp *lone, unsigned char *pointer, size_t count)
 {
-	unsigned char *copy = lone_allocate_uninitialized(lone->system, count + 1);
+	unsigned char *copy = lone_memory_allocate(lone->system, count + 1, 1, 1, LONE_MEMORY_ALLOCATION_FLAGS_NONE);
 	lone_memory_move(pointer, copy, count);
 	copy[count] = '\0';
 	return lone_lisp_bytes_transfer(lone, copy, count, true);
@@ -34,6 +34,6 @@ struct lone_lisp_value lone_lisp_bytes_copy(struct lone_lisp *lone, unsigned cha
 
 struct lone_lisp_value lone_lisp_bytes_create(struct lone_lisp *lone, size_t count)
 {
-	unsigned char *pointer = lone_allocate(lone->system, count + 1);
+	unsigned char *pointer = lone_memory_allocate(lone->system, count + 1, 1, 1, LONE_MEMORY_ALLOCATION_FLAGS_NONE);
 	return lone_lisp_bytes_transfer(lone, pointer, count, true);
 }

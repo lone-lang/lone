@@ -22,7 +22,7 @@ void lone_lisp_reader_for_file_descriptor(struct lone_lisp *lone,
 {
 	reader->file_descriptor = file_descriptor;
 	reader->buffer.bytes.count = buffer_size;
-	reader->buffer.bytes.pointer = lone_allocate(lone->system, buffer_size);
+	reader->buffer.bytes.pointer = lone_memory_allocate(lone->system, buffer_size, 1, 1, LONE_MEMORY_ALLOCATION_FLAGS_NONE);
 	reader->buffer.position.read = 0;
 	reader->buffer.position.write = 0;
 	reader->status.error = false;
@@ -32,7 +32,7 @@ void lone_lisp_reader_for_file_descriptor(struct lone_lisp *lone,
 void lone_lisp_reader_finalize(struct lone_lisp *lone, struct lone_lisp_reader *reader)
 {
 	if (reader->file_descriptor != -1) {
-		lone_deallocate(lone->system, reader->buffer.bytes.pointer);
+		lone_memory_deallocate(lone->system, reader->buffer.bytes.pointer, reader->buffer.bytes.count, 1, 1);
 	}
 }
 
@@ -40,7 +40,7 @@ static size_t lone_lisp_reader_fill_buffer(struct lone_lisp *lone, struct lone_l
 {
 	unsigned char *buffer = reader->buffer.bytes.pointer;
 	size_t size = reader->buffer.bytes.count, position = reader->buffer.position.write,
-	       allocated = size, bytes_read = 0, total_read = 0;
+	       allocated = size, bytes_read = 0, total_read = 0, old_allocated;
 	ssize_t read_result = 0;
 
 	if (reader->file_descriptor == -1) {
@@ -60,8 +60,15 @@ static size_t lone_lisp_reader_fill_buffer(struct lone_lisp *lone, struct lone_l
 		position += bytes_read;
 
 		if (bytes_read == size) {
+			old_allocated = allocated;
 			allocated *= 2;
-			buffer = lone_reallocate(lone->system, buffer, allocated);
+			buffer = lone_memory_reallocate(
+				lone->system, buffer,
+				old_allocated, 1,
+				allocated, 1,
+				1,
+				LONE_MEMORY_ALLOCATION_FLAGS_NONE
+			);
 		} else {
 			break;
 		}
@@ -292,7 +299,7 @@ static struct lone_lisp_value lone_lisp_reader_consume_text(struct lone_lisp *lo
 
 	/* escape sequences squeeze two characters into one
 	 * also don't forget the hidden null terminator */
-	output = lone_allocate_uninitialized(lone->system, input_length - escapes + 1);
+	output = lone_memory_allocate(lone->system, input_length - escapes + 1, 1, 1, LONE_MEMORY_ALLOCATION_FLAGS_NONE);
 	output_length = 0;
 
 	/* consume input and process escape sequences */
@@ -331,7 +338,7 @@ static struct lone_lisp_value lone_lisp_reader_consume_text(struct lone_lisp *lo
 	return lone_lisp_text_transfer(lone, output, output_length, true);
 
 deallocate_and_error:
-	lone_deallocate(lone->system, output);
+	lone_memory_deallocate(lone->system, output, input_length - escapes + 1, 1, 1);
 error:
 	reader->status.error = true;
 	return lone_lisp_nil();

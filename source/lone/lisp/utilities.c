@@ -69,7 +69,7 @@ struct lone_bytes lone_lisp_join(struct lone_lisp *lone,
 		}
 	}
 
-	joined = lone_allocate_uninitialized(lone->system, total + 1);
+	joined = lone_memory_allocate(lone->system, total + 1, 1, 1, LONE_MEMORY_ALLOCATION_FLAGS_NONE);
 
 	for (head = arguments; !lone_lisp_is_nil(head); head = lone_lisp_list_rest(lone, head)) {
 		argument = lone_lisp_list_first(lone, head);

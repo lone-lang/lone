@@ -5,6 +5,6 @@
 
 #include <lone/types.h>
 
-void lone_memory_initialize(struct lone_system *system, struct lone_bytes initial_static_memory);
+void lone_memory_initialize(struct lone_system *system, size_t page_size);
 
 #endif /* LONE_MEMORY_HEADER */

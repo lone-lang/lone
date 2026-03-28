@@ -15,7 +15,15 @@ struct lone_lisp_value lone_lisp_vector_create(struct lone_lisp *lone, size_t ca
 	heap_value->type = LONE_LISP_TYPE_VECTOR;
 	actual->count = 0;
 	actual->capacity = capacity;
-	actual->values = lone_memory_array(lone->system, 0, actual->capacity, sizeof(*actual->values));
+
+	actual->values = lone_memory_array(
+		lone->system,
+		0,
+		0,
+		actual->capacity,
+		sizeof(*actual->values),
+		alignof(*actual->values)
+	);
 
 	for (size_t i = 0; i < capacity; ++i) {
 		actual->values[i] = lone_lisp_nil();
@@ -33,8 +41,16 @@ void lone_lisp_vector_resize(struct lone_lisp *lone, struct lone_lisp_value vect
 {
 	struct lone_lisp_vector *actual = &lone_lisp_heap_value_of(lone, vector)->as.vector;
 
+	actual->values = lone_memory_array(
+		lone->system,
+		actual->values,
+		actual->capacity,
+		new_capacity,
+		sizeof(*actual->values),
+		alignof(*actual->values)
+	);
+
 	actual->capacity = new_capacity;
-	actual->values = lone_memory_array(lone->system, actual->values, actual->capacity, sizeof(*actual->values));
 
 	if (actual->count > new_capacity) {
 		/* vector has shrunk, truncate count */

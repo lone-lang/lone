@@ -5,8 +5,13 @@
 
 #include <lone/types.h>
 
+#include <stdalign.h>
+
 size_t lone_memory_array_size_in_bytes(size_t element_count, size_t element_size);
 bool lone_memory_array_is_bounded(size_t element_index, size_t element_capacity, size_t element_size);
-void * lone_memory_array(struct lone_system *system, void *buffer_or_null, size_t element_count, size_t element_size);
+
+void *lone_memory_array(struct lone_system *system, void *buffer_or_null,
+		size_t old_element_count, size_t new_element_count,
+		size_t element_size, size_t element_alignment);
 
 #endif /* LONE_MEMORY_ARRAY_HEADER */

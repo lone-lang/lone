@@ -30,7 +30,29 @@ bool lone_memory_array_is_bounded(size_t element_index, size_t element_capacity,
 	}
 }
 
-void * lone_memory_array(struct lone_system *system, void *buffer_or_null, size_t element_count, size_t element_size)
+void *lone_memory_array(struct lone_system *system, void *buffer_or_null,
+		size_t old_element_count, size_t new_element_count,
+		size_t element_size, size_t element_alignment)
 {
-	return lone_reallocate(system, buffer_or_null, lone_memory_array_size_in_bytes(element_count, element_size));
+	if (buffer_or_null) {
+		return lone_memory_reallocate(
+			system,
+			buffer_or_null,
+			old_element_count, element_size,
+			new_element_count, element_size,
+			element_alignment,
+			LONE_MEMORY_ALLOCATION_FLAGS_NONE
+		);
+	} else {
+		if (old_element_count) { /* old_count must be zero when allocating */ goto invalid; }
+		return lone_memory_allocate(
+			system,
+			new_element_count, element_size,
+			element_alignment,
+			LONE_MEMORY_ALLOCATION_FLAGS_NONE
+		);
+	}
+
+invalid:
+	linux_exit(-1);
 }

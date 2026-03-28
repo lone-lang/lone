@@ -13,6 +13,6 @@
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
 
-void lone_system_initialize(struct lone_system *system, struct lone_bytes initial_static_memory, struct lone_bytes random_bytes);
+void lone_system_initialize(struct lone_system *system, struct lone_auxiliary_vector *auxiliary_vector);
 
 #endif /* LONE_SYSTEM_HEADER */
