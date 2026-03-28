@@ -17,8 +17,24 @@ struct lone_lisp_value lone_lisp_table_create(struct lone_lisp *lone,
 	actual->prototype = prototype;
 	actual->count = 0;
 	actual->capacity = capacity;
-	actual->indexes = lone_memory_array(lone->system, 0, actual->capacity, sizeof(*actual->indexes));
-	actual->entries = lone_memory_array(lone->system, 0, actual->capacity, sizeof(*actual->entries));
+
+	actual->indexes = lone_memory_array(
+		lone->system,
+		0,
+		0,
+		actual->capacity,
+		sizeof(*actual->indexes),
+		alignof(*actual->indexes)
+	);
+
+	actual->entries = lone_memory_array(
+		lone->system,
+		0,
+		0,
+		actual->capacity,
+		sizeof(*actual->entries),
+		alignof(*actual->entries)
+	);
 
 	return lone_lisp_value_from_heap_value(lone, heap_value);
 }
@@ -90,8 +106,23 @@ static void lone_lisp_table_resize(struct lone_lisp *lone, struct lone_lisp_valu
 	old_entries  = actual->entries;
 	old_indexes  = actual->indexes;
 
-	new_indexes = lone_memory_array(lone->system,           0, new_capacity, sizeof(*new_indexes));
-	new_entries = lone_memory_array(lone->system, old_entries, new_capacity, sizeof(*new_entries));
+	new_indexes = lone_memory_array(
+		lone->system,
+		0,
+		0,
+		new_capacity,
+		sizeof(*new_indexes),
+		alignof(*new_indexes)
+	);
+
+	new_entries = lone_memory_array(
+		lone->system,
+		old_entries,
+		old_capacity,
+		new_capacity,
+		sizeof(*new_entries),
+		alignof(*new_entries)
+	);
 
 	for (i = 0; i < old_capacity; ++i) {
 		if (old_indexes[i].used) {
@@ -107,7 +138,7 @@ static void lone_lisp_table_resize(struct lone_lisp *lone, struct lone_lisp_valu
 		}
 	}
 
-	lone_deallocate(lone->system, old_indexes);
+	lone_memory_deallocate(lone->system, old_indexes, old_capacity, sizeof(*old_indexes), alignof(*old_indexes));
 
 	actual->indexes = new_indexes;
 	actual->entries = new_entries;

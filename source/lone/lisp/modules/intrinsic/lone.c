@@ -635,7 +635,7 @@ LONE_LISP_PRIMITIVE(lone_transfer)
 
 		/* copy stack frames up to and including the control primitive's function delimiter */
 		--frame; ++frame_count;
-		frames = lone_memory_array(lone->system, 0, frame_count, sizeof(*frames));
+		frames = lone_memory_array(lone->system, 0, 0, frame_count, sizeof(*frames), alignof(*frames));
 		lone_memory_move(frame, frames, lone_memory_array_size_in_bytes(frame_count, sizeof(*frames)));
 
 		/* reify current continuation */

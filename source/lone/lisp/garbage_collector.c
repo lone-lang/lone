@@ -250,21 +250,46 @@ static void lone_lisp_kill_all_unmarked_values(struct lone_lisp *lone)
 			case LONE_LISP_TYPE_TEXT:
 			case LONE_LISP_TYPE_SYMBOL:
 				if (value->should_deallocate_bytes) {
-					lone_deallocate(lone->system, value->as.bytes.pointer);
+					lone_memory_deallocate(
+						lone->system, value->as.bytes.pointer,
+						value->as.bytes.count + 1,
+						1, 1
+					);
 				}
 				break;
 			case LONE_LISP_TYPE_VECTOR:
-				lone_deallocate(lone->system, value->as.vector.values);
+				lone_memory_deallocate(
+					lone->system, value->as.vector.values,
+					value->as.vector.capacity,
+					sizeof(*value->as.vector.values), alignof(*value->as.vector.values)
+				);
 				break;
 			case LONE_LISP_TYPE_TABLE:
-				lone_deallocate(lone->system, value->as.table.indexes);
-				lone_deallocate(lone->system, value->as.table.entries);
+				lone_memory_deallocate(
+					lone->system, value->as.table.indexes,
+					value->as.table.capacity,
+					sizeof(*value->as.table.indexes), alignof(*value->as.table.indexes)
+				);
+				lone_memory_deallocate(
+					lone->system, value->as.table.entries,
+					value->as.table.capacity,
+					sizeof(*value->as.table.entries), alignof(*value->as.table.entries)
+				);
 				break;
 			case LONE_LISP_TYPE_CONTINUATION:
-				lone_deallocate(lone->system, value->as.continuation.frames);
+				lone_memory_deallocate(
+					lone->system, value->as.continuation.frames,
+					value->as.continuation.frame_count,
+					sizeof(*value->as.continuation.frames), alignof(*value->as.continuation.frames)
+				);
 				break;
 			case LONE_LISP_TYPE_GENERATOR:
-				lone_deallocate(lone->system, value->as.generator.stacks.own.base);
+				lone_memory_deallocate(
+					lone->system, value->as.generator.stacks.own.base,
+					value->as.generator.stacks.own.limit - value->as.generator.stacks.own.base,
+					sizeof(*value->as.generator.stacks.own.base),
+					alignof(*value->as.generator.stacks.own.base)
+				);
 				break;
 			case LONE_LISP_TYPE_MODULE:
 			case LONE_LISP_TYPE_FUNCTION:

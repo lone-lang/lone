@@ -49,7 +49,7 @@ static void lone_lisp_print_bytes(struct lone_lisp *lone, struct lone_lisp_value
 	if (count == 0) { linux_write(fd, "bytes[]", 7); return; }
 
 	size = 2 + count * 2; /* "0x" + 2 characters per input byte */
-	text = lone_allocate_uninitialized(lone->system, size);
+	text = lone_memory_allocate(lone->system, size, 1, 1, LONE_MEMORY_ALLOCATION_FLAGS_NONE);
 	byte = lone_lisp_heap_value_of(lone, bytes)->as.bytes.pointer;
 
 	text[0] = '0';
@@ -66,7 +66,7 @@ static void lone_lisp_print_bytes(struct lone_lisp *lone, struct lone_lisp_value
 	linux_write(fd, text, size);
 	linux_write(fd, "]", 1);
 
-	lone_deallocate(lone->system, text);
+	lone_memory_deallocate(lone->system, text, size, 1, 1);
 }
 
 static void lone_lisp_print_list(struct lone_lisp *lone, struct lone_lisp_value list, int fd)

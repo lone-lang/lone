@@ -326,7 +326,7 @@ struct lone_lisp_machine_stack lone_lisp_machine_allocate_stack(struct lone_lisp
 {
 	struct lone_lisp_machine_stack stack;
 
-	stack.base = lone_memory_array(lone->system, 0, stack_size, sizeof(*stack.base));
+	stack.base = lone_memory_array(lone->system, 0, 0, stack_size, sizeof(*stack.base), alignof(*stack.base));
 	stack.limit = stack.base + stack_size;
 	stack.top = stack.base;
 

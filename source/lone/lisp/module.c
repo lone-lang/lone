@@ -108,7 +108,7 @@ static int lone_lisp_module_search(struct lone_lisp *lone, struct lone_lisp_valu
 {
 	struct lone_lisp_value arguments, package, search_path;
 	struct lone_lisp_value slash, ln;
-	unsigned char *path;
+	struct lone_bytes path;
 	long result;
 	size_t i;
 
@@ -123,11 +123,11 @@ static int lone_lisp_module_search(struct lone_lisp *lone, struct lone_lisp_valu
 		arguments = lone_lisp_list_flatten(lone, arguments);
 		arguments = lone_lisp_text_transfer_bytes(lone, lone_lisp_join(lone, slash, arguments, lone_lisp_has_bytes), true);
 		arguments = lone_lisp_list_build(lone, 2, &arguments, &ln);
-		path = lone_lisp_concatenate(lone, arguments, lone_lisp_has_bytes).pointer;
+		path = lone_lisp_concatenate(lone, arguments, lone_lisp_has_bytes);
 
-		result = linux_openat(AT_FDCWD, path, O_RDONLY | O_CLOEXEC);
+		result = linux_openat(AT_FDCWD, path.pointer, O_RDONLY | O_CLOEXEC);
 
-		lone_deallocate(lone->system, path);
+		lone_memory_deallocate(lone->system, path.pointer, path.count + 1, 1, 1);
 
 		switch (result) {
 		case -ENOENT:
@@ -167,7 +167,11 @@ static void lone_lisp_module_load_from_reader(struct lone_lisp *lone,
 
 	lone_lisp_reader_finalize(lone, reader);
 	lone_lisp_garbage_collector(lone, &machine);
-	lone_deallocate(lone->system, machine.stack.base);
+	lone_memory_deallocate(
+		lone->system, machine.stack.base,
+		machine.stack.limit - machine.stack.base,
+		sizeof(*machine.stack.base), alignof(*machine.stack.base)
+	);
 }
 
 void lone_lisp_module_load_from_bytes(struct lone_lisp *lone,
