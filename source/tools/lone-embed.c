@@ -484,22 +484,22 @@ set_segment(struct elf *elf, struct lone_elf_header *header,
 
 	set_true_size = type == LONE_ELF_SEGMENT_TYPE_LONE;
 
-	lone_elf_segment_write_type(header, segment, type);
-	lone_elf_segment_write_file_offset(header, segment, elf->data.offset);
+	segment_write_u32(header, segment, lone_elf_segment_write_type, type);
+	segment_write_umax(header, segment, lone_elf_segment_write_file_offset, elf->data.offset);
 
 	address = align_to_page(elf, elf->limits.end.virtual);
-	lone_elf_segment_write_virtual_address(header, segment, address);
+	segment_write_umax(header, segment, lone_elf_segment_write_virtual_address, address);
 
 	address = align_to_page(elf, elf->limits.end.physical);
-	lone_elf_segment_write_physical_address(header, segment, address);
+	segment_write_umax(header, segment, lone_elf_segment_write_physical_address, address);
 
 	size = elf->data.size;
 	size = set_true_size? size : align_to_page(elf, size);
-	lone_elf_segment_write_size_in_file(header, segment, size);
-	lone_elf_segment_write_size_in_memory(header, segment, size);
+	segment_write_umax(header, segment, lone_elf_segment_write_size_in_file, size);
+	segment_write_umax(header, segment, lone_elf_segment_write_size_in_memory, size);
 
-	lone_elf_segment_write_alignment(header, segment, set_true_size? 1 : elf->page_size);
-	lone_elf_segment_write_flags(header, segment, LONE_ELF_SEGMENT_FLAGS_READABLE);
+	segment_write_umax(header, segment, lone_elf_segment_write_alignment, set_true_size? 1 : elf->page_size);
+	segment_write_u32(header, segment, lone_elf_segment_write_flags, LONE_ELF_SEGMENT_FLAGS_READABLE);
 }
 
 static void set_lone_segments(struct elf *elf)
@@ -599,8 +599,8 @@ static void patch_ehdr_if_needed(struct elf *elf)
 	if (!offset.present) { invalid_elf(); }
 
 	if (offset.value != elf->segments.offset) {
-		lone_elf_header_write_segments_offset(header, elf->segments.offset);
-		lone_elf_header_write_segment_count(header, elf->segments.table.segment.count);
+		if (!lone_elf_header_write_segments_offset(header, elf->segments.offset)) { invalid_elf(); }
+		if (!lone_elf_header_write_segment_count(header, elf->segments.table.segment.count)) { invalid_elf(); }
 		patch_elf_header(elf);
 	}
 }
