@@ -340,6 +340,10 @@ struct lone_memory_allocator {
 	size_t page_size;
 };
 
+enum lone_memory_allocation_flags {
+	LONE_MEMORY_ALLOCATION_FLAGS_NONE = 0,
+};
+
 struct lone_memory {
 	struct lone_memory *prev, *next;
 	int free;
