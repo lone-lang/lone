@@ -44,4 +44,9 @@ void *lone_memory_reallocate(struct lone_system *system,
                              size_t alignment,
                              enum lone_memory_allocation_flags flags);
 
+void lone_memory_deallocate(struct lone_system *system,
+                            void *pointer,
+                            size_t count, size_t size,
+                            size_t alignment);
+
 #endif /* LONE_MEMORY_ALLOCATOR_HEADER */

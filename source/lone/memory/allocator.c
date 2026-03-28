@@ -168,6 +168,40 @@ overflow:
 	linux_exit(-1);
 }
 
+void lone_memory_deallocate(struct lone_system *system,
+                            void *pointer,
+                            size_t count, size_t size,
+                            size_t alignment)
+{
+	size_t total, class, class_size;
+	struct lone_memory_slab *slab;
+
+	if (__builtin_mul_overflow(count, size, &total)) { goto overflow; }
+
+	if (total > LONE_MEMORY_SLAB_MAX) {
+		lone_memory_munmap_rounded(pointer, total, system->allocator.page_size);
+		return;
+	}
+
+	class = lone_memory_effective_class(total, alignment);
+
+	if (class >= LONE_MEMORY_SLAB_CLASSES) {
+		lone_memory_munmap_rounded(pointer, total, system->allocator.page_size);
+		return;
+	}
+
+	class_size = LONE_MEMORY_SLAB_MIN << class;
+	slab = &system->allocator.slabs[class];
+
+	lone_memory_zero(pointer, class_size);
+	*(void **) pointer = slab->free;
+	slab->free = pointer;
+	return;
+
+overflow:
+	linux_exit(-1);
+}
+
 static size_t __attribute__((const)) lone_next_power_of_2(size_t n)
 {
 	size_t next = 1;
