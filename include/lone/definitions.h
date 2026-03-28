@@ -7,6 +7,8 @@
 #include <linux/elf.h>
 #include <asm/bitsperlong.h>
 
+#include <assert.h>
+
 /* ╭────────────────────────────────────────────────────────────────────────╮
    │                                                                        │
    │                                      bits = 32    |    bits = 64       │
@@ -47,6 +49,10 @@
 #define LONE_MEMORY_SLAB_MAX        4096
 #define LONE_MEMORY_SLAB_SIZE       65536
 #define LONE_MEMORY_SLAB_CLASSES    (LONE_LOG2(LONE_MEMORY_SLAB_MAX) - LONE_LOG2(LONE_MEMORY_SLAB_MIN) + 1)
+
+static_assert((LONE_MEMORY_SLAB_MAX & (LONE_MEMORY_SLAB_MAX - 1)) == 0, "LONE_MEMORY_SLAB_MAX must be a power of 2");
+static_assert(LONE_MEMORY_SLAB_MAX >= 4096, "Size classes must cover at least 4096 bytes (minimum Linux page size)");
+static_assert(LONE_MEMORY_SLAB_SIZE >= LONE_MEMORY_SLAB_MAX, "Slab size must be at least as large as the maximum size class");
 
 #ifndef LONE_ALIGNMENT
 	#define LONE_ALIGNMENT 16
