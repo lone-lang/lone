@@ -48,6 +48,11 @@ mmap_failed:
 	linux_exit(-1);
 }
 
+static void *lone_memory_mmap_rounded(size_t size, size_t page_size)
+{
+	return lone_memory_mmap(lone_memory_round_up_to_page(size, page_size));
+}
+
 static size_t __attribute__((const)) lone_next_power_of_2(size_t n)
 {
 	size_t next = 1;
