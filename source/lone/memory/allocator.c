@@ -31,6 +31,23 @@ static inline size_t lone_memory_round_up_to_page(size_t size, size_t page_size)
 	return (size + page_size - 1) & ~(page_size - 1);
 }
 
+static void *lone_memory_mmap(size_t size)
+{
+	intptr_t mapped;
+
+	mapped = linux_mmap(
+		0, size,
+		PROT_READ | PROT_WRITE,
+		MAP_PRIVATE | MAP_ANONYMOUS,
+		-1, 0);
+
+	if (mapped < 0) { goto mmap_failed; }
+	return (void *) mapped;
+
+mmap_failed:
+	linux_exit(-1);
+}
+
 static size_t __attribute__((const)) lone_next_power_of_2(size_t n)
 {
 	size_t next = 1;
