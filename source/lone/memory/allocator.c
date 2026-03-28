@@ -7,6 +7,16 @@
 #include <lone/memory/functions.h>
 #include <lone/utilities.h>
 
+#include <limits.h>
+
+static inline size_t lone_memory_size_class(size_t size)
+{
+	size_t log2_ceil;
+	if (size <= LONE_MEMORY_SLAB_MIN) { return 0; }
+	log2_ceil = (sizeof(size) * CHAR_BIT) - __builtin_clzl(size - 1);
+	return log2_ceil - __builtin_ctzl(LONE_MEMORY_SLAB_MIN);
+}
+
 static size_t __attribute__((const)) lone_next_power_of_2(size_t n)
 {
 	size_t next = 1;
