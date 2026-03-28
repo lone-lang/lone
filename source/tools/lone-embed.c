@@ -247,7 +247,7 @@ static void load_program_header_table(struct elf *elf)
 	elf->segments.memory.count = size;
 
 	seek_to(elf->file.descriptor, offset.value);
-	read_bytes(elf->file.descriptor, elf->segments.memory);
+	read_bytes(elf->file.descriptor, (struct lone_bytes) { pht_size(elf), elf->segments.memory.pointer });
 }
 
 static lone_u32 segment_read_u32(struct lone_elf_header *header,
@@ -565,8 +565,9 @@ static void query_file_sizes(struct elf *elf)
 
 static void patch_program_header_table(struct elf *elf)
 {
+	struct lone_bytes pht = { pht_size(elf), elf->segments.memory.pointer };
 	seek_to(elf->file.descriptor, elf->segments.offset);
-	write_bytes(elf->file.descriptor, elf->segments.memory);
+	write_bytes(elf->file.descriptor, pht);
 }
 
 static void append_data(struct elf *elf)
