@@ -344,13 +344,6 @@ enum lone_memory_allocation_flags {
 	LONE_MEMORY_ALLOCATION_FLAGS_NONE = 0,
 };
 
-struct lone_memory {
-	struct lone_memory *prev, *next;
-	int free;
-	size_t size;
-	unsigned char pointer[];
-};
-
 /* ╭────────────────────────────────────────────────────────────────────────╮
    │                                                                        │
    │    The lone system structure represents low level system state         │
@@ -360,7 +353,6 @@ struct lone_memory {
 
 struct lone_system {
 	struct lone_memory_allocator allocator;
-	struct lone_memory *memory;
 	struct {
 		struct {
 			unsigned long offset_basis;
