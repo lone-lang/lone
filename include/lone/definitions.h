@@ -21,6 +21,28 @@
 	#error "Unsupported architecture"
 #endif
 
+/* Compile-time log2 for power-of-2 constants.
+ * Checks the lowest set bit position. */
+#define LONE_LOG2(n) (             \
+	((n) & 0x00001) ?  0 :     \
+	((n) & 0x00002) ?  1 :     \
+	((n) & 0x00004) ?  2 :     \
+	((n) & 0x00008) ?  3 :     \
+	((n) & 0x00010) ?  4 :     \
+	((n) & 0x00020) ?  5 :     \
+	((n) & 0x00040) ?  6 :     \
+	((n) & 0x00080) ?  7 :     \
+	((n) & 0x00100) ?  8 :     \
+	((n) & 0x00200) ?  9 :     \
+	((n) & 0x00400) ? 10 :     \
+	((n) & 0x00800) ? 11 :     \
+	((n) & 0x01000) ? 12 :     \
+	((n) & 0x02000) ? 13 :     \
+	((n) & 0x04000) ? 14 :     \
+	((n) & 0x08000) ? 15 :     \
+	((n) & 0x10000) ? 16 : -1  \
+)
+
 #ifndef LONE_ALIGNMENT
 	#define LONE_ALIGNMENT 16
 #endif
