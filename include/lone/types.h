@@ -344,6 +344,13 @@ struct lone_system {
    │    simply subtract the block descriptor's size from the pointer.       │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
+
+struct lone_memory_slab {
+	void *free;
+	unsigned char *position;
+	unsigned char *end;
+};
+
 struct lone_memory {
 	struct lone_memory *prev, *next;
 	int free;
