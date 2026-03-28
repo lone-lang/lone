@@ -53,6 +53,52 @@ static void *lone_memory_mmap_rounded(size_t size, size_t page_size)
 	return lone_memory_mmap(lone_memory_round_up_to_page(size, page_size));
 }
 
+void *lone_memory_allocate(struct lone_system *system,
+                           size_t count, size_t size,
+                           size_t alignment,
+                           enum lone_memory_allocation_flags flags)
+{
+	size_t total, class, class_size;
+	struct lone_memory_slab *slab;
+	unsigned char *block;
+
+	if (__builtin_mul_overflow(count, size, &total)) { goto overflow; }
+
+	if (total > LONE_MEMORY_SLAB_MAX) {
+		return lone_memory_mmap_rounded(total, system->allocator.page_size);
+	}
+
+	class = lone_memory_effective_class(total, alignment);
+
+	if (class >= LONE_MEMORY_SLAB_CLASSES) {
+		return lone_memory_mmap_rounded(total, system->allocator.page_size);
+	}
+
+	class_size = LONE_MEMORY_SLAB_MIN << class;
+	slab = &system->allocator.slabs[class];
+
+	if (slab->free) {
+		block = slab->free;
+		slab->free = *(void **) block;
+		lone_memory_zero(block, sizeof(void *));
+		return block;
+	}
+
+	if (slab->position && slab->position + class_size <= slab->end) {
+		block = slab->position;
+		slab->position += class_size;
+		return block;
+	}
+
+	block = lone_memory_mmap(LONE_MEMORY_SLAB_SIZE);
+	slab->position = block + class_size;
+	slab->end = block + LONE_MEMORY_SLAB_SIZE;
+	return block;
+
+overflow:
+	linux_exit(-1);
+}
+
 static size_t __attribute__((const)) lone_next_power_of_2(size_t n)
 {
 	size_t next = 1;
