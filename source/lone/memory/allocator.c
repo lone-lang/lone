@@ -31,6 +31,18 @@ static inline size_t lone_memory_round_up_to_page(size_t size, size_t page_size)
 	return (size + page_size - 1) & ~(page_size - 1);
 }
 
+static void *lone_memory_mremap(void *pointer, size_t old_size, size_t new_size)
+{
+	intptr_t remapped;
+
+	remapped = linux_mremap(pointer, old_size, new_size, MREMAP_MAYMOVE, 0);
+	if (remapped < 0) { goto mremap_failed; }
+	return (void *) remapped;
+
+mremap_failed:
+	linux_exit(-1);
+}
+
 static void *lone_memory_mmap(size_t size)
 {
 	intptr_t mapped;
