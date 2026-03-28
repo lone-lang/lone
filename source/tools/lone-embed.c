@@ -111,7 +111,7 @@ static void check_arguments(int argc, char **argv)
 
 static int open_path(char *path)
 {
-	int fd = linux_openat(AT_FDCWD, path, O_RDWR | O_CLOEXEC);
+	int fd = linux_openat(AT_FDCWD, (unsigned char *) path, O_RDWR | O_CLOEXEC);
 	if (fd < 0) { /* error opening file descriptor */ linux_exit(2); }
 	return fd;
 }
