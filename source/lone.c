@@ -37,12 +37,10 @@
 long lone(int argc, char **argv, char **envp, struct lone_auxiliary_vector *auxv)
 {
 	void *stack = __builtin_frame_address(0);
-	static unsigned char __attribute__((aligned(LONE_ALIGNMENT))) bytes[LONE_LISP_MEMORY_SIZE];
-	struct lone_bytes memory = { sizeof(bytes), bytes };
 	struct lone_system system;
 	struct lone_lisp lone;
 
-	lone_system_initialize(&system, auxv, memory);
+	lone_system_initialize(&system, auxv);
 	lone_lisp_initialize(&lone, &system, stack);
 
 	lone_lisp_modules_intrinsic_initialize(&lone, argc, argv, envp, auxv);
