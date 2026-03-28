@@ -65,6 +65,18 @@ static void *lone_memory_mmap_rounded(size_t size, size_t page_size)
 	return lone_memory_mmap(lone_memory_round_up_to_page(size, page_size));
 }
 
+static void lone_memory_munmap(void *pointer, size_t size)
+{
+	intptr_t unmapped;
+
+	unmapped = linux_munmap(pointer, size);
+	if (unmapped < 0) { goto munmap_failed; }
+	return;
+
+munmap_failed:
+	linux_exit(-1);
+}
+
 void *lone_memory_allocate(struct lone_system *system,
                            size_t count, size_t size,
                            size_t alignment,
