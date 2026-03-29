@@ -7,11 +7,15 @@
 #include <lone/memory/allocator.h>
 #include <lone/memory/array.h>
 
+#include <lone/utilities.h>
+
 struct lone_lisp_value lone_lisp_table_create(struct lone_lisp *lone,
 		size_t capacity, struct lone_lisp_value prototype)
 {
 	struct lone_lisp_heap_value *heap_value = lone_lisp_heap_allocate_value(lone);
 	struct lone_lisp_table *actual = &heap_value->as.table;
+
+	capacity = lone_next_power_of_2(capacity);
 
 	heap_value->type = LONE_LISP_TYPE_TABLE;
 	actual->prototype = prototype;

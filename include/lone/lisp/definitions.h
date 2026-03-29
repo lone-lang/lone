@@ -27,9 +27,8 @@
 	#define LONE_LISP_TABLE_LOAD_FACTOR 0.7
 #endif
 
-#ifndef LONE_LISP_TABLE_GROWTH_FACTOR
-	#define LONE_LISP_TABLE_GROWTH_FACTOR 2
-#endif
+/* required to be a power of 2 */
+#define LONE_LISP_TABLE_GROWTH_FACTOR 2
 
 #define LONE_LISP_PRIMITIVE(name)                       \
 long lone_lisp_primitive_ ## name                       \
