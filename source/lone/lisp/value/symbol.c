@@ -1,15 +1,22 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later */
 
 #include <lone/lisp/types.h>
+#include <lone/lisp/heap.h>
+#include <lone/lisp/hash.h>
 
+#include <lone/memory/allocator.h>
 #include <lone/memory/functions.h>
 
 static struct lone_lisp_value lone_lisp_symbol_transfer(struct lone_lisp *lone,
 		unsigned char *text, size_t length, bool should_deallocate)
 {
-	struct lone_lisp_value value = lone_lisp_bytes_transfer(lone, text, length, should_deallocate);
-	lone_lisp_heap_value_of(lone, value)->type = LONE_LISP_TYPE_SYMBOL;
-	return value;
+	struct lone_lisp_heap_value *actual = lone_lisp_heap_allocate_value(lone);
+	actual->type = LONE_LISP_TYPE_SYMBOL;
+	actual->as.symbol.name.count = length;
+	actual->as.symbol.name.pointer = text;
+	actual->should_deallocate_bytes = should_deallocate;
+	actual->as.symbol.hash = lone_lisp_hash_as_symbol(lone, actual->as.symbol.name);
+	return lone_lisp_value_from_heap_value(lone, actual);
 }
 
 static struct lone_lisp_value lone_lisp_symbol_transfer_bytes(struct lone_lisp *lone,
@@ -21,9 +28,10 @@ static struct lone_lisp_value lone_lisp_symbol_transfer_bytes(struct lone_lisp *
 static struct lone_lisp_value lone_lisp_symbol_copy(struct lone_lisp *lone,
 		unsigned char *text, size_t length)
 {
-	struct lone_lisp_value value = lone_lisp_bytes_copy(lone, text, length);
-	lone_lisp_heap_value_of(lone, value)->type = LONE_LISP_TYPE_SYMBOL;
-	return value;
+	unsigned char *copy = lone_memory_allocate(lone->system, length + 1, 1, 1, LONE_MEMORY_ALLOCATION_FLAGS_NONE);
+	lone_memory_move(text, copy, length);
+	copy[length] = '\0';
+	return lone_lisp_symbol_transfer(lone, copy, length, true);
 }
 
 struct lone_lisp_value lone_lisp_intern(struct lone_lisp *lone,
