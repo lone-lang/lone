@@ -58,10 +58,15 @@ static double lone_lisp_table_load_factor(struct lone_lisp *lone, struct lone_li
 	return count / capacity;
 }
 
+static unsigned long lone_lisp_table_wrap_around(size_t index, size_t capacity)
+{
+	return index & (capacity - 1);
+}
+
 static unsigned long lone_lisp_table_compute_hash_for(struct lone_lisp *lone,
 		struct lone_lisp_value key, size_t capacity)
 {
-	return lone_lisp_hash(lone, key) % capacity;
+	return lone_lisp_table_wrap_around(lone_lisp_hash(lone, key), capacity);
 }
 
 static size_t lone_lisp_table_entry_find_index_for(struct lone_lisp *lone, struct lone_lisp_value key,
@@ -71,7 +76,7 @@ static size_t lone_lisp_table_entry_find_index_for(struct lone_lisp *lone, struc
 	size_t i = lone_lisp_table_compute_hash_for(lone, key, capacity);
 
 	while (indexes[i].used && !lone_lisp_is_equal(lone, entries[indexes[i].index].key, key)) {
-		i = (i + 1) % capacity;
+		i = lone_lisp_table_wrap_around(i + 1, capacity);
 	}
 
 	return i;
@@ -223,7 +228,7 @@ void lone_lisp_table_delete(struct lone_lisp *lone,
 
 	j = i;
 	while (1) {
-		j = (j + 1) % capacity;
+		j = lone_lisp_table_wrap_around(j + 1, capacity);
 		if (!indexes[j].used) { break; }
 		k = lone_lisp_table_compute_hash_for(lone, entries[indexes[j].index].key, capacity);
 		if ((j > i && (k <= i || k > j)) || (j < i && (k <= i && k > j))) {
