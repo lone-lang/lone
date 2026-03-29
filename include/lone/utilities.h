@@ -6,5 +6,7 @@
 long lone_min(long x, long y);
 long lone_max(long x, long y);
 
+unsigned long lone_next_power_of_2(unsigned long n);
+
 #endif /* LONE_UTILITIES_HEADER */
 
