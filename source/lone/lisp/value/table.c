@@ -6,6 +6,7 @@
 
 #include <lone/memory/allocator.h>
 #include <lone/memory/array.h>
+#include <lone/memory/functions.h>
 
 #include <lone/utilities.h>
 
@@ -30,6 +31,8 @@ struct lone_lisp_value lone_lisp_table_create(struct lone_lisp *lone,
 		sizeof(*actual->indexes),
 		alignof(*actual->indexes)
 	);
+
+	lone_memory_one(actual->indexes, lone_memory_array_size_in_bytes(capacity, sizeof(*actual->indexes)));
 
 	actual->entries = lone_memory_array(
 		lone->system,
@@ -60,6 +63,16 @@ static bool lone_lisp_table_needs_resize(struct lone_lisp *lone, struct lone_lis
 	return (count * LONE_LISP_TABLE_LOAD_FACTOR_DENOMINATOR) > (capacity * LONE_LISP_TABLE_LOAD_FACTOR_NUMERATOR);
 }
 
+static bool lone_lisp_table_is_empty(size_t *indexes, size_t index)
+{
+	return indexes[index] == LONE_LISP_TABLE_INDEX_EMPTY;
+}
+
+static bool lone_lisp_table_is_used(size_t *indexes, size_t index)
+{
+	return !lone_lisp_table_is_empty(indexes, index);
+}
+
 static unsigned long lone_lisp_table_wrap_around(size_t index, size_t capacity)
 {
 	return index & (capacity - 1);
@@ -72,12 +85,11 @@ static unsigned long lone_lisp_table_compute_hash_for(struct lone_lisp *lone,
 }
 
 static size_t lone_lisp_table_entry_find_index_for(struct lone_lisp *lone, struct lone_lisp_value key,
-		struct lone_lisp_table_index *indexes, struct lone_lisp_table_entry *entries,
-		size_t capacity)
+		size_t *indexes, struct lone_lisp_table_entry *entries, size_t capacity)
 {
 	size_t i = lone_lisp_table_compute_hash_for(lone, key, capacity);
 
-	while (indexes[i].used && !lone_lisp_is_equal(lone, entries[indexes[i].index].key, key)) {
+	while (lone_lisp_table_is_used(indexes, i) && !lone_lisp_is_equal(lone, entries[indexes[i]].key, key)) {
 		i = lone_lisp_table_wrap_around(i + 1, capacity);
 	}
 
@@ -85,20 +97,19 @@ static size_t lone_lisp_table_entry_find_index_for(struct lone_lisp *lone, struc
 }
 
 static bool lone_lisp_table_entry_set(struct lone_lisp *lone,
-		struct lone_lisp_table_index *indexes, struct lone_lisp_table_entry *entries,
+		size_t *indexes, struct lone_lisp_table_entry *entries,
 		size_t capacity, size_t index_if_new_entry,
 		struct lone_lisp_value key, struct lone_lisp_value value)
 {
 	size_t i = lone_lisp_table_entry_find_index_for(lone, key, indexes, entries, capacity);
 
-	if (indexes[i].used) {
-		entries[indexes[i].index].value = value;
+	if (lone_lisp_table_is_used(indexes, i)) {
+		entries[indexes[i]].value = value;
 		return false;
 	} else {
-		indexes[i].used = true;
-		indexes[i].index = index_if_new_entry;
-		entries[indexes[i].index].key = key;
-		entries[indexes[i].index].value = value;
+		indexes[i] = index_if_new_entry;
+		entries[index_if_new_entry].key = key;
+		entries[index_if_new_entry].value = value;
 		return true;
 	}
 }
@@ -106,8 +117,8 @@ static bool lone_lisp_table_entry_set(struct lone_lisp *lone,
 static void lone_lisp_table_resize(struct lone_lisp *lone, struct lone_lisp_value table, size_t new_capacity)
 {
 	struct lone_lisp_table *actual;
-	struct lone_lisp_table_index *old_indexes, *new_indexes;
 	struct lone_lisp_table_entry *old_entries, *new_entries;
+	size_t *old_indexes, *new_indexes;
 	size_t old_capacity;
 	size_t i;
 
@@ -126,6 +137,8 @@ static void lone_lisp_table_resize(struct lone_lisp *lone, struct lone_lisp_valu
 		alignof(*new_indexes)
 	);
 
+	lone_memory_one(new_indexes, lone_memory_array_size_in_bytes(new_capacity, sizeof(new_indexes)));
+
 	new_entries = lone_memory_array(
 		lone->system,
 		old_entries,
@@ -136,15 +149,15 @@ static void lone_lisp_table_resize(struct lone_lisp *lone, struct lone_lisp_valu
 	);
 
 	for (i = 0; i < old_capacity; ++i) {
-		if (old_indexes[i].used) {
+		if (lone_lisp_table_is_used(old_indexes, i)) {
 			lone_lisp_table_entry_set(
 				lone,
 				new_indexes,
 				new_entries,
 				new_capacity,
-				old_indexes[i].index,
-				new_entries[old_indexes[i].index].key,
-				new_entries[old_indexes[i].index].value
+				old_indexes[i],
+				new_entries[old_indexes[i]].key,
+				new_entries[old_indexes[i]].value
 			);
 		}
 	}
@@ -187,8 +200,8 @@ struct lone_lisp_value lone_lisp_table_get(struct lone_lisp *lone,
 		struct lone_lisp_value table, struct lone_lisp_value key)
 {
 	struct lone_lisp_table *actual;
-	struct lone_lisp_table_index *indexes;
 	struct lone_lisp_table_entry *entries;
+	size_t *indexes;
 	size_t capacity, i;
 
 	actual = &lone_lisp_heap_value_of(lone, table)->as.table;
@@ -198,8 +211,8 @@ struct lone_lisp_value lone_lisp_table_get(struct lone_lisp *lone,
 
 	i = lone_lisp_table_entry_find_index_for(lone, key, indexes, entries, capacity);
 
-	if (indexes[i].used) {
-		return entries[indexes[i].index].value;
+	if (lone_lisp_table_is_used(indexes, i)) {
+		return entries[indexes[i]].value;
 	} else if (!lone_lisp_is_nil(actual->prototype)) {
 		return lone_lisp_table_get(lone, actual->prototype, key);
 	} else {
@@ -211,8 +224,8 @@ void lone_lisp_table_delete(struct lone_lisp *lone,
 		struct lone_lisp_value table, struct lone_lisp_value key)
 {
 	struct lone_lisp_table *actual;
-	struct lone_lisp_table_index *indexes;
 	struct lone_lisp_table_entry *entries;
+	size_t *indexes;
 	size_t capacity, count;
 	size_t i, j, k, l;
 
@@ -224,24 +237,22 @@ void lone_lisp_table_delete(struct lone_lisp *lone,
 
 	i = lone_lisp_table_entry_find_index_for(lone, key, indexes, entries, capacity);
 
-	if (!indexes[i].used) { return; }
+	if (lone_lisp_table_is_empty(indexes, i)) { return; }
 
-	l = indexes[i].index;
+	l = indexes[i];
 
 	j = i;
 	while (1) {
 		j = lone_lisp_table_wrap_around(j + 1, capacity);
-		if (!indexes[j].used) { break; }
-		k = lone_lisp_table_compute_hash_for(lone, entries[indexes[j].index].key, capacity);
+		if (lone_lisp_table_is_empty(indexes, j)) { break; }
+		k = lone_lisp_table_compute_hash_for(lone, entries[indexes[j]].key, capacity);
 		if ((j > i && (k <= i || k > j)) || (j < i && (k <= i && k > j))) {
-			indexes[i].used = indexes[j].used;
-			indexes[i].index = indexes[j].index;
+			indexes[i] = indexes[j];
 			i = j;
 		}
 	}
 
-	indexes[i].used = false;
-	indexes[i].index = 0;
+	indexes[i] = LONE_LISP_TABLE_INDEX_EMPTY;
 
 	for (i = 0; i < capacity; ++i) {
 
@@ -250,8 +261,8 @@ void lone_lisp_table_delete(struct lone_lisp *lone,
 			entries[i].value = entries[i + 1].value;
 		}
 
-		if (indexes[i].used && indexes[i].index >= l) {
-			--indexes[i].index;
+		if (lone_lisp_table_is_used(indexes, i) && indexes[i] >= l) {
+			--indexes[i];
 		}
 	}
 

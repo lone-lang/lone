@@ -166,10 +166,6 @@ struct lone_lisp_vector {
    │    as in Javascript and Self.                                          │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
-struct lone_lisp_table_index {
-	bool used: 1;
-	size_t index;
-};
 
 struct lone_lisp_table_entry {
 	struct lone_lisp_value key;
@@ -179,7 +175,7 @@ struct lone_lisp_table_entry {
 struct lone_lisp_table {
 	size_t count;
 	size_t capacity;
-	struct lone_lisp_table_index *indexes;
+	size_t *indexes;
 	struct lone_lisp_table_entry *entries;
 	struct lone_lisp_value prototype;
 };
