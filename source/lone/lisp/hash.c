@@ -44,7 +44,6 @@ static size_t lone_lisp_hash_value_recursively(struct lone_lisp *lone,
 static size_t lone_lisp_hash_heap_value_recursively(struct lone_lisp *lone,
 		struct lone_lisp_heap_value *value, unsigned long hash)
 {
-	struct lone_lisp_value symbol;
 	struct lone_bytes bytes;
 
 	bytes.pointer = (unsigned char *) &value->type;
@@ -65,9 +64,7 @@ static size_t lone_lisp_hash_heap_value_recursively(struct lone_lisp *lone,
 		hash = lone_lisp_hash_value_recursively(lone, value->as.list.rest, hash);
 		return hash;
 	case LONE_LISP_TYPE_SYMBOL:
-		symbol = lone_lisp_value_from_heap_value(lone, value);
-		bytes.pointer = (unsigned char *) &symbol;
-		bytes.count = sizeof(symbol);
+		bytes = value->as.bytes;
 		break;
 	case LONE_LISP_TYPE_TEXT:
 	case LONE_LISP_TYPE_BYTES:
