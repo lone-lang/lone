@@ -273,3 +273,9 @@ void *memcpy(void *to, void *from, size_t count)
 	lone_memory_move(from, to, count);
 	return to;
 }
+
+void *memmove(void *to, void *from, size_t count)
+{
+	memcpy(to, from, count);
+	return to;
+}

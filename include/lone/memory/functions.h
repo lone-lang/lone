@@ -17,5 +17,6 @@ size_t lone_c_string_length(char *c_string);
 /* Compilers emit calls to mem* functions even with -nostdlib */
 void *memset(void *to, int byte, size_t count);
 void *memcpy(void *to, void *from, size_t count);
+void *memmove(void *to, void *from, size_t count);
 
 #endif /* LONE_MEMORY_FUNCTIONS_HEADER */
