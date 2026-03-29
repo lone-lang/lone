@@ -80,3 +80,27 @@ size_t lone_lisp_hash(struct lone_lisp *lone, struct lone_lisp_value value)
 {
 	return lone_lisp_hash_value_recursively(lone, value, lone->system->hash.fnv_1a.offset_basis);
 }
+
+size_t lone_lisp_hash_as_symbol(struct lone_lisp *lone, struct lone_bytes name)
+{
+	enum lone_lisp_value_type value_type;
+	enum lone_lisp_heap_value_type heap_value_type;
+	unsigned long hash;
+	struct lone_bytes bytes;
+
+	value_type = LONE_LISP_TYPE_HEAP_VALUE;
+	heap_value_type = LONE_LISP_TYPE_SYMBOL;
+	hash = lone->system->hash.fnv_1a.offset_basis;
+
+	bytes.pointer = (unsigned char *) &value_type;
+	bytes.count = sizeof(value_type);
+	hash = lone_hash_fnv_1a(bytes, hash);
+
+	bytes.pointer = (unsigned char *) &heap_value_type;
+	bytes.count = sizeof(heap_value_type);
+	hash = lone_hash_fnv_1a(bytes, hash);
+
+	hash = lone_hash_fnv_1a(name, hash);
+
+	return hash;
+}

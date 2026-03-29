@@ -6,5 +6,6 @@
 #include <lone/lisp/types.h>
 
 size_t lone_lisp_hash(struct lone_lisp *lone, struct lone_lisp_value value);
+size_t lone_lisp_hash_as_symbol(struct lone_lisp *lone, struct lone_bytes name);
 
 #endif /* LONE_LISP_HASH_HEADER */
