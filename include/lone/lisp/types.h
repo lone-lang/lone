@@ -142,6 +142,11 @@ struct lone_lisp_vector {
 	size_t capacity;
 };
 
+struct lone_lisp_symbol {
+	struct lone_bytes name;
+	unsigned long hash;
+};
+
 /* ╭────────────────────────────────────────────────────────────────────────╮
    │                                                                        │
    │    Lone tables are openly addressed, linearly probed hash tables.      │
@@ -196,7 +201,8 @@ struct lone_lisp_heap_value {
 		struct lone_lisp_list list;
 		struct lone_lisp_vector vector;
 		struct lone_lisp_table table;
-		struct lone_bytes bytes;   /* also used by texts and symbols */
+		struct lone_lisp_symbol symbol;
+		struct lone_bytes bytes; /* used by texts and bytes values */
 
 		struct {
 			long forwarding_index;

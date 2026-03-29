@@ -64,7 +64,7 @@ static size_t lone_lisp_hash_heap_value_recursively(struct lone_lisp *lone,
 		hash = lone_lisp_hash_value_recursively(lone, value->as.list.rest, hash);
 		return hash;
 	case LONE_LISP_TYPE_SYMBOL:
-		bytes = value->as.bytes;
+		bytes = value->as.symbol.name;
 		break;
 	case LONE_LISP_TYPE_TEXT:
 	case LONE_LISP_TYPE_BYTES:

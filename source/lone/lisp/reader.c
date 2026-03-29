@@ -474,11 +474,11 @@ static bool lone_lisp_reader_is_expected_character_symbol(struct lone_lisp *lone
 	if (lone_lisp_is_symbol(lone, value)) {
 		actual = lone_lisp_heap_value_of(lone, value);
 
-		if (actual->as.bytes.count != 1) {
+		if (actual->as.symbol.name.count != 1) {
 			return false;
 		}
 
-		character = *actual->as.bytes.pointer;
+		character = *actual->as.symbol.name.pointer;
 		return character == expected;
 	} else {
 		return false;
@@ -682,8 +682,8 @@ static struct lone_lisp_value lone_lisp_parse(struct lone_lisp *lone,
 		return token;
 	case LONE_LISP_TYPE_SYMBOL:
 
-		if (actual->as.bytes.count > 1) { return token; }
-		character = *actual->as.bytes.pointer;
+		if (actual->as.symbol.name.count > 1) { return token; }
+		character = *actual->as.symbol.name.pointer;
 
 		switch (character) {
 		default:

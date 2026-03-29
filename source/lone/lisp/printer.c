@@ -216,8 +216,8 @@ void lone_lisp_print(struct lone_lisp *lone, struct lone_lisp_value value, int f
 		break;
 	case LONE_LISP_TYPE_SYMBOL:
 		linux_write(fd,
-				lone_lisp_heap_value_of(lone, value)->as.bytes.pointer,
-				lone_lisp_heap_value_of(lone, value)->as.bytes.count);
+				lone_lisp_heap_value_of(lone, value)->as.symbol.name.pointer,
+				lone_lisp_heap_value_of(lone, value)->as.symbol.name.count);
 		break;
 	case LONE_LISP_TYPE_TEXT:
 		linux_write(fd, "\"", 1);

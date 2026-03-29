@@ -378,8 +378,9 @@ static inline long lone_lisp_value_to_linux_system_call_argument(struct lone_lis
 	switch (lone_lisp_heap_value_of(lone, value)->type) {
 	case LONE_LISP_TYPE_BYTES:
 	case LONE_LISP_TYPE_TEXT:
-	case LONE_LISP_TYPE_SYMBOL:
 		return (long) lone_lisp_heap_value_of(lone, value)->as.bytes.pointer;
+	case LONE_LISP_TYPE_SYMBOL:
+		return (long) lone_lisp_heap_value_of(lone, value)->as.symbol.name.pointer;
 	case LONE_LISP_TYPE_PRIMITIVE:
 		return (long) lone_lisp_heap_value_of(lone, value)->as.primitive.function;
 	case LONE_LISP_TYPE_FUNCTION:
