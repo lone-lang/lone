@@ -11,6 +11,7 @@ bool lone_memory_is_zero(void *x, size_t count);
 void lone_memory_move(void *from, void *to, size_t count);
 void lone_memory_set(void *to, unsigned char byte, size_t count);
 void lone_memory_zero(void *to, size_t count);
+void lone_memory_one(void *to, size_t count);
 size_t lone_c_string_length(char *c_string);
 
 /* Compilers emit calls to mem* functions even with -nostdlib */
