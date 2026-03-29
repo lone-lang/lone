@@ -48,14 +48,16 @@ size_t lone_lisp_table_count(struct lone_lisp *lone, struct lone_lisp_value tabl
 	return lone_lisp_heap_value_of(lone, table)->as.table.count;
 }
 
-static double lone_lisp_table_load_factor(struct lone_lisp *lone, struct lone_lisp_value table, unsigned char added)
+static bool lone_lisp_table_needs_resize(struct lone_lisp *lone, struct lone_lisp_value table, unsigned char added)
 {
-	struct lone_lisp_table *actual = &lone_lisp_heap_value_of(lone, table)->as.table;
+	struct lone_lisp_table *actual;
+	size_t count, capacity;
 
-	double count = (double) (actual->count + added);
-	double capacity = (double) actual->capacity;
+	actual = &lone_lisp_heap_value_of(lone, table)->as.table;
+	count = actual->count + added;
+	capacity = actual->capacity;
 
-	return count / capacity;
+	return (count * LONE_LISP_TABLE_LOAD_FACTOR_DENOMINATOR) > (capacity * LONE_LISP_TABLE_LOAD_FACTOR_NUMERATOR);
 }
 
 static unsigned long lone_lisp_table_wrap_around(size_t index, size_t capacity)
@@ -162,7 +164,7 @@ void lone_lisp_table_set(struct lone_lisp *lone, struct lone_lisp_value table,
 
 	actual = &lone_lisp_heap_value_of(lone, table)->as.table;
 
-	if (lone_lisp_table_load_factor(lone, table, 1) > LONE_LISP_TABLE_LOAD_FACTOR) {
+	if (lone_lisp_table_needs_resize(lone, table, 1)) {
 		lone_lisp_table_resize(lone, table, actual->capacity * LONE_LISP_TABLE_GROWTH_FACTOR);
 	}
 
