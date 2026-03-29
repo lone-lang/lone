@@ -78,6 +78,10 @@ static size_t lone_lisp_hash_heap_value_recursively(struct lone_lisp *lone,
 
 size_t lone_lisp_hash(struct lone_lisp *lone, struct lone_lisp_value value)
 {
+	if (lone_lisp_is_symbol(lone, value)) {
+		return lone_lisp_heap_value_of(lone, value)->as.symbol.hash;
+	}
+
 	return lone_lisp_hash_value_recursively(lone, value, lone->system->hash.fnv_1a.offset_basis);
 }
 
