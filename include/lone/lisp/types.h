@@ -486,6 +486,13 @@ void lone_lisp_table_set(struct lone_lisp *lone, struct lone_lisp_value table,
 void lone_lisp_table_delete(struct lone_lisp *lone,
 		struct lone_lisp_value table, struct lone_lisp_value key);
 
+struct lone_lisp_value lone_lisp_table_get_by_symbol(struct lone_lisp *lone,
+		struct lone_lisp_value table, struct lone_bytes bytes);
+struct lone_lisp_value lone_lisp_table_get_by_text(struct lone_lisp *lone,
+		struct lone_lisp_value table, struct lone_bytes bytes);
+struct lone_lisp_value lone_lisp_table_get_by_bytes(struct lone_lisp *lone,
+		struct lone_lisp_value table, struct lone_bytes bytes);
+
 size_t lone_lisp_table_count(struct lone_lisp *lone, struct lone_lisp_value table);
 struct lone_lisp_value lone_lisp_table_key_at(struct lone_lisp *lone, struct lone_lisp_value table, lone_size i);
 struct lone_lisp_value lone_lisp_table_value_at(struct lone_lisp *lone, struct lone_lisp_value table, lone_size i);
