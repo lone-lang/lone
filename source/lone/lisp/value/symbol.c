@@ -37,20 +37,19 @@ static struct lone_lisp_value lone_lisp_symbol_copy(struct lone_lisp *lone,
 struct lone_lisp_value lone_lisp_intern(struct lone_lisp *lone,
 		unsigned char *bytes, size_t count, bool should_deallocate)
 {
-	struct lone_lisp_value key, value;
+	struct lone_bytes name = { count, bytes };
+	struct lone_lisp_value value;
 
-	key = should_deallocate?
-		  lone_lisp_bytes_copy(lone, bytes, count)
-		: lone_lisp_bytes_transfer(lone, bytes, count, should_deallocate);
-
-	value = lone_lisp_table_get(lone, lone->symbol_table, key);
+	value = lone_lisp_table_get_by_symbol(lone, lone->symbol_table, name);
 
 	if (lone_lisp_is_nil(value)) {
-		value = should_deallocate?
-			  lone_lisp_symbol_copy(lone, bytes, count)
+
+		value =
+			  should_deallocate
+			? lone_lisp_symbol_copy(lone, bytes, count)
 			: lone_lisp_symbol_transfer(lone, bytes, count, should_deallocate);
 
-		lone_lisp_table_set(lone, lone->symbol_table, key, value);
+		lone_lisp_table_set(lone, lone->symbol_table, value, value);
 	}
 
 	return value;
