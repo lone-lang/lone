@@ -137,7 +137,7 @@ static void lone_lisp_table_resize(struct lone_lisp *lone, struct lone_lisp_valu
 		alignof(*new_indexes)
 	);
 
-	lone_memory_one(new_indexes, lone_memory_array_size_in_bytes(new_capacity, sizeof(new_indexes)));
+	lone_memory_one(new_indexes, lone_memory_array_size_in_bytes(new_capacity, sizeof(*new_indexes)));
 
 	new_entries = lone_memory_array(
 		lone->system,
