@@ -12,6 +12,7 @@ static void lone_lisp_print_integer(int fd, long n)
 	static char digits[LONE_LISP_DECIMAL_DIGITS_PER_INTEGER + 1]; /* digits + sign */
 	char *digit;
 	bool is_negative;
+	unsigned long magnitude;
 	size_t count;
 
 	digit = digits + LONE_LISP_DECIMAL_DIGITS_PER_INTEGER;  /* work backwards */
@@ -19,16 +20,17 @@ static void lone_lisp_print_integer(int fd, long n)
 
 	if (n < 0) {
 		is_negative = true;
-		n *= -1;
+		magnitude = -((unsigned long) n);
 	} else {
 		is_negative = false;
+		magnitude = (unsigned long) n;
 	}
 
 	do {
-		*--digit = '0' + (n % 10);
-		n /= 10;
+		*--digit = '0' + (magnitude % 10);
+		magnitude /= 10;
 		++count;
-	} while (n > 0);
+	} while (magnitude > 0);
 
 	if (is_negative) {
 		*--digit = '-';
