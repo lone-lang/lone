@@ -24,7 +24,7 @@ static struct lone_bytes slice(struct lone_lisp *lone, struct lone_bytes bytes, 
 	size = lone_lisp_integer_of(second);
 	end = start + size;
 
-	if (start >= bytes.count || end >= bytes.count) {
+	if (start >= bytes.count || end > bytes.count) {
 		/* segment overrun */ linux_exit(-1);
 	}
 
