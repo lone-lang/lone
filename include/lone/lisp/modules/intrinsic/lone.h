@@ -24,7 +24,6 @@ LONE_LISP_PRIMITIVE(lone_quote);
 LONE_LISP_PRIMITIVE(lone_quasiquote);
 LONE_LISP_PRIMITIVE(lone_lambda);
 LONE_LISP_PRIMITIVE(lone_lambda_bang);
-LONE_LISP_PRIMITIVE(lone_lambda_star);
 LONE_LISP_PRIMITIVE(lone_return);
 LONE_LISP_PRIMITIVE(lone_control);
 LONE_LISP_PRIMITIVE(lone_transfer);
