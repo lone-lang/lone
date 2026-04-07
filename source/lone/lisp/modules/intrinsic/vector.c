@@ -113,6 +113,8 @@ LONE_LISP_PRIMITIVE(vector_slice)
 		j = (size_t) index;
 	}
 
+	if (j < i) { /* end before start: (slice vector 10 5) */ linux_exit(-1); }
+
 	slice = lone_lisp_vector_create(lone, j - i);
 
 	for (k = 0; i < j; ++i, ++k) {
