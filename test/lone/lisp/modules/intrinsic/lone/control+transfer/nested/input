@@ -1,0 +1,11 @@
+(import (lone print lambda control transfer) (math + *))
+
+(print
+  (control
+    (* 2
+      (control
+        (* 3 (transfer 10))
+        (lambda (value continuation)
+          (continuation (+ value 1)))))
+    (lambda (value continuation)
+      value)))
