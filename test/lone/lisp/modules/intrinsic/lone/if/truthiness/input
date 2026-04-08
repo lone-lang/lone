@@ -1,0 +1,7 @@
+(import (lone print if quote))
+
+(print (if 0 'true 'false))
+(print (if "" 'true 'false))
+(print (if [] 'true 'false))
+(print (if {} 'true 'false))
+(print (if () 'true 'false))
