@@ -1,0 +1,4 @@
+(import (lone print quote identical?) (text to-symbol))
+
+(print (to-symbol "hello"))
+(print (identical? (to-symbol "hello") 'hello))

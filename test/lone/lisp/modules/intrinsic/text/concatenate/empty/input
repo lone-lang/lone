@@ -1,0 +1,5 @@
+(import (lone print) (text concatenate))
+
+(print (concatenate))
+(print (concatenate "" ""))
+(print (concatenate "" "a" ""))
