@@ -1,0 +1,10 @@
+(import (lone print set lambda if) (math - <=))
+
+(set even? (lambda (n) (if (<= n 0) 1 (odd? (- n 1)))))
+(set odd? (lambda (n) (if (<= n 0) 0 (even? (- n 1)))))
+
+(print (even? 0))
+(print (even? 1))
+(print (even? 4))
+(print (odd? 3))
+(print (odd? 6))
