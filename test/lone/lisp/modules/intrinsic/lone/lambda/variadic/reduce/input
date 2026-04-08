@@ -1,0 +1,7 @@
+(import (lone print set lambda) (math +) (list reduce))
+
+(set sum (lambda ((arguments)) (reduce + 0 arguments)))
+
+(print (sum 1 2 3))
+(print (sum 10 20 30 40))
+(print (sum 100))

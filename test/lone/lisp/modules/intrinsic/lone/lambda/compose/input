@@ -1,0 +1,11 @@
+(import (lone print set lambda) (math + *))
+
+(set compose (lambda (f g) (lambda (x) (f (g x)))))
+(set double (lambda (x) (* x 2)))
+(set increment (lambda (x) (+ x 1)))
+
+(set double-then-increment (compose increment double))
+(set increment-then-double (compose double increment))
+
+(print (double-then-increment 5))
+(print (increment-then-double 5))

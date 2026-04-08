@@ -1,0 +1,6 @@
+(import (lone lambda! set print))
+
+(set quote (lambda! (x) x))
+
+(print (quote hello))
+(print (quote (1 2 3)))
