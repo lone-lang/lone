@@ -1,0 +1,12 @@
+(import (lone print set) (bytes new write-u16le read-u16le read-u16be))
+
+(set memory (new 2))
+
+; write 0x0102 = 258 in little-endian: memory = [02 01]
+(write-u16le memory 0 258)
+
+; read as little-endian: 0x0102 = 258
+(print (read-u16le memory 0))
+
+; read as big-endian: interprets [02 01] as 0x0201 = 513
+(print (read-u16be memory 0))

@@ -1,0 +1,10 @@
+(import (lone print set) (bytes new write-s16 read-s16 read-u16))
+
+(set memory (new 4))
+
+(write-s16 memory 0 -32768)
+(print (read-s16 memory 0))
+(print (read-u16 memory 0))
+
+(write-s16 memory 0 32767)
+(print (read-s16 memory 0))
