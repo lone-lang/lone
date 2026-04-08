@@ -280,6 +280,7 @@ static bool lone_lisp_table_is_equal(struct lone_lisp *lone, struct lone_lisp_va
 
 bool lone_lisp_is_equal(struct lone_lisp *lone, struct lone_lisp_value x, struct lone_lisp_value y)
 {
+	if (x.tagged == y.tagged) { return true; }
 	if (!lone_lisp_has_same_type(lone, x, y)) { return false; }
 
 	switch (lone_lisp_type_of(x)) {
