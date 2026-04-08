@@ -1,0 +1,8 @@
+(import (lone print let) (math +))
+
+(let (a 1)
+  (let (b (+ a 1))
+    (let (c (+ b 1))
+      (print a)
+      (print b)
+      (print c))))

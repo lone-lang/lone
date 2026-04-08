@@ -1,0 +1,9 @@
+(import (lone print set lambda begin return))
+
+(set f (lambda ()
+  (begin
+    (print "before")
+    (return 42)
+    (print "after"))))
+
+(print (f))

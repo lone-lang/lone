@@ -1,0 +1,7 @@
+(import (lone print if) (math < >))
+
+(if (< 1 2)
+  (if (> 3 2)
+    (print "both")
+    (print "first-only"))
+  (print "neither"))
