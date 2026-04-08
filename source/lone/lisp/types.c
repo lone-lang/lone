@@ -150,12 +150,7 @@ bool lone_lisp_is_applicable(struct lone_lisp *lone, struct lone_lisp_value valu
 
 bool lone_lisp_is_list(struct lone_lisp *lone, struct lone_lisp_value value)
 {
-	return lone_lisp_is_heap_value_of_type(lone, value, LONE_LISP_TYPE_LIST);
-}
-
-bool lone_lisp_is_list_or_nil(struct lone_lisp *lone, struct lone_lisp_value value)
-{
-	return lone_lisp_is_nil(value) || lone_lisp_is_list(lone, value);
+	return lone_lisp_is_nil(value) || lone_lisp_is_heap_value_of_type(lone, value, LONE_LISP_TYPE_LIST);
 }
 
 bool lone_lisp_is_vector(struct lone_lisp *lone, struct lone_lisp_value value)

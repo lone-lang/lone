@@ -246,7 +246,6 @@ bool lone_lisp_is_function(struct lone_lisp *lone, struct lone_lisp_value value)
 bool lone_lisp_is_primitive(struct lone_lisp *lone, struct lone_lisp_value value);
 bool lone_lisp_is_applicable(struct lone_lisp *lone, struct lone_lisp_value value);
 bool lone_lisp_is_list(struct lone_lisp *lone, struct lone_lisp_value value);
-bool lone_lisp_is_list_or_nil(struct lone_lisp *lone, struct lone_lisp_value value);
 bool lone_lisp_is_vector(struct lone_lisp *lone, struct lone_lisp_value value);
 bool lone_lisp_is_table(struct lone_lisp *lone, struct lone_lisp_value value);
 bool lone_lisp_has_bytes(struct lone_lisp *lone, struct lone_lisp_value value);

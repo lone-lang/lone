@@ -80,10 +80,12 @@ static void lone_lisp_print_list(struct lone_lisp *lone, struct lone_lisp_value 
 
 	lone_lisp_print(lone, first, fd);
 
-	if (lone_lisp_is_list(lone, rest)) {
+	if (lone_lisp_is_nil(rest)) {
+		/* proper list termination */
+	} else if (lone_lisp_is_list(lone, rest)) {
 		linux_write(fd, " ", 1);
 		lone_lisp_print_list(lone, rest, fd);
-	} else if (!lone_lisp_is_nil(rest)) {
+	} else {
 		linux_write(fd, " . ", 3);
 		lone_lisp_print(lone, rest, fd);
 	}

@@ -559,7 +559,7 @@ static struct lone_lisp_value lone_lisp_primitive_lambda_with_flags(struct lone_
 	struct lone_lisp_value bindings, code;
 
 	bindings = lone_lisp_list_first(lone, arguments);
-	if (!lone_lisp_is_list_or_nil(lone, bindings)) { /* parameters not a list: (lambda 10) */ linux_exit(-1); }
+	if (!lone_lisp_is_list(lone, bindings)) { /* parameters not a list: (lambda 10) */ linux_exit(-1); }
 
 	code = lone_lisp_list_rest(lone, arguments);
 
