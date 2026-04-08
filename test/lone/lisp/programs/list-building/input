@@ -1,0 +1,10 @@
+(import (lone set print lambda if quote) (list construct first) (math + <))
+
+(set build-list (lambda (n accumulator)
+  (if (< n 1)
+    accumulator
+    (build-list (+ n -1) (construct n accumulator)))))
+
+(set my-list (build-list 20 ()))
+(print my-list)
+(print (first my-list))

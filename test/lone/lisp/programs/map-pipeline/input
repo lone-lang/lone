@@ -1,0 +1,9 @@
+(import (lone set print quote lambda) (list map) (math + *))
+
+(set numbers (quote (1 2 3 4 5)))
+
+(set doubled (map (lambda (x) (* 2 x)) numbers))
+(set incremented (map (lambda (x) (+ x 10)) doubled))
+
+(print doubled)
+(print incremented)

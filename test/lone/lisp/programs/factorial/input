@@ -1,0 +1,11 @@
+(import (lone print set if lambda) (math * - <))
+
+(set factorial (lambda (n)
+  (if (< n 2)
+    1
+    (* n (factorial (- n 1))))))
+
+(print (factorial 1))
+(print (factorial 5))
+(print (factorial 10))
+(print (factorial 19))

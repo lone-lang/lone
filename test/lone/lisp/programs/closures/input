@@ -1,0 +1,11 @@
+(import (lone set print lambda let) (math + *))
+
+(set make-multiplier (lambda (n) (lambda (x) (* n x))))
+
+(let (double    (make-multiplier 2)
+      triple    (make-multiplier 3)
+      quadruple (make-multiplier 4))
+  (print (double 5))
+  (print (triple 5))
+  (print (quadruple 5))
+  (print (double (triple 7))))

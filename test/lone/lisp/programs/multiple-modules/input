@@ -1,0 +1,16 @@
+(import
+  (lone set print quote lambda)
+  (math + *)
+  (list map reduce)
+  (text concatenate join)
+  (vector count))
+
+(set numbers (quote (1 2 3 4 5)))
+(print (reduce + 0 numbers))
+
+(set doubled (map (lambda (x) (* 2 x)) numbers))
+(print doubled)
+
+(print (join ", " "hello" "world"))
+(print (count [1 2 3 4 5]))
+(print (concatenate "a" "b" "c"))
