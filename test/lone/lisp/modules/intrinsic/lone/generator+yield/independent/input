@@ -1,0 +1,16 @@
+(import (lone print set lambda generator yield) (math +))
+
+(set counter (lambda (start)
+  (yield start)
+  (yield (+ start 1))
+  (+ start 2)))
+
+(set g1 (generator counter))
+(set g2 (generator counter))
+
+(print (g1 10))
+(print (g2 20))
+(print (g1))
+(print (g2))
+(print (g1))
+(print (g2))

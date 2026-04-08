@@ -1,0 +1,6 @@
+(import (lone print set lambda generator yield))
+
+(set f (lambda (x) x))
+(set g (generator f))
+
+(print (g 42))
