@@ -1,0 +1,12 @@
+(import (lone let print) (math +))
+
+(let (a 1)
+  (let (a 2 b a)
+    (print a)
+    (print b))
+  (print a))
+
+(let (x 10)
+  (let (x (+ x 1))
+    (print x))
+  (print x))
