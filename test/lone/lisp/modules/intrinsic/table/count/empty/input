@@ -1,0 +1,3 @@
+(import (lone print) (table count))
+
+(print (count {}))

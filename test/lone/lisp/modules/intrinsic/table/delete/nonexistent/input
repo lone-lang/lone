@@ -1,0 +1,6 @@
+(import (lone print set quote) prefixed (table delete count set))
+
+(set t {})
+(table.set t 'a 1)
+(table.delete t 'nonexistent)
+(print (table.count t))

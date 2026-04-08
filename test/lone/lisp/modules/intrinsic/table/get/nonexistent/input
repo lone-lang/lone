@@ -1,0 +1,5 @@
+(import (lone print set quote) (table get))
+
+(set table {})
+(table 'a 1)
+(print (get table 'b))
