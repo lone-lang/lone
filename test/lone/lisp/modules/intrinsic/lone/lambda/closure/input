@@ -1,0 +1,12 @@
+(import (lone print set lambda) (math +))
+
+(set make-adder
+  (lambda (n)
+    (lambda (x) (+ n x))))
+
+(set add-five (make-adder 5))
+(set add-ten (make-adder 10))
+
+(print (add-five 3))
+(print (add-ten 3))
+(print (add-five (add-ten 0)))
