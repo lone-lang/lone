@@ -1,0 +1,3 @@
+(import (lone lambda) (table each))
+
+(each {} (lambda (k v) k))

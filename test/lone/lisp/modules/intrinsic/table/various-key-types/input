@@ -1,0 +1,11 @@
+(import (lone set print quote) prefixed (table get set))
+
+(set table {})
+
+(table.set table 'symbol-key 1)
+(table.set table "text-key" 2)
+(table.set table 42 3)
+
+(print (table.get table 'symbol-key))
+(print (table.get table "text-key"))
+(print (table.get table 42))

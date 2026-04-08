@@ -1,0 +1,8 @@
+(import (lone set print quote))
+
+(set table { x 10 })
+
+(print (table 'x))
+(table 'x 42)
+(print (table 'x))
+(print table)

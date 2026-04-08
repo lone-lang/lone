@@ -1,0 +1,11 @@
+(import (lone set print quote) prefixed (table get set count))
+
+(set table {})
+
+(table.set table 'x 1)
+(print (table.get table 'x))
+
+(table.set table 'x 99)
+(print (table.get table 'x))
+
+(print (table.count table))
