@@ -1,0 +1,7 @@
+(import (lone print))
+
+; before first
+(print 1)
+; between
+(print 2)
+; after last

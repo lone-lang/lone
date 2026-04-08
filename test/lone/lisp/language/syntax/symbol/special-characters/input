@@ -1,0 +1,9 @@
+(import (lone print quote))
+
+(print 'hello-world)
+(print 'list?)
+(print 'lambda!)
+(print 'a+b)
+(print '+)
+(print '-)
+(print '*)

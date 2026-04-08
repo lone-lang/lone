@@ -1,0 +1,5 @@
+(import (lone print))
+
+(print +1)
+(print +42)
+(print +999)
