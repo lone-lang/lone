@@ -1,0 +1,19 @@
+(import (lone print set) (bytes new read-u8 write-u8 read-s8 write-s8))
+
+(set memory (new 1))
+
+(print (write-u8 memory 0 255))
+(print (read-u8 memory 0))
+(print (read-s8 memory 0))
+
+(print (write-s8 memory 0 -128))
+(print (read-u8 memory 0))
+(print (read-s8 memory 0))
+
+(print (write-s8 memory 0 127))
+(print (read-u8 memory 0))
+(print (read-s8 memory 0))
+
+(print (write-u8 memory 0 128))
+(print (read-u8 memory 0))
+(print (read-s8 memory 0))
