@@ -1,0 +1,4 @@
+(import (lone print) (math +))
+
+(print (+ -5 3))
+(print (+ -10 -20))
