@@ -1,0 +1,4 @@
+(import (lone print equivalent?))
+
+(print (equivalent? [1 2] [1 2]))
+(print (equivalent? [] []))
