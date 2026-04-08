@@ -1,0 +1,5 @@
+(import (lone print quote integer?))
+
+(print (integer? "hello"))
+(print (integer? 'x))
+(print (integer? [1 2]))

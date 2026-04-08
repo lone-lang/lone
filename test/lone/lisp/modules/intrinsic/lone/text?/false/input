@@ -1,0 +1,5 @@
+(import (lone print quote text?))
+
+(print (text? 42))
+(print (text? 'x))
+(print (text? []))

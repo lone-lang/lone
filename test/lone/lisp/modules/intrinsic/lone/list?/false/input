@@ -1,0 +1,5 @@
+(import (lone print list?))
+
+(print (list? 42))
+(print (list? "hello"))
+(print (list? [1 2]))

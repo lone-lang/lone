@@ -1,0 +1,5 @@
+(import (lone print quote vector?))
+
+(print (vector? 42))
+(print (vector? "hello"))
+(print (vector? '(1 2)))

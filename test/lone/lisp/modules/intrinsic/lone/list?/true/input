@@ -1,0 +1,4 @@
+(import (lone print quote list?))
+
+(print (list? '(1 2 3)))
+(print (list? '(a)))

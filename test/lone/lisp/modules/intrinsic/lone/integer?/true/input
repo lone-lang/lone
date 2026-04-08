@@ -1,0 +1,5 @@
+(import (lone print integer?))
+
+(print (integer? 0))
+(print (integer? 42))
+(print (integer? -1))

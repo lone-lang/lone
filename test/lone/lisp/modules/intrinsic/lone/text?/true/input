@@ -1,0 +1,4 @@
+(import (lone print text?))
+
+(print (text? "hello"))
+(print (text? ""))

@@ -1,0 +1,4 @@
+(import (lone print table?))
+
+(print (table? { x 1 }))
+(print (table? {}))

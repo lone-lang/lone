@@ -1,0 +1,5 @@
+(import (lone print quote table?))
+
+(print (table? 42))
+(print (table? "hello"))
+(print (table? '(1 2)))

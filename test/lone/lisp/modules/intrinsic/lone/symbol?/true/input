@@ -1,0 +1,4 @@
+(import (lone print quote symbol?))
+
+(print (symbol? 'hello))
+(print (symbol? '+))

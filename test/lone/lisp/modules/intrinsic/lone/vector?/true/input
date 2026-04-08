@@ -1,0 +1,4 @@
+(import (lone print vector?))
+
+(print (vector? [1 2 3]))
+(print (vector? []))

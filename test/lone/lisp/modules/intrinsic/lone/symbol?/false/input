@@ -1,0 +1,5 @@
+(import (lone print symbol?))
+
+(print (symbol? 42))
+(print (symbol? "hello"))
+(print (symbol? []))

@@ -1,0 +1,5 @@
+(import (lone print identical?))
+
+(print (identical? 42 42))
+(print (identical? 0 0))
+(print (identical? 42 43))
