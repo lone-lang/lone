@@ -1,0 +1,3 @@
+(import (lone print) (vector each))
+
+(each [10 20 30] print)
