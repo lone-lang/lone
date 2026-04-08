@@ -1,0 +1,4 @@
+(import (lone print set lambda) (list map) (math *))
+
+(set double (lambda (x) (* x 2)))
+(print (map double ()))

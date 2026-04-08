@@ -1,0 +1,3 @@
+(import (lone print quote) (math +) (list reduce))
+
+(print (reduce + 0 '(42)))
