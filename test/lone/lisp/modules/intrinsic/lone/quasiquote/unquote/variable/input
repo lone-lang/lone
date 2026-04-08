@@ -1,0 +1,4 @@
+(import (lone print let quasiquote))
+
+(let (x 10)
+  (print (quasiquote (a (unquote x) b))))

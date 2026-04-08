@@ -1,0 +1,3 @@
+(import (lone print quote quasiquote))
+
+(print (quasiquote ((unquote* '(1 2)) (unquote* '(3 4)))))
