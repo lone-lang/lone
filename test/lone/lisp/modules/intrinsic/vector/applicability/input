@@ -1,0 +1,9 @@
+(import (lone set print))
+
+(set vector [10 20 30 40 50])
+
+(print (vector 0))
+(print (vector 2))
+(vector 2 99)
+(print (vector 2))
+(print vector)

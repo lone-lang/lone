@@ -1,0 +1,6 @@
+(import (lone set print) (vector slice))
+
+(set vector [1 2 3 4 5])
+
+(print (slice vector 0 0))
+(print (slice vector 3 3))

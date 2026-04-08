@@ -1,0 +1,3 @@
+(import (lone lambda) (vector each))
+
+(each [] (lambda (x) x))
