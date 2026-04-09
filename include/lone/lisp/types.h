@@ -79,6 +79,27 @@ enum lone_lisp_tag {
 	LONE_LISP_TAG_TRUE    = 0x05,
 	LONE_LISP_TAG_FALSE   = 0x07,
 
+	/* Inline symbol tags:
+	 *
+	 * 	bit 7 = 1
+	 * 	bits 4-6 = 000
+	 * 	bits 1-3 = length
+	 * 	bit 0 = 1
+	 *
+	 * Symbols with names ≤ 7 bytes are encoded directly
+	 * in the word. Bytes are stored in the data bits
+	 * starting at bit 8. Two inline symbols with identical
+	 * names produce identical words.
+	 */
+	LONE_LISP_TAG_INLINE_SYMBOL_0 = 0x81, /* length 0 */
+	LONE_LISP_TAG_INLINE_SYMBOL_1 = 0x83, /* length 1 */
+	LONE_LISP_TAG_INLINE_SYMBOL_2 = 0x85, /* length 2 */
+	LONE_LISP_TAG_INLINE_SYMBOL_3 = 0x87, /* length 3 */
+	LONE_LISP_TAG_INLINE_SYMBOL_4 = 0x89, /* length 4 */
+	LONE_LISP_TAG_INLINE_SYMBOL_5 = 0x8B, /* length 5 */
+	LONE_LISP_TAG_INLINE_SYMBOL_6 = 0x8D, /* length 6 */
+	LONE_LISP_TAG_INLINE_SYMBOL_7 = 0x8F, /* length 7 */
+
 	/* Lone lisp machine stack frame tags
 	 *
 	 * Stack frames are 8-byte tagged words
@@ -291,6 +312,14 @@ bool lone_lisp_has_bytes(struct lone_lisp *lone, struct lone_lisp_value value);
 bool lone_lisp_is_bytes(struct lone_lisp *lone, struct lone_lisp_value value);
 bool lone_lisp_is_text(struct lone_lisp *lone, struct lone_lisp_value value);
 bool lone_lisp_is_symbol(struct lone_lisp *lone, struct lone_lisp_value value);
+bool lone_lisp_is_inline_symbol(struct lone_lisp_value value);
+
+/* Extract symbol name bytes from either heap or inline symbols.
+ * For inline symbols, the returned pointer points into the tagged word
+ * at the address of the value parameter, so the caller must keep
+ * the value alive for the lifetime of the returned struct lone_bytes.
+ */
+struct lone_bytes lone_lisp_symbol_name(struct lone_lisp *lone, struct lone_lisp_value *value);
 
 bool lone_lisp_is_nil(struct lone_lisp_value value);
 bool lone_lisp_is_false(struct lone_lisp_value value);
@@ -549,6 +578,8 @@ struct lone_lisp_value lone_lisp_table_value_at(struct lone_lisp *lone, struct l
    │    However, this means they won't be garbage collected.                │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
+
+struct lone_lisp_value lone_lisp_inline_symbol_create(unsigned char *bytes, size_t count);
 
 struct lone_lisp_value lone_lisp_intern(struct lone_lisp *lone,
 		unsigned char *bytes, size_t count, bool should_deallocate);

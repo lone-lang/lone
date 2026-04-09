@@ -58,6 +58,10 @@ struct lone_lisp_value lone_lisp_intern(struct lone_lisp *lone,
 	struct lone_bytes name = { count, bytes };
 	struct lone_lisp_value value;
 
+	if (count <= LONE_LISP_INLINE_MAX_LENGTH) {
+		return lone_lisp_inline_symbol_create(bytes, count);
+	}
+
 	value = lone_lisp_table_get_by_symbol(lone, lone->symbol_table, name);
 
 	if (lone_lisp_is_nil(value)) {

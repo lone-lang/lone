@@ -468,18 +468,16 @@ error:
 static bool lone_lisp_reader_is_expected_character_symbol(struct lone_lisp *lone,
 		struct lone_lisp_value value, unsigned char expected)
 {
-	struct lone_lisp_heap_value *actual;
-	unsigned char character;
+	struct lone_bytes name;
 
 	if (lone_lisp_is_symbol(lone, value)) {
-		actual = lone_lisp_heap_value_of(lone, value);
+		name = lone_lisp_symbol_name(lone, &value);
 
-		if (actual->as.symbol.name.count != 1) {
+		if (name.count != 1) {
 			return false;
 		}
 
-		character = *actual->as.symbol.name.pointer;
-		return character == expected;
+		return *name.pointer == expected;
 	} else {
 		return false;
 	}
@@ -657,7 +655,7 @@ static struct lone_lisp_value lone_lisp_parse_special_character(struct lone_lisp
 static struct lone_lisp_value lone_lisp_parse(struct lone_lisp *lone,
 		struct lone_lisp_reader *reader, struct lone_lisp_value token)
 {
-	struct lone_lisp_heap_value *actual;
+	struct lone_bytes name;
 	char character;
 
 	if (reader->status.end_of_input) { return lone_lisp_nil(); }
@@ -674,10 +672,10 @@ static struct lone_lisp_value lone_lisp_parse(struct lone_lisp *lone,
 		return token;
 	case LONE_LISP_TAG_SYMBOL:
 
-		actual = lone_lisp_heap_value_of(lone, token);
+		name = lone_lisp_symbol_name(lone, &token);
 
-		if (actual->as.symbol.name.count > 1) { return token; }
-		character = *actual->as.symbol.name.pointer;
+		if (name.count > 1) { return token; }
+		character = *name.pointer;
 
 		switch (character) {
 		default:

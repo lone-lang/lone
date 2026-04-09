@@ -353,23 +353,25 @@ static inline long lone_lisp_value_to_linux_system_call_number(struct lone_lisp 
 	linux_exit(-1);
 }
 
-static inline long lone_lisp_value_to_linux_system_call_argument(struct lone_lisp *lone, struct lone_lisp_value value)
+static inline long lone_lisp_value_to_linux_system_call_argument(struct lone_lisp *lone, struct lone_lisp_value *value)
 {
-	switch (lone_lisp_type_of(value)) {
+	switch (lone_lisp_type_of(*value)) {
 	case LONE_LISP_TAG_NIL:
 	case LONE_LISP_TAG_FALSE:
 		return 0;
 	case LONE_LISP_TAG_TRUE:
 		return 1;
 	case LONE_LISP_TAG_INTEGER:
-		return (long) lone_lisp_integer_of(value);
+		return (long) lone_lisp_integer_of(*value);
 	case LONE_LISP_TAG_BYTES:
 	case LONE_LISP_TAG_TEXT:
-		return (long) lone_lisp_heap_value_of(lone, value)->as.bytes.pointer;
-	case LONE_LISP_TAG_SYMBOL:
-		return (long) lone_lisp_heap_value_of(lone, value)->as.symbol.name.pointer;
+		return (long) lone_lisp_heap_value_of(lone, *value)->as.bytes.pointer;
+	case LONE_LISP_TAG_SYMBOL: {
+		struct lone_bytes name = lone_lisp_symbol_name(lone, value);
+		return (long) name.pointer;
+	}
 	case LONE_LISP_TAG_PRIMITIVE:
-		return (long) lone_lisp_heap_value_of(lone, value)->as.primitive.function;
+		return (long) lone_lisp_heap_value_of(lone, *value)->as.primitive.function;
 	case LONE_LISP_TAG_FUNCTION:
 	case LONE_LISP_TAG_CONTINUATION:
 	case LONE_LISP_TAG_GENERATOR:
@@ -385,6 +387,7 @@ static inline long lone_lisp_value_to_linux_system_call_argument(struct lone_lis
 LONE_LISP_PRIMITIVE(linux_system_call)
 {
 	struct lone_lisp_value linux_system_call_table, arguments, argument;
+	struct lone_lisp_value values[6]; /* must outlive args[] for inline symbol pointers */
 	long result, number, args[6];
 	unsigned char i;
 
@@ -399,10 +402,11 @@ LONE_LISP_PRIMITIVE(linux_system_call)
 
 	for (i = 0; i < 6; ++i) {
 		if (lone_lisp_is_nil(arguments)) {
+			values[i] = lone_lisp_nil();
 			args[i] = 0;
 		} else {
-			argument = lone_lisp_list_first(lone, arguments);
-			args[i] = lone_lisp_value_to_linux_system_call_argument(lone, argument);
+			values[i] = lone_lisp_list_first(lone, arguments);
+			args[i] = lone_lisp_value_to_linux_system_call_argument(lone, &values[i]);
 			arguments = lone_lisp_list_rest(lone, arguments);
 		}
 	}

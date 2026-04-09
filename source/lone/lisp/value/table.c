@@ -133,8 +133,14 @@ static bool lone_lisp_table_bytes_is_equal(struct lone_lisp *lone,
 	enum lone_lisp_tag x_tag;
 	unsigned char x_hash_bits;
 
-	x_tag = x_value.tagged & LONE_LISP_TAG_MASK;
+	x_tag = lone_lisp_type_of(x_value);
 	if (x_tag != y_tag) { return false; }
+
+	/* Inline symbols: compare bytes directly from the tagged word. */
+	if (lone_lisp_is_inline_symbol(x_value)) {
+		x_bytes = lone_lisp_symbol_name(lone, &x_value);
+		return lone_bytes_is_equal(x_bytes, y_bytes);
+	}
 
 	/* For symbols, compare 8 hash bits stored in metadata at bits 8-15
 	 * against the search hash bits before accessing the heap.
