@@ -102,7 +102,7 @@ static bool lone_lisp_table_key_matches(struct lone_lisp *lone,
 	 */
 	if (stored.tagged == key.tagged) { return true; }
 
-	switch (key.tagged & LONE_LISP_TAG_MASK) {
+	switch (lone_lisp_type_of(key)) {
 	case LONE_LISP_TAG_LIST:
 	case LONE_LISP_TAG_TEXT:
 	case LONE_LISP_TAG_BYTES:
@@ -136,9 +136,9 @@ static bool lone_lisp_table_bytes_is_equal(struct lone_lisp *lone,
 	x_tag = lone_lisp_type_of(x_value);
 	if (x_tag != y_tag) { return false; }
 
-	/* Inline symbols: compare bytes directly from the tagged word. */
-	if (lone_lisp_is_inline_symbol(x_value)) {
-		x_bytes = lone_lisp_symbol_name(lone, &x_value);
+	/* Inline values: compare bytes directly from the tagged word. */
+	if (lone_lisp_is_inline_value(x_value)) {
+		x_bytes = lone_lisp_inline_value_bytes(&x_value);
 		return lone_bytes_is_equal(x_bytes, y_bytes);
 	}
 

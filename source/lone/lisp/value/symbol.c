@@ -90,5 +90,9 @@ struct lone_lisp_value lone_lisp_intern_c_string(struct lone_lisp *lone, char *c
 
 struct lone_lisp_value lone_lisp_intern_text(struct lone_lisp *lone, struct lone_lisp_value text)
 {
+	if (lone_lisp_is_inline_text(text)) {
+		struct lone_bytes bytes = lone_lisp_inline_value_bytes(&text);
+		return lone_lisp_intern(lone, bytes.pointer, bytes.count, false);
+	}
 	return lone_lisp_intern_bytes(lone, lone_lisp_heap_value_of(lone, text)->as.bytes, true);
 }

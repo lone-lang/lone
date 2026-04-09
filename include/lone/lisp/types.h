@@ -355,6 +355,15 @@ bool lone_lisp_is_bytes(struct lone_lisp *lone, struct lone_lisp_value value);
 bool lone_lisp_is_text(struct lone_lisp *lone, struct lone_lisp_value value);
 bool lone_lisp_is_symbol(struct lone_lisp *lone, struct lone_lisp_value value);
 bool lone_lisp_is_inline_symbol(struct lone_lisp_value value);
+bool lone_lisp_is_inline_text(struct lone_lisp_value value);
+bool lone_lisp_is_inline_value(struct lone_lisp_value value);
+
+/* Extract bytes from any inline value (symbol, text, or bytes).
+ * The returned pointer points into the tagged word at the address
+ * of the value parameter, so the caller must keep the value alive
+ * for the lifetime of the returned struct lone_bytes.
+ */
+struct lone_bytes lone_lisp_inline_value_bytes(struct lone_lisp_value *value);
 
 /* Extract symbol name bytes from either heap or inline symbols.
  * For inline symbols, the returned pointer points into the tagged word
@@ -622,6 +631,7 @@ struct lone_lisp_value lone_lisp_table_value_at(struct lone_lisp *lone, struct l
    ╰────────────────────────────────────────────────────────────────────────╯ */
 
 struct lone_lisp_value lone_lisp_inline_symbol_create(unsigned char *bytes, size_t count);
+struct lone_lisp_value lone_lisp_inline_text_create(unsigned char *bytes, size_t count);
 
 struct lone_lisp_value lone_lisp_intern(struct lone_lisp *lone,
 		unsigned char *bytes, size_t count, bool should_deallocate);

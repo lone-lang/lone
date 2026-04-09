@@ -49,7 +49,11 @@ static size_t lone_lisp_hash_value_recursively(struct lone_lisp *lone,
 		break;
 	case LONE_LISP_TAG_TEXT:
 	case LONE_LISP_TAG_BYTES:
-		bytes = lone_lisp_heap_value_of(lone, value)->as.bytes;
+		if (lone_lisp_is_inline_value(value)) {
+			bytes = lone_lisp_inline_value_bytes(&value);
+		} else {
+			bytes = lone_lisp_heap_value_of(lone, value)->as.bytes;
+		}
 		break;
 	case LONE_LISP_TAG_MODULE:
 	case LONE_LISP_TAG_FUNCTION:

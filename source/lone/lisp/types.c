@@ -33,9 +33,13 @@ enum lone_lisp_tag lone_lisp_type_of(struct lone_lisp_value value)
 {
 	enum lone_lisp_tag tag = value.tagged & LONE_LISP_TAG_MASK;
 
-	/* normalize inline symbol tags to the canonical symbol type */
+	/* normalize inline tags to their canonical heap type */
 	if ((tag & LONE_LISP_INLINE_TYPE_MASK) == LONE_LISP_INLINE_TYPE_SYMBOL) {
 		return LONE_LISP_TAG_SYMBOL;
+	}
+
+	if ((tag & LONE_LISP_INLINE_TYPE_MASK) == LONE_LISP_INLINE_TYPE_TEXT) {
+		return LONE_LISP_TAG_TEXT;
 	}
 
 	return tag;
@@ -152,7 +156,8 @@ bool lone_lisp_has_bytes(struct lone_lisp *lone, struct lone_lisp_value value)
 	return (value.tagged & LONE_LISP_TAG_MASK) == LONE_LISP_TAG_BYTES
 	    || (value.tagged & LONE_LISP_TAG_MASK) == LONE_LISP_TAG_TEXT
 	    || (value.tagged & LONE_LISP_TAG_MASK) == LONE_LISP_TAG_SYMBOL
-	    || lone_lisp_is_inline_symbol(value);
+	    || lone_lisp_is_inline_symbol(value)
+	    || lone_lisp_is_inline_text(value);
 }
 
 bool lone_lisp_is_bytes(struct lone_lisp *lone, struct lone_lisp_value value)
@@ -164,12 +169,23 @@ bool lone_lisp_is_bytes(struct lone_lisp *lone, struct lone_lisp_value value)
 bool lone_lisp_is_text(struct lone_lisp *lone, struct lone_lisp_value value)
 {
 	(void) lone;
-	return (value.tagged & LONE_LISP_TAG_MASK) == LONE_LISP_TAG_TEXT;
+	return (value.tagged & LONE_LISP_TAG_MASK) == LONE_LISP_TAG_TEXT
+	    || lone_lisp_is_inline_text(value);
 }
 
 bool lone_lisp_is_inline_symbol(struct lone_lisp_value value)
 {
 	return (value.tagged & LONE_LISP_INLINE_TYPE_MASK) == LONE_LISP_INLINE_TYPE_SYMBOL;
+}
+
+bool lone_lisp_is_inline_text(struct lone_lisp_value value)
+{
+	return (value.tagged & LONE_LISP_INLINE_TYPE_MASK) == LONE_LISP_INLINE_TYPE_TEXT;
+}
+
+bool lone_lisp_is_inline_value(struct lone_lisp_value value)
+{
+	return (value.tagged & 0x81) == 0x81;
 }
 
 bool lone_lisp_is_symbol(struct lone_lisp *lone, struct lone_lisp_value value)
@@ -179,12 +195,19 @@ bool lone_lisp_is_symbol(struct lone_lisp *lone, struct lone_lisp_value value)
 	    || lone_lisp_is_inline_symbol(value);
 }
 
-struct lone_lisp_value lone_lisp_inline_symbol_create(unsigned char *bytes, size_t count)
+struct lone_bytes lone_lisp_inline_value_bytes(struct lone_lisp_value *value)
+{
+	size_t count = (value->tagged >> LONE_LISP_INLINE_LENGTH_SHIFT) & LONE_LISP_INLINE_LENGTH_MASK;
+	unsigned char *pointer = ((unsigned char *) &value->tagged) + 1;
+	return (struct lone_bytes) { .count = count, .pointer = pointer };
+}
+
+static struct lone_lisp_value lone_lisp_inline_create(unsigned char type, unsigned char *bytes, size_t count)
 {
 	long tagged;
 	size_t i;
 
-	tagged = LONE_LISP_INLINE_TYPE_SYMBOL | (long) (count << LONE_LISP_INLINE_LENGTH_SHIFT);
+	tagged = type | (long) (count << LONE_LISP_INLINE_LENGTH_SHIFT);
 
 	for (i = 0; i < count; ++i) {
 		tagged |= ((long) bytes[i]) << (LONE_LISP_DATA_SHIFT + i * 8);
@@ -193,12 +216,20 @@ struct lone_lisp_value lone_lisp_inline_symbol_create(unsigned char *bytes, size
 	return (struct lone_lisp_value) { .tagged = tagged };
 }
 
+struct lone_lisp_value lone_lisp_inline_symbol_create(unsigned char *bytes, size_t count)
+{
+	return lone_lisp_inline_create(LONE_LISP_INLINE_TYPE_SYMBOL, bytes, count);
+}
+
+struct lone_lisp_value lone_lisp_inline_text_create(unsigned char *bytes, size_t count)
+{
+	return lone_lisp_inline_create(LONE_LISP_INLINE_TYPE_TEXT, bytes, count);
+}
+
 struct lone_bytes lone_lisp_symbol_name(struct lone_lisp *lone, struct lone_lisp_value *value)
 {
 	if (lone_lisp_is_inline_symbol(*value)) {
-		size_t count = (value->tagged >> LONE_LISP_INLINE_LENGTH_SHIFT) & LONE_LISP_INLINE_LENGTH_MASK;
-		unsigned char *pointer = ((unsigned char *) &value->tagged) + 1;
-		return (struct lone_bytes) { .count = count, .pointer = pointer };
+		return lone_lisp_inline_value_bytes(value);
 	} else {
 		return lone_lisp_heap_value_of(lone, *value)->as.symbol.name;
 	}
@@ -208,6 +239,14 @@ bool lone_lisp_is_identical(struct lone_lisp *lone, struct lone_lisp_value x, st
 {
 	(void) lone;
 	return x.tagged == y.tagged;
+}
+
+static struct lone_bytes lone_lisp_text_or_bytes_data(struct lone_lisp *lone, struct lone_lisp_value *value)
+{
+	if (lone_lisp_is_inline_value(*value)) {
+		return lone_lisp_inline_value_bytes(value);
+	}
+	return lone_lisp_heap_value_of(lone, *value)->as.bytes;
 }
 
 bool lone_lisp_is_equivalent(struct lone_lisp *lone, struct lone_lisp_value x, struct lone_lisp_value y)
@@ -222,8 +261,8 @@ bool lone_lisp_is_equivalent(struct lone_lisp *lone, struct lone_lisp_value x, s
 		return x.tagged == y.tagged;
 	case LONE_LISP_TAG_TEXT:
 	case LONE_LISP_TAG_BYTES:
-		return lone_bytes_is_equal(lone_lisp_heap_value_of(lone, x)->as.bytes,
-		                           lone_lisp_heap_value_of(lone, y)->as.bytes);
+		return lone_bytes_is_equal(lone_lisp_text_or_bytes_data(lone, &x),
+		                           lone_lisp_text_or_bytes_data(lone, &y));
 	case LONE_LISP_TAG_MODULE:
 	case LONE_LISP_TAG_FUNCTION:
 	case LONE_LISP_TAG_PRIMITIVE:

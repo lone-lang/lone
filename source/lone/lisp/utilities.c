@@ -38,9 +38,13 @@ struct lone_lisp_value lone_lisp_apply_comparator(struct lone_lisp *lone,
 
 static struct lone_bytes select_bytes(struct lone_lisp *lone, struct lone_lisp_value *value)
 {
-	return lone_lisp_is_symbol(lone, *value)
-	     ? lone_lisp_symbol_name(lone, value)
-	     : lone_lisp_heap_value_of(lone, *value)->as.bytes;
+	if (lone_lisp_is_symbol(lone, *value)) {
+		return lone_lisp_symbol_name(lone, value);
+	}
+	if (lone_lisp_is_inline_value(*value)) {
+		return lone_lisp_inline_value_bytes(value);
+	}
+	return lone_lisp_heap_value_of(lone, *value)->as.bytes;
 }
 
 struct lone_bytes lone_lisp_join(struct lone_lisp *lone,

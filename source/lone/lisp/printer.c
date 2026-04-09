@@ -218,12 +218,17 @@ void lone_lisp_print(struct lone_lisp *lone, struct lone_lisp_value value, int f
 		linux_write(fd, name.pointer, name.count);
 		break;
 	}
-	case LONE_LISP_TAG_TEXT:
+	case LONE_LISP_TAG_TEXT: {
+		struct lone_bytes text;
+		if (lone_lisp_is_inline_text(value)) {
+			text = lone_lisp_inline_value_bytes(&value);
+		} else {
+			text = lone_lisp_heap_value_of(lone, value)->as.bytes;
+		}
 		linux_write(fd, "\"", 1);
-		linux_write(fd,
-				lone_lisp_heap_value_of(lone, value)->as.bytes.pointer,
-				lone_lisp_heap_value_of(lone, value)->as.bytes.count);
+		linux_write(fd, text.pointer, text.count);
 		linux_write(fd, "\"", 1);
 		break;
+	}
 	}
 }
