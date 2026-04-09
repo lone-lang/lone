@@ -171,19 +171,19 @@ static bool should_evaluate_operands(struct lone_lisp *lone,
 		return false;
 	} else {
 		switch (lone_lisp_heap_value_of(lone, applicable)->type) {
-		case LONE_LISP_TYPE_FUNCTION:
+		case LONE_LISP_TAG_FUNCTION:
 			return lone_lisp_heap_value_of(lone, applicable)->as.function.flags.evaluate_arguments;
-		case LONE_LISP_TYPE_PRIMITIVE:
+		case LONE_LISP_TAG_PRIMITIVE:
 			return lone_lisp_heap_value_of(lone, applicable)->as.primitive.flags.evaluate_arguments;
-		case LONE_LISP_TYPE_GENERATOR:
+		case LONE_LISP_TAG_GENERATOR:
 			return should_evaluate_operands(
 				lone,
 				lone_lisp_heap_value_of(lone, applicable)->as.generator.function,
 				operands
 			);
-		case LONE_LISP_TYPE_CONTINUATION:
-		case LONE_LISP_TYPE_VECTOR:
-		case LONE_LISP_TYPE_TABLE:
+		case LONE_LISP_TAG_CONTINUATION:
+		case LONE_LISP_TAG_VECTOR:
+		case LONE_LISP_TAG_TABLE:
 			return true;
 		default:
 			linux_exit(-1);
@@ -251,17 +251,7 @@ static struct lone_lisp_value bind_arguments(struct lone_lisp *lone, struct lone
 			current = lone_lisp_list_first(lone, names);
 
 			switch (lone_lisp_type_of(current)) {
-			case LONE_LISP_TYPE_HEAP_VALUE:
-				break;
-			case LONE_LISP_TYPE_NIL:
-			case LONE_LISP_TYPE_FALSE:
-			case LONE_LISP_TYPE_TRUE:
-			case LONE_LISP_TYPE_INTEGER:
-				/* unexpected value */ linux_exit(-1);
-			}
-
-			switch (lone_lisp_heap_value_of(lone, current)->type) {
-			case LONE_LISP_TYPE_SYMBOL:
+			case LONE_LISP_TAG_SYMBOL:
 				/* normal argument passing: (lambda (x y)) */
 
 				if (!lone_lisp_is_nil(arguments)) {
@@ -277,7 +267,7 @@ static struct lone_lisp_value bind_arguments(struct lone_lisp *lone, struct lone
 				}
 
 				break;
-			case LONE_LISP_TYPE_LIST:
+			case LONE_LISP_TAG_LIST:
 				/* variadic argument passing: (lambda ((arguments))), (lambda (x y (rest))) */
 
 				if (!lone_lisp_is_symbol(lone, lone_lisp_list_first(lone, current))) {
@@ -296,15 +286,7 @@ static struct lone_lisp_value bind_arguments(struct lone_lisp *lone, struct lone
 					return new_environment;
 				}
 
-			case LONE_LISP_TYPE_MODULE:
-			case LONE_LISP_TYPE_FUNCTION:
-			case LONE_LISP_TYPE_PRIMITIVE:
-			case LONE_LISP_TYPE_CONTINUATION:
-			case LONE_LISP_TYPE_GENERATOR:
-			case LONE_LISP_TYPE_BYTES:
-			case LONE_LISP_TYPE_TEXT:
-			case LONE_LISP_TYPE_VECTOR:
-			case LONE_LISP_TYPE_TABLE:
+			default:
 				/* unexpected value */ linux_exit(-1);
 			}
 
@@ -360,39 +342,33 @@ bool lone_lisp_machine_cycle(struct lone_lisp *lone, struct lone_lisp_machine *m
 	case LONE_LISP_MACHINE_STEP_EXPRESSION_EVALUATION:
 	expression_evaluation:
 		switch (lone_lisp_type_of(machine->expression)) {
-		case LONE_LISP_TYPE_NIL:
-		case LONE_LISP_TYPE_FALSE:
-		case LONE_LISP_TYPE_TRUE:
-		case LONE_LISP_TYPE_INTEGER:
+		case LONE_LISP_TAG_NIL:
+		case LONE_LISP_TAG_FALSE:
+		case LONE_LISP_TAG_TRUE:
+		case LONE_LISP_TAG_INTEGER:
+		case LONE_LISP_TAG_MODULE:
+		case LONE_LISP_TAG_FUNCTION:
+		case LONE_LISP_TAG_PRIMITIVE:
+		case LONE_LISP_TAG_CONTINUATION:
+		case LONE_LISP_TAG_GENERATOR:
+		case LONE_LISP_TAG_VECTOR:
+		case LONE_LISP_TAG_TABLE:
+		case LONE_LISP_TAG_BYTES:
+		case LONE_LISP_TAG_TEXT:
 			machine->value = machine->expression;
 			lone_lisp_machine_restore_step(lone, machine);
 			break;
-		case LONE_LISP_TYPE_HEAP_VALUE:
-			switch (lone_lisp_heap_value_of(lone, machine->expression)->type) {
-			case LONE_LISP_TYPE_MODULE:
-			case LONE_LISP_TYPE_FUNCTION:
-			case LONE_LISP_TYPE_PRIMITIVE:
-			case LONE_LISP_TYPE_CONTINUATION:
-			case LONE_LISP_TYPE_GENERATOR:
-			case LONE_LISP_TYPE_VECTOR:
-			case LONE_LISP_TYPE_TABLE:
-			case LONE_LISP_TYPE_BYTES:
-			case LONE_LISP_TYPE_TEXT:
-				machine->value = machine->expression;
-				lone_lisp_machine_restore_step(lone, machine);
-				break;
-			case LONE_LISP_TYPE_SYMBOL:
-				machine->value = lone_lisp_table_get(lone, machine->environment, machine->expression);
-				lone_lisp_machine_restore_step(lone, machine);
-				break;
-			case LONE_LISP_TYPE_LIST:
-				lone_lisp_machine_save_step(lone, machine);
-				lone_lisp_machine_push_value(lone, machine, machine->environment);
-				lone_lisp_machine_push_value(lone, machine, lone_lisp_list_rest(lone, machine->expression));
-				machine->expression = lone_lisp_list_first(lone, machine->expression);
-				lone_lisp_machine_push_step(lone, machine, LONE_LISP_MACHINE_STEP_EVALUATED_OPERATOR);
-				goto expression_evaluation;
-			}
+		case LONE_LISP_TAG_SYMBOL:
+			machine->value = lone_lisp_table_get(lone, machine->environment, machine->expression);
+			lone_lisp_machine_restore_step(lone, machine);
+			break;
+		case LONE_LISP_TAG_LIST:
+			lone_lisp_machine_save_step(lone, machine);
+			lone_lisp_machine_push_value(lone, machine, machine->environment);
+			lone_lisp_machine_push_value(lone, machine, lone_lisp_list_rest(lone, machine->expression));
+			machine->expression = lone_lisp_list_first(lone, machine->expression);
+			lone_lisp_machine_push_step(lone, machine, LONE_LISP_MACHINE_STEP_EVALUATED_OPERATOR);
+			goto expression_evaluation;
 		}
 		return true;
 	case LONE_LISP_MACHINE_STEP_EVALUATED_OPERATOR:
@@ -407,27 +383,15 @@ bool lone_lisp_machine_cycle(struct lone_lisp *lone, struct lone_lisp_machine *m
 		machine->environment = lone_lisp_machine_pop_value(lone, machine);
 		machine->list = lone_lisp_nil();
 		switch (lone_lisp_type_of(machine->applicable)) {
-		case LONE_LISP_TYPE_NIL:
-		case LONE_LISP_TYPE_FALSE:
-		case LONE_LISP_TYPE_TRUE:
-		case LONE_LISP_TYPE_INTEGER:
+		case LONE_LISP_TAG_FUNCTION:
+		case LONE_LISP_TAG_PRIMITIVE:
+		case LONE_LISP_TAG_CONTINUATION:
+		case LONE_LISP_TAG_GENERATOR:
+		case LONE_LISP_TAG_VECTOR:
+		case LONE_LISP_TAG_TABLE:
+			break;
+		default:
 			goto operator_not_applicable;
-		case LONE_LISP_TYPE_HEAP_VALUE:
-			switch (lone_lisp_heap_value_of(lone, machine->value)->type) {
-			case LONE_LISP_TYPE_MODULE:
-			case LONE_LISP_TYPE_LIST:
-			case LONE_LISP_TYPE_SYMBOL:
-			case LONE_LISP_TYPE_TEXT:
-			case LONE_LISP_TYPE_BYTES:
-				goto operator_not_applicable;
-			case LONE_LISP_TYPE_FUNCTION:
-			case LONE_LISP_TYPE_PRIMITIVE:
-			case LONE_LISP_TYPE_CONTINUATION:
-			case LONE_LISP_TYPE_GENERATOR:
-			case LONE_LISP_TYPE_VECTOR:
-			case LONE_LISP_TYPE_TABLE:
-				break;
-			}
 		}
 		if (should_evaluate_operands(lone, machine->applicable, machine->unevaluated)) {
 			lone_lisp_machine_push_value(lone, machine, machine->applicable);
@@ -503,8 +467,8 @@ bool lone_lisp_machine_cycle(struct lone_lisp *lone, struct lone_lisp_machine *m
 		 * Stack:
 		 * 	next-step
 		 */
-		switch (lone_lisp_heap_value_of(lone, machine->applicable)->type) {
-		case LONE_LISP_TYPE_FUNCTION:
+		switch (machine->applicable.tagged & LONE_LISP_TAG_MASK) {
+		case LONE_LISP_TAG_FUNCTION:
 			machine->environment = bind_arguments(
 				lone,
 				machine->environment,
@@ -515,7 +479,7 @@ bool lone_lisp_machine_cycle(struct lone_lisp *lone, struct lone_lisp_machine *m
 			machine->unevaluated = lone_lisp_heap_value_of(lone, machine->applicable)->as.function.code;
 			machine->step = LONE_LISP_MACHINE_STEP_SEQUENCE_EVALUATION;
 			return true;
-		case LONE_LISP_TYPE_PRIMITIVE:
+		case LONE_LISP_TAG_PRIMITIVE:
 			/* primitives pop the list of arguments from the stack */
 			lone_lisp_machine_push_function_delimiter(lone, machine);
 			lone_lisp_machine_push_value(lone, machine, machine->list);
@@ -545,7 +509,7 @@ bool lone_lisp_machine_cycle(struct lone_lisp *lone, struct lone_lisp_machine *m
 				goto after_application;
 			}
 			return true;
-		case LONE_LISP_TYPE_CONTINUATION:
+		case LONE_LISP_TAG_CONTINUATION:
 			if (lone_lisp_list_has_rest(lone, machine->list)) { goto too_many_arguments; }
 			lone_lisp_machine_push_frames(
 				lone,
@@ -556,7 +520,7 @@ bool lone_lisp_machine_cycle(struct lone_lisp *lone, struct lone_lisp_machine *m
 			lone_lisp_machine_restore_step(lone, machine);
 			machine->value = lone_lisp_list_first(lone, machine->list);
 			return true;
-		case LONE_LISP_TYPE_GENERATOR:
+		case LONE_LISP_TAG_GENERATOR:
 			generator = &lone_lisp_heap_value_of(lone, machine->applicable)->as.generator;
 			if (!generator->stacks.own.top) { /* generator is finished */ linux_exit(-1); }
 			if (generator->stacks.caller.base) { /* generator is already running */ linux_exit(-1); }
@@ -579,11 +543,11 @@ bool lone_lisp_machine_cycle(struct lone_lisp *lone, struct lone_lisp_machine *m
 				machine->step = LONE_LISP_MACHINE_STEP_AFTER_APPLICATION;
 			}
 			return true;
-		case LONE_LISP_TYPE_VECTOR:
+		case LONE_LISP_TAG_VECTOR:
 			machine->value = apply_to_vector(lone, machine->applicable, machine->list);
 			lone_lisp_machine_restore_step(lone, machine);
 			break;
-		case LONE_LISP_TYPE_TABLE:
+		case LONE_LISP_TAG_TABLE:
 			machine->value = apply_to_table(lone, machine->applicable, machine->list);
 			lone_lisp_machine_restore_step(lone, machine);
 			break;

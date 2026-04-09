@@ -664,23 +664,17 @@ static struct lone_lisp_value lone_lisp_parse(struct lone_lisp *lone,
 
 	/* lexer has already parsed atoms */
 	switch (lone_lisp_type_of(token)) {
-	case LONE_LISP_TYPE_NIL:
-	case LONE_LISP_TYPE_FALSE:
-	case LONE_LISP_TYPE_TRUE:
-	case LONE_LISP_TYPE_INTEGER:
+	case LONE_LISP_TAG_NIL:
+	case LONE_LISP_TAG_FALSE:
+	case LONE_LISP_TAG_TRUE:
+	case LONE_LISP_TAG_INTEGER:
 		return token;
-	case LONE_LISP_TYPE_HEAP_VALUE:
-		break;
-	}
-
-	actual = lone_lisp_heap_value_of(lone, token);
-
-	/* parser deals with nested structures */
-	switch (actual->type) {
-	case LONE_LISP_TYPE_BYTES:
-	case LONE_LISP_TYPE_TEXT:
+	case LONE_LISP_TAG_BYTES:
+	case LONE_LISP_TAG_TEXT:
 		return token;
-	case LONE_LISP_TYPE_SYMBOL:
+	case LONE_LISP_TAG_SYMBOL:
+
+		actual = lone_lisp_heap_value_of(lone, token);
 
 		if (actual->as.symbol.name.count > 1) { return token; }
 		character = *actual->as.symbol.name.pointer;
@@ -704,14 +698,14 @@ static struct lone_lisp_value lone_lisp_parse(struct lone_lisp *lone,
 		__builtin_unreachable();
 		break;
 
-	case LONE_LISP_TYPE_MODULE:
-	case LONE_LISP_TYPE_FUNCTION:
-	case LONE_LISP_TYPE_PRIMITIVE:
-	case LONE_LISP_TYPE_CONTINUATION:
-	case LONE_LISP_TYPE_GENERATOR:
-	case LONE_LISP_TYPE_LIST:
-	case LONE_LISP_TYPE_VECTOR:
-	case LONE_LISP_TYPE_TABLE:
+	case LONE_LISP_TAG_MODULE:
+	case LONE_LISP_TAG_FUNCTION:
+	case LONE_LISP_TAG_PRIMITIVE:
+	case LONE_LISP_TAG_CONTINUATION:
+	case LONE_LISP_TAG_GENERATOR:
+	case LONE_LISP_TAG_LIST:
+	case LONE_LISP_TAG_VECTOR:
+	case LONE_LISP_TAG_TABLE:
 		/* unexpected value type from lexer */
 		goto error;
 	}

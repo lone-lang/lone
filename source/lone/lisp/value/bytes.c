@@ -11,11 +11,10 @@ struct lone_lisp_value lone_lisp_bytes_transfer(struct lone_lisp *lone,
 		bool should_deallocate)
 {
 	struct lone_lisp_heap_value *actual = lone_lisp_heap_allocate_value(lone);
-	actual->type = LONE_LISP_TYPE_BYTES;
 	actual->as.bytes.count = count;
 	actual->as.bytes.pointer = pointer;
 	actual->should_deallocate_bytes = should_deallocate;
-	return lone_lisp_value_from_heap_value(lone, actual);
+	return lone_lisp_value_from_heap_value(lone, actual, LONE_LISP_TAG_BYTES);
 }
 
 struct lone_lisp_value lone_lisp_bytes_transfer_bytes(struct lone_lisp *lone,

@@ -318,43 +318,35 @@ static inline long lone_lisp_value_to_linux_system_call_number(struct lone_lisp 
 	struct lone_lisp_value number;
 
 	switch (lone_lisp_type_of(value)) {
-	case LONE_LISP_TYPE_INTEGER:
+	case LONE_LISP_TAG_INTEGER:
 		return lone_lisp_integer_of(value);
-	case LONE_LISP_TYPE_NIL:
-	case LONE_LISP_TYPE_FALSE:
-	case LONE_LISP_TYPE_TRUE:
+	case LONE_LISP_TAG_NIL:
+	case LONE_LISP_TAG_FALSE:
+	case LONE_LISP_TAG_TRUE:
 		linux_exit(-1);
-	case LONE_LISP_TYPE_HEAP_VALUE:
-		break;
-	}
-
-	switch (lone_lisp_heap_value_of(lone, value)->type) {
-	case LONE_LISP_TYPE_TEXT:
+	case LONE_LISP_TAG_TEXT:
 		value = lone_lisp_text_to_symbol(lone, value);
 		__attribute__((fallthrough));
-	case LONE_LISP_TYPE_SYMBOL:
+	case LONE_LISP_TAG_SYMBOL:
 		number = lone_lisp_table_get(lone, linux_system_call_table, value);
 		break;
-	case LONE_LISP_TYPE_BYTES:
-	case LONE_LISP_TYPE_MODULE:
-	case LONE_LISP_TYPE_FUNCTION:
-	case LONE_LISP_TYPE_PRIMITIVE:
-	case LONE_LISP_TYPE_CONTINUATION:
-	case LONE_LISP_TYPE_GENERATOR:
-	case LONE_LISP_TYPE_LIST:
-	case LONE_LISP_TYPE_VECTOR:
-	case LONE_LISP_TYPE_TABLE:
+	case LONE_LISP_TAG_BYTES:
+	case LONE_LISP_TAG_MODULE:
+	case LONE_LISP_TAG_FUNCTION:
+	case LONE_LISP_TAG_PRIMITIVE:
+	case LONE_LISP_TAG_CONTINUATION:
+	case LONE_LISP_TAG_GENERATOR:
+	case LONE_LISP_TAG_LIST:
+	case LONE_LISP_TAG_VECTOR:
+	case LONE_LISP_TAG_TABLE:
 	default:
 		linux_exit(-1);
 	}
 
 	switch (lone_lisp_type_of(number)) {
-	case LONE_LISP_TYPE_INTEGER:
+	case LONE_LISP_TAG_INTEGER:
 		return lone_lisp_integer_of(number);
-	case LONE_LISP_TYPE_NIL:
-	case LONE_LISP_TYPE_FALSE:
-	case LONE_LISP_TYPE_TRUE:
-	case LONE_LISP_TYPE_HEAP_VALUE:
+	default:
 		break;
 	}
 
@@ -364,32 +356,27 @@ static inline long lone_lisp_value_to_linux_system_call_number(struct lone_lisp 
 static inline long lone_lisp_value_to_linux_system_call_argument(struct lone_lisp *lone, struct lone_lisp_value value)
 {
 	switch (lone_lisp_type_of(value)) {
-	case LONE_LISP_TYPE_NIL:
-	case LONE_LISP_TYPE_FALSE:
+	case LONE_LISP_TAG_NIL:
+	case LONE_LISP_TAG_FALSE:
 		return 0;
-	case LONE_LISP_TYPE_TRUE:
+	case LONE_LISP_TAG_TRUE:
 		return 1;
-	case LONE_LISP_TYPE_INTEGER:
+	case LONE_LISP_TAG_INTEGER:
 		return (long) lone_lisp_integer_of(value);
-	case LONE_LISP_TYPE_HEAP_VALUE:
-		break;
-	}
-
-	switch (lone_lisp_heap_value_of(lone, value)->type) {
-	case LONE_LISP_TYPE_BYTES:
-	case LONE_LISP_TYPE_TEXT:
+	case LONE_LISP_TAG_BYTES:
+	case LONE_LISP_TAG_TEXT:
 		return (long) lone_lisp_heap_value_of(lone, value)->as.bytes.pointer;
-	case LONE_LISP_TYPE_SYMBOL:
+	case LONE_LISP_TAG_SYMBOL:
 		return (long) lone_lisp_heap_value_of(lone, value)->as.symbol.name.pointer;
-	case LONE_LISP_TYPE_PRIMITIVE:
+	case LONE_LISP_TAG_PRIMITIVE:
 		return (long) lone_lisp_heap_value_of(lone, value)->as.primitive.function;
-	case LONE_LISP_TYPE_FUNCTION:
-	case LONE_LISP_TYPE_CONTINUATION:
-	case LONE_LISP_TYPE_GENERATOR:
-	case LONE_LISP_TYPE_LIST:
-	case LONE_LISP_TYPE_VECTOR:
-	case LONE_LISP_TYPE_TABLE:
-	case LONE_LISP_TYPE_MODULE:
+	case LONE_LISP_TAG_FUNCTION:
+	case LONE_LISP_TAG_CONTINUATION:
+	case LONE_LISP_TAG_GENERATOR:
+	case LONE_LISP_TAG_LIST:
+	case LONE_LISP_TAG_VECTOR:
+	case LONE_LISP_TAG_TABLE:
+	case LONE_LISP_TAG_MODULE:
 	default:
 		linux_exit(-1);
 	}

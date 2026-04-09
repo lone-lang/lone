@@ -48,26 +48,37 @@ struct lone_lisp_reader {
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
 
-enum lone_lisp_heap_value_type {
-	LONE_LISP_TYPE_MODULE,
-	LONE_LISP_TYPE_FUNCTION,
-	LONE_LISP_TYPE_PRIMITIVE,
-	LONE_LISP_TYPE_CONTINUATION,
-	LONE_LISP_TYPE_GENERATOR,
-	LONE_LISP_TYPE_LIST,
-	LONE_LISP_TYPE_VECTOR,
-	LONE_LISP_TYPE_TABLE,
-	LONE_LISP_TYPE_SYMBOL,
-	LONE_LISP_TYPE_TEXT,
-	LONE_LISP_TYPE_BYTES,
-};
+/* ╭────────────────────────────────────────────────────────────────────────╮
+   │                                                                        │
+   │    Tag byte values for tagged value words.                             │
+   │                                                                        │
+   │    Bit 0 discriminates heap (0) from non-heap (1) values.              │
+   │    For heap values, bits 1-4 encode the type (16 slots, 11 used).      │
+   │    For non-heap values, the remaining bits distinguish type.           │
+   │                                                                        │
+   ╰────────────────────────────────────────────────────────────────────────╯ */
 
-enum lone_lisp_value_type {
-	LONE_LISP_TYPE_HEAP_VALUE = 0x00, /* bit 0 = 0: heap reference */
-	LONE_LISP_TYPE_INTEGER    = 0x01, /* bit 0 = 1: non-heap */
-	LONE_LISP_TYPE_NIL        = 0x03,
-	LONE_LISP_TYPE_TRUE       = 0x05,
-	LONE_LISP_TYPE_FALSE      = 0x07,
+enum lone_lisp_tag {
+
+	/* heap value tags: bit 0 = 0, type in bits 1-4 */
+	LONE_LISP_TAG_MODULE       = 0x00,
+	LONE_LISP_TAG_FUNCTION     = 0x02,
+	LONE_LISP_TAG_PRIMITIVE    = 0x04,
+	LONE_LISP_TAG_CONTINUATION = 0x06,
+	LONE_LISP_TAG_GENERATOR    = 0x08,
+	LONE_LISP_TAG_LIST         = 0x0A,
+	LONE_LISP_TAG_VECTOR       = 0x0C,
+	LONE_LISP_TAG_TABLE        = 0x0E,
+	LONE_LISP_TAG_SYMBOL       = 0x10,
+	LONE_LISP_TAG_TEXT         = 0x12,
+	LONE_LISP_TAG_BYTES        = 0x14,
+
+	/* non-heap value tags: bit 0 = 1 */
+	LONE_LISP_TAG_INTEGER = 0x01,
+	LONE_LISP_TAG_NIL     = 0x03,
+	LONE_LISP_TAG_TRUE    = 0x05,
+	LONE_LISP_TAG_FALSE   = 0x07,
+
 };
 
 struct lone_lisp_value {
@@ -190,7 +201,7 @@ struct lone_lisp_heap_value {
 		bool should_deallocate_bytes: 1;
 	};
 
-	enum lone_lisp_heap_value_type type;
+	enum lone_lisp_tag type; /* tag byte, set at allocation for GC sweep */
 
 	union {
 		struct lone_lisp_module module;
@@ -230,16 +241,13 @@ struct lone_lisp_value lone_lisp_boolean_for(bool value);
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
 
-unsigned char lone_lisp_type_tag_of(struct lone_lisp_value value);
-enum lone_lisp_value_type lone_lisp_type_of(struct lone_lisp_value value);
+enum lone_lisp_tag lone_lisp_type_of(struct lone_lisp_value value);
 struct lone_lisp_heap_value *lone_lisp_heap_value_of(struct lone_lisp *lone, struct lone_lisp_value value);
 lone_lisp_integer lone_lisp_integer_of(struct lone_lisp_value value);
+struct lone_lisp_value lone_lisp_retag(struct lone_lisp *lone, struct lone_lisp_value value, enum lone_lisp_tag new_tag);
 
 bool lone_lisp_is_register_value(struct lone_lisp_value value);
 bool lone_lisp_is_heap_value(struct lone_lisp_value value);
-bool lone_lisp_is_register_value_of_type(struct lone_lisp_value value, enum lone_lisp_value_type register_value_type);
-bool lone_lisp_is_heap_value_of_type(struct lone_lisp *lone,
-		struct lone_lisp_value value, enum lone_lisp_heap_value_type heap_value_type);
 
 bool lone_lisp_is_module(struct lone_lisp *lone, struct lone_lisp_value value);
 bool lone_lisp_is_function(struct lone_lisp *lone, struct lone_lisp_value value);
@@ -299,7 +307,8 @@ bool lone_lisp_integer_is_greater_than_or_equal_to(struct lone_lisp *lone, struc
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
 
-struct lone_lisp_value lone_lisp_value_from_heap_value(struct lone_lisp *lone, struct lone_lisp_heap_value *heap_value);
+struct lone_lisp_value lone_lisp_value_from_heap_value(struct lone_lisp *lone,
+		struct lone_lisp_heap_value *heap_value, enum lone_lisp_tag tag);
 
 /* ╭────────────────────────────────────────────────────────────────────────╮
    │                                                                        │

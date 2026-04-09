@@ -13,7 +13,7 @@ struct lone_lisp_value lone_lisp_integer_create(lone_lisp_integer integer)
 	}
 
 	return (struct lone_lisp_value) {
-		.tagged = (integer << LONE_LISP_DATA_SHIFT) | LONE_LISP_TYPE_INTEGER,
+		.tagged = (integer << LONE_LISP_DATA_SHIFT) | LONE_LISP_TAG_INTEGER,
 	};
 }
 

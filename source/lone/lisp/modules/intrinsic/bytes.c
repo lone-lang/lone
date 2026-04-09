@@ -89,17 +89,14 @@ LONE_LISP_PRIMITIVE(bytes_new)
 	}
 
 	switch (lone_lisp_type_of(count)) {
-	case LONE_LISP_TYPE_INTEGER:
+	case LONE_LISP_TAG_INTEGER:
 		if (lone_lisp_integer_of(count) <= 0) {
 			/* zero or negative allocation, likely a mistake: (new 0), (new -64) */ linux_exit(-1);
 		}
 
 		allocation = lone_lisp_integer_of(count);
 		break;
-	case LONE_LISP_TYPE_NIL:
-	case LONE_LISP_TYPE_FALSE:
-	case LONE_LISP_TYPE_TRUE:
-	case LONE_LISP_TYPE_HEAP_VALUE:
+	default:
 		/* count not an integer: (new {}) */ linux_exit(-1);
 	}
 

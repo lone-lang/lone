@@ -12,10 +12,9 @@ struct lone_lisp_value lone_lisp_list_create(struct lone_lisp *lone,
 		struct lone_lisp_value first, struct lone_lisp_value rest)
 {
 	struct lone_lisp_heap_value *actual = lone_lisp_heap_allocate_value(lone);
-	actual->type = LONE_LISP_TYPE_LIST;
 	actual->as.list.first = first;
 	actual->as.list.rest = rest;
-	return lone_lisp_value_from_heap_value(lone, actual);
+	return lone_lisp_value_from_heap_value(lone, actual, LONE_LISP_TAG_LIST);
 }
 
 struct lone_lisp_value lone_lisp_list_create_nil(struct lone_lisp *lone)

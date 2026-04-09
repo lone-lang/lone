@@ -11,12 +11,11 @@ static struct lone_lisp_value lone_lisp_symbol_transfer(struct lone_lisp *lone,
 		unsigned char *text, size_t length, bool should_deallocate)
 {
 	struct lone_lisp_heap_value *actual = lone_lisp_heap_allocate_value(lone);
-	actual->type = LONE_LISP_TYPE_SYMBOL;
 	actual->as.symbol.name.count = length;
 	actual->as.symbol.name.pointer = text;
 	actual->should_deallocate_bytes = should_deallocate;
 	actual->as.symbol.hash = lone_lisp_hash_as_symbol(lone, actual->as.symbol.name);
-	return lone_lisp_value_from_heap_value(lone, actual);
+	return lone_lisp_value_from_heap_value(lone, actual, LONE_LISP_TAG_SYMBOL);
 }
 
 static struct lone_lisp_value lone_lisp_symbol_transfer_bytes(struct lone_lisp *lone,
