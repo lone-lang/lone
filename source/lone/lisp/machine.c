@@ -48,31 +48,27 @@ void lone_lisp_machine_push_value(struct lone_lisp *lone, struct lone_lisp_machi
 		struct lone_lisp_value value)
 {
 	lone_lisp_machine_push(lone, machine, (struct lone_lisp_machine_stack_frame) {
-		.type = LONE_LISP_MACHINE_STACK_FRAME_TYPE_VALUE,
-		.as.value = value,
+		.tagged = value.tagged,
 	});
 }
 
 void lone_lisp_machine_push_function_delimiter(struct lone_lisp *lone, struct lone_lisp_machine *machine)
 {
 	lone_lisp_machine_push(lone, machine, (struct lone_lisp_machine_stack_frame) {
-		.type = LONE_LISP_MACHINE_STACK_FRAME_TYPE_FUNCTION_DELIMITER,
-		.as.value = lone_lisp_nil(),
+		.tagged = LONE_LISP_TAG_FUNCTION_DELIMITER,
 	});
 }
 
 void lone_lisp_machine_push_continuation_delimiter(struct lone_lisp *lone, struct lone_lisp_machine *machine)
 {
 	lone_lisp_machine_push(lone, machine, (struct lone_lisp_machine_stack_frame) {
-		.type = LONE_LISP_MACHINE_STACK_FRAME_TYPE_CONTINUATION_DELIMITER,
-		.as.value = lone_lisp_nil(),
+		.tagged = LONE_LISP_TAG_CONTINUATION_DELIMITER,
 	});
 }
 
 struct lone_lisp_value lone_lisp_machine_pop_value(struct lone_lisp *lone, struct lone_lisp_machine *machine)
 {
-	struct lone_lisp_value value = lone_lisp_machine_pop(lone, machine).as.value;
-	return value;
+	return (struct lone_lisp_value) { .tagged = lone_lisp_machine_pop(lone, machine).tagged };
 }
 
 void lone_lisp_machine_pop_function_delimiter(struct lone_lisp *lone, struct lone_lisp_machine *machine)
@@ -89,22 +85,20 @@ void lone_lisp_machine_push_integer(struct lone_lisp *lone, struct lone_lisp_mac
 		lone_lisp_integer integer)
 {
 	lone_lisp_machine_push(lone, machine, (struct lone_lisp_machine_stack_frame) {
-		.type = LONE_LISP_MACHINE_STACK_FRAME_TYPE_INTEGER,
-		.as.integer = integer,
+		.tagged = (integer << LONE_LISP_DATA_SHIFT) | LONE_LISP_TAG_INTEGER,
 	});
 }
 
 lone_lisp_integer lone_lisp_machine_pop_integer(struct lone_lisp *lone, struct lone_lisp_machine *machine)
 {
-	return lone_lisp_machine_pop(lone, machine).as.integer;
+	return lone_lisp_machine_pop(lone, machine).tagged >> LONE_LISP_DATA_SHIFT;
 }
 
 void lone_lisp_machine_push_step(struct lone_lisp *lone, struct lone_lisp_machine *machine,
 		enum lone_lisp_machine_step step)
 {
 	lone_lisp_machine_push(lone, machine, (struct lone_lisp_machine_stack_frame) {
-		.type = LONE_LISP_MACHINE_STACK_FRAME_TYPE_STEP,
-		.as.step = step,
+		.tagged = ((long) step << LONE_LISP_DATA_SHIFT) | LONE_LISP_TAG_STEP,
 	});
 }
 
@@ -115,8 +109,7 @@ void lone_lisp_machine_save_step(struct lone_lisp *lone, struct lone_lisp_machin
 
 enum lone_lisp_machine_step lone_lisp_machine_pop_step(struct lone_lisp *lone, struct lone_lisp_machine *machine)
 {
-	enum lone_lisp_machine_step step = lone_lisp_machine_pop(lone, machine).as.step;
-	return step;
+	return lone_lisp_machine_pop(lone, machine).tagged >> LONE_LISP_DATA_SHIFT;
 }
 
 void lone_lisp_machine_restore_step(struct lone_lisp *lone, struct lone_lisp_machine *machine)
@@ -128,8 +121,7 @@ void lone_lisp_machine_push_primitive_step(struct lone_lisp *lone, struct lone_l
 		long primitive_step)
 {
 	lone_lisp_machine_push(lone, machine, (struct lone_lisp_machine_stack_frame) {
-		.type = LONE_LISP_MACHINE_STACK_FRAME_TYPE_PRIMITIVE_STEP,
-		.as.primitive_step = primitive_step,
+		.tagged = (primitive_step << LONE_LISP_DATA_SHIFT) | LONE_LISP_TAG_PRIMITIVE_STEP,
 	});
 }
 
@@ -140,8 +132,7 @@ void lone_lisp_machine_save_primitive_step(struct lone_lisp *lone, struct lone_l
 
 long lone_lisp_machine_pop_primitive_step(struct lone_lisp *lone, struct lone_lisp_machine *machine)
 {
-	long primitive_step = lone_lisp_machine_pop(lone, machine).as.primitive_step;
-	return primitive_step;
+	return lone_lisp_machine_pop(lone, machine).tagged >> LONE_LISP_DATA_SHIFT;
 }
 
 void lone_lisp_machine_restore_primitive_step(struct lone_lisp *lone, struct lone_lisp_machine *machine)
@@ -149,19 +140,18 @@ void lone_lisp_machine_restore_primitive_step(struct lone_lisp *lone, struct lon
 	machine->primitive.step = lone_lisp_machine_pop_primitive_step(lone, machine);
 }
 
-void lone_lisp_machine_unwind_to(struct lone_lisp *lone, struct lone_lisp_machine *machine,
-		enum lone_lisp_machine_stack_frame_type frame_type)
+void lone_lisp_machine_unwind_to(struct lone_lisp *lone, struct lone_lisp_machine *machine, enum lone_lisp_tag tag)
 {
 	struct lone_lisp_machine_stack_frame frame;
 
-	while (frame_type != (frame = lone_lisp_machine_pop(lone, machine)).type);
+	while (tag != ((enum lone_lisp_tag) ((frame = lone_lisp_machine_pop(lone, machine)).tagged & LONE_LISP_TAG_MASK)));
 
 	lone_lisp_machine_push(lone, machine, frame);
 }
 
 void lone_lisp_machine_unwind_to_function_delimiter(struct lone_lisp *lone, struct lone_lisp_machine *machine)
 {
-	lone_lisp_machine_unwind_to(lone, machine, LONE_LISP_MACHINE_STACK_FRAME_TYPE_FUNCTION_DELIMITER);
+	lone_lisp_machine_unwind_to(lone, machine, LONE_LISP_TAG_FUNCTION_DELIMITER);
 }
 
 static bool should_evaluate_operands(struct lone_lisp *lone,
@@ -529,8 +519,11 @@ bool lone_lisp_machine_cycle(struct lone_lisp *lone, struct lone_lisp_machine *m
 				/* generator not yet started, initialize its stack */
 				machine->stack = generator->stacks.own;
 				lone_lisp_machine_push(lone, machine, (struct lone_lisp_machine_stack_frame) {
-					.type = LONE_LISP_MACHINE_STACK_FRAME_TYPE_GENERATOR_DELIMITER,
-					.as.value = machine->applicable,
+					.tagged =
+						lone_lisp_retag(
+							machine->applicable,
+							LONE_LISP_TAG_GENERATOR_DELIMITER
+						).tagged,
 				});
 				lone_lisp_machine_push_step(lone, machine, LONE_LISP_MACHINE_STEP_GENERATOR_RETURN);
 				machine->expression = lone_lisp_list_create(lone, generator->function, machine->list);
@@ -637,7 +630,10 @@ bool lone_lisp_machine_cycle(struct lone_lisp *lone, struct lone_lisp_machine *m
 		/* Stack:
 		 * 	generator-delimiter
 		 */
-		generator = &lone_lisp_heap_value_of(lone, machine->stack.base[0].as.value)->as.generator;
+		generator = &lone_lisp_heap_value_of(
+			lone,
+			lone_lisp_retag_frame(machine->stack.base[0], LONE_LISP_TAG_GENERATOR)
+		)->as.generator;
 		generator->stacks.own.top = 0; /* generator has finished */
 		machine->stack = generator->stacks.caller;
 		generator->stacks.caller = (struct lone_lisp_machine_stack) { 0 };

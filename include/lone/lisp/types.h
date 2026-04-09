@@ -274,7 +274,8 @@ struct lone_lisp_value lone_lisp_boolean_for(bool value);
 enum lone_lisp_tag lone_lisp_type_of(struct lone_lisp_value value);
 struct lone_lisp_heap_value *lone_lisp_heap_value_of(struct lone_lisp *lone, struct lone_lisp_value value);
 lone_lisp_integer lone_lisp_integer_of(struct lone_lisp_value value);
-struct lone_lisp_value lone_lisp_retag(struct lone_lisp *lone, struct lone_lisp_value value, enum lone_lisp_tag new_tag);
+struct lone_lisp_value lone_lisp_retag(struct lone_lisp_value value, enum lone_lisp_tag new_tag);
+struct lone_lisp_value lone_lisp_retag_frame(struct lone_lisp_machine_stack_frame frame, enum lone_lisp_tag new_tag);
 
 bool lone_lisp_is_register_value(struct lone_lisp_value value);
 bool lone_lisp_is_heap_value(struct lone_lisp_value value);
@@ -647,24 +648,8 @@ enum lone_lisp_machine_step {
 	LONE_LISP_MACHINE_STEP_HALT,
 };
 
-enum lone_lisp_machine_stack_frame_type {
-	LONE_LISP_MACHINE_STACK_FRAME_TYPE_VALUE,
-	LONE_LISP_MACHINE_STACK_FRAME_TYPE_INTEGER,
-	LONE_LISP_MACHINE_STACK_FRAME_TYPE_STEP,
-	LONE_LISP_MACHINE_STACK_FRAME_TYPE_PRIMITIVE_STEP,
-	LONE_LISP_MACHINE_STACK_FRAME_TYPE_FUNCTION_DELIMITER,
-	LONE_LISP_MACHINE_STACK_FRAME_TYPE_CONTINUATION_DELIMITER,
-	LONE_LISP_MACHINE_STACK_FRAME_TYPE_GENERATOR_DELIMITER,
-};
-
 struct lone_lisp_machine_stack_frame {
-	enum lone_lisp_machine_stack_frame_type type;
-	union {
-		struct lone_lisp_value value;
-		lone_lisp_integer integer;
-		enum lone_lisp_machine_step step;
-		lone_lisp_integer primitive_step;
-	} as;
+	long tagged;
 };
 
 struct lone_lisp_machine {

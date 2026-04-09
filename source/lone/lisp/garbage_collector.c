@@ -181,17 +181,7 @@ static void lone_lisp_mark_lisp_stack_values(struct lone_lisp *lone,
 	struct lone_lisp_machine_stack_frame *frame;
 
 	for (frame = base; frame < limit; ++frame) {
-		switch (frame->type) {
-		case LONE_LISP_MACHINE_STACK_FRAME_TYPE_INTEGER:
-		case LONE_LISP_MACHINE_STACK_FRAME_TYPE_STEP:
-		case LONE_LISP_MACHINE_STACK_FRAME_TYPE_PRIMITIVE_STEP:
-			continue;
-		case LONE_LISP_MACHINE_STACK_FRAME_TYPE_VALUE:
-		case LONE_LISP_MACHINE_STACK_FRAME_TYPE_FUNCTION_DELIMITER:
-		case LONE_LISP_MACHINE_STACK_FRAME_TYPE_CONTINUATION_DELIMITER:
-		case LONE_LISP_MACHINE_STACK_FRAME_TYPE_GENERATOR_DELIMITER:
-			lone_lisp_mark_value(lone, frame->as.value);
-		}
+		lone_lisp_mark_value(lone, (struct lone_lisp_value) { .tagged = frame->tagged });
 	}
 }
 
@@ -393,18 +383,8 @@ static void lone_lisp_rewrite_stack_frames(struct lone_lisp *lone,
 	struct lone_lisp_machine_stack_frame *frame;
 
 	for (frame = base; frame < limit; ++frame) {
-		switch (frame->type) {
-		case LONE_LISP_MACHINE_STACK_FRAME_TYPE_INTEGER:
-		case LONE_LISP_MACHINE_STACK_FRAME_TYPE_STEP:
-		case LONE_LISP_MACHINE_STACK_FRAME_TYPE_PRIMITIVE_STEP:
-			continue;
-		case LONE_LISP_MACHINE_STACK_FRAME_TYPE_VALUE:
-		case LONE_LISP_MACHINE_STACK_FRAME_TYPE_FUNCTION_DELIMITER:
-		case LONE_LISP_MACHINE_STACK_FRAME_TYPE_CONTINUATION_DELIMITER:
-		case LONE_LISP_MACHINE_STACK_FRAME_TYPE_GENERATOR_DELIMITER:
-			frame->as.value = lone_lisp_forward_value(lone, frame->as.value);
-			break;
-		}
+		struct lone_lisp_value value = { .tagged = frame->tagged };
+		frame->tagged = lone_lisp_forward_value(lone, value).tagged;
 	}
 }
 

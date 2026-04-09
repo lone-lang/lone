@@ -318,12 +318,15 @@ struct lone_lisp_value lone_lisp_value_from_heap_value(struct lone_lisp *lone,
 	};
 }
 
-struct lone_lisp_value lone_lisp_retag(struct lone_lisp *lone, struct lone_lisp_value value, enum lone_lisp_tag new_tag)
+struct lone_lisp_value lone_lisp_retag(struct lone_lisp_value value, enum lone_lisp_tag new_tag)
 {
-	(void) lone;
-
 	/* replace the tag byte, keep index and metadata */
 	value.tagged = (value.tagged & ~((long) LONE_LISP_TAG_MASK)) | new_tag;
 
 	return value;
+}
+
+struct lone_lisp_value lone_lisp_retag_frame(struct lone_lisp_machine_stack_frame frame, enum lone_lisp_tag new_tag)
+{
+	return lone_lisp_retag((struct lone_lisp_value) { .tagged = frame.tagged }, new_tag);
 }
