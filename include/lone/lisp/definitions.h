@@ -7,6 +7,44 @@
 
 #define LONE_LISP_DECIMAL_DIGITS_PER_INTEGER LONE_DECIMAL_DIGITS_PER_LONG
 
+/* ╭────────────────────────────────────────────────────────────────────────╮
+   │                                                                        │
+   │    Tagged value layout constants.                                      │
+   │                                                                        │
+   │    All lone lisp values are 64-bit tagged words.                       │
+   │    The low byte is the tag. The upper 56 bits are data.                │
+   │                                                                        │
+   │    For non-heap values with bit 0 = 1, all 56 bits represent data.     │
+   │                                                                        │
+   │        63                            8  7      0                       │
+   │        ┌──────────────────────────────┬─────────┐                      │
+   │        │  data (56)                   │ tag (8) │                      │
+   │        └──────────────────────────────┴─────────┘                      │
+   │                                                                        │
+   │    For heap values with bit 0 = 0, the data is further split           │
+   │    into 16 bits of per-value metadata and a 40-bit heap index.         │
+   │                                                                        │
+   │        63              24  23        8  7      0                       │
+   │        ┌─────────────────┬────────────┬─────────┐                      │
+   │        │  index (40)     │ meta (16)  │ tag (8) │                      │
+   │        └─────────────────┴────────────┴─────────┘                      │
+   │                                                                        │
+   │                                                                        │
+   ╰────────────────────────────────────────────────────────────────────────╯ */
+
+#define LONE_LISP_TAG_BITS              8
+#define LONE_LISP_TAG_MASK              0xFF
+
+#define LONE_LISP_DATA_BITS             56
+#define LONE_LISP_DATA_SHIFT            LONE_LISP_TAG_BITS
+
+#define LONE_LISP_METADATA_BITS         16
+#define LONE_LISP_METADATA_SHIFT        LONE_LISP_TAG_BITS
+#define LONE_LISP_METADATA_MASK         0xFFFF
+
+#define LONE_LISP_INDEX_BITS            40
+#define LONE_LISP_INDEX_SHIFT           24
+
 #ifndef LONE_LISP_BUFFER_SIZE
 	#define LONE_LISP_BUFFER_SIZE 4096
 #endif

@@ -31,14 +31,7 @@ struct lone_lisp_value lone_lisp_boolean_for(bool value)
 
 unsigned char lone_lisp_type_tag_of(struct lone_lisp_value value)
 {
-	unsigned char tag = value.tagged & 7;
-
-	switch (tag) {
-	case 7:
-		return value.tagged & 31;
-	}
-
-	return tag;
+	return value.tagged & LONE_LISP_TAG_MASK;
 }
 
 enum lone_lisp_value_type lone_lisp_type_of(struct lone_lisp_value value)
@@ -50,14 +43,14 @@ struct lone_lisp_heap_value *lone_lisp_heap_value_of(struct lone_lisp *lone, str
 {
 	size_t index;
 
-	index = ((unsigned long) value.tagged) >> 3;
+	index = ((unsigned long) value.tagged) >> LONE_LISP_INDEX_SHIFT;
 
 	return &lone->heap.values[index];
 }
 
 lone_lisp_integer lone_lisp_integer_of(struct lone_lisp_value value)
 {
-	return value.tagged >> 3;
+	return value.tagged >> LONE_LISP_DATA_SHIFT;
 }
 
 bool lone_lisp_has_same_type(struct lone_lisp *lone, struct lone_lisp_value x, struct lone_lisp_value y)
@@ -370,6 +363,6 @@ struct lone_lisp_value lone_lisp_value_from_heap_value(struct lone_lisp *lone, s
 	index = (size_t) (heap_value - lone->heap.values);
 
 	return (struct lone_lisp_value) {
-		.tagged = (long) (index << 3),
+		.tagged = (long) ((unsigned long) index << LONE_LISP_INDEX_SHIFT),
 	};
 }

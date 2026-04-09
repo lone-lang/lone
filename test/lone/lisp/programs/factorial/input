@@ -8,4 +8,4 @@
 (print (factorial 1))
 (print (factorial 5))
 (print (factorial 10))
-(print (factorial 19))
+(print (factorial 18))

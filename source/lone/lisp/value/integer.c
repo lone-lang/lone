@@ -7,13 +7,13 @@
 struct lone_lisp_value lone_lisp_integer_create(lone_lisp_integer integer)
 {
 	/* see if integer survives the tag being shifted in and out of it */
-	if ((integer << 3) >> 3 != integer) {
+	if ((integer << LONE_LISP_DATA_SHIFT) >> LONE_LISP_DATA_SHIFT != integer) {
 		/* number is too large for lone's tagged value representation */
 		linux_exit(-1);
 	}
 
 	return (struct lone_lisp_value) {
-		.tagged = (integer << 3) | LONE_LISP_TYPE_INTEGER,
+		.tagged = (integer << LONE_LISP_DATA_SHIFT) | LONE_LISP_TYPE_INTEGER,
 	};
 }
 

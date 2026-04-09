@@ -162,8 +162,8 @@ static void lone_lisp_mark_native_stack_roots_in_range(struct lone_lisp *lone, v
 
 		word = (unsigned long) *pointer;
 
-		if ((word & 7) == LONE_LISP_TYPE_HEAP_VALUE) {
-			index = word >> 3;
+		if (!(word & 1)) {
+			index = word >> LONE_LISP_INDEX_SHIFT;
 
 			if (index < lone->heap.count) {
 				lone_lisp_pin_and_mark_heap_value(lone, &lone->heap.values[index]);
@@ -372,18 +372,24 @@ static void lone_lisp_move_heap_value(struct lone_lisp *lone, size_t from, size_
 
 static struct lone_lisp_value lone_lisp_forward_value(struct lone_lisp *lone, struct lone_lisp_value value)
 {
-	size_t old_index;
+	size_t old_index, new_index;
+	long preserved;
 
 	if (!lone_lisp_is_heap_value(value)) { return value; }
 
-	old_index = ((unsigned long) value.tagged) >> 3;
+	old_index = ((unsigned long) value.tagged) >> LONE_LISP_INDEX_SHIFT;
 
 	if (old_index >= lone->heap.count) { return value; }
 
 	if (lone_lisp_is_alive(lone, old_index)) { return value; }
 
+	new_index = lone->heap.values[old_index].as.metadata.forwarding_index;
+
+	/* preserve tag and metadata bits, replace the index */
+	preserved = value.tagged & (((long) 1 << LONE_LISP_INDEX_SHIFT) - 1);
+
 	return (struct lone_lisp_value) {
-		.tagged = (long) (lone->heap.values[old_index].as.metadata.forwarding_index << 3),
+		.tagged = preserved | (long) ((unsigned long) new_index << LONE_LISP_INDEX_SHIFT),
 	};
 }
 
