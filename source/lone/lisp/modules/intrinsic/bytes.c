@@ -118,8 +118,14 @@ LONE_LISP_PRIMITIVE(bytes_is_zero)
 		/* expected a bytes object: (zero? 0), (zero? "text") */ linux_exit(-1);
 	}
 
-	lone_lisp_machine_push_value(lone, machine,
-			lone_lisp_boolean_for(lone_bytes_is_zero(lone_lisp_heap_value_of(lone, bytes)->as.bytes)));
+	if (lone_lisp_is_inline_bytes(bytes)) {
+		struct lone_bytes content = lone_lisp_inline_value_bytes(&bytes);
+		lone_lisp_machine_push_value(lone, machine,
+				lone_lisp_boolean_for(lone_bytes_is_zero(content)));
+	} else {
+		lone_lisp_machine_push_value(lone, machine,
+				lone_lisp_boolean_for(lone_bytes_is_zero(lone_lisp_heap_value_of(lone, bytes)->as.bytes)));
+	}
 	return 0;
 }
 

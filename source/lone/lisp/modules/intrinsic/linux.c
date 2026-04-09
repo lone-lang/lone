@@ -365,6 +365,10 @@ static inline long lone_lisp_value_to_linux_system_call_argument(struct lone_lis
 		return (long) lone_lisp_integer_of(*value);
 	case LONE_LISP_TAG_BYTES:
 	case LONE_LISP_TAG_TEXT:
+		if (lone_lisp_is_inline_value(*value)) {
+			struct lone_bytes bytes = lone_lisp_inline_value_bytes(value);
+			return (long) bytes.pointer;
+		}
 		return (long) lone_lisp_heap_value_of(lone, *value)->as.bytes.pointer;
 	case LONE_LISP_TAG_SYMBOL: {
 		struct lone_bytes name = lone_lisp_symbol_name(lone, value);

@@ -10,7 +10,13 @@ struct lone_lisp_value lone_lisp_bytes_transfer(struct lone_lisp *lone,
 		unsigned char *pointer, size_t count,
 		bool should_deallocate)
 {
-	struct lone_lisp_heap_value *actual = lone_lisp_heap_allocate_value(lone);
+	struct lone_lisp_heap_value *actual;
+
+	if (count <= LONE_LISP_INLINE_MAX_LENGTH && !should_deallocate) {
+		return lone_lisp_inline_bytes_create(pointer, count);
+	}
+
+	actual = lone_lisp_heap_allocate_value(lone);
 	actual->as.bytes.count = count;
 	actual->as.bytes.pointer = pointer;
 	actual->should_deallocate_bytes = should_deallocate;
@@ -25,7 +31,13 @@ struct lone_lisp_value lone_lisp_bytes_transfer_bytes(struct lone_lisp *lone,
 
 struct lone_lisp_value lone_lisp_bytes_copy(struct lone_lisp *lone, unsigned char *pointer, size_t count)
 {
-	unsigned char *copy = lone_memory_allocate(lone->system, count + 1, 1, 1, LONE_MEMORY_ALLOCATION_FLAGS_NONE);
+	unsigned char *copy;
+
+	if (count <= LONE_LISP_INLINE_MAX_LENGTH) {
+		return lone_lisp_inline_bytes_create(pointer, count);
+	}
+
+	copy = lone_memory_allocate(lone->system, count + 1, 1, 1, LONE_MEMORY_ALLOCATION_FLAGS_NONE);
 	lone_memory_move(pointer, copy, count);
 	copy[count] = '\0';
 	return lone_lisp_bytes_transfer(lone, copy, count, true);

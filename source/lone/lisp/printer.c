@@ -45,14 +45,20 @@ static void lone_lisp_print_bytes(struct lone_lisp *lone, struct lone_lisp_value
 	static unsigned char hexadecimal[] = "0123456789ABCDEF";
 	unsigned char *text, *byte, low, high;
 	size_t size, count, i;
+	struct lone_bytes content;
 
-	count = lone_lisp_heap_value_of(lone, bytes)->as.bytes.count;
+	if (lone_lisp_is_inline_bytes(bytes)) {
+		content = lone_lisp_inline_value_bytes(&bytes);
+	} else {
+		content = lone_lisp_heap_value_of(lone, bytes)->as.bytes;
+	}
+	count = content.count;
 
 	if (count == 0) { linux_write(fd, "bytes[]", 7); return; }
 
 	size = 2 + count * 2; /* "0x" + 2 characters per input byte */
 	text = lone_memory_allocate(lone->system, size, 1, 1, LONE_MEMORY_ALLOCATION_FLAGS_NONE);
-	byte = lone_lisp_heap_value_of(lone, bytes)->as.bytes.pointer;
+	byte = content.pointer;
 
 	text[0] = '0';
 	text[1] = 'x';

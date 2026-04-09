@@ -356,6 +356,7 @@ bool lone_lisp_is_text(struct lone_lisp *lone, struct lone_lisp_value value);
 bool lone_lisp_is_symbol(struct lone_lisp *lone, struct lone_lisp_value value);
 bool lone_lisp_is_inline_symbol(struct lone_lisp_value value);
 bool lone_lisp_is_inline_text(struct lone_lisp_value value);
+bool lone_lisp_is_inline_bytes(struct lone_lisp_value value);
 bool lone_lisp_is_inline_value(struct lone_lisp_value value);
 
 /* Extract bytes from any inline value (symbol, text, or bytes).
@@ -632,6 +633,7 @@ struct lone_lisp_value lone_lisp_table_value_at(struct lone_lisp *lone, struct l
 
 struct lone_lisp_value lone_lisp_inline_symbol_create(unsigned char *bytes, size_t count);
 struct lone_lisp_value lone_lisp_inline_text_create(unsigned char *bytes, size_t count);
+struct lone_lisp_value lone_lisp_inline_bytes_create(unsigned char *bytes, size_t count);
 
 struct lone_lisp_value lone_lisp_intern(struct lone_lisp *lone,
 		unsigned char *bytes, size_t count, bool should_deallocate);

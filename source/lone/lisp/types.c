@@ -42,6 +42,10 @@ enum lone_lisp_tag lone_lisp_type_of(struct lone_lisp_value value)
 		return LONE_LISP_TAG_TEXT;
 	}
 
+	if ((tag & LONE_LISP_INLINE_TYPE_MASK) == LONE_LISP_INLINE_TYPE_BYTES) {
+		return LONE_LISP_TAG_BYTES;
+	}
+
 	return tag;
 }
 
@@ -157,13 +161,15 @@ bool lone_lisp_has_bytes(struct lone_lisp *lone, struct lone_lisp_value value)
 	    || (value.tagged & LONE_LISP_TAG_MASK) == LONE_LISP_TAG_TEXT
 	    || (value.tagged & LONE_LISP_TAG_MASK) == LONE_LISP_TAG_SYMBOL
 	    || lone_lisp_is_inline_symbol(value)
-	    || lone_lisp_is_inline_text(value);
+	    || lone_lisp_is_inline_text(value)
+	    || lone_lisp_is_inline_bytes(value);
 }
 
 bool lone_lisp_is_bytes(struct lone_lisp *lone, struct lone_lisp_value value)
 {
 	(void) lone;
-	return (value.tagged & LONE_LISP_TAG_MASK) == LONE_LISP_TAG_BYTES;
+	return (value.tagged & LONE_LISP_TAG_MASK) == LONE_LISP_TAG_BYTES
+	    || lone_lisp_is_inline_bytes(value);
 }
 
 bool lone_lisp_is_text(struct lone_lisp *lone, struct lone_lisp_value value)
@@ -181,6 +187,11 @@ bool lone_lisp_is_inline_symbol(struct lone_lisp_value value)
 bool lone_lisp_is_inline_text(struct lone_lisp_value value)
 {
 	return (value.tagged & LONE_LISP_INLINE_TYPE_MASK) == LONE_LISP_INLINE_TYPE_TEXT;
+}
+
+bool lone_lisp_is_inline_bytes(struct lone_lisp_value value)
+{
+	return (value.tagged & LONE_LISP_INLINE_TYPE_MASK) == LONE_LISP_INLINE_TYPE_BYTES;
 }
 
 bool lone_lisp_is_inline_value(struct lone_lisp_value value)
@@ -224,6 +235,11 @@ struct lone_lisp_value lone_lisp_inline_symbol_create(unsigned char *bytes, size
 struct lone_lisp_value lone_lisp_inline_text_create(unsigned char *bytes, size_t count)
 {
 	return lone_lisp_inline_create(LONE_LISP_INLINE_TYPE_TEXT, bytes, count);
+}
+
+struct lone_lisp_value lone_lisp_inline_bytes_create(unsigned char *bytes, size_t count)
+{
+	return lone_lisp_inline_create(LONE_LISP_INLINE_TYPE_BYTES, bytes, count);
 }
 
 struct lone_bytes lone_lisp_symbol_name(struct lone_lisp *lone, struct lone_lisp_value *value)
