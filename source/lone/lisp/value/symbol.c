@@ -11,11 +11,30 @@ static struct lone_lisp_value lone_lisp_symbol_transfer(struct lone_lisp *lone,
 		unsigned char *text, size_t length, bool should_deallocate)
 {
 	struct lone_lisp_heap_value *actual = lone_lisp_heap_allocate_value(lone);
+	struct lone_lisp_value value;
+	unsigned long hash;
+
 	actual->as.symbol.name.count = length;
 	actual->as.symbol.name.pointer = text;
 	actual->should_deallocate_bytes = should_deallocate;
-	actual->as.symbol.hash = lone_lisp_hash_as_symbol(lone, actual->as.symbol.name);
-	return lone_lisp_value_from_heap_value(lone, actual, LONE_LISP_TAG_SYMBOL);
+	hash = lone_lisp_hash_as_symbol(lone, actual->as.symbol.name);
+	actual->as.symbol.hash = hash;
+	value = lone_lisp_value_from_heap_value(lone, actual, LONE_LISP_TAG_SYMBOL);
+
+	/* Store 8 hash bits in the metadata field at bits 8-15.
+	 * These bits enable fast rejection during table lookups
+	 * using raw bytes without accessing the heap.
+	 * Useful for symbol interning, imports.
+	 *
+	 * 255/256 of non-matching entries are rejected
+	 * by comparing the metadata byte against the
+	 * search hash byte. The unlikely matches are
+	 * compared normally via structural equality.
+	 *
+	 */
+	value.tagged |= (long) ((hash & 0xFF) << LONE_LISP_METADATA_SHIFT);
+
+	return value;
 }
 
 static struct lone_lisp_value lone_lisp_symbol_transfer_bytes(struct lone_lisp *lone,

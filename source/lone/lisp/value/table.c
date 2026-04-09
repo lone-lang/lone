@@ -125,14 +125,25 @@ static size_t lone_lisp_table_entry_find_index_for(struct lone_lisp *lone, struc
 }
 
 static bool lone_lisp_table_bytes_is_equal(struct lone_lisp *lone,
-		struct lone_lisp_value x_value, struct lone_bytes y_bytes, enum lone_lisp_tag y_tag)
+		struct lone_lisp_value x_value,
+		struct lone_bytes y_bytes, enum lone_lisp_tag y_tag, unsigned char y_hash_bits)
 {
 	struct lone_lisp_heap_value *x_heap_value;
 	struct lone_bytes x_bytes;
 	enum lone_lisp_tag x_tag;
+	unsigned char x_hash_bits;
 
 	x_tag = x_value.tagged & LONE_LISP_TAG_MASK;
 	if (x_tag != y_tag) { return false; }
+
+	/* For symbols, compare 8 hash bits stored in metadata at bits 8-15
+	 * against the search hash bits before accessing the heap.
+	 * Rejects 255/256 of non-matching entries without a heap dereference.
+	 */
+	if (x_tag == LONE_LISP_TAG_SYMBOL) {
+		x_hash_bits = (x_value.tagged >> LONE_LISP_METADATA_SHIFT) & 0xFF;
+		if (x_hash_bits != y_hash_bits) { return false; }
+	}
 
 	x_heap_value = lone_lisp_heap_value_of(lone, x_value);
 
@@ -155,10 +166,11 @@ static size_t lone_lisp_table_entry_find_index_by(struct lone_lisp *lone,
 		unsigned long hash, struct lone_bytes bytes, enum lone_lisp_tag type,
 		size_t *indexes, struct lone_lisp_table_entry *entries, size_t capacity)
 {
+	unsigned char hash_bits = (unsigned char) hash;
 	size_t i = lone_lisp_table_wrap_around(hash, capacity);
 
 	while (lone_lisp_table_is_used(indexes, i)
-	       && !lone_lisp_table_bytes_is_equal(lone, entries[indexes[i]].key, bytes, type)) {
+	       && !lone_lisp_table_bytes_is_equal(lone, entries[indexes[i]].key, bytes, type, hash_bits)) {
 		i = lone_lisp_table_wrap_around(i + 1, capacity);
 	}
 
