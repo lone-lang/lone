@@ -83,12 +83,41 @@ static unsigned long lone_lisp_table_compute_hash_for(struct lone_lisp *lone,
 	return lone_lisp_table_wrap_around(lone_lisp_hash(lone, key), capacity);
 }
 
+static bool lone_lisp_table_key_matches(struct lone_lisp *lone,
+		struct lone_lisp_value stored, struct lone_lisp_value key)
+{
+	/* Word comparison suffices for identity-comparable types:
+	 *
+	 * 	interned symbols: same name, same heap index
+	 * 	integers: value encoded in data bits
+	 * 	singletons: nil, true, false
+	 *
+	 * Fall through to structural comparison only for types
+	 * where distinct heap objects can be equal:
+	 *
+	 * 	lists
+	 * 	texts
+	 * 	bytes
+	 *
+	 */
+	if (stored.tagged == key.tagged) { return true; }
+
+	switch (key.tagged & LONE_LISP_TAG_MASK) {
+	case LONE_LISP_TAG_LIST:
+	case LONE_LISP_TAG_TEXT:
+	case LONE_LISP_TAG_BYTES:
+		return lone_lisp_is_equal(lone, stored, key);
+	default:
+		return false;
+	}
+}
+
 static size_t lone_lisp_table_entry_find_index_for(struct lone_lisp *lone, struct lone_lisp_value key,
 		size_t *indexes, struct lone_lisp_table_entry *entries, size_t capacity)
 {
 	size_t i = lone_lisp_table_compute_hash_for(lone, key, capacity);
 
-	while (lone_lisp_table_is_used(indexes, i) && !lone_lisp_is_equal(lone, entries[indexes[i]].key, key)) {
+	while (lone_lisp_table_is_used(indexes, i) && !lone_lisp_table_key_matches(lone, entries[indexes[i]].key, key)) {
 		i = lone_lisp_table_wrap_around(i + 1, capacity);
 	}
 
