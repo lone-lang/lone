@@ -69,6 +69,8 @@
    │    Inline value types:                                                 │
    │                                                                        │
    │        000 = symbol                                                    │
+   │        001 = text                                                      │
+   │        010 = bytes                                                     │
    │                                                                        │
    │    Data layout:                                                        │
    │                                                                        │
@@ -88,6 +90,8 @@
 #define LONE_LISP_INLINE_FLAG              0x80
 #define LONE_LISP_INLINE_TYPE_MASK         0xF1  /* bit 7 + bits 4-6 + bit 0 */
 #define LONE_LISP_INLINE_TYPE_SYMBOL       0x81  /* 1_000_xxx_1 */
+#define LONE_LISP_INLINE_TYPE_TEXT         0x91  /* 1_001_xxx_1 */
+#define LONE_LISP_INLINE_TYPE_BYTES        0xA1  /* 1_010_xxx_1 */
 #define LONE_LISP_INLINE_LENGTH_SHIFT      1
 #define LONE_LISP_INLINE_LENGTH_MASK       0x07  /* 3 bits for length 0-7 */
 #define LONE_LISP_INLINE_MAX_LENGTH        7

@@ -100,6 +100,48 @@ enum lone_lisp_tag {
 	LONE_LISP_TAG_INLINE_SYMBOL_6 = 0x8D, /* length 6 */
 	LONE_LISP_TAG_INLINE_SYMBOL_7 = 0x8F, /* length 7 */
 
+	/* Inline text tags:
+	 *
+	 * 	bit 7 = 1
+	 * 	bits 4-6 = 001
+	 * 	bits 1-3 = length
+	 * 	bit 0 = 1
+	 *
+	 * Texts with content ≤ 7 bytes are encoded directly
+	 * in the word. Bytes are stored in the data bits
+	 * starting at bit 8. Two inline texts with identical
+	 * content produce identical words.
+	 */
+	LONE_LISP_TAG_INLINE_TEXT_0 = 0x91, /* length 0 */
+	LONE_LISP_TAG_INLINE_TEXT_1 = 0x93, /* length 1 */
+	LONE_LISP_TAG_INLINE_TEXT_2 = 0x95, /* length 2 */
+	LONE_LISP_TAG_INLINE_TEXT_3 = 0x97, /* length 3 */
+	LONE_LISP_TAG_INLINE_TEXT_4 = 0x99, /* length 4 */
+	LONE_LISP_TAG_INLINE_TEXT_5 = 0x9B, /* length 5 */
+	LONE_LISP_TAG_INLINE_TEXT_6 = 0x9D, /* length 6 */
+	LONE_LISP_TAG_INLINE_TEXT_7 = 0x9F, /* length 7 */
+
+	/* Inline bytes tags:
+	 *
+	 * 	bit 7 = 1
+	 * 	bits 4-6 = 010
+	 * 	bits 1-3 = length
+	 * 	bit 0 = 1
+	 *
+	 * Byte sequences with ≤ 7 bytes are encoded directly
+	 * in the word. Bytes are stored in the data bits
+	 * starting at bit 8. Two inline byte values with
+	 * identical content produce identical words.
+	 */
+	LONE_LISP_TAG_INLINE_BYTES_0 = 0xA1, /* length 0 */
+	LONE_LISP_TAG_INLINE_BYTES_1 = 0xA3, /* length 1 */
+	LONE_LISP_TAG_INLINE_BYTES_2 = 0xA5, /* length 2 */
+	LONE_LISP_TAG_INLINE_BYTES_3 = 0xA7, /* length 3 */
+	LONE_LISP_TAG_INLINE_BYTES_4 = 0xA9, /* length 4 */
+	LONE_LISP_TAG_INLINE_BYTES_5 = 0xAB, /* length 5 */
+	LONE_LISP_TAG_INLINE_BYTES_6 = 0xAD, /* length 6 */
+	LONE_LISP_TAG_INLINE_BYTES_7 = 0xAF, /* length 7 */
+
 	/* Lone lisp machine stack frame tags
 	 *
 	 * Stack frames are 8-byte tagged words
