@@ -79,6 +79,36 @@ enum lone_lisp_tag {
 	LONE_LISP_TAG_TRUE    = 0x05,
 	LONE_LISP_TAG_FALSE   = 0x07,
 
+	/* Lone lisp machine stack frame tags
+	 *
+	 * Stack frames are 8-byte tagged words
+	 * sharing the same format as lone_lisp_value.
+	 * Lisp values are stored directly.
+	 * Steps and delimiters use dedicated tags
+	 * following the same even/odd scheme
+	 * for the garbage collector's benefit:
+	 * bit 0 = 1 means no heap reference,
+	 * bit 0 = 0 means index in the heap.
+	 * The garbage collector will skip
+	 * odd values and trace even values.
+	 *
+	 * The generator delimiter is the only
+	 * even-tagged frame type right now:
+	 * it stores a reference to the generator
+	 * itself so that the yield primitive
+	 * can find it.
+	 *
+	 * The set of even-tagged frame types
+	 * is likely to change in the future
+	 * as the delimited continuations
+	 * facilities get further development.
+	 */
+	LONE_LISP_TAG_STEP                   = 0x21,
+	LONE_LISP_TAG_PRIMITIVE_STEP         = 0x23,
+	LONE_LISP_TAG_FUNCTION_DELIMITER     = 0x41,
+	LONE_LISP_TAG_CONTINUATION_DELIMITER = 0x43,
+	LONE_LISP_TAG_GENERATOR_DELIMITER    = 0x60,
+
 };
 
 struct lone_lisp_value {
