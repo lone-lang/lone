@@ -160,11 +160,13 @@ static bool should_evaluate_operands(struct lone_lisp *lone,
 	if (lone_lisp_is_nil(operands)) {
 		return false;
 	} else {
-		switch (lone_lisp_heap_value_of(lone, applicable)->type) {
+		switch (applicable.tagged & LONE_LISP_TAG_MASK) {
 		case LONE_LISP_TAG_FUNCTION:
-			return lone_lisp_heap_value_of(lone, applicable)->as.function.flags.evaluate_arguments;
 		case LONE_LISP_TAG_PRIMITIVE:
-			return lone_lisp_heap_value_of(lone, applicable)->as.primitive.flags.evaluate_arguments;
+			/* FEXPR flags are encoded in the metadata field (bit 8).
+			 * Single bit test on the tagged word, no heap dereference.
+			 */
+			return (applicable.tagged & LONE_LISP_METADATA_EVALUATE_ARGUMENTS) != 0;
 		case LONE_LISP_TAG_GENERATOR:
 			return should_evaluate_operands(
 				lone,

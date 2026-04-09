@@ -45,6 +45,13 @@
 #define LONE_LISP_INDEX_BITS            40
 #define LONE_LISP_INDEX_SHIFT           24
 
+/* FEXPR flags in metadata for functions and primitives.
+ * These are bit positions within the full tagged word,
+ * allowing direct bit tests without extraction.
+ */
+#define LONE_LISP_METADATA_EVALUATE_ARGUMENTS  (1L << 8)
+#define LONE_LISP_METADATA_EVALUATE_RESULT     (1L << 9)
+
 #ifndef LONE_LISP_BUFFER_SIZE
 	#define LONE_LISP_BUFFER_SIZE 4096
 #endif
