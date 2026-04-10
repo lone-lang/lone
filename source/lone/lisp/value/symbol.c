@@ -11,12 +11,30 @@ static struct lone_lisp_value lone_lisp_symbol_transfer(struct lone_lisp *lone,
 		unsigned char *text, size_t length, bool should_deallocate)
 {
 	struct lone_lisp_heap_value *actual = lone_lisp_heap_allocate_value(lone);
-	actual->type = LONE_LISP_TYPE_SYMBOL;
+	struct lone_lisp_value value;
+	unsigned long hash;
+
 	actual->as.symbol.name.count = length;
 	actual->as.symbol.name.pointer = text;
 	actual->should_deallocate_bytes = should_deallocate;
-	actual->as.symbol.hash = lone_lisp_hash_as_symbol(lone, actual->as.symbol.name);
-	return lone_lisp_value_from_heap_value(lone, actual);
+	hash = lone_lisp_hash_as_symbol(lone, actual->as.symbol.name);
+	actual->as.symbol.hash = hash;
+	value = lone_lisp_value_from_heap_value(lone, actual, LONE_LISP_TAG_SYMBOL);
+
+	/* Store 8 hash bits in the metadata field at bits 8-15.
+	 * These bits enable fast rejection during table lookups
+	 * using raw bytes without accessing the heap.
+	 * Useful for symbol interning, imports.
+	 *
+	 * 255/256 of non-matching entries are rejected
+	 * by comparing the metadata byte against the
+	 * search hash byte. The unlikely matches are
+	 * compared normally via structural equality.
+	 *
+	 */
+	value.tagged |= (long) ((hash & 0xFF) << LONE_LISP_METADATA_SHIFT);
+
+	return value;
 }
 
 static struct lone_lisp_value lone_lisp_symbol_transfer_bytes(struct lone_lisp *lone,
@@ -39,6 +57,10 @@ struct lone_lisp_value lone_lisp_intern(struct lone_lisp *lone,
 {
 	struct lone_bytes name = { count, bytes };
 	struct lone_lisp_value value;
+
+	if (count <= LONE_LISP_INLINE_MAX_LENGTH) {
+		return lone_lisp_inline_symbol_create(bytes, count);
+	}
 
 	value = lone_lisp_table_get_by_symbol(lone, lone->symbol_table, name);
 
@@ -68,5 +90,9 @@ struct lone_lisp_value lone_lisp_intern_c_string(struct lone_lisp *lone, char *c
 
 struct lone_lisp_value lone_lisp_intern_text(struct lone_lisp *lone, struct lone_lisp_value text)
 {
+	if (lone_lisp_is_inline_text(text)) {
+		struct lone_bytes bytes = lone_lisp_inline_value_bytes(&text);
+		return lone_lisp_intern(lone, bytes.pointer, bytes.count, false);
+	}
 	return lone_lisp_intern_bytes(lone, lone_lisp_heap_value_of(lone, text)->as.bytes, true);
 }

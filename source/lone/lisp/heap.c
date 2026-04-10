@@ -79,6 +79,7 @@ static void lone_lisp_heap_grow(struct lone_lisp *lone)
 	size_t new_capacity;
 
 	if (__builtin_mul_overflow(lone->heap.capacity, LONE_LISP_HEAP_GROWTH_FACTOR, &new_capacity)) { goto overflow; }
+	if (new_capacity > ((size_t) 1 << LONE_LISP_INDEX_BITS)) { goto overflow; }
 	if (__builtin_mul_overflow(new_capacity, sizeof(struct lone_lisp_heap_value), &new_values_size)) { goto overflow; }
 
 	old_values_size = lone->heap.capacity * sizeof(struct lone_lisp_heap_value);

@@ -12,7 +12,6 @@ struct lone_lisp_value lone_lisp_vector_create(struct lone_lisp *lone, size_t ca
 	struct lone_lisp_heap_value *heap_value = lone_lisp_heap_allocate_value(lone);
 	struct lone_lisp_vector *actual = &heap_value->as.vector;
 
-	heap_value->type = LONE_LISP_TYPE_VECTOR;
 	actual->count = 0;
 	actual->capacity = capacity;
 
@@ -29,7 +28,7 @@ struct lone_lisp_value lone_lisp_vector_create(struct lone_lisp *lone, size_t ca
 		actual->values[i] = lone_lisp_nil();
 	}
 
-	return lone_lisp_value_from_heap_value(lone, heap_value);
+	return lone_lisp_value_from_heap_value(lone, heap_value, LONE_LISP_TAG_VECTOR);
 }
 
 size_t lone_lisp_vector_count(struct lone_lisp *lone, struct lone_lisp_value vector)

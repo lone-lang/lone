@@ -89,17 +89,14 @@ LONE_LISP_PRIMITIVE(bytes_new)
 	}
 
 	switch (lone_lisp_type_of(count)) {
-	case LONE_LISP_TYPE_INTEGER:
+	case LONE_LISP_TAG_INTEGER:
 		if (lone_lisp_integer_of(count) <= 0) {
 			/* zero or negative allocation, likely a mistake: (new 0), (new -64) */ linux_exit(-1);
 		}
 
 		allocation = lone_lisp_integer_of(count);
 		break;
-	case LONE_LISP_TYPE_NIL:
-	case LONE_LISP_TYPE_FALSE:
-	case LONE_LISP_TYPE_TRUE:
-	case LONE_LISP_TYPE_HEAP_VALUE:
+	default:
 		/* count not an integer: (new {}) */ linux_exit(-1);
 	}
 
@@ -121,8 +118,14 @@ LONE_LISP_PRIMITIVE(bytes_is_zero)
 		/* expected a bytes object: (zero? 0), (zero? "text") */ linux_exit(-1);
 	}
 
-	lone_lisp_machine_push_value(lone, machine,
-			lone_lisp_boolean_for(lone_bytes_is_zero(lone_lisp_heap_value_of(lone, bytes)->as.bytes)));
+	if (lone_lisp_is_inline_bytes(bytes)) {
+		struct lone_bytes content = lone_lisp_inline_value_bytes(&bytes);
+		lone_lisp_machine_push_value(lone, machine,
+				lone_lisp_boolean_for(lone_bytes_is_zero(content)));
+	} else {
+		lone_lisp_machine_push_value(lone, machine,
+				lone_lisp_boolean_for(lone_bytes_is_zero(lone_lisp_heap_value_of(lone, bytes)->as.bytes)));
+	}
 	return 0;
 }
 

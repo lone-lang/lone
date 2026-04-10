@@ -45,14 +45,20 @@ static void lone_lisp_print_bytes(struct lone_lisp *lone, struct lone_lisp_value
 	static unsigned char hexadecimal[] = "0123456789ABCDEF";
 	unsigned char *text, *byte, low, high;
 	size_t size, count, i;
+	struct lone_bytes content;
 
-	count = lone_lisp_heap_value_of(lone, bytes)->as.bytes.count;
+	if (lone_lisp_is_inline_bytes(bytes)) {
+		content = lone_lisp_inline_value_bytes(&bytes);
+	} else {
+		content = lone_lisp_heap_value_of(lone, bytes)->as.bytes;
+	}
+	count = content.count;
 
 	if (count == 0) { linux_write(fd, "bytes[]", 7); return; }
 
 	size = 2 + count * 2; /* "0x" + 2 characters per input byte */
 	text = lone_memory_allocate(lone->system, size, 1, 1, LONE_MEMORY_ALLOCATION_FLAGS_NONE);
-	byte = lone_lisp_heap_value_of(lone, bytes)->as.bytes.pointer;
+	byte = content.pointer;
 
 	text[0] = '0';
 	text[1] = 'x';
@@ -164,39 +170,34 @@ static void lone_lisp_print_hash_notation(struct lone_lisp *lone, char *descript
 void lone_lisp_print(struct lone_lisp *lone, struct lone_lisp_value value, int fd)
 {
 	switch (lone_lisp_type_of(value)) {
-	case LONE_LISP_TYPE_NIL:
+	case LONE_LISP_TAG_NIL:
 		linux_write(fd, "nil", 3);
 		return;
-	case LONE_LISP_TYPE_FALSE:
+	case LONE_LISP_TAG_FALSE:
 		linux_write(fd, "false", 5);
 		return;
-	case LONE_LISP_TYPE_TRUE:
+	case LONE_LISP_TAG_TRUE:
 		linux_write(fd, "true", 4);
 		return;
-	case LONE_LISP_TYPE_INTEGER:
+	case LONE_LISP_TAG_INTEGER:
 		lone_lisp_print_integer(fd, lone_lisp_integer_of(value));
 		return;
-	case LONE_LISP_TYPE_HEAP_VALUE:
-		break;
-	}
-
-	switch (lone_lisp_heap_value_of(lone, value)->type) {
-	case LONE_LISP_TYPE_MODULE:
+	case LONE_LISP_TAG_MODULE:
 		lone_lisp_print_hash_notation(lone, "module",
 				lone_lisp_heap_value_of(lone, value)->as.module.name, fd);
 		break;
-	case LONE_LISP_TYPE_PRIMITIVE:
+	case LONE_LISP_TAG_PRIMITIVE:
 		lone_lisp_print_hash_notation(lone, "primitive",
 				lone_lisp_heap_value_of(lone, value)->as.primitive.name, fd);
 		break;
-	case LONE_LISP_TYPE_FUNCTION:
+	case LONE_LISP_TAG_FUNCTION:
 		lone_lisp_print_function(lone, value, fd);
 		break;
-	case LONE_LISP_TYPE_CONTINUATION:
+	case LONE_LISP_TAG_CONTINUATION:
 		lone_lisp_print_hash_notation(lone, "continuation",
 				lone_lisp_integer_create(lone_lisp_heap_value_of(lone, value)->as.continuation.frame_count), fd);
 		break;
-	case LONE_LISP_TYPE_GENERATOR:
+	case LONE_LISP_TAG_GENERATOR:
 		lone_lisp_print_hash_notation(
 			lone,
 			"generator",
@@ -204,31 +205,36 @@ void lone_lisp_print(struct lone_lisp *lone, struct lone_lisp_value value, int f
 			fd
 		);
 		break;
-	case LONE_LISP_TYPE_LIST:
+	case LONE_LISP_TAG_LIST:
 		linux_write(fd, "(", 1);
 		lone_lisp_print_list(lone, value, fd);
 		linux_write(fd, ")", 1);
 		break;
-	case LONE_LISP_TYPE_VECTOR:
+	case LONE_LISP_TAG_VECTOR:
 		lone_lisp_print_vector(lone, value, fd);
 		break;
-	case LONE_LISP_TYPE_TABLE:
+	case LONE_LISP_TAG_TABLE:
 		lone_lisp_print_table(lone, value, fd);
 		break;
-	case LONE_LISP_TYPE_BYTES:
+	case LONE_LISP_TAG_BYTES:
 		lone_lisp_print_bytes(lone, value, fd);
 		break;
-	case LONE_LISP_TYPE_SYMBOL:
-		linux_write(fd,
-				lone_lisp_heap_value_of(lone, value)->as.symbol.name.pointer,
-				lone_lisp_heap_value_of(lone, value)->as.symbol.name.count);
+	case LONE_LISP_TAG_SYMBOL: {
+		struct lone_bytes name = lone_lisp_symbol_name(lone, &value);
+		linux_write(fd, name.pointer, name.count);
 		break;
-	case LONE_LISP_TYPE_TEXT:
+	}
+	case LONE_LISP_TAG_TEXT: {
+		struct lone_bytes text;
+		if (lone_lisp_is_inline_text(value)) {
+			text = lone_lisp_inline_value_bytes(&value);
+		} else {
+			text = lone_lisp_heap_value_of(lone, value)->as.bytes;
+		}
 		linux_write(fd, "\"", 1);
-		linux_write(fd,
-				lone_lisp_heap_value_of(lone, value)->as.bytes.pointer,
-				lone_lisp_heap_value_of(lone, value)->as.bytes.count);
+		linux_write(fd, text.pointer, text.count);
 		linux_write(fd, "\"", 1);
 		break;
+	}
 	}
 }

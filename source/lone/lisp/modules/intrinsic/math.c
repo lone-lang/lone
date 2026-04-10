@@ -68,9 +68,9 @@ static struct lone_lisp_value lone_lisp_primitive_integer_operation(struct lone_
 		argument = lone_lisp_list_first(lone, arguments);
 
 		switch (lone_lisp_type_of(argument)) {
-		case LONE_LISP_TYPE_INTEGER:
+		case LONE_LISP_TAG_INTEGER:
 			switch (lone_lisp_type_of(accumulator)) {
-			case LONE_LISP_TYPE_INTEGER:
+			case LONE_LISP_TAG_INTEGER:
 				switch (operation) {
 				case '+':
 					accumulator = lone_lisp_integer_create(
@@ -97,17 +97,11 @@ static struct lone_lisp_value lone_lisp_primitive_integer_operation(struct lone_
 					/* invalid primitive integer operation */ linux_exit(-1);
 				}
 				break;
-			case LONE_LISP_TYPE_NIL:
-			case LONE_LISP_TYPE_FALSE:
-			case LONE_LISP_TYPE_TRUE:
-			case LONE_LISP_TYPE_HEAP_VALUE:
+			default:
 				/* accumulator is not a number */ linux_exit(-1);
 			}
 			break;
-		case LONE_LISP_TYPE_NIL:
-		case LONE_LISP_TYPE_FALSE:
-		case LONE_LISP_TYPE_TRUE:
-		case LONE_LISP_TYPE_HEAP_VALUE:
+		default:
 			/* argument is not a number */ linux_exit(-1);
 		}
 
@@ -175,7 +169,7 @@ LONE_LISP_PRIMITIVE(math_divide)
 	arguments = lone_lisp_list_rest(lone, arguments);
 
 	switch (lone_lisp_type_of(dividend)) {
-	case LONE_LISP_TYPE_INTEGER:
+	case LONE_LISP_TAG_INTEGER:
 		if (lone_lisp_is_nil(arguments)) {
 			/* not given a divisor, return 1/x instead: (/ 2) = 1/2 */
 			divisor = dividend;
@@ -186,10 +180,7 @@ LONE_LISP_PRIMITIVE(math_divide)
 			divisor = lone_lisp_primitive_integer_operation(lone, arguments, '*', lone_lisp_one());
 			break;
 		}
-	case LONE_LISP_TYPE_NIL:
-	case LONE_LISP_TYPE_FALSE:
-	case LONE_LISP_TYPE_TRUE:
-	case LONE_LISP_TYPE_HEAP_VALUE:
+	default:
 		/* can't divide non-numbers: (/ "not a number") */ goto not_a_number;
 	}
 
@@ -262,13 +253,10 @@ static struct lone_lisp_value compute_sign(struct lone_lisp *lone, struct lone_l
 	}
 
 	switch (lone_lisp_type_of(value)) {
-	case LONE_LISP_TYPE_INTEGER:
+	case LONE_LISP_TAG_INTEGER:
 		return sign_of(value);
 
-	case LONE_LISP_TYPE_NIL:
-	case LONE_LISP_TYPE_FALSE:
-	case LONE_LISP_TYPE_TRUE:
-	case LONE_LISP_TYPE_HEAP_VALUE:
+	default:
 		/* value is not a number */ linux_exit(-1);
 	}
 }

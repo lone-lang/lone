@@ -18,7 +18,6 @@ struct lone_lisp_value lone_lisp_table_create(struct lone_lisp *lone,
 
 	capacity = lone_next_power_of_2(capacity);
 
-	heap_value->type = LONE_LISP_TYPE_TABLE;
 	actual->prototype = prototype;
 	actual->count = 0;
 	actual->capacity = capacity;
@@ -43,7 +42,7 @@ struct lone_lisp_value lone_lisp_table_create(struct lone_lisp *lone,
 		alignof(*actual->entries)
 	);
 
-	return lone_lisp_value_from_heap_value(lone, heap_value);
+	return lone_lisp_value_from_heap_value(lone, heap_value, LONE_LISP_TAG_TABLE);
 }
 
 size_t lone_lisp_table_count(struct lone_lisp *lone, struct lone_lisp_value table)
@@ -84,12 +83,41 @@ static unsigned long lone_lisp_table_compute_hash_for(struct lone_lisp *lone,
 	return lone_lisp_table_wrap_around(lone_lisp_hash(lone, key), capacity);
 }
 
+static bool lone_lisp_table_key_matches(struct lone_lisp *lone,
+		struct lone_lisp_value stored, struct lone_lisp_value key)
+{
+	/* Word comparison suffices for identity-comparable types:
+	 *
+	 * 	interned symbols: same name, same heap index
+	 * 	integers: value encoded in data bits
+	 * 	singletons: nil, true, false
+	 *
+	 * Fall through to structural comparison only for types
+	 * where distinct heap objects can be equal:
+	 *
+	 * 	lists
+	 * 	texts
+	 * 	bytes
+	 *
+	 */
+	if (stored.tagged == key.tagged) { return true; }
+
+	switch (lone_lisp_type_of(key)) {
+	case LONE_LISP_TAG_LIST:
+	case LONE_LISP_TAG_TEXT:
+	case LONE_LISP_TAG_BYTES:
+		return lone_lisp_is_equal(lone, stored, key);
+	default:
+		return false;
+	}
+}
+
 static size_t lone_lisp_table_entry_find_index_for(struct lone_lisp *lone, struct lone_lisp_value key,
 		size_t *indexes, struct lone_lisp_table_entry *entries, size_t capacity)
 {
 	size_t i = lone_lisp_table_compute_hash_for(lone, key, capacity);
 
-	while (lone_lisp_table_is_used(indexes, i) && !lone_lisp_is_equal(lone, entries[indexes[i]].key, key)) {
+	while (lone_lisp_table_is_used(indexes, i) && !lone_lisp_table_key_matches(lone, entries[indexes[i]].key, key)) {
 		i = lone_lisp_table_wrap_around(i + 1, capacity);
 	}
 
@@ -97,27 +125,40 @@ static size_t lone_lisp_table_entry_find_index_for(struct lone_lisp *lone, struc
 }
 
 static bool lone_lisp_table_bytes_is_equal(struct lone_lisp *lone,
-		struct lone_lisp_value x_value, struct lone_bytes y_bytes, enum lone_lisp_heap_value_type y_heap_value_type)
+		struct lone_lisp_value x_value,
+		struct lone_bytes y_bytes, enum lone_lisp_tag y_tag, unsigned char y_hash_bits)
 {
 	struct lone_lisp_heap_value *x_heap_value;
 	struct lone_bytes x_bytes;
+	enum lone_lisp_tag x_tag;
+	unsigned char x_hash_bits;
 
-	switch (lone_lisp_type_of(x_value)) {
-	case LONE_LISP_TYPE_HEAP_VALUE:
-		x_heap_value = lone_lisp_heap_value_of(lone, x_value);
-		break;
-	default:
-		return false;
+	x_tag = lone_lisp_type_of(x_value);
+	if (x_tag != y_tag) { return false; }
+
+	/* Inline values: compare bytes directly from the tagged word. */
+	if (lone_lisp_is_inline_value(x_value)) {
+		x_bytes = lone_lisp_inline_value_bytes(&x_value);
+		return lone_bytes_is_equal(x_bytes, y_bytes);
 	}
 
-	if (x_heap_value->type != y_heap_value_type) { return false; }
+	/* For symbols, compare 8 hash bits stored in metadata at bits 8-15
+	 * against the search hash bits before accessing the heap.
+	 * Rejects 255/256 of non-matching entries without a heap dereference.
+	 */
+	if (x_tag == LONE_LISP_TAG_SYMBOL) {
+		x_hash_bits = (x_value.tagged >> LONE_LISP_METADATA_SHIFT) & 0xFF;
+		if (x_hash_bits != y_hash_bits) { return false; }
+	}
 
-	switch (x_heap_value->type) {
-	case LONE_LISP_TYPE_SYMBOL:
+	x_heap_value = lone_lisp_heap_value_of(lone, x_value);
+
+	switch (x_tag) {
+	case LONE_LISP_TAG_SYMBOL:
 		x_bytes = x_heap_value->as.symbol.name;
 		break;
-	case LONE_LISP_TYPE_TEXT:
-	case LONE_LISP_TYPE_BYTES:
+	case LONE_LISP_TAG_TEXT:
+	case LONE_LISP_TAG_BYTES:
 		x_bytes = x_heap_value->as.bytes;
 		break;
 	default:
@@ -128,13 +169,14 @@ static bool lone_lisp_table_bytes_is_equal(struct lone_lisp *lone,
 }
 
 static size_t lone_lisp_table_entry_find_index_by(struct lone_lisp *lone,
-		unsigned long hash, struct lone_bytes bytes, enum lone_lisp_heap_value_type type,
+		unsigned long hash, struct lone_bytes bytes, enum lone_lisp_tag type,
 		size_t *indexes, struct lone_lisp_table_entry *entries, size_t capacity)
 {
+	unsigned char hash_bits = (unsigned char) hash;
 	size_t i = lone_lisp_table_wrap_around(hash, capacity);
 
 	while (lone_lisp_table_is_used(indexes, i)
-	       && !lone_lisp_table_bytes_is_equal(lone, entries[indexes[i]].key, bytes, type)) {
+	       && !lone_lisp_table_bytes_is_equal(lone, entries[indexes[i]].key, bytes, type, hash_bits)) {
 		i = lone_lisp_table_wrap_around(i + 1, capacity);
 	}
 
@@ -266,7 +308,7 @@ struct lone_lisp_value lone_lisp_table_get(struct lone_lisp *lone,
 }
 
 static struct lone_lisp_value lone_lisp_table_get_by(struct lone_lisp *lone, struct lone_lisp_value table,
-		unsigned long hash, struct lone_bytes bytes, enum lone_lisp_heap_value_type type)
+		unsigned long hash, struct lone_bytes bytes, enum lone_lisp_tag type)
 {
 	struct lone_lisp_table *actual;
 	struct lone_lisp_table_entry *entries;
@@ -292,19 +334,19 @@ static struct lone_lisp_value lone_lisp_table_get_by(struct lone_lisp *lone, str
 struct lone_lisp_value lone_lisp_table_get_by_symbol(struct lone_lisp *lone,
 		struct lone_lisp_value table, struct lone_bytes bytes)
 {
-	return lone_lisp_table_get_by(lone, table, lone_lisp_hash_as_symbol(lone, bytes), bytes, LONE_LISP_TYPE_SYMBOL);
+	return lone_lisp_table_get_by(lone, table, lone_lisp_hash_as_symbol(lone, bytes), bytes, LONE_LISP_TAG_SYMBOL);
 }
 
 struct lone_lisp_value lone_lisp_table_get_by_text(struct lone_lisp *lone,
 		struct lone_lisp_value table, struct lone_bytes bytes)
 {
-	return lone_lisp_table_get_by(lone, table, lone_lisp_hash_as_text(lone, bytes), bytes, LONE_LISP_TYPE_TEXT);
+	return lone_lisp_table_get_by(lone, table, lone_lisp_hash_as_text(lone, bytes), bytes, LONE_LISP_TAG_TEXT);
 }
 
 struct lone_lisp_value lone_lisp_table_get_by_bytes(struct lone_lisp *lone,
 		struct lone_lisp_value table, struct lone_bytes bytes)
 {
-	return lone_lisp_table_get_by(lone, table, lone_lisp_hash_as_bytes(lone, bytes), bytes, LONE_LISP_TYPE_BYTES);
+	return lone_lisp_table_get_by(lone, table, lone_lisp_hash_as_bytes(lone, bytes), bytes, LONE_LISP_TAG_BYTES);
 }
 
 void lone_lisp_table_delete(struct lone_lisp *lone,

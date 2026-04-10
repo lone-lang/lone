@@ -23,35 +23,30 @@ static struct lone_lisp_value lone_lisp_module_name_to_key(struct lone_lisp *lon
 	struct lone_lisp_value head;
 
 	switch (lone_lisp_type_of(name)) {
-	case LONE_LISP_TYPE_NIL:
-	case LONE_LISP_TYPE_FALSE:
-	case LONE_LISP_TYPE_TRUE:
-	case LONE_LISP_TYPE_INTEGER:
+	case LONE_LISP_TAG_NIL:
+	case LONE_LISP_TAG_FALSE:
+	case LONE_LISP_TAG_TRUE:
+	case LONE_LISP_TAG_INTEGER:
 		/* invalid module name component */ linux_exit(-1);
-	case LONE_LISP_TYPE_HEAP_VALUE:
-		break;
-	}
-
-	switch (lone_lisp_heap_value_of(lone, name)->type) {
-	case LONE_LISP_TYPE_SYMBOL:
+	case LONE_LISP_TAG_SYMBOL:
 		return lone_lisp_list_create(lone, name, lone_lisp_nil());
-	case LONE_LISP_TYPE_LIST:
+	case LONE_LISP_TAG_LIST:
 		for (head = name; !lone_lisp_is_nil(head); head = lone_lisp_list_rest(lone, head)) {
 			if (!lone_lisp_is_symbol(lone, lone_lisp_list_first(lone, head))) {
 				linux_exit(-1);
 			}
 		}
 		return name;
-	case LONE_LISP_TYPE_MODULE:
+	case LONE_LISP_TAG_MODULE:
 		return lone_lisp_module_name_to_key(lone, lone_lisp_heap_value_of(lone, name)->as.module.name);
-	case LONE_LISP_TYPE_FUNCTION:
-	case LONE_LISP_TYPE_PRIMITIVE:
-	case LONE_LISP_TYPE_CONTINUATION:
-	case LONE_LISP_TYPE_GENERATOR:
-	case LONE_LISP_TYPE_TEXT:
-	case LONE_LISP_TYPE_BYTES:
-	case LONE_LISP_TYPE_VECTOR:
-	case LONE_LISP_TYPE_TABLE:
+	case LONE_LISP_TAG_FUNCTION:
+	case LONE_LISP_TAG_PRIMITIVE:
+	case LONE_LISP_TAG_CONTINUATION:
+	case LONE_LISP_TAG_GENERATOR:
+	case LONE_LISP_TAG_TEXT:
+	case LONE_LISP_TAG_BYTES:
+	case LONE_LISP_TAG_VECTOR:
+	case LONE_LISP_TAG_TABLE:
 	default:
 		/* invalid module name component */ linux_exit(-1);
 	}
@@ -320,36 +315,31 @@ static void lone_lisp_primitive_import_form(struct lone_lisp *lone,
 	struct lone_lisp_value name;
 
 	switch (lone_lisp_type_of(argument)) {
-	case LONE_LISP_TYPE_NIL:
+	case LONE_LISP_TAG_NIL:
 		/* nothing to import: (import ()) */ linux_exit(-1);
-	case LONE_LISP_TYPE_FALSE:
-	case LONE_LISP_TYPE_TRUE:
-	case LONE_LISP_TYPE_INTEGER:
+	case LONE_LISP_TAG_FALSE:
+	case LONE_LISP_TAG_TRUE:
+	case LONE_LISP_TAG_INTEGER:
 		/* not a supported import argument type */ linux_exit(-1);
-	case LONE_LISP_TYPE_HEAP_VALUE:
-		break;
-	}
-
-	switch (lone_lisp_heap_value_of(lone, argument)->type) {
-	case LONE_LISP_TYPE_SYMBOL:
+	case LONE_LISP_TAG_SYMBOL:
 		/* (import module) */
 		name = argument;
 		argument = lone_lisp_nil();
 		break;
-	case LONE_LISP_TYPE_LIST:
+	case LONE_LISP_TAG_LIST:
 		/* (import (module)), (import (module symbol)) */
 		name = lone_lisp_list_first(lone, argument);
 		argument = lone_lisp_list_rest(lone, argument);
 		break;
-	case LONE_LISP_TYPE_MODULE:
-	case LONE_LISP_TYPE_FUNCTION:
-	case LONE_LISP_TYPE_PRIMITIVE:
-	case LONE_LISP_TYPE_CONTINUATION:
-	case LONE_LISP_TYPE_GENERATOR:
-	case LONE_LISP_TYPE_TEXT:
-	case LONE_LISP_TYPE_BYTES:
-	case LONE_LISP_TYPE_VECTOR:
-	case LONE_LISP_TYPE_TABLE:
+	case LONE_LISP_TAG_MODULE:
+	case LONE_LISP_TAG_FUNCTION:
+	case LONE_LISP_TAG_PRIMITIVE:
+	case LONE_LISP_TAG_CONTINUATION:
+	case LONE_LISP_TAG_GENERATOR:
+	case LONE_LISP_TAG_TEXT:
+	case LONE_LISP_TAG_BYTES:
+	case LONE_LISP_TAG_VECTOR:
+	case LONE_LISP_TAG_TABLE:
 	default:
 		/* not a supported import argument type */ linux_exit(-1);
 	}

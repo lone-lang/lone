@@ -48,26 +48,130 @@ struct lone_lisp_reader {
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
 
-enum lone_lisp_heap_value_type {
-	LONE_LISP_TYPE_MODULE,
-	LONE_LISP_TYPE_FUNCTION,
-	LONE_LISP_TYPE_PRIMITIVE,
-	LONE_LISP_TYPE_CONTINUATION,
-	LONE_LISP_TYPE_GENERATOR,
-	LONE_LISP_TYPE_LIST,
-	LONE_LISP_TYPE_VECTOR,
-	LONE_LISP_TYPE_TABLE,
-	LONE_LISP_TYPE_SYMBOL,
-	LONE_LISP_TYPE_TEXT,
-	LONE_LISP_TYPE_BYTES,
-};
+/* ╭────────────────────────────────────────────────────────────────────────╮
+   │                                                                        │
+   │    Tag byte values for tagged value words.                             │
+   │                                                                        │
+   │    Bit 0 discriminates heap (0) from non-heap (1) values.              │
+   │    For heap values, bits 1-4 encode the type (16 slots, 11 used).      │
+   │    For non-heap values, the remaining bits distinguish type.           │
+   │                                                                        │
+   ╰────────────────────────────────────────────────────────────────────────╯ */
 
-enum lone_lisp_value_type {
-	LONE_LISP_TYPE_HEAP_VALUE =                       (0 << 2) | (0 << 1) | (0 << 0), /*    000 */
-	LONE_LISP_TYPE_INTEGER    =                       (0 << 2) | (0 << 1) | (1 << 0), /*    001 */
-	LONE_LISP_TYPE_NIL        = (0 << 4) | (0 << 3) | (1 << 2) | (1 << 1) | (1 << 0), /* 00 111 */
-	LONE_LISP_TYPE_TRUE       = (0 << 4) | (1 << 3) | (1 << 2) | (1 << 1) | (1 << 0), /* 01 111 */
-	LONE_LISP_TYPE_FALSE      = (1 << 4) | (0 << 3) | (1 << 2) | (1 << 1) | (1 << 0), /* 10 111 */
+enum lone_lisp_tag {
+
+	/* heap value tags: bit 0 = 0, type in bits 1-4 */
+	LONE_LISP_TAG_MODULE       = 0x00,
+	LONE_LISP_TAG_FUNCTION     = 0x02,
+	LONE_LISP_TAG_PRIMITIVE    = 0x04,
+	LONE_LISP_TAG_CONTINUATION = 0x06,
+	LONE_LISP_TAG_GENERATOR    = 0x08,
+	LONE_LISP_TAG_LIST         = 0x0A,
+	LONE_LISP_TAG_VECTOR       = 0x0C,
+	LONE_LISP_TAG_TABLE        = 0x0E,
+	LONE_LISP_TAG_SYMBOL       = 0x10,
+	LONE_LISP_TAG_TEXT         = 0x12,
+	LONE_LISP_TAG_BYTES        = 0x14,
+
+	/* non-heap value tags: bit 0 = 1 */
+	LONE_LISP_TAG_INTEGER = 0x01,
+	LONE_LISP_TAG_NIL     = 0x03,
+	LONE_LISP_TAG_TRUE    = 0x05,
+	LONE_LISP_TAG_FALSE   = 0x07,
+
+	/* Inline symbol tags:
+	 *
+	 * 	bit 7 = 1
+	 * 	bits 4-6 = 000
+	 * 	bits 1-3 = length
+	 * 	bit 0 = 1
+	 *
+	 * Symbols with names ≤ 7 bytes are encoded directly
+	 * in the word. Bytes are stored in the data bits
+	 * starting at bit 8. Two inline symbols with identical
+	 * names produce identical words.
+	 */
+	LONE_LISP_TAG_INLINE_SYMBOL_0 = 0x81, /* length 0 */
+	LONE_LISP_TAG_INLINE_SYMBOL_1 = 0x83, /* length 1 */
+	LONE_LISP_TAG_INLINE_SYMBOL_2 = 0x85, /* length 2 */
+	LONE_LISP_TAG_INLINE_SYMBOL_3 = 0x87, /* length 3 */
+	LONE_LISP_TAG_INLINE_SYMBOL_4 = 0x89, /* length 4 */
+	LONE_LISP_TAG_INLINE_SYMBOL_5 = 0x8B, /* length 5 */
+	LONE_LISP_TAG_INLINE_SYMBOL_6 = 0x8D, /* length 6 */
+	LONE_LISP_TAG_INLINE_SYMBOL_7 = 0x8F, /* length 7 */
+
+	/* Inline text tags:
+	 *
+	 * 	bit 7 = 1
+	 * 	bits 4-6 = 001
+	 * 	bits 1-3 = length
+	 * 	bit 0 = 1
+	 *
+	 * Texts with content ≤ 7 bytes are encoded directly
+	 * in the word. Bytes are stored in the data bits
+	 * starting at bit 8. Two inline texts with identical
+	 * content produce identical words.
+	 */
+	LONE_LISP_TAG_INLINE_TEXT_0 = 0x91, /* length 0 */
+	LONE_LISP_TAG_INLINE_TEXT_1 = 0x93, /* length 1 */
+	LONE_LISP_TAG_INLINE_TEXT_2 = 0x95, /* length 2 */
+	LONE_LISP_TAG_INLINE_TEXT_3 = 0x97, /* length 3 */
+	LONE_LISP_TAG_INLINE_TEXT_4 = 0x99, /* length 4 */
+	LONE_LISP_TAG_INLINE_TEXT_5 = 0x9B, /* length 5 */
+	LONE_LISP_TAG_INLINE_TEXT_6 = 0x9D, /* length 6 */
+	LONE_LISP_TAG_INLINE_TEXT_7 = 0x9F, /* length 7 */
+
+	/* Inline bytes tags:
+	 *
+	 * 	bit 7 = 1
+	 * 	bits 4-6 = 010
+	 * 	bits 1-3 = length
+	 * 	bit 0 = 1
+	 *
+	 * Byte sequences with ≤ 7 bytes are encoded directly
+	 * in the word. Bytes are stored in the data bits
+	 * starting at bit 8. Two inline byte values with
+	 * identical content produce identical words.
+	 */
+	LONE_LISP_TAG_INLINE_BYTES_0 = 0xA1, /* length 0 */
+	LONE_LISP_TAG_INLINE_BYTES_1 = 0xA3, /* length 1 */
+	LONE_LISP_TAG_INLINE_BYTES_2 = 0xA5, /* length 2 */
+	LONE_LISP_TAG_INLINE_BYTES_3 = 0xA7, /* length 3 */
+	LONE_LISP_TAG_INLINE_BYTES_4 = 0xA9, /* length 4 */
+	LONE_LISP_TAG_INLINE_BYTES_5 = 0xAB, /* length 5 */
+	LONE_LISP_TAG_INLINE_BYTES_6 = 0xAD, /* length 6 */
+	LONE_LISP_TAG_INLINE_BYTES_7 = 0xAF, /* length 7 */
+
+	/* Lone lisp machine stack frame tags
+	 *
+	 * Stack frames are 8-byte tagged words
+	 * sharing the same format as lone_lisp_value.
+	 * Lisp values are stored directly.
+	 * Steps and delimiters use dedicated tags
+	 * following the same even/odd scheme
+	 * for the garbage collector's benefit:
+	 * bit 0 = 1 means no heap reference,
+	 * bit 0 = 0 means index in the heap.
+	 * The garbage collector will skip
+	 * odd values and trace even values.
+	 *
+	 * The generator delimiter is the only
+	 * even-tagged frame type right now:
+	 * it stores a reference to the generator
+	 * itself so that the yield primitive
+	 * can find it.
+	 *
+	 * The set of even-tagged frame types
+	 * is likely to change in the future
+	 * as the delimited continuations
+	 * facilities get further development.
+	 */
+	LONE_LISP_TAG_STEP                   = 0x21,
+	LONE_LISP_TAG_PRIMITIVE_STEP         = 0x23,
+	LONE_LISP_TAG_FUNCTION_DELIMITER     = 0x41,
+	LONE_LISP_TAG_CONTINUATION_DELIMITER = 0x43,
+	LONE_LISP_TAG_GENERATOR_DELIMITER    = 0x60,
+
 };
 
 struct lone_lisp_value {
@@ -190,7 +294,7 @@ struct lone_lisp_heap_value {
 		bool should_deallocate_bytes: 1;
 	};
 
-	enum lone_lisp_heap_value_type type;
+	enum lone_lisp_tag type; /* tag byte, set at allocation for GC sweep */
 
 	union {
 		struct lone_lisp_module module;
@@ -230,16 +334,14 @@ struct lone_lisp_value lone_lisp_boolean_for(bool value);
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
 
-unsigned char lone_lisp_type_tag_of(struct lone_lisp_value value);
-enum lone_lisp_value_type lone_lisp_type_of(struct lone_lisp_value value);
+enum lone_lisp_tag lone_lisp_type_of(struct lone_lisp_value value);
 struct lone_lisp_heap_value *lone_lisp_heap_value_of(struct lone_lisp *lone, struct lone_lisp_value value);
 lone_lisp_integer lone_lisp_integer_of(struct lone_lisp_value value);
+struct lone_lisp_value lone_lisp_retag(struct lone_lisp_value value, enum lone_lisp_tag new_tag);
+struct lone_lisp_value lone_lisp_retag_frame(struct lone_lisp_machine_stack_frame frame, enum lone_lisp_tag new_tag);
 
 bool lone_lisp_is_register_value(struct lone_lisp_value value);
 bool lone_lisp_is_heap_value(struct lone_lisp_value value);
-bool lone_lisp_is_register_value_of_type(struct lone_lisp_value value, enum lone_lisp_value_type register_value_type);
-bool lone_lisp_is_heap_value_of_type(struct lone_lisp *lone,
-		struct lone_lisp_value value, enum lone_lisp_heap_value_type heap_value_type);
 
 bool lone_lisp_is_module(struct lone_lisp *lone, struct lone_lisp_value value);
 bool lone_lisp_is_function(struct lone_lisp *lone, struct lone_lisp_value value);
@@ -252,6 +354,24 @@ bool lone_lisp_has_bytes(struct lone_lisp *lone, struct lone_lisp_value value);
 bool lone_lisp_is_bytes(struct lone_lisp *lone, struct lone_lisp_value value);
 bool lone_lisp_is_text(struct lone_lisp *lone, struct lone_lisp_value value);
 bool lone_lisp_is_symbol(struct lone_lisp *lone, struct lone_lisp_value value);
+bool lone_lisp_is_inline_symbol(struct lone_lisp_value value);
+bool lone_lisp_is_inline_text(struct lone_lisp_value value);
+bool lone_lisp_is_inline_bytes(struct lone_lisp_value value);
+bool lone_lisp_is_inline_value(struct lone_lisp_value value);
+
+/* Extract bytes from any inline value (symbol, text, or bytes).
+ * The returned pointer points into the tagged word at the address
+ * of the value parameter, so the caller must keep the value alive
+ * for the lifetime of the returned struct lone_bytes.
+ */
+struct lone_bytes lone_lisp_inline_value_bytes(struct lone_lisp_value *value);
+
+/* Extract symbol name bytes from either heap or inline symbols.
+ * For inline symbols, the returned pointer points into the tagged word
+ * at the address of the value parameter, so the caller must keep
+ * the value alive for the lifetime of the returned struct lone_bytes.
+ */
+struct lone_bytes lone_lisp_symbol_name(struct lone_lisp *lone, struct lone_lisp_value *value);
 
 bool lone_lisp_is_nil(struct lone_lisp_value value);
 bool lone_lisp_is_false(struct lone_lisp_value value);
@@ -299,7 +419,8 @@ bool lone_lisp_integer_is_greater_than_or_equal_to(struct lone_lisp *lone, struc
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
 
-struct lone_lisp_value lone_lisp_value_from_heap_value(struct lone_lisp *lone, struct lone_lisp_heap_value *heap_value);
+struct lone_lisp_value lone_lisp_value_from_heap_value(struct lone_lisp *lone,
+		struct lone_lisp_heap_value *heap_value, enum lone_lisp_tag tag);
 
 /* ╭────────────────────────────────────────────────────────────────────────╮
    │                                                                        │
@@ -510,6 +631,10 @@ struct lone_lisp_value lone_lisp_table_value_at(struct lone_lisp *lone, struct l
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
 
+struct lone_lisp_value lone_lisp_inline_symbol_create(unsigned char *bytes, size_t count);
+struct lone_lisp_value lone_lisp_inline_text_create(unsigned char *bytes, size_t count);
+struct lone_lisp_value lone_lisp_inline_bytes_create(unsigned char *bytes, size_t count);
+
 struct lone_lisp_value lone_lisp_intern(struct lone_lisp *lone,
 		unsigned char *bytes, size_t count, bool should_deallocate);
 
@@ -608,24 +733,8 @@ enum lone_lisp_machine_step {
 	LONE_LISP_MACHINE_STEP_HALT,
 };
 
-enum lone_lisp_machine_stack_frame_type {
-	LONE_LISP_MACHINE_STACK_FRAME_TYPE_VALUE,
-	LONE_LISP_MACHINE_STACK_FRAME_TYPE_INTEGER,
-	LONE_LISP_MACHINE_STACK_FRAME_TYPE_STEP,
-	LONE_LISP_MACHINE_STACK_FRAME_TYPE_PRIMITIVE_STEP,
-	LONE_LISP_MACHINE_STACK_FRAME_TYPE_FUNCTION_DELIMITER,
-	LONE_LISP_MACHINE_STACK_FRAME_TYPE_CONTINUATION_DELIMITER,
-	LONE_LISP_MACHINE_STACK_FRAME_TYPE_GENERATOR_DELIMITER,
-};
-
 struct lone_lisp_machine_stack_frame {
-	enum lone_lisp_machine_stack_frame_type type;
-	union {
-		struct lone_lisp_value value;
-		lone_lisp_integer integer;
-		enum lone_lisp_machine_step step;
-		lone_lisp_integer primitive_step;
-	} as;
+	long tagged;
 };
 
 struct lone_lisp_machine {

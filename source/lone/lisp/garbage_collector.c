@@ -19,15 +19,9 @@ static void lone_lisp_mark_lisp_stack_roots_of(struct lone_lisp *lone, struct lo
 
 static void lone_lisp_mark_value(struct lone_lisp *lone, struct lone_lisp_value value)
 {
-	switch (lone_lisp_type_of(value)) {
-	case LONE_LISP_TYPE_NIL:
-	case LONE_LISP_TYPE_FALSE:
-	case LONE_LISP_TYPE_TRUE:
-	case LONE_LISP_TYPE_INTEGER:
-		/* value types need not be marked */
+	if (value.tagged & 1) {
+		/* non-heap value: integer, nil, true, false */
 		return;
-	case LONE_LISP_TYPE_HEAP_VALUE:
-		break;
 	}
 
 	lone_lisp_mark_heap_value(lone, lone_lisp_heap_value_of(lone, value));
@@ -47,28 +41,28 @@ static void lone_lisp_mark_heap_value(struct lone_lisp *lone, struct lone_lisp_h
 	lone_bits_mark(lone->heap.bits.marked, index);
 
 	switch (value->type) {
-	case LONE_LISP_TYPE_MODULE:
+	case LONE_LISP_TAG_MODULE:
 		lone_lisp_mark_value(lone, value->as.module.name);
 		lone_lisp_mark_value(lone, value->as.module.environment);
 		lone_lisp_mark_value(lone, value->as.module.exports);
 		break;
-	case LONE_LISP_TYPE_FUNCTION:
+	case LONE_LISP_TAG_FUNCTION:
 		lone_lisp_mark_value(lone, value->as.function.arguments);
 		lone_lisp_mark_value(lone, value->as.function.code);
 		lone_lisp_mark_value(lone, value->as.function.environment);
 		break;
-	case LONE_LISP_TYPE_PRIMITIVE:
+	case LONE_LISP_TAG_PRIMITIVE:
 		lone_lisp_mark_value(lone, value->as.primitive.name);
 		lone_lisp_mark_value(lone, value->as.primitive.closure);
 		break;
-	case LONE_LISP_TYPE_CONTINUATION:
+	case LONE_LISP_TAG_CONTINUATION:
 		lone_lisp_mark_lisp_stack_values(
 			lone,
 			value->as.continuation.frames,
 			value->as.continuation.frames + value->as.continuation.frame_count
 		);
 		break;
-	case LONE_LISP_TYPE_GENERATOR:
+	case LONE_LISP_TAG_GENERATOR:
 		lone_lisp_mark_value(lone, value->as.generator.function);
 		if (value->as.generator.stacks.caller.base) {
 			/* generator is running */
@@ -83,25 +77,25 @@ static void lone_lisp_mark_heap_value(struct lone_lisp *lone, struct lone_lisp_h
 			}
 		}
 		break;
-	case LONE_LISP_TYPE_LIST:
+	case LONE_LISP_TAG_LIST:
 		lone_lisp_mark_value(lone, value->as.list.first);
 		lone_lisp_mark_value(lone, value->as.list.rest);
 		break;
-	case LONE_LISP_TYPE_VECTOR:
+	case LONE_LISP_TAG_VECTOR:
 		for (size_t i = 0; i < value->as.vector.count; ++i) {
 			lone_lisp_mark_value(lone, value->as.vector.values[i]);
 		}
 		break;
-	case LONE_LISP_TYPE_TABLE:
+	case LONE_LISP_TAG_TABLE:
 		lone_lisp_mark_value(lone, value->as.table.prototype);
 		for (size_t i = 0; i < value->as.table.count; ++i) {
 			lone_lisp_mark_value(lone, value->as.table.entries[i].key);
 			lone_lisp_mark_value(lone, value->as.table.entries[i].value);
 		}
 		break;
-	case LONE_LISP_TYPE_SYMBOL:
-	case LONE_LISP_TYPE_TEXT:
-	case LONE_LISP_TYPE_BYTES:
+	case LONE_LISP_TAG_SYMBOL:
+	case LONE_LISP_TAG_TEXT:
+	case LONE_LISP_TAG_BYTES:
 		/* these types do not contain any other values to mark */
 		break;
 	}
@@ -162,8 +156,8 @@ static void lone_lisp_mark_native_stack_roots_in_range(struct lone_lisp *lone, v
 
 		word = (unsigned long) *pointer;
 
-		if ((word & 7) == LONE_LISP_TYPE_HEAP_VALUE) {
-			index = word >> 3;
+		if (!(word & 1)) {
+			index = word >> LONE_LISP_INDEX_SHIFT;
 
 			if (index < lone->heap.count) {
 				lone_lisp_pin_and_mark_heap_value(lone, &lone->heap.values[index]);
@@ -187,17 +181,7 @@ static void lone_lisp_mark_lisp_stack_values(struct lone_lisp *lone,
 	struct lone_lisp_machine_stack_frame *frame;
 
 	for (frame = base; frame < limit; ++frame) {
-		switch (frame->type) {
-		case LONE_LISP_MACHINE_STACK_FRAME_TYPE_INTEGER:
-		case LONE_LISP_MACHINE_STACK_FRAME_TYPE_STEP:
-		case LONE_LISP_MACHINE_STACK_FRAME_TYPE_PRIMITIVE_STEP:
-			continue;
-		case LONE_LISP_MACHINE_STACK_FRAME_TYPE_VALUE:
-		case LONE_LISP_MACHINE_STACK_FRAME_TYPE_FUNCTION_DELIMITER:
-		case LONE_LISP_MACHINE_STACK_FRAME_TYPE_CONTINUATION_DELIMITER:
-		case LONE_LISP_MACHINE_STACK_FRAME_TYPE_GENERATOR_DELIMITER:
-			lone_lisp_mark_value(lone, frame->as.value);
-		}
+		lone_lisp_mark_value(lone, (struct lone_lisp_value) { .tagged = frame->tagged });
 	}
 }
 
@@ -244,8 +228,8 @@ static void lone_lisp_kill_all_unmarked_values(struct lone_lisp *lone)
 			value = &lone->heap.values[i];
 
 			switch (value->type) {
-			case LONE_LISP_TYPE_BYTES:
-			case LONE_LISP_TYPE_TEXT:
+			case LONE_LISP_TAG_BYTES:
+			case LONE_LISP_TAG_TEXT:
 				if (value->should_deallocate_bytes) {
 					lone_memory_deallocate(
 						lone->system, value->as.bytes.pointer,
@@ -254,7 +238,7 @@ static void lone_lisp_kill_all_unmarked_values(struct lone_lisp *lone)
 					);
 				}
 				break;
-			case LONE_LISP_TYPE_SYMBOL:
+			case LONE_LISP_TAG_SYMBOL:
 				if (value->should_deallocate_bytes) {
 					lone_memory_deallocate(
 						lone->system,
@@ -264,14 +248,14 @@ static void lone_lisp_kill_all_unmarked_values(struct lone_lisp *lone)
 					);
 				}
 				break;
-			case LONE_LISP_TYPE_VECTOR:
+			case LONE_LISP_TAG_VECTOR:
 				lone_memory_deallocate(
 					lone->system, value->as.vector.values,
 					value->as.vector.capacity,
 					sizeof(*value->as.vector.values), alignof(*value->as.vector.values)
 				);
 				break;
-			case LONE_LISP_TYPE_TABLE:
+			case LONE_LISP_TAG_TABLE:
 				lone_memory_deallocate(
 					lone->system, value->as.table.indexes,
 					value->as.table.capacity,
@@ -283,14 +267,14 @@ static void lone_lisp_kill_all_unmarked_values(struct lone_lisp *lone)
 					sizeof(*value->as.table.entries), alignof(*value->as.table.entries)
 				);
 				break;
-			case LONE_LISP_TYPE_CONTINUATION:
+			case LONE_LISP_TAG_CONTINUATION:
 				lone_memory_deallocate(
 					lone->system, value->as.continuation.frames,
 					value->as.continuation.frame_count,
 					sizeof(*value->as.continuation.frames), alignof(*value->as.continuation.frames)
 				);
 				break;
-			case LONE_LISP_TYPE_GENERATOR:
+			case LONE_LISP_TAG_GENERATOR:
 				lone_memory_deallocate(
 					lone->system, value->as.generator.stacks.own.base,
 					value->as.generator.stacks.own.limit - value->as.generator.stacks.own.base,
@@ -298,10 +282,10 @@ static void lone_lisp_kill_all_unmarked_values(struct lone_lisp *lone)
 					alignof(*value->as.generator.stacks.own.base)
 				);
 				break;
-			case LONE_LISP_TYPE_MODULE:
-			case LONE_LISP_TYPE_FUNCTION:
-			case LONE_LISP_TYPE_PRIMITIVE:
-			case LONE_LISP_TYPE_LIST:
+			case LONE_LISP_TAG_MODULE:
+			case LONE_LISP_TAG_FUNCTION:
+			case LONE_LISP_TAG_PRIMITIVE:
+			case LONE_LISP_TAG_LIST:
 				/* these types do not own any additional memory */
 				break;
 			}
@@ -372,18 +356,24 @@ static void lone_lisp_move_heap_value(struct lone_lisp *lone, size_t from, size_
 
 static struct lone_lisp_value lone_lisp_forward_value(struct lone_lisp *lone, struct lone_lisp_value value)
 {
-	size_t old_index;
+	size_t old_index, new_index;
+	long preserved;
 
 	if (!lone_lisp_is_heap_value(value)) { return value; }
 
-	old_index = ((unsigned long) value.tagged) >> 3;
+	old_index = ((unsigned long) value.tagged) >> LONE_LISP_INDEX_SHIFT;
 
 	if (old_index >= lone->heap.count) { return value; }
 
 	if (lone_lisp_is_alive(lone, old_index)) { return value; }
 
+	new_index = lone->heap.values[old_index].as.metadata.forwarding_index;
+
+	/* preserve tag and metadata bits, replace the index */
+	preserved = value.tagged & (((long) 1 << LONE_LISP_INDEX_SHIFT) - 1);
+
 	return (struct lone_lisp_value) {
-		.tagged = (long) (lone->heap.values[old_index].as.metadata.forwarding_index << 3),
+		.tagged = preserved | (long) ((unsigned long) new_index << LONE_LISP_INDEX_SHIFT),
 	};
 }
 
@@ -393,46 +383,36 @@ static void lone_lisp_rewrite_stack_frames(struct lone_lisp *lone,
 	struct lone_lisp_machine_stack_frame *frame;
 
 	for (frame = base; frame < limit; ++frame) {
-		switch (frame->type) {
-		case LONE_LISP_MACHINE_STACK_FRAME_TYPE_INTEGER:
-		case LONE_LISP_MACHINE_STACK_FRAME_TYPE_STEP:
-		case LONE_LISP_MACHINE_STACK_FRAME_TYPE_PRIMITIVE_STEP:
-			continue;
-		case LONE_LISP_MACHINE_STACK_FRAME_TYPE_VALUE:
-		case LONE_LISP_MACHINE_STACK_FRAME_TYPE_FUNCTION_DELIMITER:
-		case LONE_LISP_MACHINE_STACK_FRAME_TYPE_CONTINUATION_DELIMITER:
-		case LONE_LISP_MACHINE_STACK_FRAME_TYPE_GENERATOR_DELIMITER:
-			frame->as.value = lone_lisp_forward_value(lone, frame->as.value);
-			break;
-		}
+		struct lone_lisp_value value = { .tagged = frame->tagged };
+		frame->tagged = lone_lisp_forward_value(lone, value).tagged;
 	}
 }
 
 static void lone_lisp_rewrite_heap_value_interior(struct lone_lisp *lone, struct lone_lisp_heap_value *value)
 {
 	switch (value->type) {
-	case LONE_LISP_TYPE_MODULE:
+	case LONE_LISP_TAG_MODULE:
 		value->as.module.name = lone_lisp_forward_value(lone, value->as.module.name);
 		value->as.module.environment = lone_lisp_forward_value(lone, value->as.module.environment);
 		value->as.module.exports = lone_lisp_forward_value(lone, value->as.module.exports);
 		break;
-	case LONE_LISP_TYPE_FUNCTION:
+	case LONE_LISP_TAG_FUNCTION:
 		value->as.function.arguments = lone_lisp_forward_value(lone, value->as.function.arguments);
 		value->as.function.code = lone_lisp_forward_value(lone, value->as.function.code);
 		value->as.function.environment = lone_lisp_forward_value(lone, value->as.function.environment);
 		break;
-	case LONE_LISP_TYPE_PRIMITIVE:
+	case LONE_LISP_TAG_PRIMITIVE:
 		value->as.primitive.name = lone_lisp_forward_value(lone, value->as.primitive.name);
 		value->as.primitive.closure = lone_lisp_forward_value(lone, value->as.primitive.closure);
 		break;
-	case LONE_LISP_TYPE_CONTINUATION:
+	case LONE_LISP_TAG_CONTINUATION:
 		lone_lisp_rewrite_stack_frames(
 			lone,
 			value->as.continuation.frames,
 			value->as.continuation.frames + value->as.continuation.frame_count
 		);
 		break;
-	case LONE_LISP_TYPE_GENERATOR:
+	case LONE_LISP_TAG_GENERATOR:
 		value->as.generator.function = lone_lisp_forward_value(lone, value->as.generator.function);
 		if (value->as.generator.stacks.caller.base) {
 			lone_lisp_rewrite_stack_frames(
@@ -448,25 +428,25 @@ static void lone_lisp_rewrite_heap_value_interior(struct lone_lisp *lone, struct
 			);
 		}
 		break;
-	case LONE_LISP_TYPE_LIST:
+	case LONE_LISP_TAG_LIST:
 		value->as.list.first = lone_lisp_forward_value(lone, value->as.list.first);
 		value->as.list.rest = lone_lisp_forward_value(lone, value->as.list.rest);
 		break;
-	case LONE_LISP_TYPE_VECTOR:
+	case LONE_LISP_TAG_VECTOR:
 		for (size_t i = 0; i < value->as.vector.count; ++i) {
 			value->as.vector.values[i] = lone_lisp_forward_value(lone, value->as.vector.values[i]);
 		}
 		break;
-	case LONE_LISP_TYPE_TABLE:
+	case LONE_LISP_TAG_TABLE:
 		value->as.table.prototype = lone_lisp_forward_value(lone, value->as.table.prototype);
 		for (size_t i = 0; i < value->as.table.count; ++i) {
 			value->as.table.entries[i].key = lone_lisp_forward_value(lone, value->as.table.entries[i].key);
 			value->as.table.entries[i].value = lone_lisp_forward_value(lone, value->as.table.entries[i].value);
 		}
 		break;
-	case LONE_LISP_TYPE_SYMBOL:
-	case LONE_LISP_TYPE_TEXT:
-	case LONE_LISP_TYPE_BYTES:
+	case LONE_LISP_TAG_SYMBOL:
+	case LONE_LISP_TAG_TEXT:
+	case LONE_LISP_TAG_BYTES:
 		break;
 	}
 }

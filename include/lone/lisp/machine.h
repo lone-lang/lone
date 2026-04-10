@@ -43,8 +43,7 @@ void lone_lisp_machine_pop_function_delimiter(struct lone_lisp *lone, struct lon
 void lone_lisp_machine_push_continuation_delimiter(struct lone_lisp *lone, struct lone_lisp_machine *machine);
 void lone_lisp_machine_pop_continuation_delimiter(struct lone_lisp *lone, struct lone_lisp_machine *machine);
 
-void lone_lisp_machine_unwind_to(struct lone_lisp *lone, struct lone_lisp_machine *machine,
-		enum lone_lisp_machine_stack_frame_type type);
+void lone_lisp_machine_unwind_to(struct lone_lisp *lone, struct lone_lisp_machine *machine, enum lone_lisp_tag tag);
 void lone_lisp_machine_unwind_to_function_delimiter(struct lone_lisp *lone, struct lone_lisp_machine *machine);
 
 #endif /* LONE_LISP_MACHINE_HEADER */

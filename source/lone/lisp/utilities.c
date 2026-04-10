@@ -36,11 +36,15 @@ struct lone_lisp_value lone_lisp_apply_comparator(struct lone_lisp *lone,
 	return lone_lisp_true();
 }
 
-static struct lone_bytes select_bytes(struct lone_lisp *lone, struct lone_lisp_value value)
+static struct lone_bytes select_bytes(struct lone_lisp *lone, struct lone_lisp_value *value)
 {
-	return lone_lisp_is_symbol(lone, value)
-	     ? lone_lisp_heap_value_of(lone, value)->as.symbol.name
-	     : lone_lisp_heap_value_of(lone, value)->as.bytes;
+	if (lone_lisp_is_symbol(lone, *value)) {
+		return lone_lisp_symbol_name(lone, value);
+	}
+	if (lone_lisp_is_inline_value(*value)) {
+		return lone_lisp_inline_value_bytes(value);
+	}
+	return lone_lisp_heap_value_of(lone, *value)->as.bytes;
 }
 
 struct lone_bytes lone_lisp_join(struct lone_lisp *lone,
@@ -63,14 +67,14 @@ struct lone_bytes lone_lisp_join(struct lone_lisp *lone,
 
 	total = 0;
 	position = 0;
-	separator_count = select_bytes(lone, separator).count;
+	separator_count = select_bytes(lone, &separator).count;
 
 	for (head = arguments; !lone_lisp_is_nil(head); head = lone_lisp_list_rest(lone, head)) {
 		argument = lone_lisp_list_first(lone, head);
 
 		if (!is_valid(lone, argument)) { linux_exit(-1); }
 
-		total += select_bytes(lone, argument).count;
+		total += select_bytes(lone, &argument).count;
 
 		if (!lone_lisp_is_nil(separator) && !lone_lisp_is_nil(lone_lisp_list_rest(lone, head))) {
 			total += separator_count;
@@ -82,15 +86,15 @@ struct lone_bytes lone_lisp_join(struct lone_lisp *lone,
 	for (head = arguments; !lone_lisp_is_nil(head); head = lone_lisp_list_rest(lone, head)) {
 		argument = lone_lisp_list_first(lone, head);
 
-		count = select_bytes(lone, argument).count;
-		from  = select_bytes(lone, argument).pointer;
+		count = select_bytes(lone, &argument).count;
+		from  = select_bytes(lone, &argument).pointer;
 		to = joined + position;
 		lone_memory_move(from, to, count);
 		position += count;
 
 		if (!lone_lisp_is_nil(separator) && !lone_lisp_is_nil(lone_lisp_list_rest(lone, head))) {
-			count = select_bytes(lone, separator).count;
-			from = select_bytes(lone, separator).pointer;
+			count = select_bytes(lone, &separator).count;
+			from = select_bytes(lone, &separator).pointer;
 			to = joined + position;
 			lone_memory_move(from, to, count);
 			position += count;

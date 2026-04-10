@@ -658,12 +658,12 @@ LONE_LISP_PRIMITIVE(lone_transfer)
 		for (frame = machine->stack.top - 1 - 2,
 		     frame_count = 1;
 		     frame >= machine->stack.base &&
-		     frame->type != LONE_LISP_MACHINE_STACK_FRAME_TYPE_CONTINUATION_DELIMITER;
+		     (frame->tagged & LONE_LISP_TAG_MASK) != LONE_LISP_TAG_CONTINUATION_DELIMITER;
 		     --frame, ++frame_count);
 
 		/* recover the handler function */
 		--frame; ++frame_count;
-		handler = frame->as.value;
+		handler = (struct lone_lisp_value) { .tagged = frame->tagged };
 
 		/* copy stack frames up to and including the control primitive's function delimiter */
 		--frame; ++frame_count;
@@ -741,10 +741,13 @@ LONE_LISP_PRIMITIVE(lone_yield)
 
 		/* generator delimiter is in a fixed position on the generator's stack */
 		delimiter = &machine->stack.base[0];
-		if (delimiter->type != LONE_LISP_MACHINE_STACK_FRAME_TYPE_GENERATOR_DELIMITER) {
+		if ((delimiter->tagged & LONE_LISP_TAG_MASK) != LONE_LISP_TAG_GENERATOR_DELIMITER) {
 			/* not inside a generator */ linux_exit(-1);
 		}
-		generator = &lone_lisp_heap_value_of(lone, delimiter->as.value)->as.generator;
+		generator = &lone_lisp_heap_value_of(
+			lone,
+			lone_lisp_retag_frame(*delimiter, LONE_LISP_TAG_GENERATOR)
+		)->as.generator;
 
 		/* save the generator's stack */
 		generator->stacks.own = machine->stack;

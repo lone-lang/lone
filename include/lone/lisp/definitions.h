@@ -7,6 +7,95 @@
 
 #define LONE_LISP_DECIMAL_DIGITS_PER_INTEGER LONE_DECIMAL_DIGITS_PER_LONG
 
+/* ╭────────────────────────────────────────────────────────────────────────╮
+   │                                                                        │
+   │    Tagged value layout constants.                                      │
+   │                                                                        │
+   │    All lone lisp values are 64-bit tagged words.                       │
+   │    The low byte is the tag. The upper 56 bits are data.                │
+   │                                                                        │
+   │    For non-heap values with bit 0 = 1, all 56 bits represent data.     │
+   │                                                                        │
+   │        63                            8  7      0                       │
+   │        ┌──────────────────────────────┬─────────┐                      │
+   │        │  data (56)                   │ tag (8) │                      │
+   │        └──────────────────────────────┴─────────┘                      │
+   │                                                                        │
+   │    For heap values with bit 0 = 0, the data is further split           │
+   │    into 16 bits of per-value metadata and a 40-bit heap index.         │
+   │                                                                        │
+   │        63              24  23        8  7      0                       │
+   │        ┌─────────────────┬────────────┬─────────┐                      │
+   │        │  index (40)     │ meta (16)  │ tag (8) │                      │
+   │        └─────────────────┴────────────┴─────────┘                      │
+   │                                                                        │
+   │                                                                        │
+   ╰────────────────────────────────────────────────────────────────────────╯ */
+
+#define LONE_LISP_TAG_BITS              8
+#define LONE_LISP_TAG_MASK              0xFF
+
+#define LONE_LISP_DATA_BITS             56
+#define LONE_LISP_DATA_SHIFT            LONE_LISP_TAG_BITS
+
+#define LONE_LISP_METADATA_BITS         16
+#define LONE_LISP_METADATA_SHIFT        LONE_LISP_TAG_BITS
+#define LONE_LISP_METADATA_MASK         0xFFFF
+
+#define LONE_LISP_INDEX_BITS            40
+#define LONE_LISP_INDEX_SHIFT           24
+
+/* FEXPR flags in metadata for functions and primitives.
+ * These are bit positions within the full tagged word,
+ * allowing direct bit tests without extraction.
+ */
+#define LONE_LISP_METADATA_EVALUATE_ARGUMENTS  (1L << 8)
+#define LONE_LISP_METADATA_EVALUATE_RESULT     (1L << 9)
+
+/* ╭────────────────────────────────────────────────────────────────────────╮
+   │                                                                        │
+   │    Inline small values in lisp values as constants.                    │
+   │                                                                        │
+   │    Values with data ≤ 7 bytes are encoded directly                     │
+   │    in the lisp value tagged word, avoiding heap allocation.            │
+   │                                                                        │
+   │    Tag byte layout:                                                    │
+   │                                                                        │
+   │        bit 7 = 1: inline flag                                          │
+   │        bits 4-6:  inline type                                          │
+   │        bits 1-3:  length                                               │
+   │        bit 0 = 1: register value flag                                  │
+   │                                                                        │
+   │    Inline value types:                                                 │
+   │                                                                        │
+   │        000 = symbol                                                    │
+   │        001 = text                                                      │
+   │        010 = bytes                                                     │
+   │                                                                        │
+   │    Data layout:                                                        │
+   │                                                                        │
+   │      63          16  15       8  7      0                              │
+   │      ┌──────────────┬──────────┬─────────┐                             │
+   │      │  bytes 1-6   │  byte 0  │  tag    │                             │
+   │      └──────────────┴──────────┴─────────┘                             │
+   │                                                                        │
+   │    Bytes are stored starting at bit 8.                                 │
+   │    Unused high bytes are zero.                                         │
+   │    Two inline values with the same content                             │
+   │    produce identical tagged words.                                     │
+   │    Identity comparison works.                                          │
+   │                                                                        │
+   ╰────────────────────────────────────────────────────────────────────────╯ */
+
+#define LONE_LISP_INLINE_FLAG              0x80
+#define LONE_LISP_INLINE_TYPE_MASK         0xF1  /* bit 7 + bits 4-6 + bit 0 */
+#define LONE_LISP_INLINE_TYPE_SYMBOL       0x81  /* 1_000_xxx_1 */
+#define LONE_LISP_INLINE_TYPE_TEXT         0x91  /* 1_001_xxx_1 */
+#define LONE_LISP_INLINE_TYPE_BYTES        0xA1  /* 1_010_xxx_1 */
+#define LONE_LISP_INLINE_LENGTH_SHIFT      1
+#define LONE_LISP_INLINE_LENGTH_MASK       0x07  /* 3 bits for length 0-7 */
+#define LONE_LISP_INLINE_MAX_LENGTH        7
+
 #ifndef LONE_LISP_BUFFER_SIZE
 	#define LONE_LISP_BUFFER_SIZE 4096
 #endif
