@@ -138,6 +138,8 @@ position-independent across remaps.
 Heap-allocated types: Module, Function, Primitive,
 Continuation, Generator, List, Vector, Table, Symbol, Text, Bytes.
 
+See `documentation/tagged-values.md` for the full design.
+
 ### Garbage collector
 
 Three-phase mark-sweep-compact GC:
