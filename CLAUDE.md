@@ -117,13 +117,17 @@ architecture entry point  (architecture/$ARCH/include/lone/architecture/linux/en
 ### Value representation
 
 Values are tagged words (`struct lone_lisp_value { long tagged; }`).
-The low bits discriminate type:
+The low byte is the tag. The upper 56 bits are data.
 
-  - `...0` — heap value (shifted index into the heap array)
-  - `...1` — integer (shifted signed long)
-  - `00111` — nil
-  - `01111` — true
-  - `10111` — false
+  - bit 0 = 0 — heap value (40-bit index + 16-bit metadata)
+  - bit 0 = 1 — non-heap (56-bit data payload)
+  - `0x01` — integer (56-bit signed)
+  - `0x03` — nil
+  - `0x05` — true
+  - `0x07` — false
+  - `0x81`..`0x8F` — inline symbol (up to 7 bytes in-word)
+  - `0x91`..`0x9F` — inline text
+  - `0xA1`..`0xAF` — inline bytes
 
 Heap values live in a flat `mmap`'d array of `lone_lisp_heap_value`
 structs (64-byte aligned). Three separate bitmaps (live, marked, pinned)
@@ -200,7 +204,7 @@ All symbols are prefixed with `lone_`:
   - Machine: `lone_lisp_machine_*`
   - Modules: `lone_lisp_modules_intrinsic_*_initialize`, `lone_lisp_primitive_*`
   - Linux syscalls: `linux_*`
-  - Enum values: `LONE_LISP_TYPE_*`, `LONE_LISP_MACHINE_STEP_*`
+  - Enum values: `LONE_LISP_TAG_*`, `LONE_LISP_MACHINE_STEP_*`
 
 ## Compiler flags
 
