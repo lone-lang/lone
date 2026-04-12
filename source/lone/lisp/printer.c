@@ -56,7 +56,8 @@ static void lone_lisp_print_bytes(struct lone_lisp *lone, struct lone_lisp_value
 
 	if (count == 0) { linux_write(fd, "bytes[]", 7); return; }
 
-	size = 2 + count * 2; /* "0x" + 2 characters per input byte */
+	if (__builtin_mul_overflow(count, 2, &size)) { goto overflow; }
+	if (__builtin_add_overflow(size, 2, &size)) { goto overflow; } /* "0x" prefix */
 	text = lone_memory_allocate(lone->system, size, 1, 1, LONE_MEMORY_ALLOCATION_FLAGS_NONE);
 	byte = content.pointer;
 
@@ -75,6 +76,10 @@ static void lone_lisp_print_bytes(struct lone_lisp *lone, struct lone_lisp_value
 	linux_write(fd, "]", 1);
 
 	lone_memory_deallocate(lone->system, text, size, 1, 1);
+	return;
+
+overflow:
+	linux_exit(-1);
 }
 
 static void lone_lisp_print_list(struct lone_lisp *lone, struct lone_lisp_value list, int fd)

@@ -91,15 +91,29 @@ void lone_lisp_vector_set_value_at(struct lone_lisp *lone, struct lone_lisp_valu
 		size_t i, struct lone_lisp_value value)
 {
 	struct lone_lisp_vector *actual;
+	size_t new_capacity, new_count;
 
 	actual = &lone_lisp_heap_value_of(lone, vector)->as.vector;
 
+	if (__builtin_add_overflow(i, 1, &new_count)) {
+		goto overflow;
+	}
+
 	if (!lone_memory_array_is_bounded(i, actual->capacity, sizeof(*actual->values))) {
-		lone_lisp_vector_resize(lone, vector, 2 * (i + 1));
+
+		if (__builtin_mul_overflow(new_count, 2, &new_capacity)) {
+			goto overflow;
+		}
+
+		lone_lisp_vector_resize(lone, vector, new_capacity);
 	}
 
 	actual->values[i] = value;
-	if (++i > actual->count) { actual->count = i; }
+	if (new_count > actual->count) { actual->count = new_count; }
+	return;
+
+overflow:
+	linux_exit(-1);
 }
 
 void lone_lisp_vector_set(struct lone_lisp *lone, struct lone_lisp_value vector,

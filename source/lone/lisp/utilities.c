@@ -53,7 +53,7 @@ struct lone_bytes lone_lisp_join(struct lone_lisp *lone,
 {
 	struct lone_lisp_value head, argument;
 	unsigned char *joined, *from, *to;
-	size_t total, position, count, separator_count;
+	size_t total, position, count, separator_count, allocation_size;
 
 	if (!is_valid) { is_valid = lone_lisp_has_bytes; }
 	if (is_valid != lone_lisp_has_bytes && is_valid != lone_lisp_is_bytes &&
@@ -74,14 +74,29 @@ struct lone_bytes lone_lisp_join(struct lone_lisp *lone,
 
 		if (!is_valid(lone, argument)) { linux_exit(-1); }
 
-		total += select_bytes(lone, &argument).count;
+		if (__builtin_add_overflow(total,select_bytes(lone, &argument).count, &total)) {
+			goto overflow;
+		}
 
 		if (!lone_lisp_is_nil(separator) && !lone_lisp_is_nil(lone_lisp_list_rest(lone, head))) {
-			total += separator_count;
+			if (__builtin_add_overflow(total, separator_count, &total)) {
+				goto overflow;
+			}
 		}
 	}
 
-	joined = lone_memory_allocate(lone->system, total + 1, 1, 1, LONE_MEMORY_ALLOCATION_FLAGS_NONE);
+	if (__builtin_add_overflow(total, (size_t) 1, &allocation_size)) {
+		goto overflow;
+	}
+
+	joined =
+		lone_memory_allocate(
+			lone->system,
+			allocation_size,
+			1,
+			1,
+			LONE_MEMORY_ALLOCATION_FLAGS_NONE
+		);
 
 	for (head = arguments; !lone_lisp_is_nil(head); head = lone_lisp_list_rest(lone, head)) {
 		argument = lone_lisp_list_first(lone, head);
@@ -104,6 +119,9 @@ struct lone_bytes lone_lisp_join(struct lone_lisp *lone,
 	joined[total] = '\0';
 
 	return (struct lone_bytes) { .count = total, .pointer = joined };
+
+overflow:
+	linux_exit(-1);
 }
 
 struct lone_bytes lone_lisp_concatenate(struct lone_lisp *lone,

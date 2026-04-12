@@ -61,7 +61,11 @@ static size_t lone_lisp_reader_fill_buffer(struct lone_lisp *lone, struct lone_l
 
 		if (bytes_read == size) {
 			old_allocated = allocated;
-			allocated *= 2;
+
+			if (__builtin_mul_overflow(allocated, (size_t) 2, &allocated)) {
+				goto overflow;
+			}
+
 			buffer = lone_memory_reallocate(
 				lone->system, buffer,
 				old_allocated, 1,
@@ -78,6 +82,9 @@ static size_t lone_lisp_reader_fill_buffer(struct lone_lisp *lone, struct lone_l
 	reader->buffer.bytes.count = allocated;
 	reader->buffer.position.write = position;
 	return total_read;
+
+overflow:
+	linux_exit(-1);
 }
 
 /* ╭────────────────────────────────────────────────────────────────────────╮
