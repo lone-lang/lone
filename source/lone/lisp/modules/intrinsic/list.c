@@ -84,10 +84,15 @@ LONE_LISP_PRIMITIVE(list_rest)
 
 LONE_LISP_PRIMITIVE(list_flatten)
 {
-	struct lone_lisp_value arguments;
+	struct lone_lisp_value arguments, argument;
 
 	arguments = lone_lisp_machine_pop_value(lone, machine);
-	lone_lisp_machine_push_value(lone, machine, lone_lisp_list_flatten(lone, arguments));
+
+	if (lone_lisp_list_destructure(lone, arguments, 1, &argument)) {
+		/* wrong number of arguments */ linux_exit(-1);
+	}
+
+	lone_lisp_machine_push_value(lone, machine, lone_lisp_list_flatten(lone, argument));
 
 	return 0;
 }

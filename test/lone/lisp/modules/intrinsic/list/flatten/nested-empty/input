@@ -1,0 +1,5 @@
+(import (lone print quote) (list flatten))
+
+(print (flatten '(())))
+(print (flatten '(1 () 2)))
+(print (flatten '(() ())))
