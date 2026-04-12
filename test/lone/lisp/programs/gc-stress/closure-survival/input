@@ -1,0 +1,38 @@
+(import (lone set print lambda if) (list construct first) (math + - <))
+
+; Create closures that capture values from their enclosing environment
+(set make-adder (lambda (x) (lambda (y) (+ x y))))
+
+(set add-10 (make-adder 10))
+(set add-99 (make-adder 99))
+
+(set build-list (lambda (n acc)
+  (if (< n 1) acc (build-list (- n 1) (construct n acc)))))
+
+; Apply heavy allocation pressure between closure uses.
+; The closures' captured environments must survive GC.
+(build-list 50 ())
+(build-list 50 ())
+(build-list 50 ())
+(build-list 50 ())
+(build-list 50 ())
+(build-list 50 ())
+(build-list 50 ())
+(build-list 50 ())
+(build-list 50 ())
+(build-list 50 ())
+
+; Closures must still produce correct results
+(print (add-10 5))
+(print (add-10 20))
+(print (add-99 1))
+
+; More pressure
+(build-list 50 ())
+(build-list 50 ())
+(build-list 50 ())
+(build-list 50 ())
+(build-list 50 ())
+
+(print (add-99 901))
+(print (add-10 0))

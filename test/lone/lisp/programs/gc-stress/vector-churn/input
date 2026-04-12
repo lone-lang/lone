@@ -1,0 +1,18 @@
+(import (lone set print lambda if) (vector get count) (math + - <))
+
+(set make-vec (lambda (n acc)
+  (if (< n 1) acc (make-vec (- n 1) [1 2 3 4 5 6 7 8 9 10]))))
+
+; Allocate 30 ten-element vectors, discarding all but the last
+(make-vec 30 [])
+(make-vec 30 [])
+(make-vec 30 [])
+(make-vec 30 [])
+(make-vec 30 [])
+
+; Verify a fresh vector after GC pressure
+(set v [100 200 300])
+(print (get v 0))
+(print (get v 1))
+(print (get v 2))
+(print (count v))

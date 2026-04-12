@@ -1,0 +1,26 @@
+(import (lone set print lambda if list?) (list construct first) (math + - <))
+
+; Build a deeply nested list: (((((...(value)...)))))
+(set build-deep (lambda (depth value)
+  (if (< depth 1)
+    value
+    (build-deep (- depth 1) (construct value ())))))
+
+; Unwrap the nesting to retrieve the innermost value
+(set unwrap (lambda (x)
+  (if (list? x)
+    (unwrap (first x))
+    x)))
+
+; 100 levels of nesting: 100 heap-allocated list nodes
+; GC must trace through the entire chain during marking
+(set deep (build-deep 100 42))
+(print (unwrap deep))
+
+; Do it again with discarded intermediate structures
+(build-deep 100 0)
+(build-deep 100 0)
+(build-deep 100 0)
+
+; The original deep structure must still be intact
+(print (unwrap deep))

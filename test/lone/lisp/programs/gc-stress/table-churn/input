@@ -1,0 +1,31 @@
+(import (lone set print quote) (table get))
+
+; Create and discard many tables to exercise GC on table heap values.
+; Tables contain symbols (keys) and integers (values), stressing
+; both the table entry arrays and the symbol table.
+{a 1 b 2 c 3 d 4 e 5 f 6 g 7 h 8}
+{a 1 b 2 c 3 d 4 e 5 f 6 g 7 h 8}
+{a 1 b 2 c 3 d 4 e 5 f 6 g 7 h 8}
+{a 1 b 2 c 3 d 4 e 5 f 6 g 7 h 8}
+{a 1 b 2 c 3 d 4 e 5 f 6 g 7 h 8}
+{a 1 b 2 c 3 d 4 e 5 f 6 g 7 h 8}
+{a 1 b 2 c 3 d 4 e 5 f 6 g 7 h 8}
+{a 1 b 2 c 3 d 4 e 5 f 6 g 7 h 8}
+{a 1 b 2 c 3 d 4 e 5 f 6 g 7 h 8}
+{a 1 b 2 c 3 d 4 e 5 f 6 g 7 h 8}
+{a 1 b 2 c 3 d 4 e 5 f 6 g 7 h 8}
+{a 1 b 2 c 3 d 4 e 5 f 6 g 7 h 8}
+{a 1 b 2 c 3 d 4 e 5 f 6 g 7 h 8}
+{a 1 b 2 c 3 d 4 e 5 f 6 g 7 h 8}
+{a 1 b 2 c 3 d 4 e 5 f 6 g 7 h 8}
+{a 1 b 2 c 3 d 4 e 5 f 6 g 7 h 8}
+{a 1 b 2 c 3 d 4 e 5 f 6 g 7 h 8}
+{a 1 b 2 c 3 d 4 e 5 f 6 g 7 h 8}
+{a 1 b 2 c 3 d 4 e 5 f 6 g 7 h 8}
+{a 1 b 2 c 3 d 4 e 5 f 6 g 7 h 8}
+
+; Verify a fresh table works correctly after all that churn
+(set t {x 10 y 20 z 30})
+(print (get t (quote x)))
+(print (get t (quote y)))
+(print (get t (quote z)))
