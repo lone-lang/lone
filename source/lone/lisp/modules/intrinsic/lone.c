@@ -663,12 +663,30 @@ LONE_LISP_PRIMITIVE(lone_transfer)
 			/* wrong number of arguments: (transfer), (transfer value extra) */ linux_exit(-1);
 		}
 
-		/* skip primitive function delimiter and one step */
+		/* skip primitive function delimiter and one step,
+		   search for the continuation delimiter pushed by control */
 		for (frame = machine->stack.top - 1 - 2,
 		     frame_count = 1;
-		     frame >= machine->stack.base &&
-		     (frame->tagged & LONE_LISP_TAG_MASK) != LONE_LISP_TAG_CONTINUATION_DELIMITER;
-		     --frame, ++frame_count);
+		     frame >= machine->stack.base;
+		     --frame, ++frame_count) {
+
+			switch (frame->tagged & LONE_LISP_TAG_MASK) {
+			case LONE_LISP_TAG_CONTINUATION_DELIMITER:
+				goto found;
+			case LONE_LISP_TAG_GENERATOR_DELIMITER:
+				/* continuation capture across generator boundaries
+				   is not supported: disjoint stacks cannot be spliced */
+				linux_exit(-1);
+			default:
+				continue;
+			}
+		}
+
+		/* reached stack base without finding a continuation delimiter:
+		   transfer called without a matching control */
+		linux_exit(-1);
+
+	found:
 
 		/* recover the handler function */
 		--frame; ++frame_count;
