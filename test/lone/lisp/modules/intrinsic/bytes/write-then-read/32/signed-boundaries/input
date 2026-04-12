@@ -1,0 +1,15 @@
+(import (lone print set) (bytes new write-s32 read-s32 read-u32 write-u32))
+
+(set memory (new 4))
+
+(write-s32 memory 0 -2147483648)
+(print (read-s32 memory 0))
+(print (read-u32 memory 0))
+
+(write-s32 memory 0 2147483647)
+(print (read-s32 memory 0))
+(print (read-u32 memory 0))
+
+(write-u32 memory 0 4294967295)
+(print (read-u32 memory 0))
+(print (read-s32 memory 0))
