@@ -22,6 +22,11 @@ static bool lone_lisp_machine_can_pop(struct lone_lisp_machine *machine)
 	return lone_stack_can_pop(machine->stack.top, machine->stack.base, sizeof(struct lone_lisp_machine_stack_frame));
 }
 
+static bool lone_lisp_machine_can_peek(struct lone_lisp_machine *machine, size_t depth)
+{
+	return ((size_t) (machine->stack.top - machine->stack.base)) >= depth;
+}
+
 void lone_lisp_machine_push(struct lone_lisp *lone, struct lone_lisp_machine *machine,
 		struct lone_lisp_machine_stack_frame frame)
 {
@@ -69,6 +74,13 @@ void lone_lisp_machine_push_continuation_delimiter(struct lone_lisp *lone, struc
 struct lone_lisp_value lone_lisp_machine_pop_value(struct lone_lisp *lone, struct lone_lisp_machine *machine)
 {
 	return (struct lone_lisp_value) { .tagged = lone_lisp_machine_pop(lone, machine).tagged };
+}
+
+struct lone_lisp_value lone_lisp_machine_peek_value(struct lone_lisp *lone, struct lone_lisp_machine *machine,
+		size_t depth)
+{
+	if (!lone_lisp_machine_can_peek(machine, depth)) { linux_exit(-1); }
+	return (struct lone_lisp_value) { .tagged = (machine->stack.top - depth)->tagged };
 }
 
 void lone_lisp_machine_pop_function_delimiter(struct lone_lisp *lone, struct lone_lisp_machine *machine)

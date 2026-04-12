@@ -1114,9 +1114,7 @@ LONE_LISP_PRIMITIVE(lone_signal)
 		lone_lisp_machine_push_value(lone, machine, handler_expression);
 
 		/* intercept_environment is at a known and stable location */
-		intercept_environment = (struct lone_lisp_value) {
-			.tagged = (machine->stack.top - 3)->tagged
-		};
+		intercept_environment = lone_lisp_machine_peek_value(lone, machine, 3);
 
 		/* request evaluation of matcher expression */
 		machine->environment = intercept_environment;
@@ -1150,9 +1148,7 @@ LONE_LISP_PRIMITIVE(lone_signal)
 			lone_lisp_machine_push_value(lone, machine, handler_expression);
 
 			/* tag is at a known and stable location */
-			tag = (struct lone_lisp_value) {
-				.tagged = (machine->stack.top - 5)->tagged
-			};
+			tag = lone_lisp_machine_peek_value(lone, machine, 5);
 
 			/* build and evaluate (predicate (quote tag)) */
 			quoted_tag = lone_lisp_signal_quote(lone, tag);
@@ -1172,9 +1168,7 @@ LONE_LISP_PRIMITIVE(lone_signal)
 		}
 
 		/* symbol matcher, exact comparison */
-		tag = (struct lone_lisp_value) {
-			.tagged = (machine->stack.top - 4)->tagged
-		};
+		tag = lone_lisp_machine_peek_value(lone, machine, 4);
 
 		if (lone_lisp_is_identical(lone, matcher, tag)) {
 			goto evaluate_handler;
@@ -1197,9 +1191,7 @@ LONE_LISP_PRIMITIVE(lone_signal)
 		 */
 
 		lone_lisp_machine_pop_value(lone, machine); /* clauses */
-		intercept_environment = (struct lone_lisp_value) {
-			.tagged = (machine->stack.top - 1)->tagged
-		};
+		intercept_environment = lone_lisp_machine_peek_value(lone, machine, 1);
 
 		machine->environment = intercept_environment;
 		machine->expression = handler_expression;

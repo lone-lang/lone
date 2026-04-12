@@ -20,6 +20,8 @@ struct lone_lisp_machine_stack_frame lone_lisp_machine_pop(struct lone_lisp *lon
 void lone_lisp_machine_push_value(struct lone_lisp *lone, struct lone_lisp_machine *machine,
 		struct lone_lisp_value value);
 struct lone_lisp_value lone_lisp_machine_pop_value(struct lone_lisp *lone, struct lone_lisp_machine *machine);
+struct lone_lisp_value lone_lisp_machine_peek_value(struct lone_lisp *lone, struct lone_lisp_machine *machine,
+		size_t depth);
 
 void lone_lisp_machine_push_integer(struct lone_lisp *lone, struct lone_lisp_machine *machine,
 		lone_lisp_integer integer);
