@@ -1,0 +1,9 @@
+(import (lone print true? false? identical? quote))
+
+(print (true? (identical? 1 2)))
+(print (true? ()))
+(print (true? 0))
+(print (true? 1))
+(print (true? "text"))
+(print (true? 'symbol))
+(print (true? [1 2]))

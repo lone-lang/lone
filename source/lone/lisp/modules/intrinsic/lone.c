@@ -81,6 +81,12 @@ void lone_lisp_modules_intrinsic_lone_initialize(struct lone_lisp *lone)
 	lone_lisp_module_export_primitive(lone, module, "nil?",
 			"is_nil", lone_lisp_primitive_lone_is_nil, module, flags);
 
+	lone_lisp_module_export_primitive(lone, module, "true?",
+			"is_true", lone_lisp_primitive_lone_is_true, module, flags);
+
+	lone_lisp_module_export_primitive(lone, module, "false?",
+			"is_false", lone_lisp_primitive_lone_is_false, module, flags);
+
 	lone_lisp_module_export_primitive(lone, module, "list?",
 			"is_list", lone_lisp_primitive_lone_is_list, module, flags);
 
@@ -1356,6 +1362,34 @@ LONE_LISP_PRIMITIVE(lone_is_nil)
 	lone_lisp_machine_push_value(lone, machine,
 			lone_lisp_apply_predicate(lone,
 				lone_lisp_machine_pop_value(lone, machine), lone_lisp_is_nil_predicate));
+	return 0;
+}
+
+static bool lone_lisp_is_true_predicate(struct lone_lisp *lone, struct lone_lisp_value value)
+{
+	(void) lone;
+	return lone_lisp_is_true(value);
+}
+
+LONE_LISP_PRIMITIVE(lone_is_true)
+{
+	lone_lisp_machine_push_value(lone, machine,
+			lone_lisp_apply_predicate(lone,
+				lone_lisp_machine_pop_value(lone, machine), lone_lisp_is_true_predicate));
+	return 0;
+}
+
+static bool lone_lisp_is_false_predicate(struct lone_lisp *lone, struct lone_lisp_value value)
+{
+	(void) lone;
+	return lone_lisp_is_false(value);
+}
+
+LONE_LISP_PRIMITIVE(lone_is_false)
+{
+	lone_lisp_machine_push_value(lone, machine,
+			lone_lisp_apply_predicate(lone,
+				lone_lisp_machine_pop_value(lone, machine), lone_lisp_is_false_predicate));
 	return 0;
 }
 

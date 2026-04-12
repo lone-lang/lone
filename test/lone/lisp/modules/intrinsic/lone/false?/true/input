@@ -1,0 +1,3 @@
+(import (lone print false? identical?))
+
+(print (false? (identical? 1 2)))
