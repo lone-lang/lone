@@ -345,6 +345,7 @@ void lone_lisp_machine_reset(struct lone_lisp *lone, struct lone_lisp_machine *m
 		struct lone_lisp_value module, struct lone_lisp_value expression)
 {
 
+	machine->stack.top = machine->stack.base;
 	machine->step = LONE_LISP_MACHINE_STEP_EXPRESSION_EVALUATION;
 	lone_lisp_machine_push_step(lone, machine, LONE_LISP_MACHINE_STEP_HALT);
 	machine->primitive.step = 0;
