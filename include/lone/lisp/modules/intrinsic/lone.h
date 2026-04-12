@@ -31,6 +31,7 @@ LONE_LISP_PRIMITIVE(lone_generator);
 LONE_LISP_PRIMITIVE(lone_yield);
 LONE_LISP_PRIMITIVE(lone_intercept);
 LONE_LISP_PRIMITIVE(lone_signal);
+LONE_LISP_PRIMITIVE(lone_is_nil);
 LONE_LISP_PRIMITIVE(lone_is_list);
 LONE_LISP_PRIMITIVE(lone_is_vector);
 LONE_LISP_PRIMITIVE(lone_is_table);

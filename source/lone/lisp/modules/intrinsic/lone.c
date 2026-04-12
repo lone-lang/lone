@@ -78,6 +78,9 @@ void lone_lisp_modules_intrinsic_lone_initialize(struct lone_lisp *lone)
 	lone_lisp_module_export_primitive(lone, module, "print",
 			"print", lone_lisp_primitive_lone_print, module, flags);
 
+	lone_lisp_module_export_primitive(lone, module, "nil?",
+			"is_nil", lone_lisp_primitive_lone_is_nil, module, flags);
+
 	lone_lisp_module_export_primitive(lone, module, "list?",
 			"is_list", lone_lisp_primitive_lone_is_list, module, flags);
 
@@ -1322,6 +1325,20 @@ LONE_LISP_PRIMITIVE(lone_signal)
 	}
 
 	linux_exit(-1);
+}
+
+static bool lone_lisp_is_nil_predicate(struct lone_lisp *lone, struct lone_lisp_value value)
+{
+	(void) lone;
+	return lone_lisp_is_nil(value);
+}
+
+LONE_LISP_PRIMITIVE(lone_is_nil)
+{
+	lone_lisp_machine_push_value(lone, machine,
+			lone_lisp_apply_predicate(lone,
+				lone_lisp_machine_pop_value(lone, machine), lone_lisp_is_nil_predicate));
+	return 0;
 }
 
 LONE_LISP_PRIMITIVE(lone_is_list)

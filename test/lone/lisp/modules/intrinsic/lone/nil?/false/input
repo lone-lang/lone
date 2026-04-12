@@ -1,0 +1,8 @@
+(import (lone print nil? quote))
+
+(print (nil? 0))
+(print (nil? 42))
+(print (nil? "text"))
+(print (nil? 'symbol))
+(print (nil? [1 2 3]))
+(print (nil? '(1 2 3)))

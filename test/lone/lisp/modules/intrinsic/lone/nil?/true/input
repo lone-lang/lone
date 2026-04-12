@@ -1,0 +1,4 @@
+(import (lone print nil? quote))
+
+(print (nil? ()))
+(print (nil? '()))
