@@ -1,0 +1,6 @@
+(import (lone intercept signal quote))
+
+; Intercept present but no clause matches — unhandled, fatal
+(intercept
+  (('a (lambda (e) 1)))
+  (signal 'b ()))

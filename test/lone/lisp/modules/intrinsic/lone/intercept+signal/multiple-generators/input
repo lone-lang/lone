@@ -1,0 +1,15 @@
+(import (lone print intercept signal lambda quote set generator yield))
+
+; Two generators, each yields then signals on second call
+(set g1 (generator (lambda () (yield 10) (signal 'failure 1))))
+(set g2 (generator (lambda () (yield 20) (signal 'failure 2))))
+
+; First call to each yields, second call signals
+; g1 signals first (its 'failure is handled), returning e=1
+(print
+  (intercept
+    (('failure (lambda (e) e)))
+    (print (g1))
+    (print (g2))
+    (print (g1))
+    (g2)))

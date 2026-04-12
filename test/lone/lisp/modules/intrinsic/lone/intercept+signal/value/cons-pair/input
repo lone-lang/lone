@@ -1,0 +1,6 @@
+(import (lone print intercept signal lambda quote) (list construct))
+
+(print
+  (intercept
+    (('error (lambda (e) e)))
+    (signal 'error (construct 1 2))))

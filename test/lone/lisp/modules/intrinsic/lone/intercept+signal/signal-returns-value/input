@@ -1,0 +1,14 @@
+(import (lone print intercept signal lambda quote set equal?)
+        (math +))
+
+(set safe-divide (lambda (a b)
+  (if (equal? b 0)
+      (signal 'division-by-zero a)
+      (+ a b))))
+
+(import (lone if))
+
+(print
+  (intercept
+    (('division-by-zero (lambda (e k) (k 0))))
+    (safe-divide 10 0)))

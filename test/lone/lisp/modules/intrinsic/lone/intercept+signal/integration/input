@@ -1,0 +1,13 @@
+(import (lone print intercept signal lambda quote set if equal?))
+
+; nested intercepts with different handlers
+(print
+  (intercept
+    (('outer (lambda (e) (print "outer") e)))
+    (intercept
+      (('inner (lambda (e k)
+         (print "inner")
+         (k 42))))
+      (set x (signal 'inner ()))
+      (print x)
+      (signal 'outer x))))

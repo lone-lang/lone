@@ -1,0 +1,6 @@
+(import (lone print intercept signal lambda quote))
+
+(print
+  (intercept
+    (('tag (lambda (e k) 42)))
+    (signal 'tag ())))

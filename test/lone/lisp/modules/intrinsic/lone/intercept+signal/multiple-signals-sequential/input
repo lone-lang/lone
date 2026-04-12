@@ -1,0 +1,10 @@
+(import (lone print intercept signal lambda quote set))
+
+; Two signals in sequence, both resumed via continuation
+(print
+  (intercept
+    (('error (lambda (e k) (k e))))
+    (set x (signal 'error 10))
+    (set y (signal 'error 20))
+    (print x)
+    y))

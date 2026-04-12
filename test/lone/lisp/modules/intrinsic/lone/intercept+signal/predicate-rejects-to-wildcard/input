@@ -1,0 +1,10 @@
+(import (lone print intercept signal lambda quote set))
+
+; Predicate returns nil (no match), falls through to wildcard
+(set never (lambda (t) ()))
+
+(print
+  (intercept
+    ((never (lambda (e) 1))
+     (() (lambda (e) 2)))
+    (signal 'x ())))

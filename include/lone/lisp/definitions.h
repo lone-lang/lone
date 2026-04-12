@@ -52,6 +52,15 @@
 #define LONE_LISP_METADATA_EVALUATE_ARGUMENTS  (1L << 8)
 #define LONE_LISP_METADATA_EVALUATE_RESULT     (1L << 9)
 
+/* Function arity in metadata bits 10-13.
+ * 4 bits = 0-14.
+ * Value 15 = overflow sentinel: 15+, check heap structure.
+ * Shift and mask extract the arity from the full tagged word.
+ */
+#define LONE_LISP_METADATA_ARITY_SHIFT    10
+#define LONE_LISP_METADATA_ARITY_MASK     0x0F
+#define LONE_LISP_METADATA_ARITY_OVERFLOW 0x0F
+
 /* ╭────────────────────────────────────────────────────────────────────────╮
    │                                                                        │
    │    Inline small values in lisp values as constants.                    │

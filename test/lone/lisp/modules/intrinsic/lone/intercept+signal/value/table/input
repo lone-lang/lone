@@ -1,0 +1,6 @@
+(import (lone print intercept signal lambda quote) (table get))
+
+(print
+  (intercept
+    (('error (lambda (e) (get e 'x))))
+    (signal 'error { x 42 })))

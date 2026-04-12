@@ -81,6 +81,18 @@ void lone_lisp_machine_pop_continuation_delimiter(struct lone_lisp *lone, struct
 	lone_lisp_machine_pop(lone, machine);
 }
 
+void lone_lisp_machine_push_interceptor_delimiter(struct lone_lisp *lone, struct lone_lisp_machine *machine)
+{
+	lone_lisp_machine_push(lone, machine, (struct lone_lisp_machine_stack_frame) {
+		.tagged = LONE_LISP_TAG_INTERCEPTOR_DELIMITER,
+	});
+}
+
+void lone_lisp_machine_pop_interceptor_delimiter(struct lone_lisp *lone, struct lone_lisp_machine *machine)
+{
+	lone_lisp_machine_pop(lone, machine);
+}
+
 void lone_lisp_machine_push_integer(struct lone_lisp *lone, struct lone_lisp_machine *machine,
 		lone_lisp_integer integer)
 {
@@ -152,6 +164,11 @@ void lone_lisp_machine_unwind_to(struct lone_lisp *lone, struct lone_lisp_machin
 void lone_lisp_machine_unwind_to_function_delimiter(struct lone_lisp *lone, struct lone_lisp_machine *machine)
 {
 	lone_lisp_machine_unwind_to(lone, machine, LONE_LISP_TAG_FUNCTION_DELIMITER);
+}
+
+void lone_lisp_machine_unwind_to_interceptor_delimiter(struct lone_lisp *lone, struct lone_lisp_machine *machine)
+{
+	lone_lisp_machine_unwind_to(lone, machine, LONE_LISP_TAG_INTERCEPTOR_DELIMITER);
 }
 
 static bool should_evaluate_operands(struct lone_lisp *lone,

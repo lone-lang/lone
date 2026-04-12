@@ -1,0 +1,14 @@
+(import (lone print intercept signal lambda quote set generator yield))
+
+(set inner (generator (lambda ()
+  (signal 'deep-error ()))))
+
+(set outer (generator (lambda ()
+  (yield 10)
+  (inner))))
+
+(print
+  (intercept
+    (('deep-error (lambda (e) 42)))
+    (print (outer))
+    (outer)))

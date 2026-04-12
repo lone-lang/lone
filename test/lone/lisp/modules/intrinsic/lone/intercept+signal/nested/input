@@ -1,0 +1,8 @@
+(import (lone print intercept signal lambda quote))
+
+(print
+  (intercept
+    (('outer (lambda (e) 1)))
+    (intercept
+      (('inner (lambda (e) 2)))
+      (signal 'outer ()))))

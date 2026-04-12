@@ -1,0 +1,10 @@
+(import (lone print intercept signal lambda quote set))
+
+(set inner (lambda () (signal 'deep 42)))
+(set middle (lambda () (inner)))
+(set outer (lambda () (middle)))
+
+(print
+  (intercept
+    (('deep (lambda (e) e)))
+    (outer)))

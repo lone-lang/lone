@@ -1,0 +1,9 @@
+(import (lone print intercept signal lambda quote))
+
+; Inner handler re-signals a different tag to outer
+(print
+  (intercept
+    (('outer (lambda (e) 42)))
+    (intercept
+      (('inner (lambda (e) (signal 'outer ()))))
+      (signal 'inner ()))))

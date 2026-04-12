@@ -55,6 +55,9 @@ void lone_lisp_modules_intrinsic_lone_initialize(struct lone_lisp *lone)
 	lone_lisp_module_export_primitive(lone, module, "control",
 			"control", lone_lisp_primitive_lone_control, module, flags);
 
+	lone_lisp_module_export_primitive(lone, module, "intercept",
+			"intercept", lone_lisp_primitive_lone_intercept, module, flags);
+
 	flags = (struct lone_lisp_function_flags) { .evaluate_arguments = true, .evaluate_result = false };
 
 	lone_lisp_module_export_primitive(lone, module, "return",
@@ -68,6 +71,9 @@ void lone_lisp_modules_intrinsic_lone_initialize(struct lone_lisp *lone)
 
 	lone_lisp_module_export_primitive(lone, module, "yield",
 			"yield", lone_lisp_primitive_lone_yield, module, flags);
+
+	lone_lisp_module_export_primitive(lone, module, "signal",
+			"signal", lone_lisp_primitive_lone_signal, module, flags);
 
 	lone_lisp_module_export_primitive(lone, module, "print",
 			"print", lone_lisp_primitive_lone_print, module, flags);
@@ -763,6 +769,560 @@ LONE_LISP_PRIMITIVE(lone_yield)
 
 		/* return the yielded value */
 		lone_lisp_machine_push_value(lone, machine, value);
+		return 0;
+
+	default:
+		break;
+	}
+
+	linux_exit(-1);
+}
+
+LONE_LISP_PRIMITIVE(lone_intercept)
+{
+	struct lone_lisp_value arguments, clauses, body;
+
+	switch (step) {
+	case 0: /* decompose arguments, push data, evaluate body */
+
+		arguments = lone_lisp_machine_pop_value(lone, machine);
+
+		if (lone_lisp_is_nil(arguments)) {
+			/* no arguments: (intercept) */ linux_exit(-1);
+		}
+
+		clauses = lone_lisp_list_first(lone, arguments);
+		body = lone_lisp_list_rest(lone, arguments);
+
+		if (lone_lisp_is_nil(body)) {
+			/* no body: (intercept clauses) */ linux_exit(-1);
+		}
+
+		/* set up the stack so that signal can find
+		 * the environment and clause list later
+		 */
+		lone_lisp_machine_push_value(lone, machine, machine->environment);
+		lone_lisp_machine_push_value(lone, machine, clauses);
+		lone_lisp_machine_push_interceptor_delimiter(lone, machine);
+
+		/* evaluate the body as a sequence */
+		machine->unevaluated = body;
+		machine->step = LONE_LISP_MACHINE_STEP_SEQUENCE_EVALUATION_FROM_PRIMITIVE;
+		return 1;
+
+	case 1: /* evaluation completed, no error signalled */
+
+		/* clean up the data that was meant for signal */
+		lone_lisp_machine_pop_interceptor_delimiter(lone, machine);
+		lone_lisp_machine_pop_value(lone, machine); /* clause list */
+		lone_lisp_machine_pop_value(lone, machine); /* environment */
+
+		/* return body's result */
+		lone_lisp_machine_push_value(lone, machine, machine->value);
+		return 0;
+
+	default:
+		break;
+	}
+
+	linux_exit(-1);
+}
+
+/* Scan the machine stack downward from the given position looking for
+ * an interceptor delimiter. Returns a pointer to the delimiter frame
+ * or null if none was found before hitting the stack base
+ * or a generator delimiter. If a generator delimiter is found,
+ * *generator is set to the generator heap struct.
+ */
+static struct lone_lisp_machine_stack_frame *
+lone_lisp_signal_find_interceptor_delimiter_from(
+		struct lone_lisp *lone, struct lone_lisp_machine *machine,
+		struct lone_lisp_machine_stack_frame *start,
+		struct lone_lisp_generator **generator)
+{
+	struct lone_lisp_machine_stack_frame *frame;
+
+	*generator = 0;
+
+	for (frame = start; frame >= machine->stack.base; --frame) {
+
+		switch (frame->tagged & LONE_LISP_TAG_MASK) {
+		case LONE_LISP_TAG_INTERCEPTOR_DELIMITER:
+			return frame;
+		case LONE_LISP_TAG_GENERATOR_DELIMITER:
+			*generator = &lone_lisp_heap_value_of(
+				lone,
+				lone_lisp_retag_frame(*frame, LONE_LISP_TAG_GENERATOR)
+			)->as.generator;
+			return 0;
+		default:
+			continue;
+		}
+	}
+
+	return 0;
+}
+
+static struct lone_lisp_machine_stack_frame *
+lone_lisp_signal_find_interceptor_delimiter(
+		struct lone_lisp *lone, struct lone_lisp_machine *machine,
+		struct lone_lisp_generator **generator)
+{
+	return
+		lone_lisp_signal_find_interceptor_delimiter_from(
+			lone,
+			machine,
+			machine->stack.top - 1,
+			generator
+		);
+}
+
+/* Read clause list and environment relative to an interceptor delimiter.
+ * Stack layout below delimiter:
+ *
+ * 	clauses-list
+ * 	environment
+ * 	...
+ *
+ */
+static struct lone_lisp_value lone_lisp_signal_read_clause_list(
+		struct lone_lisp_machine_stack_frame *delimiter)
+{
+	return (struct lone_lisp_value) { .tagged = (delimiter - 1)->tagged };
+}
+
+static struct lone_lisp_value lone_lisp_signal_read_environment(
+		struct lone_lisp_machine_stack_frame *delimiter)
+{
+	return (struct lone_lisp_value) { .tagged = (delimiter - 2)->tagged };
+}
+
+static unsigned lone_lisp_function_arity(struct lone_lisp_value function)
+{
+	return (function.tagged >> LONE_LISP_METADATA_ARITY_SHIFT)
+	                         & LONE_LISP_METADATA_ARITY_MASK;
+}
+
+/* Wrap a value in (quote value) so it survives evaluation.
+ * Necessary when building expressions that the machine will evaluate,
+ * because symbols would otherwise be looked up in the environment.
+ */
+static struct lone_lisp_value lone_lisp_signal_quote(struct lone_lisp *lone,
+		struct lone_lisp_value value)
+{
+	struct lone_lisp_value quote = lone_lisp_intern_c_string(lone, "quote");
+	return lone_lisp_list_build(lone, 2, &quote, &value);
+}
+
+/* Terminate a generator and propagate signal to the caller's stack.
+ * Saves the current stack as the generator's own,
+ * switches to the caller's stack and terminates the generator.
+ * Then pushes a new function delimiter on the caller's stack
+ * since the one pushed by the machine for this primitive
+ * was on the old stack.
+ */
+static void lone_lisp_signal_terminate_generator(
+		struct lone_lisp *lone,
+		struct lone_lisp_machine *machine,
+		struct lone_lisp_generator *generator)
+{
+	generator->stacks.own = machine->stack;
+	machine->stack = generator->stacks.caller;
+	machine->environment = lone_lisp_nil();
+	generator->stacks.caller = (struct lone_lisp_machine_stack) { 0 };
+	generator->stacks.own.top = 0;
+
+	lone_lisp_machine_push_function_delimiter(lone, machine);
+}
+
+/* Push an interceptor's dispatch state onto the machine stack:
+ * delimiter offset, environment and clause list.
+ */
+static void lone_lisp_signal_push_interceptor_state(
+		struct lone_lisp *lone,
+		struct lone_lisp_machine *machine,
+		struct lone_lisp_machine_stack_frame *delimiter)
+{
+	lone_lisp_machine_push_integer(lone, machine,
+		delimiter - machine->stack.base);
+
+	lone_lisp_machine_push_value(lone, machine,
+		lone_lisp_signal_read_environment(delimiter));
+
+	lone_lisp_machine_push_value(lone, machine,
+		lone_lisp_signal_read_clause_list(delimiter));
+}
+
+/* Signal dispatch stack layout (stable base, variable top):
+ *
+ * 	[variable]
+ * 	intercept-environment
+ * 	delimiter-offset
+ * 	tag
+ * 	value
+ * 	...
+ *
+ * The bottom 4 frames are stable during clause iteration.
+ * The [variable] part changes depending on the current step:
+ *
+ * 	evaluate_next_clause:
+ *
+ * 		handler-expression
+ * 		clauses-list
+ *
+ * 	step 2, after match:
+ *
+ * 		handler-expression
+ * 		clauses-list
+ *
+ * 	step 3, after predicate:
+ *
+ * 		handler-expression
+ * 		clauses-list
+ *
+ *   step 4, after handler eval: nothing
+ *
+ * Tag and value are read by peeking at known stack depths
+ * rather than popping and re-pushing the entire stack.
+ */
+
+LONE_LISP_PRIMITIVE(lone_signal)
+{
+	struct lone_lisp_machine_stack_frame *delimiter, *next, *frame, *frames;
+	struct lone_lisp_value arguments, tag, value;
+	struct lone_lisp_value clauses, clause, matcher, handler;
+	struct lone_lisp_value matcher_expression, handler_expression;
+	struct lone_lisp_value intercept_environment, continuation;
+	struct lone_lisp_value quoted_tag, quoted_value;
+	struct lone_lisp_generator *generator;
+	long current_offset, delimiter_offset;
+	size_t frame_count;
+	unsigned arity;
+
+	switch (step) {
+	case 0: /* pop and destructure arguments, walk the stack */
+
+		arguments = lone_lisp_machine_pop_value(lone, machine);
+
+		if (lone_lisp_list_destructure(lone, arguments, 2, &tag, &value)) {
+			/* wrong number of arguments */ linux_exit(-1);
+		}
+
+		if (lone_lisp_is_nil(tag)) {
+			/* signal tag must not be nil */ linux_exit(-1);
+		}
+
+		/* find first interceptor delimiter */
+		delimiter = lone_lisp_signal_find_interceptor_delimiter(
+			lone,
+			machine,
+			&generator
+		);
+
+		while (!delimiter) {
+			if (!generator) {
+				/* no interceptor or generator delimiter found
+				   signal cannot be handled */
+				linux_exit(-1);
+			}
+
+			lone_lisp_signal_terminate_generator(lone, machine, generator);
+
+			/* search for interceptor delimiter on the caller's stack */
+			delimiter =
+				lone_lisp_signal_find_interceptor_delimiter(
+					lone,
+					machine,
+					&generator
+				);
+
+			/* loop continues */
+		}
+
+		/* push tag and value now that we have a delimiter to unwind to */
+		lone_lisp_machine_push_value(lone, machine, value);
+		lone_lisp_machine_push_value(lone, machine, tag);
+
+		lone_lisp_signal_push_interceptor_state(lone, machine, delimiter);
+
+	evaluate_next_clause:
+
+		clauses = lone_lisp_machine_pop_value(lone, machine);
+
+		if (lone_lisp_is_nil(clauses)) {
+			/* no matching clauses, look for another interceptor */
+
+			/* intercept_environment */
+			lone_lisp_machine_pop_value(lone, machine);
+
+			current_offset = lone_lisp_machine_pop_integer(lone, machine);
+
+			/* search above the current delimiter's data */
+			next =
+				lone_lisp_signal_find_interceptor_delimiter_from(
+					lone,
+					machine,
+					machine->stack.base + current_offset - 3,
+					&generator
+				);
+
+			while (!next) {
+				if (!generator) {
+					/* no interceptor or generator delimiter found
+					 signal cannot be handled */
+					linux_exit(-1);
+				}
+
+				/* save tag and value before switching stacks */
+				tag = lone_lisp_machine_pop_value(lone, machine);
+				value = lone_lisp_machine_pop_value(lone, machine);
+
+				lone_lisp_signal_terminate_generator(
+					lone,
+					machine,
+					generator
+				);
+
+				/* restore tag and value on the new stack */
+				lone_lisp_machine_push_value(lone, machine, value);
+				lone_lisp_machine_push_value(lone, machine, tag);
+
+				/* search on the caller's stack */
+				next =
+					lone_lisp_signal_find_interceptor_delimiter(
+						lone,
+						machine,
+						&generator
+					);
+			}
+
+			lone_lisp_signal_push_interceptor_state(lone, machine, next);
+
+			goto evaluate_next_clause;
+		}
+
+		clause = lone_lisp_list_first(lone, clauses);
+		clauses = lone_lisp_list_rest(lone, clauses);
+
+		/* extract matcher and handler expressions from the clause */
+		matcher_expression = lone_lisp_list_first(lone, clause);
+		handler_expression =
+			lone_lisp_list_first(lone, lone_lisp_list_rest(lone, clause));
+
+		/* save remaining clauses and handler expression */
+		lone_lisp_machine_push_value(lone, machine, clauses);
+		lone_lisp_machine_push_value(lone, machine, handler_expression);
+
+		/* intercept_environment is at a known and stable location */
+		intercept_environment = (struct lone_lisp_value) {
+			.tagged = (machine->stack.top - 3)->tagged
+		};
+
+		/* request evaluation of matcher expression */
+		machine->environment = intercept_environment;
+		machine->expression = matcher_expression;
+		machine->step = LONE_LISP_MACHINE_STEP_EXPRESSION_EVALUATION;
+		return 2;
+
+	case 2: /* matcher evaluated */
+
+		/* Stack layout:
+		 *
+		 * 	handler_expression
+		 * 	intercept_environment
+		 * 	delimiter-offset
+		 * 	tag
+		 * 	value
+		 * 	...
+		 *
+		 */
+
+		handler_expression = lone_lisp_machine_pop_value(lone, machine);
+		matcher = machine->value;
+
+		if (lone_lisp_is_nil(matcher)) {
+			/* nil matcher is the wildcard */
+			goto evaluate_handler;
+		}
+
+		if (lone_lisp_is_function(lone, matcher)) {
+			/* function matcher is a predicate, needs application */
+			lone_lisp_machine_push_value(lone, machine, handler_expression);
+
+			/* tag is at a known and stable location */
+			tag = (struct lone_lisp_value) {
+				.tagged = (machine->stack.top - 5)->tagged
+			};
+
+			/* build and evaluate (predicate (quote tag)) */
+			quoted_tag = lone_lisp_signal_quote(lone, tag);
+			machine->expression = lone_lisp_list_build(
+				lone,
+				2,
+				&matcher,
+				&quoted_tag
+			);
+
+			machine->step = LONE_LISP_MACHINE_STEP_EXPRESSION_EVALUATION;
+			return 3;
+		}
+
+		if (!lone_lisp_is_symbol(lone, matcher)) {
+			/* matcher must be nil, function, or symbol */ linux_exit(-1);
+		}
+
+		/* symbol matcher, exact comparison */
+		tag = (struct lone_lisp_value) {
+			.tagged = (machine->stack.top - 4)->tagged
+		};
+
+		if (lone_lisp_is_identical(lone, matcher, tag)) {
+			goto evaluate_handler;
+		}
+
+		/* no match, try next clause */
+		goto evaluate_next_clause;
+
+	evaluate_handler:
+
+		/* Stack layout:
+		 *
+		 * 	clauses-list
+		 * 	intercept_environment
+		 * 	delimiter-offset
+		 * 	tag
+		 * 	value
+		 * 	...
+		 *
+		 */
+
+		lone_lisp_machine_pop_value(lone, machine); /* clauses */
+		intercept_environment = (struct lone_lisp_value) {
+			.tagged = (machine->stack.top - 1)->tagged
+		};
+
+		machine->environment = intercept_environment;
+		machine->expression = handler_expression;
+		machine->step = LONE_LISP_MACHINE_STEP_EXPRESSION_EVALUATION;
+		return 4;
+
+	case 3: /* predicate evaluated */
+
+		/* Stack layout:
+		 *
+		 * 	handler-expression
+		 * 	clauses-list
+		 * 	intercept-environment
+		 * 	delimiter-offset
+		 * 	tag
+		 * 	value
+		 * 	...
+		 *
+		 */
+
+		handler_expression = lone_lisp_machine_pop_value(lone, machine);
+
+		if (lone_lisp_is_truthy(machine->value)) {
+			goto evaluate_handler;
+		}
+
+		/* predicate did not match, try next clause */
+		goto evaluate_next_clause;
+
+	case 4: /* handler evaluated */
+
+		/* Stack layout:
+		 *
+		 * 	intercept-environment
+		 * 	delimiter-offset
+		 * 	tag
+		 * 	value
+		 * 	...
+		 *
+		 */
+
+		handler = machine->value;
+
+		if (!lone_lisp_is_function(lone, handler)) {
+			/* handler must be a lambda */ linux_exit(-1);
+		}
+
+		arity = lone_lisp_function_arity(handler);
+		intercept_environment = lone_lisp_machine_pop_value(lone, machine);
+
+		delimiter_offset = lone_lisp_machine_pop_integer(lone, machine);
+		tag = lone_lisp_machine_pop_value(lone, machine);
+		value = lone_lisp_machine_pop_value(lone, machine);
+
+		delimiter = machine->stack.base + delimiter_offset;
+
+		if (arity >= 2) {
+			/* arity 2 handler: capture continuation then unwind */
+
+			/* capture from the interceptor's associated data to stack top */
+			frame = delimiter - 2;
+			frame_count = machine->stack.top - frame;
+
+			frames = lone_memory_array(
+				lone->system,
+				0,
+				0,
+				frame_count,
+				sizeof(*frames),
+				alignof(*frames)
+			);
+
+			lone_memory_move(
+				frame,
+				frames,
+				lone_memory_array_size_in_bytes(
+					frame_count,
+					sizeof(*frames)
+				)
+			);
+
+			continuation = lone_lisp_continuation_create(
+				lone,
+				frame_count,
+				frames
+			);
+
+			machine->stack.top = frame;
+
+		} else {
+			/* arity 1 handler: just unwind past delimiter and its data */
+			machine->stack.top = delimiter - 2;
+		}
+
+		/* build handler application
+		 * value must be quoted,
+		 * otherwise symbols will
+		 * be dereferenced */
+		quoted_value = lone_lisp_signal_quote(lone, value);
+		if (arity >= 2) {
+			machine->expression =
+				lone_lisp_list_build(
+					lone,
+					3,
+					&handler,
+					&quoted_value,
+					&continuation
+				);
+		} else {
+			machine->expression =
+				lone_lisp_list_build(
+					lone,
+					2,
+					&handler,
+					&quoted_value
+				);
+		}
+		machine->step = LONE_LISP_MACHINE_STEP_EXPRESSION_EVALUATION;
+		return 5;
+
+	case 5: /* handler has returned */
+
+		lone_lisp_machine_push_value(lone, machine, machine->value);
 		return 0;
 
 	default:

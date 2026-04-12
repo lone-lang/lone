@@ -1,0 +1,11 @@
+(import (lone print intercept signal lambda quote) (math +))
+
+; Inner handler transforms value and re-signals same tag
+; Inner: e=1 -> signal 'error (+ 1 100) = 101
+; Outer: e=101 -> (+ 101 1000) = 1101
+(print
+  (intercept
+    (('error (lambda (e) (+ e 1000))))
+    (intercept
+      (('error (lambda (e) (signal 'error (+ e 100)))))
+      (signal 'error 1))))
