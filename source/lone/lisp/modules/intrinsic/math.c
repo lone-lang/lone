@@ -58,6 +58,7 @@ void lone_lisp_modules_intrinsic_math_initialize(struct lone_lisp *lone)
 static struct lone_lisp_value lone_lisp_primitive_integer_operation(struct lone_lisp *lone, struct lone_lisp_value arguments, char operation, struct lone_lisp_value accumulator)
 {
 	struct lone_lisp_value argument;
+	lone_lisp_integer x, y, result;
 
 	if (lone_lisp_is_nil(arguments)) {
 		/* wasn't given any arguments to operate on: (+), (-), (*) */
@@ -71,31 +72,24 @@ static struct lone_lisp_value lone_lisp_primitive_integer_operation(struct lone_
 		case LONE_LISP_TAG_INTEGER:
 			switch (lone_lisp_type_of(accumulator)) {
 			case LONE_LISP_TAG_INTEGER:
+				x = lone_lisp_integer_of(accumulator);
+				y = lone_lisp_integer_of(argument);
+
 				switch (operation) {
 				case '+':
-					accumulator = lone_lisp_integer_create(
-						lone_lisp_integer_of(accumulator)
-						+
-						lone_lisp_integer_of(argument)
-					);
+					if (__builtin_add_overflow(x, y, &result)) { goto overflow; }
 					break;
 				case '-':
-					accumulator = lone_lisp_integer_create(
-						lone_lisp_integer_of(accumulator)
-						-
-						lone_lisp_integer_of(argument)
-					);
+					if (__builtin_sub_overflow(x, y, &result)) { goto overflow; }
 					break;
 				case '*':
-					accumulator = lone_lisp_integer_create(
-						lone_lisp_integer_of(accumulator)
-						*
-						lone_lisp_integer_of(argument)
-					);
+					if (__builtin_mul_overflow(x, y, &result)) { goto overflow; }
 					break;
 				default:
 					/* invalid primitive integer operation */ linux_exit(-1);
 				}
+
+				accumulator = lone_lisp_integer_create(result);
 				break;
 			default:
 				/* accumulator is not a number */ linux_exit(-1);
@@ -110,6 +104,9 @@ static struct lone_lisp_value lone_lisp_primitive_integer_operation(struct lone_
 	} while (!lone_lisp_is_nil(arguments));
 
 	return accumulator;
+
+overflow:
+	linux_exit(-1);
 }
 
 LONE_LISP_PRIMITIVE(math_add)
@@ -161,6 +158,7 @@ LONE_LISP_PRIMITIVE(math_multiply)
 LONE_LISP_PRIMITIVE(math_divide)
 {
 	struct lone_lisp_value arguments, dividend, divisor, result;
+	lone_lisp_integer x, y;
 
 	arguments = lone_lisp_machine_pop_value(lone, machine);
 
@@ -186,10 +184,17 @@ LONE_LISP_PRIMITIVE(math_divide)
 
 	if (lone_lisp_integer_of(divisor) == 0) { /* division by zero: (/ 1 0) */ goto division_by_zero; }
 
-	result = lone_lisp_integer_create(lone_lisp_integer_of(dividend) / lone_lisp_integer_of(divisor));
+	x = lone_lisp_integer_of(dividend);
+	y = lone_lisp_integer_of(divisor);
+
+	/* the only overflowing case for integer division: LONG_MIN / -1 */
+	if (x == (-__LONG_MAX__ - 1L) && y == -1) { goto overflow; }
+
+	result = lone_lisp_integer_create(x / y);
 	lone_lisp_machine_push_value(lone, machine, result);
 	return 0;
 
+overflow:
 division_by_zero:
 no_arguments:
 not_a_number:
