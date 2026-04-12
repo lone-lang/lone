@@ -163,6 +163,53 @@ static void lone_lisp_print_function(struct lone_lisp *lone, struct lone_lisp_va
 	linux_write(fd, ")", 1);
 }
 
+static void lone_lisp_print_text(struct lone_lisp *lone, struct lone_lisp_value value, int fd)
+{
+	struct lone_bytes text;
+	unsigned char *byte;
+	size_t i, run_start;
+
+	if (lone_lisp_is_inline_text(value)) {
+		text = lone_lisp_inline_value_bytes(&value);
+	} else {
+		text = lone_lisp_heap_value_of(lone, value)->as.bytes;
+	}
+
+	linux_write(fd, "\"", 1);
+
+	run_start = 0;
+
+	for (i = 0; i < text.count; ++i) {
+		char *escape;
+
+		byte = &text.pointer[i];
+
+		switch (*byte) {
+		case '\\': escape = "\\\\"; break;
+		case '"':  escape = "\\\""; break;
+		case '\n': escape = "\\n";  break;
+		case '\t': escape = "\\t";  break;
+		case '\0': escape = "\\0";  break;
+		default:   continue;
+		}
+
+		/* flush preceding unescaped run */
+		if (i > run_start) {
+			linux_write(fd, text.pointer + run_start, i - run_start);
+		}
+
+		linux_write(fd, escape, 2);
+		run_start = i + 1;
+	}
+
+	/* flush remaining unescaped run */
+	if (text.count > run_start) {
+		linux_write(fd, text.pointer + run_start, text.count - run_start);
+	}
+
+	linux_write(fd, "\"", 1);
+}
+
 static void lone_lisp_print_hash_notation(struct lone_lisp *lone, char *descriptor, struct lone_lisp_value value, int fd)
 {
 	linux_write(fd, "#<", 2);
@@ -229,17 +276,8 @@ void lone_lisp_print(struct lone_lisp *lone, struct lone_lisp_value value, int f
 		linux_write(fd, name.pointer, name.count);
 		break;
 	}
-	case LONE_LISP_TAG_TEXT: {
-		struct lone_bytes text;
-		if (lone_lisp_is_inline_text(value)) {
-			text = lone_lisp_inline_value_bytes(&value);
-		} else {
-			text = lone_lisp_heap_value_of(lone, value)->as.bytes;
-		}
-		linux_write(fd, "\"", 1);
-		linux_write(fd, text.pointer, text.count);
-		linux_write(fd, "\"", 1);
+	case LONE_LISP_TAG_TEXT:
+		lone_lisp_print_text(lone, value, fd);
 		break;
-	}
 	}
 }
