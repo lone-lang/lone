@@ -124,16 +124,13 @@ static int lone_lisp_module_search(struct lone_lisp *lone, struct lone_lisp_valu
 
 		lone_memory_deallocate(lone->system, path.pointer, path.count + 1, 1, 1);
 
-		switch (result) {
-		case -ENOENT:
-		case -EACCES: case -EPERM:
-		case -ENOTDIR: case -EISDIR:
-		case -EINVAL: case -ENAMETOOLONG:
-		case -EMFILE: case -ENFILE:
-		case -ELOOP:
-			continue;
-		case -ENOMEM: case -EFAULT:
-			linux_exit(-1);
+		if (result < 0) {
+			switch (result) {
+			case -ENOMEM: case -EFAULT:
+				linux_exit(-1);
+			default:
+				continue;
+			}
 		}
 
 		return (int) result;
