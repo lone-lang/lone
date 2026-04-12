@@ -40,7 +40,7 @@ __asm__
 "cbnz x8, 0b"                    "\n"  //       goto loop if x8 != 0
                                        // auxv: x3
 
-"and sp, x1, -16"                "\n"  // ensure 16 byte alignment
+"and sp, sp, -16"                "\n"  // ensure 16 byte alignment
 
 "bl lone"                        "\n"  // call lone; returns status code in x0
 
