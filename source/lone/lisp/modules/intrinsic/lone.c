@@ -55,6 +55,9 @@ void lone_lisp_modules_intrinsic_lone_initialize(struct lone_lisp *lone)
 	lone_lisp_module_export_primitive(lone, module, "control",
 			"control", lone_lisp_primitive_lone_control, module, flags);
 
+	lone_lisp_module_export_primitive(lone, module, "intercept",
+			"intercept", lone_lisp_primitive_lone_intercept, module, flags);
+
 	flags = (struct lone_lisp_function_flags) { .evaluate_arguments = true, .evaluate_result = false };
 
 	lone_lisp_module_export_primitive(lone, module, "return",
@@ -763,6 +766,56 @@ LONE_LISP_PRIMITIVE(lone_yield)
 
 		/* return the yielded value */
 		lone_lisp_machine_push_value(lone, machine, value);
+		return 0;
+
+	default:
+		break;
+	}
+
+	linux_exit(-1);
+}
+
+LONE_LISP_PRIMITIVE(lone_intercept)
+{
+	struct lone_lisp_value arguments, clauses, body;
+
+	switch (step) {
+	case 0: /* decompose arguments, push data, evaluate body */
+
+		arguments = lone_lisp_machine_pop_value(lone, machine);
+
+		if (lone_lisp_is_nil(arguments)) {
+			/* no arguments: (intercept) */ linux_exit(-1);
+		}
+
+		clauses = lone_lisp_list_first(lone, arguments);
+		body = lone_lisp_list_rest(lone, arguments);
+
+		if (lone_lisp_is_nil(body)) {
+			/* no body: (intercept clauses) */ linux_exit(-1);
+		}
+
+		/* set up the stack so that signal can find
+		 * the environment and clause list later
+		 */
+		lone_lisp_machine_push_value(lone, machine, machine->environment);
+		lone_lisp_machine_push_value(lone, machine, clauses);
+		lone_lisp_machine_push_interceptor_delimiter(lone, machine);
+
+		/* evaluate the body as a sequence */
+		machine->unevaluated = body;
+		machine->step = LONE_LISP_MACHINE_STEP_SEQUENCE_EVALUATION_FROM_PRIMITIVE;
+		return 1;
+
+	case 1: /* evaluation completed, no error signalled */
+
+		/* clean up the data that was meant for signal */
+		lone_lisp_machine_pop_interceptor_delimiter(lone, machine);
+		lone_lisp_machine_pop_value(lone, machine); /* clause list */
+		lone_lisp_machine_pop_value(lone, machine); /* environment */
+
+		/* return body's result */
+		lone_lisp_machine_push_value(lone, machine, machine->value);
 		return 0;
 
 	default:
