@@ -1,0 +1,9 @@
+(import (lone print intercept signal lambda quote set) (math +))
+
+; Handler lambda captures variable from enclosing scope
+(set bonus 100)
+
+(print
+  (intercept
+    (('error (lambda (e) (+ e bonus))))
+    (signal 'error 5)))

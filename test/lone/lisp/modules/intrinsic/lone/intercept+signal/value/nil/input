@@ -3,4 +3,4 @@
 (print
   (intercept
     (('error (lambda (e) e)))
-    (signal 'error 42)))
+    (signal 'error ())))

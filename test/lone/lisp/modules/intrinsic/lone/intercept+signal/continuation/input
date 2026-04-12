@@ -1,0 +1,7 @@
+(import (lone print intercept signal lambda quote set))
+
+(print
+  (intercept
+    (('missing (lambda (error resume) (resume 42))))
+    (set result (signal 'missing ()))
+    result))

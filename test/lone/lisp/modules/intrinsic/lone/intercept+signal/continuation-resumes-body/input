@@ -1,0 +1,12 @@
+(import (lone print intercept signal lambda quote set))
+
+; 2-arg handler resumes: code after signal point continues
+(print
+  (intercept
+    (('error (lambda (error resume) (resume 42))))
+    (print 1)
+    (set x 2)
+    (set x (signal 'error ()))
+    (print x)
+    (print 3)
+    x))

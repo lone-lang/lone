@@ -1,0 +1,10 @@
+(import (lone print intercept signal lambda quote set))
+
+; Intercept inside a function, called multiple times
+(set safe (lambda (tag val)
+  (intercept
+    (('error (lambda (e) 'default)))
+    (signal tag val))))
+
+(print (safe 'error 1))
+(print (safe 'error 2))

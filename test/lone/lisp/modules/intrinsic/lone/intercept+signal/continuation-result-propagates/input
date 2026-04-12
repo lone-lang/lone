@@ -1,0 +1,7 @@
+(import (lone print intercept signal lambda quote))
+
+; Continuation result becomes the final result of intercept
+(print
+  (intercept
+    (('error (lambda (e k) (k 42))))
+    (signal 'error ())))

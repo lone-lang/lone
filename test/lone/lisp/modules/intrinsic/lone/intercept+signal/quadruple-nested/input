@@ -1,0 +1,13 @@
+(import (lone print intercept signal lambda quote))
+
+; Four levels deep, signal to second level
+(print
+  (intercept
+    (('L1 (lambda (e) 1)))
+    (intercept
+      (('L2 (lambda (e) 2)))
+      (intercept
+        (('L3 (lambda (e) 3)))
+        (intercept
+          (('L4 (lambda (e) 4)))
+          (signal 'L2 ()))))))

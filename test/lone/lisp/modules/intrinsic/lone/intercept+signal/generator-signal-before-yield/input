@@ -1,11 +1,11 @@
 (import (lone print intercept signal lambda quote set generator yield))
 
+; Signal fires before generator ever yields
 (set g (generator (lambda ()
-  (yield 1)
-  (signal 'failure ()))))
+  (signal 'early ())
+  (yield 1))))
 
 (print
   (intercept
-    (('failure (lambda (e k) (k 42))))
-    (print (g))
+    (('early (lambda (e) 42)))
     (g)))

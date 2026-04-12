@@ -1,0 +1,10 @@
+(import (lone print intercept signal lambda quote))
+
+; Side effects before signal run, code after signal is skipped (1-arg handler unwinds)
+(print
+  (intercept
+    (('error (lambda (e) 42)))
+    (print 1)
+    (print 2)
+    (signal 'error ())
+    (print 3)))

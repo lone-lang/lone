@@ -1,0 +1,8 @@
+(import (lone print intercept signal lambda quote))
+
+
+(print
+  (intercept
+    ((() (lambda (e) 1)); Wildcard as first clause swallows later clauses
+     ('specific (lambda (e) 2)))
+    (signal 'specific ())))

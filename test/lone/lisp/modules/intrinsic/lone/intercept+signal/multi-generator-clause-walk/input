@@ -1,0 +1,15 @@
+(import (lone print intercept signal lambda quote set generator yield))
+
+(set g (generator (lambda ()
+  (yield (intercept
+    (('other-error (lambda (e) 0)))
+    10))
+  (intercept
+    (('other-error (lambda (e) 0)))
+    (signal 'real-error ())))))
+
+(print
+  (intercept
+    (('real-error (lambda (e) 42)))
+    (print (g))
+    (g)))

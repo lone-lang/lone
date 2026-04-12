@@ -1,0 +1,8 @@
+(import (lone print intercept signal lambda quote) (math + *))
+
+; Intercept result used as operand in arithmetic
+(print
+  (* 2
+    (intercept
+      (('error (lambda (e) (+ e 10))))
+      (signal 'error 5))))

@@ -1,0 +1,9 @@
+(import (lone print intercept signal lambda quote))
+
+; Inner intercept catches signal, outer is never triggered
+(print
+  (intercept
+    (('outer (lambda (e) 1)))
+    (intercept
+      (('inner (lambda (e) 2)))
+      (signal 'inner ()))))

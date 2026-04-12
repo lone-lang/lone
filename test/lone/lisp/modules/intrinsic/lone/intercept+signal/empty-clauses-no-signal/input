@@ -1,0 +1,5 @@
+(import (lone print intercept))
+
+; Empty clause list, no signal raised - body value returned
+(print
+  (intercept (()) 42))

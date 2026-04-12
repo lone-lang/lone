@@ -1,0 +1,11 @@
+(import (lone print intercept signal lambda quote))
+
+; Signal at innermost level propagates to outermost handler
+(print
+  (intercept
+    (('L1 (lambda (e) 1)))
+    (intercept
+      (('L2 (lambda (e) 2)))
+      (intercept
+        (('L3 (lambda (e) 3)))
+        (signal 'L1 ())))))
