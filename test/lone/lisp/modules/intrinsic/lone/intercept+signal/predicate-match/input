@@ -1,0 +1,12 @@
+(import (lone print intercept signal lambda set if equal? quote))
+
+(set math-error?
+  (lambda (tag)
+    (if (equal? tag 'division-by-zero) 1
+    (if (equal? tag 'overflow)         1
+                                       ()))))
+
+(print
+  (intercept
+    ((math-error? (lambda (e) 42)))
+    (signal 'overflow ())))

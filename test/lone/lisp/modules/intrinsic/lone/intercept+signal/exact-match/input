@@ -1,0 +1,6 @@
+(import (lone print intercept signal lambda quote))
+
+(print
+  (intercept
+    (('division-by-zero (lambda (e) 42)))
+    (signal 'division-by-zero 0)))

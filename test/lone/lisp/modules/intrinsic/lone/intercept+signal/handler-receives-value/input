@@ -1,0 +1,5 @@
+(import (lone print intercept signal lambda quote))
+
+(print (intercept
+  (('error (lambda (e) e)))
+  (signal 'error 42)))
