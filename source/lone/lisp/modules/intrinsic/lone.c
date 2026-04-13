@@ -614,8 +614,8 @@ LONE_LISP_PRIMITIVE(lone_return)
 
 	return_value = lone_lisp_list_first(lone, lone_lisp_machine_pop_value(lone, machine));
 
-	lone_lisp_machine_pop_function_delimiter(lone, machine); // this primitive's own delimiter
-	lone_lisp_machine_unwind_to_function_delimiter(lone, machine);
+	lone_lisp_machine_pop_primitive_delimiter(lone, machine); // this primitive's own delimiter
+	lone_lisp_machine_unwind_to_primitive_delimiter(lone, machine);
 
 	lone_lisp_machine_push_value(lone, machine, return_value);
 	return 0;
@@ -793,7 +793,7 @@ LONE_LISP_PRIMITIVE(lone_yield)
 		generator->stacks.caller = (struct lone_lisp_machine_stack) { 0 };
 
 		/* consumed by the lisp machine when primitives return */
-		lone_lisp_machine_push_function_delimiter(lone, machine);
+		lone_lisp_machine_push_primitive_delimiter(lone, machine);
 
 		/* return the yielded value */
 		lone_lisp_machine_push_value(lone, machine, value);
@@ -960,7 +960,7 @@ static void lone_lisp_signal_terminate_generator(
 	generator->stacks.caller = (struct lone_lisp_machine_stack) { 0 };
 	generator->stacks.own.top = 0;
 
-	lone_lisp_machine_push_function_delimiter(lone, machine);
+	lone_lisp_machine_push_primitive_delimiter(lone, machine);
 }
 
 /* Push an interceptor's dispatch state onto the machine stack:

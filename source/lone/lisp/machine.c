@@ -310,13 +310,13 @@ bool lone_lisp_machine_cycle(struct lone_lisp *lone, struct lone_lisp_machine *m
 				machine->applicable,
 				machine->list
 			);
-			lone_lisp_machine_push_function_delimiter(lone, machine);
+			lone_lisp_machine_push_primitive_delimiter(lone, machine);
 			machine->unevaluated = lone_lisp_heap_value_of(lone, machine->applicable)->as.function.code;
 			machine->step = LONE_LISP_MACHINE_STEP_SEQUENCE_EVALUATION;
 			return true;
 		case LONE_LISP_TAG_PRIMITIVE:
 			/* primitives pop the list of arguments from the stack */
-			lone_lisp_machine_push_function_delimiter(lone, machine);
+			lone_lisp_machine_push_primitive_delimiter(lone, machine);
 			lone_lisp_machine_push_value(lone, machine, machine->list);
 			machine->primitive.step = 0;
 		resume_primitive:
@@ -400,7 +400,7 @@ bool lone_lisp_machine_cycle(struct lone_lisp *lone, struct lone_lisp_machine *m
 		 * 	next-step
 		 */
 	after_application:
-		lone_lisp_machine_pop_function_delimiter(lone, machine);
+		lone_lisp_machine_pop_primitive_delimiter(lone, machine);
 		lone_lisp_machine_restore_step(lone, machine);
 		lone_lisp_machine_restore_step(lone, machine);
 		return true;

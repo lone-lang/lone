@@ -212,10 +212,23 @@ void lone_lisp_machine_push_value(struct lone_lisp *lone, struct lone_lisp_machi
 	});
 }
 
-void lone_lisp_machine_push_function_delimiter(struct lone_lisp *lone, struct lone_lisp_machine *machine)
+void lone_lisp_machine_push_function_delimiter(struct lone_lisp *lone, struct lone_lisp_machine *machine,
+		struct lone_lisp_value function)
 {
 	lone_lisp_machine_push(lone, machine, (struct lone_lisp_machine_stack_frame) {
-		.tagged = LONE_LISP_TAG_FUNCTION_DELIMITER,
+		.tagged = lone_lisp_retag(function, LONE_LISP_TAG_FUNCTION_DELIMITER).tagged,
+	});
+}
+
+void lone_lisp_machine_pop_function_delimiter(struct lone_lisp *lone, struct lone_lisp_machine *machine)
+{
+	lone_lisp_machine_pop(lone, machine);
+}
+
+void lone_lisp_machine_push_primitive_delimiter(struct lone_lisp *lone, struct lone_lisp_machine *machine)
+{
+	lone_lisp_machine_push(lone, machine, (struct lone_lisp_machine_stack_frame) {
+		.tagged = LONE_LISP_TAG_PRIMITIVE_DELIMITER,
 	});
 }
 
@@ -238,7 +251,7 @@ struct lone_lisp_value lone_lisp_machine_peek_value(struct lone_lisp *lone, stru
 	return (struct lone_lisp_value) { .tagged = (machine->stack.top - depth)->tagged };
 }
 
-void lone_lisp_machine_pop_function_delimiter(struct lone_lisp *lone, struct lone_lisp_machine *machine)
+void lone_lisp_machine_pop_primitive_delimiter(struct lone_lisp *lone, struct lone_lisp_machine *machine)
 {
 	lone_lisp_machine_pop(lone, machine);
 }
@@ -331,6 +344,11 @@ void lone_lisp_machine_unwind_to(struct lone_lisp *lone, struct lone_lisp_machin
 void lone_lisp_machine_unwind_to_function_delimiter(struct lone_lisp *lone, struct lone_lisp_machine *machine)
 {
 	lone_lisp_machine_unwind_to(lone, machine, LONE_LISP_TAG_FUNCTION_DELIMITER);
+}
+
+void lone_lisp_machine_unwind_to_primitive_delimiter(struct lone_lisp *lone, struct lone_lisp_machine *machine)
+{
+	lone_lisp_machine_unwind_to(lone, machine, LONE_LISP_TAG_PRIMITIVE_DELIMITER);
 }
 
 void lone_lisp_machine_unwind_to_interceptor_delimiter(struct lone_lisp *lone, struct lone_lisp_machine *machine)
