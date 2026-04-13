@@ -241,25 +241,37 @@ void lone_lisp_table_set(struct lone_lisp *lone, struct lone_lisp_value table,
 		struct lone_lisp_value key, struct lone_lisp_value value)
 {
 	struct lone_lisp_table *actual;
-	bool is_new_table_entry;
+	size_t i;
 
 	actual = &lone_lisp_heap_value_of(lone, table)->as.table;
+	i = lone_lisp_table_entry_find_index_for(lone, key,
+			actual->indexes, actual->entries, actual->capacity);
 
-	if (lone_lisp_table_needs_resize(lone, table, 1)) {
-		lone_lisp_table_resize(lone, table, actual->capacity * LONE_LISP_TABLE_GROWTH_FACTOR);
-	}
+	if (lone_lisp_table_is_used(actual->indexes, i)) {
+		actual->entries[actual->indexes[i]].value = value;
+	} else {
+		if (lone_lisp_table_needs_resize(lone, table, 1)) {
 
-	is_new_table_entry = lone_lisp_table_entry_set(
-		lone,
-		actual->indexes,
-		actual->entries,
-		actual->capacity,
-		actual->count,
-		key,
-		value
-	);
+			lone_lisp_table_resize(
+				lone,
+				table,
+				actual->capacity * LONE_LISP_TABLE_GROWTH_FACTOR
+			);
 
-	if (is_new_table_entry) {
+			actual = &lone_lisp_heap_value_of(lone, table)->as.table;
+
+			i = lone_lisp_table_entry_find_index_for(
+				lone,
+				key,
+				actual->indexes,
+				actual->entries,
+				actual->capacity
+			);
+		}
+
+		actual->indexes[i] = actual->count;
+		actual->entries[actual->count].key = key;
+		actual->entries[actual->count].value = value;
 		++actual->count;
 	}
 }
