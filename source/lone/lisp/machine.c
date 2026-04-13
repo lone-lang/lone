@@ -146,9 +146,11 @@ static struct lone_lisp_value bind_arguments(struct lone_lisp *lone, struct lone
 	return new_environment;
 }
 
-void lone_lisp_machine_initialize(struct lone_lisp_machine *machine, struct lone_lisp_machine_stack stack)
+void lone_lisp_machine_initialize(struct lone_lisp_machine *machine, struct lone_lisp_machine_stack stack,
+		size_t initial_stack_count)
 {
 	machine->stack = stack;
+	machine->initial_stack_count = initial_stack_count;
 }
 
 void lone_lisp_machine_reset(struct lone_lisp *lone, struct lone_lisp_machine *machine,
@@ -156,6 +158,7 @@ void lone_lisp_machine_reset(struct lone_lisp *lone, struct lone_lisp_machine *m
 {
 
 	machine->stack.top = machine->stack.base;
+	lone_lisp_machine_shrink_stack(lone, machine);
 	machine->step = LONE_LISP_MACHINE_STEP_EXPRESSION_EVALUATION;
 	lone_lisp_machine_push_step(lone, machine, LONE_LISP_MACHINE_STEP_HALT);
 	machine->primitive.step = 0;

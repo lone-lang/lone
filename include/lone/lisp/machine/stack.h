@@ -6,6 +6,9 @@
 #include <lone/lisp/types.h>
 
 struct lone_lisp_machine_stack lone_lisp_machine_allocate_stack(struct lone_lisp *lone, size_t count);
+void lone_lisp_machine_deallocate_stack(struct lone_lisp *lone, struct lone_lisp_machine_stack stack);
+
+void lone_lisp_machine_shrink_stack(struct lone_lisp *lone, struct lone_lisp_machine *machine);
 
 void lone_lisp_machine_push(struct lone_lisp *lone, struct lone_lisp_machine *machine,
 		struct lone_lisp_machine_stack_frame frame);

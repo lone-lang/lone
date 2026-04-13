@@ -5,7 +5,8 @@
 
 #include <lone/lisp/types.h>
 
-void lone_lisp_machine_initialize(struct lone_lisp_machine *machine, struct lone_lisp_machine_stack stack);
+void lone_lisp_machine_initialize(struct lone_lisp_machine *machine, struct lone_lisp_machine_stack stack,
+		size_t initial_stack_count);
 void lone_lisp_machine_reset(struct lone_lisp *lone, struct lone_lisp_machine *machine,
 		struct lone_lisp_value module, struct lone_lisp_value expression);
 bool lone_lisp_machine_cycle(struct lone_lisp *lone, struct lone_lisp_machine *machine);

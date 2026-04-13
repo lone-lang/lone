@@ -746,7 +746,7 @@ LONE_LISP_PRIMITIVE(lone_generator)
 			/* not passed a function: (generator 10) */ linux_exit(-1);
 		}
 
-		generator = lone_lisp_generator_create(lone, function, 500);
+		generator = lone_lisp_generator_create(lone, function, LONE_LISP_GENERATOR_STACK_INITIAL_SIZE);
 
 		lone_lisp_machine_push_value(lone, machine, generator);
 		return 0;
