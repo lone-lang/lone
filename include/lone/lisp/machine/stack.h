@@ -52,7 +52,6 @@ bool lone_lisp_machine_top_is_tail_return(struct lone_lisp_machine *machine);
 
 void lone_lisp_machine_unwind_to(struct lone_lisp *lone, struct lone_lisp_machine *machine, enum lone_lisp_tag tag);
 bool lone_lisp_machine_unwind_to_function_delimiter(struct lone_lisp *lone, struct lone_lisp_machine *machine);
-void lone_lisp_machine_unwind_to_primitive_delimiter(struct lone_lisp *lone, struct lone_lisp_machine *machine);
 void lone_lisp_machine_unwind_to_interceptor_delimiter(struct lone_lisp *lone, struct lone_lisp_machine *machine);
 
 #endif /* LONE_LISP_MACHINE_STACK_HEADER */
