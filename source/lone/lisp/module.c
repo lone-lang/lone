@@ -13,6 +13,36 @@
 
 #include <lone/linux.h>
 
+static bool lone_lisp_module_name_is_valid_component(struct lone_lisp *lone, struct lone_lisp_value symbol)
+{
+	struct lone_bytes name;
+	size_t i;
+
+	name = lone_lisp_symbol_name(lone, &symbol);
+
+	if (name.count == 0) { return false; }
+
+	/* reject path traversal components */
+	if (name.count == 1) {
+		if (name.pointer[0] == '.') {
+			return false;
+		}
+	} else if (name.count == 2) {
+		if (name.pointer[0] == '.' && name.pointer[1] == '.') {
+			return false;
+		}
+	}
+
+	/* reject components containing path separators and '\0' */
+	for (i = 0; i < name.count; ++i) {
+		if (name.pointer[i] == '/' || name.pointer[i] == 0) {
+			return false;
+		}
+	}
+
+	return true;
+}
+
 struct lone_lisp_value lone_lisp_module_null(struct lone_lisp *lone)
 {
 	return lone->modules.null;
@@ -21,7 +51,7 @@ struct lone_lisp_value lone_lisp_module_null(struct lone_lisp *lone)
 static struct lone_lisp_value lone_lisp_module_name_to_key(struct lone_lisp *lone,
 		struct lone_lisp_value name)
 {
-	struct lone_lisp_value head;
+	struct lone_lisp_value head, component;
 
 	switch (lone_lisp_type_of(name)) {
 	case LONE_LISP_TAG_NIL:
@@ -30,11 +60,18 @@ static struct lone_lisp_value lone_lisp_module_name_to_key(struct lone_lisp *lon
 	case LONE_LISP_TAG_INTEGER:
 		/* invalid module name component */ linux_exit(-1);
 	case LONE_LISP_TAG_SYMBOL:
+		if (!lone_lisp_module_name_is_valid_component(lone, name)) {
+			/* invalid module name component */ linux_exit(-1);
+		}
 		return lone_lisp_list_create(lone, name, lone_lisp_nil());
 	case LONE_LISP_TAG_LIST:
 		for (head = name; !lone_lisp_is_nil(head); head = lone_lisp_list_rest(lone, head)) {
-			if (!lone_lisp_is_symbol(lone, lone_lisp_list_first(lone, head))) {
-				linux_exit(-1);
+			component = lone_lisp_list_first(lone, head);
+			if (!lone_lisp_is_symbol(lone, component)) {
+				/* not a symbol */ linux_exit(-1);
+			}
+			if (!lone_lisp_module_name_is_valid_component(lone, component)) {
+				/* invalid module name component */ linux_exit(-1);
 			}
 		}
 		return name;
