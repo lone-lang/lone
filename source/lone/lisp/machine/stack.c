@@ -332,6 +332,47 @@ void lone_lisp_machine_restore_primitive_step(struct lone_lisp *lone, struct lon
 	machine->primitive.step = lone_lisp_machine_pop_primitive_step(lone, machine);
 }
 
+bool lone_lisp_machine_top_is_tail_return(struct lone_lisp_machine *machine)
+{
+	if (!lone_lisp_machine_can_pop(machine)) { return false; }
+
+	return    (machine->stack.top[-1].tagged  & LONE_LISP_TAG_MASK)   == LONE_LISP_TAG_STEP
+	       && (machine->stack.top[-1].tagged >> LONE_LISP_DATA_SHIFT) == LONE_LISP_MACHINE_STEP_TAIL_RETURN;
+}
+
+bool lone_lisp_machine_unwind_to_function_delimiter(struct lone_lisp *lone, struct lone_lisp_machine *machine)
+{
+	struct lone_lisp_machine_stack_frame *frame;
+
+	for (frame = machine->stack.top - 1; frame >= machine->stack.base; --frame) {
+
+		switch (frame->tagged & LONE_LISP_TAG_MASK) {
+		case LONE_LISP_TAG_FUNCTION_DELIMITER:
+			machine->stack.top = frame + 1;
+			return true;
+		case LONE_LISP_TAG_STEP:
+			if ((frame->tagged >> LONE_LISP_DATA_SHIFT) == LONE_LISP_MACHINE_STEP_TAIL_RETURN) {
+				/* The enclosing function's delimiter was eliminated by TCO.
+				 * The stack layout at this point is:
+				 *
+				 *     save_step          <-- frame + 1, the caller's return step
+				 *     TAIL_RETURN        <-- frame
+				 *     ...
+				 *
+				 * Truncate past both the marker and the return step above it. */
+				machine->stack.top = frame + 2;
+				return false;
+			}
+			break;
+		default:
+			break;
+		}
+	}
+
+	machine->stack.top = machine->stack.base;
+	return false;
+}
+
 void lone_lisp_machine_unwind_to(struct lone_lisp *lone, struct lone_lisp_machine *machine, enum lone_lisp_tag tag)
 {
 	struct lone_lisp_machine_stack_frame frame;
@@ -339,11 +380,6 @@ void lone_lisp_machine_unwind_to(struct lone_lisp *lone, struct lone_lisp_machin
 	while (tag != ((enum lone_lisp_tag) ((frame = lone_lisp_machine_pop(lone, machine)).tagged & LONE_LISP_TAG_MASK)));
 
 	lone_lisp_machine_push(lone, machine, frame);
-}
-
-void lone_lisp_machine_unwind_to_function_delimiter(struct lone_lisp *lone, struct lone_lisp_machine *machine)
-{
-	lone_lisp_machine_unwind_to(lone, machine, LONE_LISP_TAG_FUNCTION_DELIMITER);
 }
 
 void lone_lisp_machine_unwind_to_primitive_delimiter(struct lone_lisp *lone, struct lone_lisp_machine *machine)
