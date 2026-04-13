@@ -327,7 +327,7 @@ bool lone_lisp_machine_cycle(struct lone_lisp *lone, struct lone_lisp_machine *m
 					machine,
 					machine->primitive.step
 				);
-			if (machine->primitive.step) {
+			if (machine->primitive.step > 0) {
 				/* primitive did not finish, wants to be resumed
 				 * may have saved data to stack and set machine
 				 * to evaluate expression or apply function
@@ -338,6 +338,12 @@ bool lone_lisp_machine_cycle(struct lone_lisp *lone, struct lone_lisp_machine *m
 				lone_lisp_machine_push_value(lone, machine, machine->applicable);
 				lone_lisp_machine_push_value(lone, machine, machine->environment);
 				lone_lisp_machine_push_step(lone, machine, LONE_LISP_MACHINE_STEP_RESUME_PRIMITIVE);
+			} else if (machine->primitive.step < 0) {
+				/* tail return: pop primitive frame,
+				 * evaluate expression in caller's context */
+				lone_lisp_machine_pop_primitive_delimiter(lone, machine);
+				lone_lisp_machine_pop_step(lone, machine);
+				goto expression_evaluation;
 			} else {
 				/* primitives push the return value onto the stack */
 				machine->value = lone_lisp_machine_pop_value(lone, machine);
@@ -415,9 +421,16 @@ bool lone_lisp_machine_cycle(struct lone_lisp *lone, struct lone_lisp_machine *m
 			lone_lisp_machine_push_value(lone, machine, machine->unevaluated);
 			lone_lisp_machine_push_step(lone, machine, LONE_LISP_MACHINE_STEP_SEQUENCE_EVALUATION_NEXT);
 		} else {
-			/* tail recursion optimization
-			 * no new data is saved on the stack */
-			lone_lisp_machine_push_step(lone, machine, LONE_LISP_MACHINE_STEP_AFTER_APPLICATION);
+			/* tail call optimization:
+			 * pop current function's frame,
+			 * consume any previous tail return marker,
+			 * leave a single tail return marker for the caller */
+			lone_lisp_machine_pop_primitive_delimiter(lone, machine);
+			lone_lisp_machine_pop_step(lone, machine);
+			if (lone_lisp_machine_top_is_tail_return(machine)) {
+				lone_lisp_machine_pop_step(lone, machine);
+			}
+			lone_lisp_machine_push_step(lone, machine, LONE_LISP_MACHINE_STEP_TAIL_RETURN);
 		}
 		goto expression_evaluation;
 	case LONE_LISP_MACHINE_STEP_SEQUENCE_EVALUATION_NEXT:
@@ -471,6 +484,9 @@ bool lone_lisp_machine_cycle(struct lone_lisp *lone, struct lone_lisp_machine *m
 		machine->applicable = lone_lisp_machine_pop_value(lone, machine);
 		lone_lisp_machine_restore_primitive_step(lone, machine);
 		goto resume_primitive;
+	case LONE_LISP_MACHINE_STEP_TAIL_RETURN:
+		lone_lisp_machine_restore_step(lone, machine);
+		return true;
 	case LONE_LISP_MACHINE_STEP_GENERATOR_RETURN:
 		/* Stack:
 		 * 	generator-delimiter
