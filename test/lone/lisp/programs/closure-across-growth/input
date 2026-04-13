@@ -1,0 +1,14 @@
+(import (lone print set lambda if) (math + - <))
+
+(set recurse (lambda (n)
+  (if (< n 1)
+      0
+      (+ 1 (recurse (- n 1))))))
+
+(set test-closure (lambda (captured)
+  (lambda ()
+    (+ captured (recurse 200)))))
+
+(set f (test-closure 7))
+
+(print (f))
