@@ -658,8 +658,15 @@ LONE_LISP_PRIMITIVE(lone_return)
 
 	return_value = lone_lisp_list_first(lone, lone_lisp_machine_pop_value(lone, machine));
 
-	lone_lisp_machine_pop_primitive_delimiter(lone, machine); // this primitive's own delimiter
-	lone_lisp_machine_unwind_to_primitive_delimiter(lone, machine);
+	lone_lisp_machine_pop_primitive_delimiter(lone, machine);
+
+	if (!lone_lisp_machine_unwind_to_function_delimiter(lone, machine)) {
+		/* function's frame was eliminated by TCO:
+		 * push a synthetic delimiter so that
+		 * after_application can pop it and
+		 * restore the two steps below */
+		lone_lisp_machine_push_primitive_delimiter(lone, machine);
+	}
 
 	lone_lisp_machine_push_value(lone, machine, return_value);
 	return 0;

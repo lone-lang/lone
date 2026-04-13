@@ -310,7 +310,7 @@ bool lone_lisp_machine_cycle(struct lone_lisp *lone, struct lone_lisp_machine *m
 				machine->applicable,
 				machine->list
 			);
-			lone_lisp_machine_push_primitive_delimiter(lone, machine);
+			lone_lisp_machine_push_function_delimiter(lone, machine, machine->applicable);
 			machine->unevaluated = lone_lisp_heap_value_of(lone, machine->applicable)->as.function.code;
 			machine->step = LONE_LISP_MACHINE_STEP_SEQUENCE_EVALUATION;
 			return true;
