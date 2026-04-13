@@ -444,33 +444,6 @@ bool lone_lisp_machine_cycle(struct lone_lisp *lone, struct lone_lisp_machine *m
 		machine->environment = lone_lisp_machine_pop_value(lone, machine);
 		machine->step = LONE_LISP_MACHINE_STEP_SEQUENCE_EVALUATION;
 		return true;
-	case LONE_LISP_MACHINE_STEP_SEQUENCE_EVALUATION_FROM_PRIMITIVE:
-		/* Sequence is in machine->unevaluated.
-		 * Stack:
-		 * 	next-step
-		 */
-		machine->expression = lone_lisp_list_first(lone, machine->unevaluated);
-		if (lone_lisp_list_has_rest(lone, machine->unevaluated)) {
-			lone_lisp_machine_push_value(lone, machine, machine->environment);
-			lone_lisp_machine_push_value(lone, machine, machine->unevaluated);
-			lone_lisp_machine_push_step(lone, machine,
-					LONE_LISP_MACHINE_STEP_SEQUENCE_EVALUATION_FROM_PRIMITIVE_NEXT);
-		} else {
-			/* tail recursion optimization
-			 * nothing is saved on the stack */
-		}
-		goto expression_evaluation;
-	case LONE_LISP_MACHINE_STEP_SEQUENCE_EVALUATION_FROM_PRIMITIVE_NEXT:
-		/* Result of expression is in machine->value.
-		 * Stack:
-		 * 	unevaluated-expressions-list
-		 * 	environment
-		 * 	next-step
-		 */
-		machine->unevaluated = lone_lisp_list_rest(lone, lone_lisp_machine_pop_value(lone, machine));
-		machine->environment = lone_lisp_machine_pop_value(lone, machine);
-		machine->step = LONE_LISP_MACHINE_STEP_SEQUENCE_EVALUATION_FROM_PRIMITIVE;
-		return true;
 	case LONE_LISP_MACHINE_STEP_RESUME_PRIMITIVE:
 		/* Stack:
 		 * 	environment

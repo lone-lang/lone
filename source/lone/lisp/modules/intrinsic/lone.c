@@ -855,7 +855,7 @@ LONE_LISP_PRIMITIVE(lone_intercept)
 	struct lone_lisp_value arguments, clauses, body;
 
 	switch (step) {
-	case 0: /* decompose arguments, push data, evaluate body */
+	case 0: /* decompose arguments, push data, start body evaluation */
 
 		arguments = lone_lisp_machine_pop_value(lone, machine);
 
@@ -877,12 +877,31 @@ LONE_LISP_PRIMITIVE(lone_intercept)
 		lone_lisp_machine_push_value(lone, machine, clauses);
 		lone_lisp_machine_push_interceptor_delimiter(lone, machine);
 
-		/* evaluate the body as a sequence */
-		machine->unevaluated = body;
-		machine->step = LONE_LISP_MACHINE_STEP_SEQUENCE_EVALUATION_FROM_PRIMITIVE;
+		goto evaluate_body;
+
+	case 1: /* non-last body expression evaluated, continue */
+
+		body = lone_lisp_machine_pop_value(lone, machine);
+
+	evaluate_body:
+
+		if (!lone_lisp_list_has_rest(lone, body)) {
+			/* last or only expression
+			 * cannot tail return: interceptor delimiter must
+			 * remain on the stack in case signal fires during
+			 * the evaluation of this last expression */
+			machine->expression = lone_lisp_list_first(lone, body);
+			machine->step = LONE_LISP_MACHINE_STEP_EXPRESSION_EVALUATION;
+			return 2;
+		}
+
+		/* more expressions follow: evaluate this one, continue with rest */
+		lone_lisp_machine_push_value(lone, machine, lone_lisp_list_rest(lone, body));
+		machine->expression = lone_lisp_list_first(lone, body);
+		machine->step = LONE_LISP_MACHINE_STEP_EXPRESSION_EVALUATION;
 		return 1;
 
-	case 1: /* evaluation completed, no error signalled */
+	case 2: /* last body expression evaluated, clean up and return */
 
 		/* clean up the data that was meant for signal */
 		lone_lisp_machine_pop_interceptor_delimiter(lone, machine);
