@@ -396,7 +396,9 @@ bool lone_lisp_machine_cycle(struct lone_lisp *lone, struct lone_lisp_machine *m
 		lone_lisp_machine_restore_step(lone, machine);
 		return true;
 	case LONE_LISP_MACHINE_STEP_AFTER_APPLICATION:
-		/* Result of primitive application is in machine->value.
+		/* Result of application is in machine->value.
+		 * Reached after primitive application (via label)
+		 * and by generators resuming execution (via step).
 		 * Stack:
 		 * 	next-step
 		 * 	next-step
@@ -445,7 +447,6 @@ bool lone_lisp_machine_cycle(struct lone_lisp *lone, struct lone_lisp_machine *m
 		 * 	primitive
 		 * 	primitive-step
 		 * 	primitive-data...
-		 * 	function-delimiter
 		 * 	next-step
 		 */
 		machine->environment = lone_lisp_machine_pop_value(lone, machine);
