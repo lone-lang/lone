@@ -9,7 +9,7 @@
 
 static void lone_lisp_print_integer(int fd, long n)
 {
-	static char digits[LONE_LISP_DECIMAL_DIGITS_PER_INTEGER + 1]; /* digits + sign */
+	char digits[LONE_LISP_DECIMAL_DIGITS_PER_INTEGER + 1]; /* digits + sign */
 	char *digit;
 	bool is_negative;
 	unsigned long magnitude;
