@@ -42,9 +42,6 @@ void lone_lisp_machine_push_function_delimiter(struct lone_lisp *lone, struct lo
 		struct lone_lisp_value function);
 void lone_lisp_machine_pop_function_delimiter(struct lone_lisp *lone, struct lone_lisp_machine *machine);
 
-void lone_lisp_machine_push_primitive_delimiter(struct lone_lisp *lone, struct lone_lisp_machine *machine);
-void lone_lisp_machine_pop_primitive_delimiter(struct lone_lisp *lone, struct lone_lisp_machine *machine);
-
 void lone_lisp_machine_push_continuation_delimiter(struct lone_lisp *lone, struct lone_lisp_machine *machine);
 void lone_lisp_machine_pop_continuation_delimiter(struct lone_lisp *lone, struct lone_lisp_machine *machine);
 

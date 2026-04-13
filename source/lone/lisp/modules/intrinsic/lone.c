@@ -658,14 +658,11 @@ LONE_LISP_PRIMITIVE(lone_return)
 
 	return_value = lone_lisp_list_first(lone, lone_lisp_machine_pop_value(lone, machine));
 
-	lone_lisp_machine_pop_primitive_delimiter(lone, machine);
-
-	if (!lone_lisp_machine_unwind_to_function_delimiter(lone, machine)) {
-		/* function's frame was eliminated by TCO:
-		 * push a synthetic delimiter so that
-		 * after_application can pop it and
-		 * restore the two steps below */
-		lone_lisp_machine_push_primitive_delimiter(lone, machine);
+	if (lone_lisp_machine_unwind_to_function_delimiter(lone, machine)) {
+		/* pop the function delimiter;
+		 * the two steps below it will be
+		 * consumed by after_application */
+		lone_lisp_machine_pop_function_delimiter(lone, machine);
 	}
 
 	lone_lisp_machine_push_value(lone, machine, return_value);
@@ -721,9 +718,9 @@ LONE_LISP_PRIMITIVE(lone_transfer)
 			/* wrong number of arguments: (transfer), (transfer value extra) */ linux_exit(-1);
 		}
 
-		/* skip primitive function delimiter and one step,
+		/* skip the two save steps from transfer's application,
 		   search for the continuation delimiter pushed by control */
-		for (frame = machine->stack.top - 1 - 2,
+		for (frame = machine->stack.top - 1 - 1,
 		     frame_count = 1;
 		     frame >= machine->stack.base;
 		     --frame, ++frame_count) {
@@ -750,16 +747,15 @@ LONE_LISP_PRIMITIVE(lone_transfer)
 		--frame; ++frame_count;
 		handler = (struct lone_lisp_value) { .tagged = frame->tagged };
 
-		/* copy stack frames up to and including the control primitive's function delimiter */
-		--frame; ++frame_count;
+		/* copy stack frames starting from the handler */
 		frames = lone_memory_array(lone->system, 0, 0, frame_count, sizeof(*frames), alignof(*frames));
 		lone_memory_move(frame, frames, lone_memory_array_size_in_bytes(frame_count, sizeof(*frames)));
 
 		/* reify current continuation */
 		continuation = lone_lisp_continuation_create(lone, frame_count, frames);
 
-		/* reset stack back to the control primitive's function delimiter */
-		machine->stack.top = frame + 1;
+		/* reset stack to control's application save steps */
+		machine->stack.top = frame;
 
 		/* configure machine to evaluate handler function with value and continuation */
 		machine->expression = lone_lisp_list_build(lone, 3, &handler, &value, &continuation);
@@ -842,9 +838,6 @@ LONE_LISP_PRIMITIVE(lone_yield)
 
 		/* mark generator as suspended by clearing the caller stack */
 		generator->stacks.caller = (struct lone_lisp_machine_stack) { 0 };
-
-		/* consumed by the lisp machine when primitives return */
-		lone_lisp_machine_push_primitive_delimiter(lone, machine);
 
 		/* return the yielded value */
 		lone_lisp_machine_push_value(lone, machine, value);
@@ -1029,8 +1022,6 @@ static void lone_lisp_signal_terminate_generator(
 	machine->environment = lone_lisp_nil();
 	generator->stacks.caller = (struct lone_lisp_machine_stack) { 0 };
 	generator->stacks.own.top = 0;
-
-	lone_lisp_machine_push_primitive_delimiter(lone, machine);
 }
 
 /* Push an interceptor's dispatch state onto the machine stack:
@@ -1350,9 +1341,9 @@ LONE_LISP_PRIMITIVE(lone_signal)
 			/* arity 2 handler: capture continuation then unwind */
 
 			/* capture from the interceptor's associated data to stack top,
-			 * excluding signal's own func-delim and save_step at the top */
+			 * excluding signal's own save steps at the top */
 			frame = delimiter - 2;
-			frame_count = (machine->stack.top - 2) - frame;
+			frame_count = (machine->stack.top - 1) - frame;
 
 			frames = lone_memory_array(
 				lone->system,

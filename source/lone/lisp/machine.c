@@ -316,7 +316,6 @@ bool lone_lisp_machine_cycle(struct lone_lisp *lone, struct lone_lisp_machine *m
 			return true;
 		case LONE_LISP_TAG_PRIMITIVE:
 			/* primitives pop the list of arguments from the stack */
-			lone_lisp_machine_push_primitive_delimiter(lone, machine);
 			lone_lisp_machine_push_value(lone, machine, machine->list);
 			machine->primitive.step = 0;
 		resume_primitive:
@@ -339,9 +338,7 @@ bool lone_lisp_machine_cycle(struct lone_lisp *lone, struct lone_lisp_machine *m
 				lone_lisp_machine_push_value(lone, machine, machine->environment);
 				lone_lisp_machine_push_step(lone, machine, LONE_LISP_MACHINE_STEP_RESUME_PRIMITIVE);
 			} else if (machine->primitive.step < 0) {
-				/* tail return: pop primitive frame,
-				 * evaluate expression in caller's context */
-				lone_lisp_machine_pop_primitive_delimiter(lone, machine);
+				/* tail return: evaluate expression in caller's context */
 				lone_lisp_machine_pop_step(lone, machine);
 				goto expression_evaluation;
 			} else {
@@ -399,14 +396,12 @@ bool lone_lisp_machine_cycle(struct lone_lisp *lone, struct lone_lisp_machine *m
 		lone_lisp_machine_restore_step(lone, machine);
 		return true;
 	case LONE_LISP_MACHINE_STEP_AFTER_APPLICATION:
-		/* Result of function application is in machine->value.
+		/* Result of primitive application is in machine->value.
 		 * Stack:
-		 * 	function-delimiter
 		 * 	next-step
 		 * 	next-step
 		 */
 	after_application:
-		lone_lisp_machine_pop_primitive_delimiter(lone, machine);
 		lone_lisp_machine_restore_step(lone, machine);
 		lone_lisp_machine_restore_step(lone, machine);
 		return true;
@@ -425,7 +420,7 @@ bool lone_lisp_machine_cycle(struct lone_lisp *lone, struct lone_lisp_machine *m
 			 * pop current function's frame,
 			 * consume any previous tail return marker,
 			 * leave a single tail return marker for the caller */
-			lone_lisp_machine_pop_primitive_delimiter(lone, machine);
+			lone_lisp_machine_pop_function_delimiter(lone, machine);
 			lone_lisp_machine_pop_step(lone, machine);
 			if (lone_lisp_machine_top_is_tail_return(machine)) {
 				lone_lisp_machine_pop_step(lone, machine);
