@@ -191,7 +191,7 @@ void lone_lisp_machine_push_frames(struct lone_lisp *lone, struct lone_lisp_mach
 		size_t frame_count, struct lone_lisp_machine_stack_frame *frames)
 {
 	size_t size = lone_memory_array_size_in_bytes(frame_count, sizeof(*frames));
-	if (!lone_lisp_machine_can_push_bytes(machine, size)) {
+	while (!lone_lisp_machine_can_push_bytes(machine, size)) {
 		if (!lone_lisp_machine_grow_stack(lone, machine)) { linux_exit(-1); }
 	}
 	lone_memory_move(frames, machine->stack.top, size);
