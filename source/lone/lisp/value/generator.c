@@ -3,6 +3,7 @@
 #include <lone/lisp/types.h>
 #include <lone/lisp/heap.h>
 #include <lone/lisp/machine.h>
+#include <lone/lisp/machine/stack.h>
 
 struct lone_lisp_value lone_lisp_generator_create(struct lone_lisp *lone,
 		struct lone_lisp_value function, size_t stack_size)

@@ -4,6 +4,7 @@
 
 #include <lone/lisp/reader.h>
 #include <lone/lisp/machine.h>
+#include <lone/lisp/machine/stack.h>
 
 #include <lone/lisp/garbage_collector.h>
 #include <lone/lisp/utilities.h>
@@ -145,7 +146,9 @@ static void lone_lisp_module_load_from_reader(struct lone_lisp *lone,
 	struct lone_lisp_machine machine;
 	struct lone_lisp_value value;
 
-	lone_lisp_machine_initialize(&machine, lone_lisp_machine_allocate_stack(lone, 1000));
+	lone_lisp_machine_initialize(&machine,
+		lone_lisp_machine_allocate_stack(lone, LONE_LISP_MACHINE_STACK_INITIAL_SIZE),
+		LONE_LISP_MACHINE_STACK_INITIAL_SIZE);
 
 	while (1) {
 		value = lone_lisp_read(lone, reader);
@@ -159,11 +162,7 @@ static void lone_lisp_module_load_from_reader(struct lone_lisp *lone,
 
 	lone_lisp_reader_finalize(lone, reader);
 	lone_lisp_garbage_collector(lone, &machine);
-	lone_memory_deallocate(
-		lone->system, machine.stack.base,
-		machine.stack.limit - machine.stack.base,
-		sizeof(*machine.stack.base), alignof(*machine.stack.base)
-	);
+	lone_lisp_machine_deallocate_stack(lone, machine.stack);
 }
 
 void lone_lisp_module_load_from_bytes(struct lone_lisp *lone,

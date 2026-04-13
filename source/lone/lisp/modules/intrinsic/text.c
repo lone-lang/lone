@@ -3,6 +3,7 @@
 #include <lone/lisp/modules/intrinsic/text.h>
 
 #include <lone/lisp/machine.h>
+#include <lone/lisp/machine/stack.h>
 #include <lone/lisp/module.h>
 #include <lone/lisp/utilities.h>
 

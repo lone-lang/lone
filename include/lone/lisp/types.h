@@ -741,6 +741,8 @@ struct lone_lisp_machine_stack_frame {
 struct lone_lisp_machine {
 	/* the machine's stack, where its registers and return steps are saved */
 	struct lone_lisp_machine_stack stack;
+	/* initial stack frame count, used by shrink-at-reset */
+	size_t initial_stack_count;
 
 	/* where in the machine to return to after a computation step is done */
 	enum lone_lisp_machine_step step;

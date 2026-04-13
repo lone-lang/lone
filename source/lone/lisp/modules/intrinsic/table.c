@@ -3,6 +3,7 @@
 #include <lone/lisp/modules/intrinsic/table.h>
 
 #include <lone/lisp/machine.h>
+#include <lone/lisp/machine/stack.h>
 #include <lone/lisp/module.h>
 
 #include <lone/linux.h>

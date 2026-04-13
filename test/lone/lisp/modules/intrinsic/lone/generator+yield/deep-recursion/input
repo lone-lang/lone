@@ -1,0 +1,10 @@
+(import (lone print set lambda if generator yield) (math + - <))
+
+(set deep-yield (lambda (n)
+  (if (< n 1)
+      (yield 42)
+      (+ 1 (deep-yield (- n 1))))))
+
+(set g (generator deep-yield))
+
+(print (g 50))

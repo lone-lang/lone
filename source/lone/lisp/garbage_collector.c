@@ -2,6 +2,7 @@
 
 #include <lone/lisp/garbage_collector.h>
 #include <lone/lisp/heap.h>
+#include <lone/lisp/machine/stack.h>
 
 #include <lone/memory/allocator.h>
 #include <lone/memory/functions.h>
@@ -275,12 +276,7 @@ static void lone_lisp_kill_all_unmarked_values(struct lone_lisp *lone)
 				);
 				break;
 			case LONE_LISP_TAG_GENERATOR:
-				lone_memory_deallocate(
-					lone->system, value->as.generator.stacks.own.base,
-					value->as.generator.stacks.own.limit - value->as.generator.stacks.own.base,
-					sizeof(*value->as.generator.stacks.own.base),
-					alignof(*value->as.generator.stacks.own.base)
-				);
+				lone_lisp_machine_deallocate_stack(lone, value->as.generator.stacks.own);
 				break;
 			case LONE_LISP_TAG_MODULE:
 			case LONE_LISP_TAG_FUNCTION:
