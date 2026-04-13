@@ -1,11 +1,13 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later */
 
 #include <lone/memory/functions.h>
+#include <lone/types.h>
 
 int lone_memory_compare(const void *a, const void *b, size_t count)
 {
 	size_t misalignment, leading, words, trailing, offset, i, j;
-	const unsigned long *wp, *wq;
+	const unsigned long *wp;
+	unsigned long wq;
 	const unsigned char *p, *q;
 
 	p = a;
@@ -35,13 +37,13 @@ int lone_memory_compare(const void *a, const void *b, size_t count)
 		}
 	}
 
-	/* compare aligned words */
+	/* compare aligned words from p, potentially unaligned loads from q */
 	words = (count - leading) / sizeof(unsigned long);
 	wp = (const unsigned long *) (p + leading);
-	wq = (const unsigned long *) (q + leading);
 
 	for (i = 0; i < words; ++i) {
-		if (wp[i] != wq[i]) {
+		wq = lone_u64_read(q + leading + i * sizeof(unsigned long));
+		if (wp[i] != wq) {
 			/* found mismatched word, now find mismatched byte */
 			offset = leading + i * sizeof(unsigned long);
 			for (j = 0; j < sizeof(unsigned long); ++j) {
@@ -120,8 +122,8 @@ bool lone_memory_is_zero(const void *x, size_t count)
 void lone_memory_move(const void *from, void *to, size_t count)
 {
 	size_t misalignment, leading, trailing, words, i, offset;
-	const unsigned long *aligned_source;
 	unsigned long *aligned_destination;
+	unsigned long word;
 	const unsigned char *source;
 	unsigned char *destination;
 
@@ -159,13 +161,13 @@ void lone_memory_move(const void *from, void *to, size_t count)
 			destination[i] = source[i];
 		}
 
+		/* aligned word stores, potentially unaligned word loads */
 		words               = (count - leading) / sizeof(unsigned long);
-
-		aligned_source      = ((const unsigned long *) (source      + leading));
-		aligned_destination = ((      unsigned long *) (destination + leading));
+		aligned_destination = ((unsigned long *) (destination + leading));
 
 		for (i = 0; i < words; ++i) {
-			aligned_destination[i] = aligned_source[i];
+			word = lone_u64_read(source + leading + i * sizeof(unsigned long));
+			aligned_destination[i] = word;
 		}
 
 		offset = leading + words * sizeof(unsigned long);
@@ -184,14 +186,14 @@ void lone_memory_move(const void *from, void *to, size_t count)
 			destination[count - 1 - i] = source[count - 1 - i];
 		}
 
+		/* aligned word stores, potentially unaligned word loads */
 		words = (count - trailing) / sizeof(unsigned long);
 		leading = (count - trailing) % sizeof(unsigned long);
-
-		aligned_source      = ((const unsigned long *) (source      + leading));
-		aligned_destination = ((      unsigned long *) (destination + leading));
+		aligned_destination = ((unsigned long *) (destination + leading));
 
 		for (i = words; i > 0; --i) {
-			aligned_destination[i - 1] = aligned_source[i - 1];
+			word = lone_u64_read(source + leading + (i - 1) * sizeof(unsigned long));
+			aligned_destination[i - 1] = word;
 		}
 
 		for (i = leading; i > 0; --i) {

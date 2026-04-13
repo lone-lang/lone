@@ -64,18 +64,30 @@ void lone_s8_write(void *address, lone_s8 value)
 	*always_aligned = value;
 }
 
+/* Each macro instantiation declares a packed struct wrapping
+ * the given type and uses it to cast the address argument.
+ *
+ * The packed attribute tells the compiler that the struct
+ * may reside at any address regardless of the member's
+ * natural alignment requirement. Dereferencing through
+ * the packed pointer therefore compiles to an unaligned
+ * load or store.
+ *
+ * This is the primitive building block for unaligned access.
+ */
+
 #define LONE_READER(type) \
 lone_##type lone_##type##_read(void *address) \
 { \
-	lone_##type value; \
-	lone_memory_move(address, &value, sizeof(lone_##type)); /* byte-wise copy, native endianness */ \
-	return value; \
+	struct lone_unaligned { lone_##type value; } __attribute__((packed)); \
+	return ((const struct lone_unaligned *) address)->value; \
 }
 
 #define LONE_WRITER(type) \
 void lone_##type##_write(void *address, lone_##type value) \
 { \
-	lone_memory_move(&value, address, sizeof(lone_##type)); /* byte-wise copy, native endianness */ \
+	struct lone_unaligned { lone_##type value; } __attribute__((packed)); \
+	((struct lone_unaligned *) address)->value = value; \
 }
 
 LONE_READER(u16)
