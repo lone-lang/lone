@@ -20,8 +20,14 @@ size_t __attribute__((const)) lone_memory_array_size_in_bytes(size_t element_cou
 
 bool lone_memory_array_is_bounded(size_t element_index, size_t element_capacity, size_t element_size)
 {
-	size_t end_of_indexed_element = lone_memory_array_size_in_bytes(element_index + 1, element_size);
-	size_t end_of_buffer          = lone_memory_array_size_in_bytes(element_capacity,  element_size);
+	size_t element_count, end_of_indexed_element, end_of_buffer;
+
+	if (__builtin_add_overflow(element_index, (size_t) 1, &element_count)) {
+		return false; /* index + 1 overflows size_t */
+	}
+
+	end_of_indexed_element = lone_memory_array_size_in_bytes(element_count, element_size);
+	end_of_buffer          = lone_memory_array_size_in_bytes(element_capacity,  element_size);
 
 	if (end_of_indexed_element > end_of_buffer) {
 		return false; /* buffer overrun */
