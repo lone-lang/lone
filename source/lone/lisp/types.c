@@ -218,6 +218,8 @@ static struct lone_lisp_value lone_lisp_inline_create(unsigned char type, unsign
 	long tagged;
 	size_t i;
 
+	if (count > LONE_LISP_INLINE_MAX_LENGTH) { linux_exit(-1); }
+
 	tagged = type | (long) (count << LONE_LISP_INLINE_LENGTH_SHIFT);
 
 	for (i = 0; i < count; ++i) {
