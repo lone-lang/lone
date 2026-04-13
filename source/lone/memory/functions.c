@@ -2,11 +2,11 @@
 
 #include <lone/memory/functions.h>
 
-int lone_memory_compare(void *a, void *b, size_t count)
+int lone_memory_compare(const void *a, const void *b, size_t count)
 {
 	size_t misalignment, leading, words, trailing, offset, i, j;
 	const unsigned long *wp, *wq;
-	unsigned char *p, *q;
+	const unsigned char *p, *q;
 
 	p = a;
 	q = b;
@@ -65,16 +65,16 @@ int lone_memory_compare(void *a, void *b, size_t count)
 	return 0;
 }
 
-bool lone_memory_is_equal(void *a, void *b, size_t count)
+bool lone_memory_is_equal(const void *a, const void *b, size_t count)
 {
 	return lone_memory_compare(a, b, count) == 0;
 }
 
-bool lone_memory_is_zero(void *x, size_t count)
+bool lone_memory_is_zero(const void *x, size_t count)
 {
 	size_t misalignment, leading, words, trailing, offset, i;
 	const unsigned long *wp;
-	unsigned char *p;
+	const unsigned char *p;
 
 	p = x;
 
@@ -117,12 +117,13 @@ bool lone_memory_is_zero(void *x, size_t count)
 	return true;
 }
 
-void lone_memory_move(void *from, void *to, size_t count)
+void lone_memory_move(const void *from, void *to, size_t count)
 {
 	size_t misalignment, leading, trailing, words, i, offset;
 	const unsigned long *aligned_source;
 	unsigned long *aligned_destination;
-	unsigned char *source, *destination;
+	const unsigned char *source;
+	unsigned char *destination;
 
 	source = from;
 	destination = to;
@@ -268,13 +269,13 @@ void *memset(void *to, int byte, size_t count)
 	return to;
 }
 
-void *memcpy(void *to, void *from, size_t count)
+void *memcpy(void *to, const void *from, size_t count)
 {
 	lone_memory_move(from, to, count);
 	return to;
 }
 
-void *memmove(void *to, void *from, size_t count)
+void *memmove(void *to, const void *from, size_t count)
 {
 	memcpy(to, from, count);
 	return to;
