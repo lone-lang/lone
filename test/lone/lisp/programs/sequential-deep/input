@@ -1,0 +1,10 @@
+(import (lone print set lambda if) (math + - <))
+
+(set count-down (lambda (n)
+  (if (< n 1)
+      0
+      (+ 1 (count-down (- n 1))))))
+
+(print (count-down 500))
+(print (count-down 500))
+(print (count-down 50))
