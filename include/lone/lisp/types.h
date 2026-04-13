@@ -155,20 +155,15 @@ enum lone_lisp_tag {
 	 * The garbage collector will skip
 	 * odd values and trace even values.
 	 *
-	 * The generator delimiter is the only
-	 * even-tagged frame type right now:
-	 * it stores a reference to the generator
-	 * itself so that the yield primitive
-	 * can find it.
-	 *
-	 * The set of even-tagged frame types
-	 * is likely to change in the future
-	 * as the delimited continuations
-	 * facilities get further development.
+	 * Even-tagged frame types store heap
+	 * references that the GC must trace:
+	 * function delimiters store the function
+	 * being applied and generator delimiters
+	 * store the generator itself.
 	 */
 	LONE_LISP_TAG_STEP                   = 0x21,
 	LONE_LISP_TAG_PRIMITIVE_STEP         = 0x23,
-	LONE_LISP_TAG_FUNCTION_DELIMITER     = 0x41,
+	LONE_LISP_TAG_FUNCTION_DELIMITER     = 0x40,
 	LONE_LISP_TAG_CONTINUATION_DELIMITER = 0x43,
 	LONE_LISP_TAG_INTERCEPTOR_DELIMITER  = 0x45,
 	LONE_LISP_TAG_GENERATOR_DELIMITER    = 0x60,
@@ -727,9 +722,8 @@ enum lone_lisp_machine_step {
 	LONE_LISP_MACHINE_STEP_AFTER_APPLICATION,
 	LONE_LISP_MACHINE_STEP_SEQUENCE_EVALUATION,
 	LONE_LISP_MACHINE_STEP_SEQUENCE_EVALUATION_NEXT,
-	LONE_LISP_MACHINE_STEP_SEQUENCE_EVALUATION_FROM_PRIMITIVE,
-	LONE_LISP_MACHINE_STEP_SEQUENCE_EVALUATION_FROM_PRIMITIVE_NEXT,
 	LONE_LISP_MACHINE_STEP_RESUME_PRIMITIVE,
+	LONE_LISP_MACHINE_STEP_TAIL_RETURN,
 	LONE_LISP_MACHINE_STEP_GENERATOR_RETURN,
 	LONE_LISP_MACHINE_STEP_HALT,
 };
