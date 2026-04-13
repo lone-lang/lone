@@ -1,0 +1,9 @@
+(import (lone print set lambda if let) (math - <=))
+
+(set loop (lambda (n)
+  (if (<= n 0)
+      0
+      (let (m (- n 1))
+        (loop m)))))
+
+(print (loop 100000))
