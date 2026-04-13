@@ -4,6 +4,7 @@
 
 #include <lone/lisp/reader.h>
 #include <lone/lisp/machine.h>
+#include <lone/lisp/machine/stack.h>
 
 #include <lone/lisp/garbage_collector.h>
 #include <lone/lisp/utilities.h>
