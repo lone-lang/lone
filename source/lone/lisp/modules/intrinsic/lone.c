@@ -122,18 +122,28 @@ LONE_LISP_PRIMITIVE(lone_begin)
 	struct lone_lisp_value expressions;
 
 	switch (step) {
-	case 0: /* unpack arguments and setup */
+	case 0:
+
+		expressions = lone_lisp_machine_pop_value(lone, machine);
+		goto evaluate_next;
+
+	case 1:
 
 		expressions = lone_lisp_machine_pop_value(lone, machine);
 
-		machine->step = LONE_LISP_MACHINE_STEP_SEQUENCE_EVALUATION_FROM_PRIMITIVE;
-		machine->unevaluated = expressions;
+	evaluate_next:
+
+		if (!lone_lisp_list_has_rest(lone, expressions)) {
+			/* last or only expression: tail return */
+			machine->expression = lone_lisp_list_first(lone, expressions);
+			return -1;
+		}
+
+		/* more expressions follow: evaluate this one, continue with rest */
+		lone_lisp_machine_push_value(lone, machine, lone_lisp_list_rest(lone, expressions));
+		machine->expression = lone_lisp_list_first(lone, expressions);
+		machine->step = LONE_LISP_MACHINE_STEP_EXPRESSION_EVALUATION;
 		return 1;
-
-	case 1: /* collect and return result */
-
-		lone_lisp_machine_push_value(lone, machine, machine->value);
-		return 0;
 
 	default:
 		break;
@@ -162,22 +172,34 @@ LONE_LISP_PRIMITIVE(lone_when)
 
 		return 1;
 
-	case 1: /* evaluate remaining expressions if condition true */
+	case 1: /* evaluate body if condition true */
 
 		body = lone_lisp_machine_pop_value(lone, machine);
 
-		if (lone_lisp_is_truthy(machine->value)) {
-			machine->step = LONE_LISP_MACHINE_STEP_SEQUENCE_EVALUATION_FROM_PRIMITIVE;
-			machine->unevaluated = body;
-			return 2;
-		} else {
+		if (lone_lisp_is_falsy(machine->value)) {
 			lone_lisp_machine_push_value(lone, machine, lone_lisp_nil());
 			return 0;
 		}
 
-	case 2: /* collect result of sequence evaluation and return it */
-		lone_lisp_machine_push_value(lone, machine, machine->value);
-		return 0;
+		goto evaluate_body;
+
+	case 2:
+
+		body = lone_lisp_machine_pop_value(lone, machine);
+
+	evaluate_body:
+
+		if (!lone_lisp_list_has_rest(lone, body)) {
+			/* last or only expression: tail return */
+			machine->expression = lone_lisp_list_first(lone, body);
+			return -1;
+		}
+
+		/* more expressions follow: evaluate this one, continue with rest */
+		lone_lisp_machine_push_value(lone, machine, lone_lisp_list_rest(lone, body));
+		machine->expression = lone_lisp_list_first(lone, body);
+		machine->step = LONE_LISP_MACHINE_STEP_EXPRESSION_EVALUATION;
+		return 2;
 
 	default:
 		break;
@@ -205,22 +227,34 @@ LONE_LISP_PRIMITIVE(lone_unless)
 		machine->expression = condition;
 		return 1;
 
-	case 1: /* evaluate remaining expressions if condition false */
+	case 1: /* evaluate body if condition false */
 
 		body = lone_lisp_machine_pop_value(lone, machine);
 
-		if (lone_lisp_is_falsy(machine->value)) {
-			machine->step = LONE_LISP_MACHINE_STEP_SEQUENCE_EVALUATION_FROM_PRIMITIVE;
-			machine->unevaluated = body;
-			return 2;
-		} else {
+		if (lone_lisp_is_truthy(machine->value)) {
 			lone_lisp_machine_push_value(lone, machine, lone_lisp_nil());
 			return 0;
 		}
 
-	case 2: /* collect result of sequence evaluation and return it */
-		lone_lisp_machine_push_value(lone, machine, machine->value);
-		return 0;
+		goto evaluate_body;
+
+	case 2:
+
+		body = lone_lisp_machine_pop_value(lone, machine);
+
+	evaluate_body:
+
+		if (!lone_lisp_list_has_rest(lone, body)) {
+			/* last or only expression: tail return */
+			machine->expression = lone_lisp_list_first(lone, body);
+			return -1;
+		}
+
+		/* more expressions follow: evaluate this one, continue with rest */
+		lone_lisp_machine_push_value(lone, machine, lone_lisp_list_rest(lone, body));
+		machine->expression = lone_lisp_list_first(lone, body);
+		machine->step = LONE_LISP_MACHINE_STEP_EXPRESSION_EVALUATION;
+		return 2;
 
 	default:
 		break;
@@ -263,18 +297,13 @@ LONE_LISP_PRIMITIVE(lone_if)
 		machine->expression = condition;
 		return 1;
 
-	case 1: /* check evaluated condition and then evaluate consequent or alternative */
+	case 1: /* check evaluated condition and tail return consequent or alternative */
 
 		consequent  = lone_lisp_machine_pop_value(lone, machine);
 		alternative = lone_lisp_machine_pop_value(lone, machine);
 
-		machine->step = LONE_LISP_MACHINE_STEP_EXPRESSION_EVALUATION;
 		machine->expression = lone_lisp_is_truthy(machine->value)? consequent : alternative;
-		return 2;
-
-	case 2: /* collect result and return the value */
-		lone_lisp_machine_push_value(lone, machine, machine->value);
-		return 0;
+		return -1;
 
 	default:
 		break;
@@ -335,11 +364,8 @@ LONE_LISP_PRIMITIVE(lone_let)
 			bindings = lone_lisp_list_rest(lone, rest);
 		}
 
-		lone_lisp_machine_push_value(lone, machine, original_environment);
 		machine->environment = new_environment;
-		machine->step = LONE_LISP_MACHINE_STEP_SEQUENCE_EVALUATION_FROM_PRIMITIVE;
-		machine->unevaluated = body;
-		return 2;
+		goto evaluate_body;
 
 	case 1: /* collect evaluated value for variable binding */
 
@@ -352,11 +378,29 @@ LONE_LISP_PRIMITIVE(lone_let)
 
 		goto bind_value_to_variable;
 
-	case 2: /* restore environment; collect and return result of last evaluated expression */
+	case 2:
 
-		machine->environment = lone_lisp_machine_pop_value(lone, machine);
-		lone_lisp_machine_push_value(lone, machine, machine->value);
-		return 0;
+		body = lone_lisp_machine_pop_value(lone, machine);
+
+	evaluate_body:
+
+		if (lone_lisp_is_nil(body)) {
+			/* empty body: (let (x 10)) → nil */
+			lone_lisp_machine_push_value(lone, machine, lone_lisp_nil());
+			return 0;
+		}
+
+		if (!lone_lisp_list_has_rest(lone, body)) {
+			/* last or only expression: tail return */
+			machine->expression = lone_lisp_list_first(lone, body);
+			return -1;
+		}
+
+		/* more expressions follow: evaluate this one, continue with rest */
+		lone_lisp_machine_push_value(lone, machine, lone_lisp_list_rest(lone, body));
+		machine->expression = lone_lisp_list_first(lone, body);
+		machine->step = LONE_LISP_MACHINE_STEP_EXPRESSION_EVALUATION;
+		return 2;
 
 	default:
 		break;
@@ -1279,9 +1323,10 @@ LONE_LISP_PRIMITIVE(lone_signal)
 		if (arity >= 2) {
 			/* arity 2 handler: capture continuation then unwind */
 
-			/* capture from the interceptor's associated data to stack top */
+			/* capture from the interceptor's associated data to stack top,
+			 * excluding signal's own func-delim and save_step at the top */
 			frame = delimiter - 2;
-			frame_count = machine->stack.top - frame;
+			frame_count = (machine->stack.top - 2) - frame;
 
 			frames = lone_memory_array(
 				lone->system,
