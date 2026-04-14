@@ -29,6 +29,11 @@ struct lone_lisp_value lone_lisp_boolean_for(bool value)
 	}
 }
 
+struct lone_lisp_value lone_lisp_tombstone(void)
+{
+	return (struct lone_lisp_value) { .tagged = LONE_LISP_TAG_TOMBSTONE };
+}
+
 enum lone_lisp_tag lone_lisp_type_of(struct lone_lisp_value value)
 {
 	enum lone_lisp_tag tag = value.tagged & LONE_LISP_TAG_MASK;
@@ -207,6 +212,12 @@ bool lone_lisp_is_symbol(struct lone_lisp *lone, struct lone_lisp_value value)
 	return (value.tagged & LONE_LISP_TAG_MASK) == LONE_LISP_TAG_SYMBOL
 	    || lone_lisp_is_inline_symbol(value);
 }
+
+bool lone_lisp_is_tombstone(struct lone_lisp_value value)
+{
+	return value.tagged == LONE_LISP_TAG_TOMBSTONE;
+}
+
 
 struct lone_bytes lone_lisp_inline_value_bytes(struct lone_lisp_value *value)
 {

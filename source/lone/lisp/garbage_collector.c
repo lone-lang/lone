@@ -87,7 +87,8 @@ static void lone_lisp_mark_heap_value(struct lone_lisp *lone, struct lone_lisp_h
 		break;
 	case LONE_LISP_TAG_TABLE:
 		lone_lisp_mark_value(lone, value->as.table.prototype);
-		for (size_t i = 0; i < value->as.table.count; ++i) {
+		for (size_t i = 0; i < value->as.table.used; ++i) {
+			if (lone_lisp_is_tombstone(value->as.table.entries[i].key)) { continue; }
 			lone_lisp_mark_value(lone, value->as.table.entries[i].key);
 			lone_lisp_mark_value(lone, value->as.table.entries[i].value);
 		}
@@ -434,7 +435,8 @@ static void lone_lisp_rewrite_heap_value_interior(struct lone_lisp *lone, struct
 		break;
 	case LONE_LISP_TAG_TABLE:
 		value->as.table.prototype = lone_lisp_forward_value(lone, value->as.table.prototype);
-		for (size_t i = 0; i < value->as.table.count; ++i) {
+		for (size_t i = 0; i < value->as.table.used; ++i) {
+			if (lone_lisp_is_tombstone(value->as.table.entries[i].key)) { continue; }
 			value->as.table.entries[i].key = lone_lisp_forward_value(lone, value->as.table.entries[i].key);
 			value->as.table.entries[i].value = lone_lisp_forward_value(lone, value->as.table.entries[i].value);
 		}

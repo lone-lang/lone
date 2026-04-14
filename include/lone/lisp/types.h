@@ -142,6 +142,10 @@ enum lone_lisp_tag {
 	LONE_LISP_TAG_INLINE_BYTES_6 = 0xAD, /* length 6 */
 	LONE_LISP_TAG_INLINE_BYTES_7 = 0xAF, /* length 7 */
 
+	/* Internal value tags: not exposed to lisp code.
+	 * Used as sentinels in internal data structures. */
+	LONE_LISP_TAG_TOMBSTONE = 0x29, /* dead table entry marker */
+
 	/* Lone lisp machine stack frame tags
 	 *
 	 * Stack frames are 8-byte tagged words
@@ -266,15 +270,16 @@ struct lone_lisp_symbol {
    │                                                                        │
    │    Lone tables are openly addressed, linearly probed hash tables.      │
    │                                                                        │
-   │    Entries are stored compactly and maintain insertion order.          │
-   │    Hashes index into a separate sparse array of indexes                │
-   │    meant for the compact entries array.                                │
+   │    Entries maintain insertion order in a separate array.               │
+   │    Hashes index into a sparse array of indexes                         │
+   │    that point into the ordered entries array.                          │
    │                                                                        │
    │    Tables strive to maintain a load factor of at most 0.7:             │
    │    they will be rehashed once they're above 70% capacity.              │
    │                                                                        │
-   │    When deleting keys, entries are shifted backwards.                  │
-   │    Tombstones are not used.                                            │
+   │    Deletion uses backward-shift on the index array                     │
+   │    to keep probe chains clean, then tombstones the entry.              │
+   │    Tombstones are compacted during resize.                             │
    │                                                                        │
    │    Currently, lone tables use the FNV-1a hashing algorithm.            │
    │    More algorithms will probably be implemented in the future.         │
@@ -295,6 +300,7 @@ struct lone_lisp_table_entry {
 struct lone_lisp_table {
 	size_t count;
 	size_t capacity;
+	size_t used;
 	size_t *indexes;
 	struct lone_lisp_table_entry *entries;
 	struct lone_lisp_value prototype;
@@ -339,6 +345,7 @@ struct lone_lisp_value lone_lisp_nil(void);
 struct lone_lisp_value lone_lisp_false(void);
 struct lone_lisp_value lone_lisp_true(void);
 struct lone_lisp_value lone_lisp_boolean_for(bool value);
+struct lone_lisp_value lone_lisp_tombstone(void);
 
 /* ╭────────────────────────────────────────────────────────────────────────╮
    │                                                                        │
@@ -370,6 +377,7 @@ bool lone_lisp_is_inline_symbol(struct lone_lisp_value value);
 bool lone_lisp_is_inline_text(struct lone_lisp_value value);
 bool lone_lisp_is_inline_bytes(struct lone_lisp_value value);
 bool lone_lisp_is_inline_value(struct lone_lisp_value value);
+bool lone_lisp_is_tombstone(struct lone_lisp_value value);
 
 /* Extract bytes from any inline value (symbol, text, or bytes).
  * The returned pointer points into the tagged word at the address
@@ -630,13 +638,13 @@ struct lone_lisp_value lone_lisp_table_get_by_bytes(struct lone_lisp *lone,
 		struct lone_lisp_value table, struct lone_bytes bytes);
 
 size_t lone_lisp_table_count(struct lone_lisp *lone, struct lone_lisp_value table);
-struct lone_lisp_value lone_lisp_table_key_at(struct lone_lisp *lone, struct lone_lisp_value table, lone_size i);
-struct lone_lisp_value lone_lisp_table_value_at(struct lone_lisp *lone, struct lone_lisp_value table, lone_size i);
+struct lone_lisp_table_entry *lone_lisp_table_next_entry(struct lone_lisp *lone,
+		struct lone_lisp_value table, size_t *i);
 
-#define LONE_LISP_TABLE_FOR_EACH(lone, entry, table, i)                                            \
-	for ((i) = 0, (entry) = &lone_lisp_heap_value_of((lone), (table))->as.table.entries[0];    \
-	     (i) < lone_lisp_heap_value_of((lone), (table))->as.table.count;                       \
-	     ++(i), (entry) = &lone_lisp_heap_value_of((lone), (table))->as.table.entries[(i)])
+#define LONE_LISP_TABLE_FOR_EACH(__lone, __entry, __table, __i)                                    \
+	for ((__i) = 0;                                                                            \
+	     ((__entry) = lone_lisp_table_next_entry((__lone), (__table), &(__i)));                \
+	     ++(__i))
 
 /* ╭────────────────────────────────────────────────────────────────────────╮
    │                                                                        │
