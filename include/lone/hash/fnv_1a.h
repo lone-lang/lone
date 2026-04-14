@@ -4,7 +4,6 @@
 #define LONE_HASH_FNV_1A_HEADER
 
 #include <lone/definitions.h>
-#include <lone/types.h>
 
 /* ╭────────────────────────────────────────────────────────────────────────╮
    │                                                                        │
@@ -22,7 +21,15 @@
 	#error "Unsupported architecture"
 #endif
 
-void lone_hash_fnv_1a_initialize(struct lone_system *system, struct lone_bytes random);
+struct lone_bytes;
+
+struct lone_hash_fnv_1a_state {
+	unsigned long hash;
+};
+
+void lone_hash_fnv_1a_initialize(struct lone_hash_fnv_1a_state *state, unsigned long offset_basis);
+void lone_hash_fnv_1a_update(struct lone_hash_fnv_1a_state *state, struct lone_bytes data);
+unsigned long lone_hash_fnv_1a_finish(struct lone_hash_fnv_1a_state *state);
 
 unsigned long
 __attribute__((pure))

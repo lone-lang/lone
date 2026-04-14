@@ -281,9 +281,6 @@ struct lone_lisp_symbol {
    │    to keep probe chains clean, then tombstones the entry.              │
    │    Tombstones are compacted during resize.                             │
    │                                                                        │
-   │    Currently, lone tables use the FNV-1a hashing algorithm.            │
-   │    More algorithms will probably be implemented in the future.         │
-   │                                                                        │
    │    Tables are able to inherit from another table:                      │
    │    missing keys are also looked up in the parent table.                │
    │    This is currently used to implement nested environments             │

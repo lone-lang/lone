@@ -2,17 +2,15 @@
 
 #include <lone/system.h>
 #include <lone/memory.h>
-#include <lone/hash.h>
+#include <lone/random.h>
 #include <lone/auxiliary_vector.h>
 
 void lone_system_initialize(struct lone_system *system, struct lone_auxiliary_vector *auxiliary_vector)
 {
-	struct lone_bytes random_bytes;
 	size_t page_size;
 
-	random_bytes = lone_auxiliary_vector_random(auxiliary_vector);
 	page_size = lone_auxiliary_vector_page_size(auxiliary_vector);
 
 	lone_memory_initialize(system, page_size);
-	lone_hash_initialize(system, random_bytes);
+	lone_random_with_urandom_fallback(auxiliary_vector, LONE_BYTES_VALUE_FROM_ARRAY(system->random));
 }

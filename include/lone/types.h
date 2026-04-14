@@ -347,17 +347,13 @@ enum lone_memory_allocation_flags {
 /* ╭────────────────────────────────────────────────────────────────────────╮
    │                                                                        │
    │    The lone system structure represents low level system state         │
-   │    such as allocated memory and hash function state.                   │
+   │    such as allocated memory and random bytes for hash keying.          │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
 
 struct lone_system {
 	struct lone_memory_allocator allocator;
-	struct {
-		struct {
-			unsigned long offset_basis;
-		} fnv_1a;
-	} hash;
+	unsigned char random[16];
 };
 
 #endif /* LONE_TYPES_HEADER */

@@ -11,6 +11,8 @@ void
 __attribute__((noreturn))
 __stack_chk_fail(void);
 
-void lone_compiler_stack_protector_initialize(struct lone_bytes random);
+void
+__attribute__((no_stack_protector))
+lone_compiler_stack_protector_initialize(struct lone_auxiliary_vector *auxiliary_vector);
 
 #endif /* LONE_COMPILER_STACK_PROTECTOR_HEADER */
