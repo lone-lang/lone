@@ -189,6 +189,7 @@ LONE_LISP_PRIMITIVE(bytes_write_##sign##bits##endian) \
 	struct lone_lisp_value offset; \
 	struct lone_lisp_value value; \
 \
+	lone_lisp_integer raw; \
 	lone_##sign##bits integer; \
 	bool success; \
 \
@@ -200,7 +201,15 @@ LONE_LISP_PRIMITIVE(bytes_write_##sign##bits##endian) \
 \
 	lone_lisp_bytes_check_write_arguments(lone, bytes, offset, value); \
 \
-	integer = (lone_##sign##bits) lone_lisp_integer_of(value); \
+	raw = lone_lisp_integer_of(value); \
+	/* Narrowing cast: well-defined for unsigned types (modular reduction). \
+	 * For signed types, GCC and Clang both guarantee truncation semantics \
+	 * which makes the round-trip equality check below a correct range test. */ \
+	integer = (lone_##sign##bits) raw; \
+\
+	if ((lone_lisp_integer) integer != raw) { \
+		/* value out of range for target type */ linux_exit(-1); \
+	} \
 \
 	success = lone_bytes_write_##sign##bits##endian( \
 		lone_lisp_heap_value_of(lone, bytes)->as.bytes, \

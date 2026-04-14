@@ -27,6 +27,11 @@ struct lone_lisp_value lone_lisp_segment_read_descriptor(struct lone_lisp *lone,
 	}
 
 	offset = reader.buffer.position.read;
+
+	if (offset > bytes.count) {
+		/* reader exceeded segment bounds */ linux_exit(-1);
+	}
+
 	symbol = lone_lisp_intern_c_string(lone, "data");
 	data = lone_lisp_bytes_transfer(lone, bytes.pointer + offset, bytes.count - offset, false);
 	lone_lisp_table_set(lone, descriptor, symbol, data);

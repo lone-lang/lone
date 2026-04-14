@@ -29,7 +29,9 @@ bool lone_bytes_contains_offset(struct lone_bytes bytes, lone_size offset)
 
 bool lone_bytes_contains_block(struct lone_bytes bytes, lone_size offset, lone_size size)
 {
-	return (offset + size) <= bytes.count;
+	lone_size end;
+	if (__builtin_add_overflow(offset, size, &end)) { return false; }
+	return end <= bytes.count;
 }
 
 bool lone_bytes_contains_address(struct lone_bytes bytes, void *pointer)

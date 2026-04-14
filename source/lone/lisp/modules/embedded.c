@@ -12,17 +12,24 @@
 static struct lone_bytes slice(struct lone_lisp *lone, struct lone_bytes bytes, struct lone_lisp_value pair)
 {
 	struct lone_lisp_value first, second;
+	lone_lisp_integer start_integer, size_integer;
 	size_t start, end, size;
 
-	if (!lone_lisp_is_list(lone, pair)) { /* unexpected value type */ linux_exit(-1); }
+	if (!lone_lisp_is_list(lone, pair)) { goto unexpected_value_type; }
 	first = lone_lisp_list_first(lone, pair);
-	if (!lone_lisp_is_integer(lone, first)) { /* unexpected value type */ linux_exit(-1); }
+	if (!lone_lisp_is_integer(lone, first)) { goto unexpected_value_type; }
 	second = lone_lisp_list_rest(lone, pair);
-	if (!lone_lisp_is_integer(lone, second)) { /* unexpected value type */ linux_exit(-1); }
+	if (!lone_lisp_is_integer(lone, second)) { goto unexpected_value_type; }
 
-	start = lone_lisp_integer_of(first);
-	size = lone_lisp_integer_of(second);
-	end = start + size;
+	start_integer = lone_lisp_integer_of(first);
+	size_integer = lone_lisp_integer_of(second);
+
+	if (start_integer < 0 || size_integer < 0) { goto negative_offset_or_size; }
+
+	start = (size_t) start_integer;
+	size = (size_t) size_integer;
+
+	if (__builtin_add_overflow(start, size, &end)) { goto overflow; }
 
 	if (start >= bytes.count || end > bytes.count) {
 		/* segment overrun */ linux_exit(-1);
@@ -32,6 +39,11 @@ static struct lone_bytes slice(struct lone_lisp *lone, struct lone_bytes bytes, 
 		.count = size,
 		.pointer = bytes.pointer + start
 	};
+
+unexpected_value_type:
+negative_offset_or_size:
+overflow:
+	linux_exit(-1);
 }
 
 void lone_lisp_modules_embedded_load(struct lone_lisp *lone, lone_elf_native_segment *segment)
