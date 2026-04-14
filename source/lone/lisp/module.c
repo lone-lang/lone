@@ -231,6 +231,11 @@ struct lone_lisp_value lone_lisp_module_load(struct lone_lisp *lone, struct lone
 	if (not_found) {
 		file_descriptor = lone_lisp_module_search(lone, name);
 		lone_lisp_module_load_from_file_descriptor(lone, module, file_descriptor);
+
+		/* On Linux, close releases the file descriptor
+		   even when it returns an error such as EINTR.
+		   The module has been fully loaded at this point
+		   so there is nothing meaningful to do on failure. */
 		linux_close(file_descriptor);
 	}
 
