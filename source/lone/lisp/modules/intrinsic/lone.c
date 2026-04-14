@@ -718,7 +718,7 @@ LONE_LISP_PRIMITIVE(lone_transfer)
 			/* wrong number of arguments: (transfer), (transfer value extra) */ linux_exit(-1);
 		}
 
-		/* skip the two save steps from transfer's application,
+		/* skip transfer's save step,
 		   search for the continuation delimiter pushed by control */
 		for (frame = machine->stack.top - 1 - 1,
 		     frame_count = 1;
