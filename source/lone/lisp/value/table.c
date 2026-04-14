@@ -18,6 +18,22 @@ struct lone_lisp_value lone_lisp_table_create(struct lone_lisp *lone,
 
 	capacity = lone_next_power_of_2(capacity);
 
+	/* Fibonacci hashing computes hash_to_index as:
+	 *
+	 * 	(hash * FIBONACCI_CONSTANT) >> (BITS_PER_LONG - ctz(capacity))
+	 *
+	 * Capacities are always clamped to 2.
+	 * When capacity is 1, ctz(1) is 0,
+	 * producing a shift of BITS_PER_LONG,
+	 * which is undefined behavior in C
+	 * for types of that width. Capacity 1
+	 * is also completely pointless:
+	 * the load factor check triggers
+	 * a resize immediately on the
+	 * first insertion.
+	 */
+	if (capacity < 2) { capacity = 2; }
+
 	actual->prototype = prototype;
 	actual->count = 0;
 	actual->capacity = capacity;
@@ -78,10 +94,33 @@ static unsigned long lone_lisp_table_wrap_around(size_t index, size_t capacity)
 	return index & (capacity - 1);
 }
 
+/* Fibonacci hashing constant = 2^N / φ
+ *
+ * Multiplying a hash by this and extracting the high bits
+ * distributes table entries across table slots better,
+ * eliminating primary clustering from correlated hashes.
+ *
+ * Knuth, The Art of Computer Programming, Volume 3, §6.4.
+ */
+#if __BITS_PER_LONG == 64
+	#define LONE_LISP_TABLE_FIBONACCI_CONSTANT 11400714819323198485UL
+#elif __BITS_PER_LONG == 32
+	#define LONE_LISP_TABLE_FIBONACCI_CONSTANT 2654435769UL
+#else
+	#error "Unsupported architecture"
+#endif
+
+static unsigned long lone_lisp_table_hash_to_index(size_t hash, size_t capacity)
+{
+	return (hash * LONE_LISP_TABLE_FIBONACCI_CONSTANT) >> (__BITS_PER_LONG - __builtin_ctzl(capacity));
+}
+
+#undef LONE_LISP_TABLE_FIBONACCI_CONSTANT
+
 static unsigned long lone_lisp_table_compute_hash_for(struct lone_lisp *lone,
 		struct lone_lisp_value key, size_t capacity)
 {
-	return lone_lisp_table_wrap_around(lone_lisp_hash(lone, key), capacity);
+	return lone_lisp_table_hash_to_index(lone_lisp_hash(lone, key), capacity);
 }
 
 static bool lone_lisp_table_key_matches(struct lone_lisp *lone,
@@ -155,7 +194,7 @@ static size_t lone_lisp_table_entry_find_index_by(struct lone_lisp *lone,
 		size_t *indexes, struct lone_lisp_table_entry *entries, size_t capacity)
 {
 	unsigned char hash_bits = (unsigned char) hash;
-	size_t i = lone_lisp_table_wrap_around(hash, capacity);
+	size_t i = lone_lisp_table_hash_to_index(hash, capacity);
 
 	while (lone_lisp_table_is_used(indexes, i)
 	       && !lone_lisp_table_bytes_is_equal(lone, entries[indexes[i]].key, bytes, type, hash_bits)) {
