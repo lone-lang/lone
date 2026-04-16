@@ -412,6 +412,11 @@ bool lone_lisp_machine_cycle(struct lone_lisp *lone, struct lone_lisp_machine *m
 				lone_lisp_machine_push_value(lone, machine, primitive);
 				lone_lisp_machine_push_value(lone, machine, machine->environment);
 				lone_lisp_machine_push_step(lone, machine, LONE_LISP_MACHINE_STEP_RESUME_PRIMITIVE);
+			} else if (machine->primitive.step == -2) {
+				/* tail apply: apply function in caller's context
+				 * primitive has set applicable and list,
+				 * both APPLICATION steps are still on the stack */
+				machine->step = LONE_LISP_MACHINE_STEP_APPLICATION;
 			} else if (machine->primitive.step < 0) {
 				/* tail return: evaluate expression in caller's context */
 				lone_lisp_machine_pop_step(lone, machine);
