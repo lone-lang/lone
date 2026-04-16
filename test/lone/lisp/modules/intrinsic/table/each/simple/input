@@ -1,6 +1,6 @@
-(import (lone lambda print quote) (table each))
+(import (lone lambda print) (table each))
 
-(each { 'x 10 'y 20 'z 30 }
+(each { x 10 y 20 z 30 }
   (lambda (key value)
     (print key)
     (print value)))
