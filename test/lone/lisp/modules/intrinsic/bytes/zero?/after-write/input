@@ -1,0 +1,17 @@
+(import (lone print set) (bytes new zero? write-u8 write-u32))
+
+(set memory (new 8))
+
+(print (zero? memory))
+
+(write-u8 memory 0 1)
+(print (zero? memory))
+
+(write-u8 memory 0 0)
+(print (zero? memory))
+
+(write-u32 memory 4 999)
+(print (zero? memory))
+
+(write-u32 memory 4 0)
+(print (zero? memory))
