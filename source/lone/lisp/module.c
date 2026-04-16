@@ -18,7 +18,7 @@ static bool lone_lisp_module_name_is_valid_component(struct lone_lisp *lone, str
 	struct lone_bytes name;
 	size_t i;
 
-	name = lone_lisp_symbol_name(lone, &symbol);
+	name = lone_lisp_bytes_of(lone, &symbol);
 
 	if (name.count == 0) { return false; }
 

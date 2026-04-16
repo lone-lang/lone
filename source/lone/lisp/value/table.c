@@ -128,7 +128,6 @@ static bool lone_lisp_table_bytes_is_equal(struct lone_lisp *lone,
 		struct lone_lisp_value x_value,
 		struct lone_bytes y_bytes, enum lone_lisp_tag y_tag, unsigned char y_hash_bits)
 {
-	struct lone_lisp_heap_value *x_heap_value;
 	struct lone_bytes x_bytes;
 	enum lone_lisp_tag x_tag;
 	unsigned char x_hash_bits;
@@ -136,34 +135,16 @@ static bool lone_lisp_table_bytes_is_equal(struct lone_lisp *lone,
 	x_tag = lone_lisp_type_of(x_value);
 	if (x_tag != y_tag) { return false; }
 
-	/* Inline values: compare bytes directly from the tagged word. */
-	if (lone_lisp_is_inline_value(x_value)) {
-		x_bytes = lone_lisp_inline_value_bytes(&x_value);
-		return lone_bytes_is_equal(x_bytes, y_bytes);
-	}
-
-	/* For symbols, compare 8 hash bits stored in metadata at bits 8-15
+	/* For heap symbols, compare 8 hash bits stored in metadata at bits 8-15
 	 * against the search hash bits before accessing the heap.
 	 * Rejects 255/256 of non-matching entries without a heap dereference.
 	 */
-	if (x_tag == LONE_LISP_TAG_SYMBOL) {
+	if (x_tag == LONE_LISP_TAG_SYMBOL && !lone_lisp_is_inline_value(x_value)) {
 		x_hash_bits = (x_value.tagged >> LONE_LISP_METADATA_SHIFT) & 0xFF;
 		if (x_hash_bits != y_hash_bits) { return false; }
 	}
 
-	x_heap_value = lone_lisp_heap_value_of(lone, x_value);
-
-	switch (x_tag) {
-	case LONE_LISP_TAG_SYMBOL:
-		x_bytes = x_heap_value->as.symbol.name;
-		break;
-	case LONE_LISP_TAG_TEXT:
-	case LONE_LISP_TAG_BYTES:
-		x_bytes = x_heap_value->as.bytes;
-		break;
-	default:
-		return false;
-	}
+	x_bytes = lone_lisp_bytes_of(lone, &x_value);
 
 	return lone_bytes_is_equal(x_bytes, y_bytes);
 }

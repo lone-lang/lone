@@ -39,7 +39,7 @@ static size_t lone_lisp_hash_value_recursively(struct lone_lisp *lone,
 		return hash;
 	case LONE_LISP_TAG_SYMBOL:
 		if (lone_lisp_is_inline_symbol(value)) {
-			struct lone_bytes name = lone_lisp_symbol_name(lone, &value);
+			struct lone_bytes name = lone_lisp_bytes_of(lone, &value);
 			symbol_hash = lone_lisp_hash_as_symbol(lone, name);
 		} else {
 			symbol_hash = lone_lisp_heap_value_of(lone, value)->as.symbol.hash;
@@ -49,11 +49,7 @@ static size_t lone_lisp_hash_value_recursively(struct lone_lisp *lone,
 		break;
 	case LONE_LISP_TAG_TEXT:
 	case LONE_LISP_TAG_BYTES:
-		if (lone_lisp_is_inline_value(value)) {
-			bytes = lone_lisp_inline_value_bytes(&value);
-		} else {
-			bytes = lone_lisp_heap_value_of(lone, value)->as.bytes;
-		}
+		bytes = lone_lisp_bytes_of(lone, &value);
 		break;
 	case LONE_LISP_TAG_MODULE:
 	case LONE_LISP_TAG_FUNCTION:
@@ -73,7 +69,7 @@ size_t lone_lisp_hash(struct lone_lisp *lone, struct lone_lisp_value value)
 {
 	if (lone_lisp_is_symbol(lone, value)) {
 		if (lone_lisp_is_inline_symbol(value)) {
-			struct lone_bytes name = lone_lisp_symbol_name(lone, &value);
+			struct lone_bytes name = lone_lisp_bytes_of(lone, &value);
 			return lone_lisp_hash_as_symbol(lone, name);
 		}
 		return lone_lisp_heap_value_of(lone, value)->as.symbol.hash;
@@ -113,3 +109,4 @@ size_t lone_lisp_hash_as_bytes(struct lone_lisp *lone, struct lone_bytes bytes)
 {
 	return lone_lisp_hash_as_tagged_type(lone, bytes, LONE_LISP_TAG_BYTES);
 }
+

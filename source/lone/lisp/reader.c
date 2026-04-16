@@ -478,7 +478,7 @@ static bool lone_lisp_reader_is_expected_character_symbol(struct lone_lisp *lone
 	struct lone_bytes name;
 
 	if (lone_lisp_is_symbol(lone, value)) {
-		name = lone_lisp_symbol_name(lone, &value);
+		name = lone_lisp_bytes_of(lone, &value);
 
 		if (name.count != 1) {
 			return false;
@@ -679,7 +679,7 @@ static struct lone_lisp_value lone_lisp_parse(struct lone_lisp *lone,
 		return token;
 	case LONE_LISP_TAG_SYMBOL:
 
-		name = lone_lisp_symbol_name(lone, &token);
+		name = lone_lisp_bytes_of(lone, &token);
 
 		if (name.count > 1) { return token; }
 		character = *name.pointer;

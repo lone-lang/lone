@@ -244,27 +244,31 @@ struct lone_lisp_value lone_lisp_inline_bytes_create(unsigned char *bytes, size_
 	return lone_lisp_inline_create(LONE_LISP_INLINE_TYPE_BYTES, bytes, count);
 }
 
-struct lone_bytes lone_lisp_symbol_name(struct lone_lisp *lone, struct lone_lisp_value *value)
-{
-	if (lone_lisp_is_inline_symbol(*value)) {
-		return lone_lisp_inline_value_bytes(value);
-	} else {
-		return lone_lisp_heap_value_of(lone, *value)->as.symbol.name;
-	}
-}
-
 bool lone_lisp_is_identical(struct lone_lisp *lone, struct lone_lisp_value x, struct lone_lisp_value y)
 {
 	(void) lone;
 	return x.tagged == y.tagged;
 }
 
-static struct lone_bytes lone_lisp_text_or_bytes_data(struct lone_lisp *lone, struct lone_lisp_value *value)
+struct lone_bytes lone_lisp_bytes_of(struct lone_lisp *lone, struct lone_lisp_value *value)
 {
+	struct lone_lisp_heap_value *heap_value;
+
 	if (lone_lisp_is_inline_value(*value)) {
 		return lone_lisp_inline_value_bytes(value);
 	}
-	return lone_lisp_heap_value_of(lone, *value)->as.bytes;
+
+	heap_value = lone_lisp_heap_value_of(lone, *value);
+
+	switch (lone_lisp_type_of(*value)) {
+	case LONE_LISP_TAG_SYMBOL:
+		return heap_value->as.symbol.name;
+	case LONE_LISP_TAG_TEXT:
+	case LONE_LISP_TAG_BYTES:
+		return heap_value->as.bytes;
+	default:
+		linux_exit(-1);
+	}
 }
 
 bool lone_lisp_is_equivalent(struct lone_lisp *lone, struct lone_lisp_value x, struct lone_lisp_value y)
@@ -279,8 +283,8 @@ bool lone_lisp_is_equivalent(struct lone_lisp *lone, struct lone_lisp_value x, s
 		return x.tagged == y.tagged;
 	case LONE_LISP_TAG_TEXT:
 	case LONE_LISP_TAG_BYTES:
-		return lone_bytes_is_equal(lone_lisp_text_or_bytes_data(lone, &x),
-		                           lone_lisp_text_or_bytes_data(lone, &y));
+		return lone_bytes_is_equal(lone_lisp_bytes_of(lone, &x),
+		                           lone_lisp_bytes_of(lone, &y));
 	case LONE_LISP_TAG_MODULE:
 	case LONE_LISP_TAG_FUNCTION:
 	case LONE_LISP_TAG_PRIMITIVE:

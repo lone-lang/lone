@@ -47,11 +47,7 @@ static void lone_lisp_print_bytes(struct lone_lisp *lone, struct lone_lisp_value
 	size_t size, count, i;
 	struct lone_bytes content;
 
-	if (lone_lisp_is_inline_bytes(bytes)) {
-		content = lone_lisp_inline_value_bytes(&bytes);
-	} else {
-		content = lone_lisp_heap_value_of(lone, bytes)->as.bytes;
-	}
+	content = lone_lisp_bytes_of(lone, &bytes);
 	count = content.count;
 
 	if (count == 0) { linux_write(fd, "bytes[]", 7); return; }
@@ -169,11 +165,7 @@ static void lone_lisp_print_text(struct lone_lisp *lone, struct lone_lisp_value 
 	unsigned char *byte;
 	size_t i, run_start;
 
-	if (lone_lisp_is_inline_text(value)) {
-		text = lone_lisp_inline_value_bytes(&value);
-	} else {
-		text = lone_lisp_heap_value_of(lone, value)->as.bytes;
-	}
+	text = lone_lisp_bytes_of(lone, &value);
 
 	linux_write(fd, "\"", 1);
 
@@ -272,7 +264,7 @@ void lone_lisp_print(struct lone_lisp *lone, struct lone_lisp_value value, int f
 		lone_lisp_print_bytes(lone, value, fd);
 		break;
 	case LONE_LISP_TAG_SYMBOL: {
-		struct lone_bytes name = lone_lisp_symbol_name(lone, &value);
+		struct lone_bytes name = lone_lisp_bytes_of(lone, &value);
 		linux_write(fd, name.pointer, name.count);
 		break;
 	}

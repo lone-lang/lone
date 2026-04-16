@@ -362,12 +362,13 @@ bool lone_lisp_is_inline_value(struct lone_lisp_value value);
  */
 struct lone_bytes lone_lisp_inline_value_bytes(struct lone_lisp_value *value);
 
-/* Extract symbol name bytes from either heap or inline symbols.
- * For inline symbols, the returned pointer points into the tagged word
+/* Extract byte data from any value that has bytes:
+ * symbols (inline or heap), text (inline or heap), or bytes (heap).
+ * For inline values, the returned pointer points into the tagged word
  * at the address of the value parameter, so the caller must keep
  * the value alive for the lifetime of the returned struct lone_bytes.
  */
-struct lone_bytes lone_lisp_symbol_name(struct lone_lisp *lone, struct lone_lisp_value *value);
+struct lone_bytes lone_lisp_bytes_of(struct lone_lisp *lone, struct lone_lisp_value *value);
 
 bool lone_lisp_is_nil(struct lone_lisp_value value);
 bool lone_lisp_is_false(struct lone_lisp_value value);
