@@ -745,7 +745,6 @@ struct lone_lisp_machine {
 	struct {
 		/* where to return in a primitive after a computation step is done */
 		long step;
-		struct lone_lisp_value closure;
 	} primitive;
 
 	struct lone_lisp_value module;      /* the module where evaluation is occurring */

@@ -465,7 +465,6 @@ static void lone_lisp_rewrite_all_references(struct lone_lisp *lone, struct lone
 	machine->unevaluated = lone_lisp_forward_value(lone, machine->unevaluated);
 	machine->list = lone_lisp_forward_value(lone, machine->list);
 	machine->module = lone_lisp_forward_value(lone, machine->module);
-	machine->primitive.closure = lone_lisp_forward_value(lone, machine->primitive.closure);
 
 	/* lisp machine stack */
 	lone_lisp_rewrite_stack_frames(lone, machine->stack.base, machine->stack.top);

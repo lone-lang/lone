@@ -394,7 +394,6 @@ bool lone_lisp_machine_cycle(struct lone_lisp *lone, struct lone_lisp_machine *m
 			 * environment must be preserved.
 			 */
 			primitive = machine->applicable;
-			machine->primitive.closure = lone_lisp_heap_value_of(lone, primitive)->as.primitive.closure;
 			machine->primitive.step =
 				lone_lisp_heap_value_of(lone, primitive)->as.primitive.function(
 					lone,

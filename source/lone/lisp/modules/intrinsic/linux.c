@@ -398,7 +398,7 @@ LONE_LISP_PRIMITIVE(linux_system_call)
 
 	arguments = lone_lisp_machine_pop_value(lone, machine);
 
-	linux_system_call_table = machine->primitive.closure;
+	linux_system_call_table = lone_lisp_heap_value_of(lone, machine->applicable)->as.primitive.closure;
 
 	if (lone_lisp_is_nil(arguments)) { /* need at least the system call number */ linux_exit(-1); }
 	argument = lone_lisp_list_first(lone, arguments);
