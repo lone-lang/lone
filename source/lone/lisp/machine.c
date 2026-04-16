@@ -159,7 +159,7 @@ void lone_lisp_machine_reset(struct lone_lisp *lone, struct lone_lisp_machine *m
 
 	machine->stack.top = machine->stack.base;
 	lone_lisp_machine_shrink_stack(lone, machine);
-	machine->step = LONE_LISP_MACHINE_STEP_EXPRESSION_EVALUATION;
+	machine->step = LONE_LISP_MACHINE_STEP_EVALUATE;
 	lone_lisp_machine_push_step(lone, machine, LONE_LISP_MACHINE_STEP_HALT);
 	machine->primitive.step = 0;
 
@@ -172,7 +172,7 @@ void lone_lisp_machine_reset(struct lone_lisp *lone, struct lone_lisp_machine *m
    │                                                                        │
    │    The machine has two entry points:                                   │
    │                                                                        │
-   │        EXPRESSION_EVALUATION                                           │
+   │        EVALUATE                                                        │
    │            Reads machine->expression and machine->environment.         │
    │            Evaluates values, looks up symbols, handles list forms.     │
    │                                                                        │
@@ -212,8 +212,8 @@ bool lone_lisp_machine_cycle(struct lone_lisp *lone, struct lone_lisp_machine *m
 	lone_lisp_integer count, i;
 
 	switch (machine->step) {
-	case LONE_LISP_MACHINE_STEP_EXPRESSION_EVALUATION:
-	expression_evaluation:
+	case LONE_LISP_MACHINE_STEP_EVALUATE:
+	evaluate:
 		switch (lone_lisp_type_of(machine->expression)) {
 		case LONE_LISP_TAG_NIL:
 		case LONE_LISP_TAG_FALSE:
@@ -241,7 +241,7 @@ bool lone_lisp_machine_cycle(struct lone_lisp *lone, struct lone_lisp_machine *m
 			lone_lisp_machine_push_value(lone, machine, lone_lisp_list_rest(lone, machine->expression));
 			machine->expression = lone_lisp_list_first(lone, machine->expression);
 			lone_lisp_machine_push_step(lone, machine, LONE_LISP_MACHINE_STEP_EVALUATED_OPERATOR);
-			goto expression_evaluation;
+			goto evaluate;
 		}
 		return true;
 	case LONE_LISP_MACHINE_STEP_APPLY:
@@ -252,7 +252,7 @@ bool lone_lisp_machine_cycle(struct lone_lisp *lone, struct lone_lisp_machine *m
 		 *
 		 * Provision the extra step that APPLICATION needs,
 		 * then proceed to APPLICATION.
-		 * Mirrors EXPRESSION_EVALUATION's save_step
+		 * Mirrors EVALUATE's save_step
 		 * when it encounters a list.
 		 */
 		lone_lisp_machine_save_step(lone, machine);
@@ -308,7 +308,7 @@ bool lone_lisp_machine_cycle(struct lone_lisp *lone, struct lone_lisp_machine *m
 			 * no new data is pushed onto the stack */
 			lone_lisp_machine_push_step(lone, machine, LONE_LISP_MACHINE_STEP_LAST_OPERAND_ACCUMULATION);
 		}
-		goto expression_evaluation;
+		goto evaluate;
 	case LONE_LISP_MACHINE_STEP_OPERAND_ACCUMULATION:
 		/* Evaluated operand is in machine->value.
 		 * Stack:
@@ -360,7 +360,7 @@ bool lone_lisp_machine_cycle(struct lone_lisp *lone, struct lone_lisp_machine *m
 		 * Primitives: after_application (2x restore_step).
 		 * Vectors/Tables: 2x restore_step.
 		 *
-		 * Reached through EXPRESSION_EVALUATION or APPLY,
+		 * Reached through EVALUATE or APPLY,
 		 * both of which provision the first step.
 		 */
 		switch (machine->applicable.tagged & LONE_LISP_TAG_MASK) {
@@ -390,8 +390,8 @@ bool lone_lisp_machine_cycle(struct lone_lisp *lone, struct lone_lisp_machine *m
 			 *
 			 * machine->environment is saved after the call.
 			 * Primitives such as let and when extend it
-			 * before requesting EXPRESSION_EVALUATION.
-			 * The modified environment must be preserved.
+			 * before requesting EVALUATE. This modified
+			 * environment must be preserved.
 			 */
 			primitive = machine->applicable;
 			machine->primitive.closure = lone_lisp_heap_value_of(lone, primitive)->as.primitive.closure;
@@ -420,7 +420,7 @@ bool lone_lisp_machine_cycle(struct lone_lisp *lone, struct lone_lisp_machine *m
 			} else if (machine->primitive.step < 0) {
 				/* tail return: evaluate expression in caller's context */
 				lone_lisp_machine_pop_step(lone, machine);
-				goto expression_evaluation;
+				goto evaluate;
 			} else {
 				/* primitives push the return value onto the stack */
 				machine->value = lone_lisp_machine_pop_value(lone, machine);
@@ -455,7 +455,7 @@ bool lone_lisp_machine_cycle(struct lone_lisp *lone, struct lone_lisp_machine *m
 				});
 				lone_lisp_machine_push_step(lone, machine, LONE_LISP_MACHINE_STEP_GENERATOR_RETURN);
 				machine->expression = lone_lisp_list_create(lone, generator->function, machine->list);
-				machine->step = LONE_LISP_MACHINE_STEP_EXPRESSION_EVALUATION;
+				machine->step = LONE_LISP_MACHINE_STEP_EVALUATE;
 			} else {
 				/* generator has executed before */
 				if (lone_lisp_list_has_rest(lone, machine->list)) { goto too_many_arguments; }
@@ -509,7 +509,7 @@ bool lone_lisp_machine_cycle(struct lone_lisp *lone, struct lone_lisp_machine *m
 			}
 			lone_lisp_machine_push_step(lone, machine, LONE_LISP_MACHINE_STEP_TAIL_RETURN);
 		}
-		goto expression_evaluation;
+		goto evaluate;
 	case LONE_LISP_MACHINE_STEP_SEQUENCE_EVALUATION_NEXT:
 		/* Result of expression is in machine->value.
 		 * Stack:

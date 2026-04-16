@@ -713,7 +713,7 @@ struct lone_lisp_value lone_lisp_bytes_create(struct lone_lisp *lone,
    ╰────────────────────────────────────────────────────────────────────────╯ */
 
 enum lone_lisp_machine_step {
-	LONE_LISP_MACHINE_STEP_EXPRESSION_EVALUATION,
+	LONE_LISP_MACHINE_STEP_EVALUATE,
 	LONE_LISP_MACHINE_STEP_APPLY,
 	LONE_LISP_MACHINE_STEP_EVALUATED_OPERATOR,
 	LONE_LISP_MACHINE_STEP_OPERAND_EVALUATION,
