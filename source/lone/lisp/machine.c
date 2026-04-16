@@ -168,9 +168,47 @@ void lone_lisp_machine_reset(struct lone_lisp *lone, struct lone_lisp_machine *m
 	machine->environment = lone_lisp_heap_value_of(lone, module)->as.module.environment;
 }
 
+/* ╭─────────────────────────┨ LONE LISP MACHINE ┠──────────────────────────╮
+   │                                                                        │
+   │    The machine has two entry points:                                   │
+   │                                                                        │
+   │        EXPRESSION_EVALUATION                                           │
+   │            Reads machine->expression and machine->environment.         │
+   │            Evaluates values, looks up symbols, handles list forms.     │
+   │                                                                        │
+   │        APPLY                                                           │
+   │            Reads machine->applicable and machine->list.                │
+   │            Applies a function to already evaluated arguments.          │
+   │                                                                        │
+   │    Both entry points provision a step on the stack                     │
+   │    then proceed to APPLICATION for dispatch.                           │
+   │    APPLICATION always consumes two steps:                              │
+   │    the one provisioned by the entry point                              │
+   │    and the one placed by the caller.                                   │
+   │                                                                        │
+   │    Primitives may set machine->step to either entry point              │
+   │    and return step > 0 to request a sub-computation.                   │
+   │    The primitive will be resumed with the returned                     │
+   │    step value when it is done. Primitives may also                     │
+   │    return step = 0 to indicate they are finished                       │
+   │    and have placed their results on the stack.                         │
+   │    When tail position optimization is supported,                       │
+   │    primitives may return step < 0. Step -1 means                       │
+   │    evaluate machine->expression in tail position                       │
+   │    and step -2 means apply machine->applicable                         │
+   │    in tail position. This is required for tail                         │
+   │    call optimization to work in primitives which                       │
+   │    evaluate or apply. This protocol is avoided                         │
+   │    in cases where the data must remain on the                          │
+   │    stack. For example, signal requires intercept                       │
+   │    delimiters to be on the stack in order to unwind.                   │
+   │                                                                        │
+   ╰────────────────────────────────────────────────────────────────────────╯ */
+
 bool lone_lisp_machine_cycle(struct lone_lisp *lone, struct lone_lisp_machine *machine)
 {
 	struct lone_lisp_generator *generator;
+	struct lone_lisp_value primitive;
 	lone_lisp_integer count, i;
 
 	switch (machine->step) {
@@ -205,6 +243,20 @@ bool lone_lisp_machine_cycle(struct lone_lisp *lone, struct lone_lisp_machine *m
 			lone_lisp_machine_push_step(lone, machine, LONE_LISP_MACHINE_STEP_EVALUATED_OPERATOR);
 			goto expression_evaluation;
 		}
+		return true;
+	case LONE_LISP_MACHINE_STEP_APPLY:
+		/* Applicable is in machine->applicable.
+		 * Already evaluated operands are in machine->list.
+		 * Stack:
+		 * 	next-step
+		 *
+		 * Provision the extra step that APPLICATION needs,
+		 * then proceed to APPLICATION.
+		 * Mirrors EXPRESSION_EVALUATION's save_step
+		 * when it encounters a list.
+		 */
+		lone_lisp_machine_save_step(lone, machine);
+		machine->step = LONE_LISP_MACHINE_STEP_APPLICATION;
 		return true;
 	case LONE_LISP_MACHINE_STEP_EVALUATED_OPERATOR:
 		/* Evaluated operator is in machine->value.
@@ -300,7 +352,16 @@ bool lone_lisp_machine_cycle(struct lone_lisp *lone, struct lone_lisp_machine *m
 		/* Operator is in machine->applicable.
 		 * Operands, evaluated or not, are in machine->list.
 		 * Stack:
-		 * 	next-step
+		 * 	step (provisioned by entry point)
+		 * 	step (placed by caller)
+		 *
+		 * Always consumes exactly two steps.
+		 * Functions: TCO pop_step + TAIL_RETURN.
+		 * Primitives: after_application (2x restore_step).
+		 * Vectors/Tables: 2x restore_step.
+		 *
+		 * Reached through EXPRESSION_EVALUATION or APPLY,
+		 * both of which provision the first step.
 		 */
 		switch (machine->applicable.tagged & LONE_LISP_TAG_MASK) {
 		case LONE_LISP_TAG_FUNCTION:
@@ -319,9 +380,23 @@ bool lone_lisp_machine_cycle(struct lone_lisp *lone, struct lone_lisp_machine *m
 			lone_lisp_machine_push_value(lone, machine, machine->list);
 			machine->primitive.step = 0;
 		resume_primitive:
-			machine->primitive.closure = lone_lisp_heap_value_of(lone, machine->applicable)->as.primitive.closure;
+			/* machine->applicable is saved before the call.
+			 * Primitives may clobber it in order to use APPLY.
+			 * However, RESUME_PRIMITIVE needs to know which
+			 * primitive to restore if the primitive suspends.
+			 * So he primitive value must be pushed on the stack
+			 * after the primitive has returned, which means it
+			 * must be saved beforehand.
+			 *
+			 * machine->environment is saved after the call.
+			 * Primitives such as let and when extend it
+			 * before requesting EXPRESSION_EVALUATION.
+			 * The modified environment must be preserved.
+			 */
+			primitive = machine->applicable;
+			machine->primitive.closure = lone_lisp_heap_value_of(lone, primitive)->as.primitive.closure;
 			machine->primitive.step =
-				lone_lisp_heap_value_of(lone, machine->applicable)->as.primitive.function(
+				lone_lisp_heap_value_of(lone, primitive)->as.primitive.function(
 					lone,
 					machine,
 					machine->primitive.step
@@ -334,7 +409,7 @@ bool lone_lisp_machine_cycle(struct lone_lisp *lone, struct lone_lisp_machine *m
 				 * the returned step value so that primitive
 				 * knows where to resume execution */
 				lone_lisp_machine_save_primitive_step(lone, machine);
-				lone_lisp_machine_push_value(lone, machine, machine->applicable);
+				lone_lisp_machine_push_value(lone, machine, primitive);
 				lone_lisp_machine_push_value(lone, machine, machine->environment);
 				lone_lisp_machine_push_step(lone, machine, LONE_LISP_MACHINE_STEP_RESUME_PRIMITIVE);
 			} else if (machine->primitive.step < 0) {
