@@ -43,6 +43,7 @@ LONE_LISP_PRIMITIVE(lone_is_integer);
 LONE_LISP_PRIMITIVE(lone_is_identical);
 LONE_LISP_PRIMITIVE(lone_is_equivalent);
 LONE_LISP_PRIMITIVE(lone_is_equal);
+LONE_LISP_PRIMITIVE(lone_apply);
 LONE_LISP_PRIMITIVE(lone_print);
 
 #endif /* LONE_LISP_MODULES_INTRINSIC_LONE_HEADER */

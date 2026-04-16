@@ -130,7 +130,7 @@ LONE_LISP_PRIMITIVE(vector_slice)
 
 LONE_LISP_PRIMITIVE(vector_each)
 {
-	struct lone_lisp_value arguments, vector, function, entry, expression;
+	struct lone_lisp_value arguments, vector, function, entry;
 	lone_lisp_integer i;
 
 	switch (step) {
@@ -155,10 +155,10 @@ LONE_LISP_PRIMITIVE(vector_each)
 	iteration:
 
 		entry = lone_lisp_vector_get_value_at(lone, vector, i);
-		expression = lone_lisp_list_build(lone, 2, &function, &entry);
 
-		machine->step = LONE_LISP_MACHINE_STEP_EXPRESSION_EVALUATION;
-		machine->expression = expression;
+		machine->applicable = function;
+		machine->list = lone_lisp_list_build(lone, 1, &entry);
+		machine->step = LONE_LISP_MACHINE_STEP_APPLY;
 
 		lone_lisp_machine_push_integer(lone, machine, i);
 		lone_lisp_machine_push_value(lone, machine, function);

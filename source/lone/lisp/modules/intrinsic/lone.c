@@ -76,6 +76,9 @@ void lone_lisp_modules_intrinsic_lone_initialize(struct lone_lisp *lone)
 	lone_lisp_module_export_primitive(lone, module, "signal",
 			"signal", lone_lisp_primitive_lone_signal, module, flags);
 
+	lone_lisp_module_export_primitive(lone, module, "apply",
+			"apply", lone_lisp_primitive_lone_apply, module, flags);
+
 	lone_lisp_module_export_primitive(lone, module, "print",
 			"print", lone_lisp_primitive_lone_print, module, flags);
 
@@ -142,7 +145,7 @@ LONE_LISP_PRIMITIVE(lone_begin)
 		/* more expressions follow: evaluate this one, continue with rest */
 		lone_lisp_machine_push_value(lone, machine, lone_lisp_list_rest(lone, expressions));
 		machine->expression = lone_lisp_list_first(lone, expressions);
-		machine->step = LONE_LISP_MACHINE_STEP_EXPRESSION_EVALUATION;
+		machine->step = LONE_LISP_MACHINE_STEP_EVALUATE;
 		return 1;
 
 	default:
@@ -167,7 +170,7 @@ LONE_LISP_PRIMITIVE(lone_when)
 
 		lone_lisp_machine_push_value(lone, machine, body);
 
-		machine->step = LONE_LISP_MACHINE_STEP_EXPRESSION_EVALUATION;
+		machine->step = LONE_LISP_MACHINE_STEP_EVALUATE;
 		machine->expression = condition;
 
 		return 1;
@@ -198,7 +201,7 @@ LONE_LISP_PRIMITIVE(lone_when)
 		/* more expressions follow: evaluate this one, continue with rest */
 		lone_lisp_machine_push_value(lone, machine, lone_lisp_list_rest(lone, body));
 		machine->expression = lone_lisp_list_first(lone, body);
-		machine->step = LONE_LISP_MACHINE_STEP_EXPRESSION_EVALUATION;
+		machine->step = LONE_LISP_MACHINE_STEP_EVALUATE;
 		return 2;
 
 	default:
@@ -223,7 +226,7 @@ LONE_LISP_PRIMITIVE(lone_unless)
 
 		lone_lisp_machine_push_value(lone, machine, body);
 
-		machine->step = LONE_LISP_MACHINE_STEP_EXPRESSION_EVALUATION;
+		machine->step = LONE_LISP_MACHINE_STEP_EVALUATE;
 		machine->expression = condition;
 		return 1;
 
@@ -253,7 +256,7 @@ LONE_LISP_PRIMITIVE(lone_unless)
 		/* more expressions follow: evaluate this one, continue with rest */
 		lone_lisp_machine_push_value(lone, machine, lone_lisp_list_rest(lone, body));
 		machine->expression = lone_lisp_list_first(lone, body);
-		machine->step = LONE_LISP_MACHINE_STEP_EXPRESSION_EVALUATION;
+		machine->step = LONE_LISP_MACHINE_STEP_EVALUATE;
 		return 2;
 
 	default:
@@ -293,7 +296,7 @@ LONE_LISP_PRIMITIVE(lone_if)
 		lone_lisp_machine_push_value(lone, machine, alternative);
 		lone_lisp_machine_push_value(lone, machine, consequent);
 
-		machine->step = LONE_LISP_MACHINE_STEP_EXPRESSION_EVALUATION;
+		machine->step = LONE_LISP_MACHINE_STEP_EVALUATE;
 		machine->expression = condition;
 		return 1;
 
@@ -354,7 +357,7 @@ LONE_LISP_PRIMITIVE(lone_let)
 			lone_lisp_machine_push_value(lone, machine, new_environment);
 			lone_lisp_machine_push_value(lone, machine, body);
 
-			machine->step = LONE_LISP_MACHINE_STEP_EXPRESSION_EVALUATION;
+			machine->step = LONE_LISP_MACHINE_STEP_EVALUATE;
 			machine->expression = second;
 			machine->environment = new_environment;
 			return 1;
@@ -399,7 +402,7 @@ LONE_LISP_PRIMITIVE(lone_let)
 		/* more expressions follow: evaluate this one, continue with rest */
 		lone_lisp_machine_push_value(lone, machine, lone_lisp_list_rest(lone, body));
 		machine->expression = lone_lisp_list_first(lone, body);
-		machine->step = LONE_LISP_MACHINE_STEP_EXPRESSION_EVALUATION;
+		machine->step = LONE_LISP_MACHINE_STEP_EVALUATE;
 		return 2;
 
 	default:
@@ -443,7 +446,7 @@ LONE_LISP_PRIMITIVE(lone_set)
 
 		lone_lisp_machine_push_value(lone, machine, variable);
 
-		machine->step = LONE_LISP_MACHINE_STEP_EXPRESSION_EVALUATION;
+		machine->step = LONE_LISP_MACHINE_STEP_EVALUATE;
 		machine->expression = value;
 		return 1;
 
@@ -531,7 +534,7 @@ LONE_LISP_PRIMITIVE(lone_quasiquote)
 					lone_lisp_machine_push_value(lone, machine, splicing);
 					lone_lisp_machine_push_value(lone, machine, current);
 
-					machine->step = LONE_LISP_MACHINE_STEP_EXPRESSION_EVALUATION;
+					machine->step = LONE_LISP_MACHINE_STEP_EVALUATE;
 					machine->expression = first;
 					return 1;
 
@@ -685,7 +688,7 @@ LONE_LISP_PRIMITIVE(lone_control)
 		lone_lisp_machine_push_value(lone, machine, handler);
 		lone_lisp_machine_push_continuation_delimiter(lone, machine);
 
-		machine->step = LONE_LISP_MACHINE_STEP_EXPRESSION_EVALUATION;
+		machine->step = LONE_LISP_MACHINE_STEP_EVALUATE;
 		machine->expression = body;
 		return 1;
 
@@ -759,7 +762,7 @@ LONE_LISP_PRIMITIVE(lone_transfer)
 
 		/* configure machine to evaluate handler function with value and continuation */
 		machine->expression = lone_lisp_list_build(lone, 3, &handler, &value, &continuation);
-		machine->step = LONE_LISP_MACHINE_STEP_EXPRESSION_EVALUATION;
+		machine->step = LONE_LISP_MACHINE_STEP_EVALUATE;
 
 		return 1;
 
@@ -891,14 +894,14 @@ LONE_LISP_PRIMITIVE(lone_intercept)
 			 * remain on the stack in case signal fires during
 			 * the evaluation of this last expression */
 			machine->expression = lone_lisp_list_first(lone, body);
-			machine->step = LONE_LISP_MACHINE_STEP_EXPRESSION_EVALUATION;
+			machine->step = LONE_LISP_MACHINE_STEP_EVALUATE;
 			return 2;
 		}
 
 		/* more expressions follow: evaluate this one, continue with rest */
 		lone_lisp_machine_push_value(lone, machine, lone_lisp_list_rest(lone, body));
 		machine->expression = lone_lisp_list_first(lone, body);
-		machine->step = LONE_LISP_MACHINE_STEP_EXPRESSION_EVALUATION;
+		machine->step = LONE_LISP_MACHINE_STEP_EVALUATE;
 		return 1;
 
 	case 2: /* last body expression evaluated, clean up and return */
@@ -1208,7 +1211,7 @@ LONE_LISP_PRIMITIVE(lone_signal)
 		/* request evaluation of matcher expression */
 		machine->environment = intercept_environment;
 		machine->expression = matcher_expression;
-		machine->step = LONE_LISP_MACHINE_STEP_EXPRESSION_EVALUATION;
+		machine->step = LONE_LISP_MACHINE_STEP_EVALUATE;
 		return 2;
 
 	case 2: /* matcher evaluated */
@@ -1248,7 +1251,7 @@ LONE_LISP_PRIMITIVE(lone_signal)
 				&quoted_tag
 			);
 
-			machine->step = LONE_LISP_MACHINE_STEP_EXPRESSION_EVALUATION;
+			machine->step = LONE_LISP_MACHINE_STEP_EVALUATE;
 			return 3;
 		}
 
@@ -1284,7 +1287,7 @@ LONE_LISP_PRIMITIVE(lone_signal)
 
 		machine->environment = intercept_environment;
 		machine->expression = handler_expression;
-		machine->step = LONE_LISP_MACHINE_STEP_EXPRESSION_EVALUATION;
+		machine->step = LONE_LISP_MACHINE_STEP_EVALUATE;
 		return 4;
 
 	case 3: /* predicate evaluated */
@@ -1399,7 +1402,7 @@ LONE_LISP_PRIMITIVE(lone_signal)
 					&quoted_value
 				);
 		}
-		machine->step = LONE_LISP_MACHINE_STEP_EXPRESSION_EVALUATION;
+		machine->step = LONE_LISP_MACHINE_STEP_EVALUATE;
 		return 5;
 
 	case 5: /* handler has returned */
@@ -1526,6 +1529,30 @@ LONE_LISP_PRIMITIVE(lone_is_equal)
 			lone_lisp_apply_comparator(lone,
 				lone_lisp_machine_pop_value(lone, machine), lone_lisp_is_equal));
 	return 0;
+}
+
+LONE_LISP_PRIMITIVE(lone_apply)
+{
+	struct lone_lisp_value arguments, function, list;
+
+	arguments = lone_lisp_machine_pop_value(lone, machine);
+
+	if (lone_lisp_list_destructure(lone, arguments, 2, &function, &list)) {
+		/* wrong number of arguments */ linux_exit(-1);
+	}
+
+	if (!lone_lisp_is_applicable(lone, function)) {
+		/* not given an applicable value */ linux_exit(-1);
+	}
+
+	if (!lone_lisp_is_list(lone, list) && !lone_lisp_is_nil(list)) {
+		/* second argument must be a list */ linux_exit(-1);
+	}
+
+	machine->applicable = function;
+	machine->list = list;
+
+	return -2;
 }
 
 LONE_LISP_PRIMITIVE(lone_print)

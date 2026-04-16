@@ -90,7 +90,7 @@ LONE_LISP_PRIMITIVE(table_delete)
 
 LONE_LISP_PRIMITIVE(table_each)
 {
-	struct lone_lisp_value arguments, table, function, expression;
+	struct lone_lisp_value arguments, table, function;
 	struct lone_lisp_table_entry *entry;
 	lone_lisp_integer i;
 
@@ -117,10 +117,10 @@ LONE_LISP_PRIMITIVE(table_each)
 	iteration:
 
 		entry = &lone_lisp_heap_value_of(lone, table)->as.table.entries[i];
-		expression = lone_lisp_list_build(lone, 3, &function, &entry->key, &entry->value);
 
-		machine->step = LONE_LISP_MACHINE_STEP_EXPRESSION_EVALUATION;
-		machine->expression = expression;
+		machine->applicable = function;
+		machine->list = lone_lisp_list_build(lone, 2, &entry->key, &entry->value);
+		machine->step = LONE_LISP_MACHINE_STEP_APPLY;
 
 		lone_lisp_machine_push_integer(lone, machine, i);
 		lone_lisp_machine_push_value(lone, machine, function);
