@@ -1,0 +1,12 @@
+(import (lone print set lambda if return let) (math - <= +))
+
+; Return from inside let in tail position during deep recursion.
+; Regression: return must correctly unwind past TCO let frames.
+
+(set accumulate (lambda (n acc)
+  (if (<= n 0)
+    (return acc)
+    (let (next (+ acc n))
+      (accumulate (- n 1) next)))))
+
+(print (accumulate 100000 0))

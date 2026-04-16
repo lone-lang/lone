@@ -1,0 +1,31 @@
+(import (lone set print lambda quote) (table get) (math + *))
+
+; Stress GC with closures, tables, and vectors simultaneously.
+; Regression: GC stack scanner must mark all root types correctly.
+
+(set make-adder (lambda (n) (lambda (x) (+ x n))))
+(set add5 (make-adder 5))
+(set add10 (make-adder 10))
+
+; Allocate and discard mixed types to trigger GC
+{a 1 b 2 c 3}
+{d 4 e 5 f 6}
+[1 2 3 4 5]
+[6 7 8 9 10]
+{g 7 h 8 i 9}
+[11 12 13 14 15]
+
+; Verify closures survived
+(print (add5 100))
+(print (add10 100))
+
+; More allocation pressure
+{j 10 k 11 l 12}
+{m 13 n 14 o 15}
+[16 17 18 19 20]
+[21 22 23 24 25]
+
+; Verify table + closure interaction after pressure
+(set t {x 42 y 99})
+(print (get t (quote x)))
+(print (add5 (get t (quote y))))

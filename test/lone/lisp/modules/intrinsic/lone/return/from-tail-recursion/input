@@ -1,0 +1,15 @@
+(import (lone print set lambda if return equal?) (math - <=))
+
+; Early return from deeply tail-recursive search.
+; Regression: return must find the correct lambda delimiter
+; even when TCO has replaced the original stack frame.
+
+(set search (lambda (n)
+  (if (<= n 0)
+    (return -1)
+    (if (equal? n 42)
+      (return n)
+      (search (- n 1))))))
+
+(print (search 100))
+(print (search 10))

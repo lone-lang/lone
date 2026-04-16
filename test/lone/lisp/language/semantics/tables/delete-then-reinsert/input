@@ -1,0 +1,24 @@
+(import (lone set print quote) prefixed (table set get delete count))
+
+; Delete entries, verify count, re-insert at same key.
+; Regression: deletion must not leave ghost entries.
+
+(set t { a 1 b 2 c 3 d 4 e 5 })
+(print (table.count t))
+
+(table.delete t 'c)
+(print (table.count t))
+(print (table.get t 'c))
+
+; Re-insert at the deleted key
+(table.set t 'c 30)
+(print (table.count t))
+(print (table.get t 'c))
+
+; Delete all but one
+(table.delete t 'a)
+(table.delete t 'b)
+(table.delete t 'd)
+(table.delete t 'e)
+(print (table.count t))
+(print (table.get t 'c))

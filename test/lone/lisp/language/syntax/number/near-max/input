@@ -1,0 +1,9 @@
+(import (lone print) (math + -))
+
+; Numbers near the 56-bit signed integer boundary.
+; Max: 2^55 - 1 = 36028797018963967.
+; Regression: parser must handle large numbers without overflow.
+
+(print 36028797018963966)
+(print (- 36028797018963967 1))
+(print (+ 18014398509481983 18014398509481983))

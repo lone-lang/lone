@@ -1,0 +1,31 @@
+(import (lone set print quote) prefixed (table set get count))
+
+; Insert 16 entries into an empty table.
+; Forces at least one internal resize.
+; Regression: entries must survive rehashing.
+
+(set t {})
+
+(table.set t (quote a) 1)
+(table.set t (quote b) 2)
+(table.set t (quote c) 3)
+(table.set t (quote d) 4)
+(table.set t (quote e) 5)
+(table.set t (quote f) 6)
+(table.set t (quote g) 7)
+(table.set t (quote h) 8)
+(table.set t (quote i) 9)
+(table.set t (quote j) 10)
+(table.set t (quote k) 11)
+(table.set t (quote l) 12)
+(table.set t (quote m) 13)
+(table.set t (quote n) 14)
+(table.set t (quote o) 15)
+(table.set t (quote p) 16)
+
+(print (table.count t))
+
+; Verify first, middle, and last entries
+(print (table.get t (quote a)))
+(print (table.get t (quote h)))
+(print (table.get t (quote p)))

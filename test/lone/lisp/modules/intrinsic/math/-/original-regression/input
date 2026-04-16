@@ -1,0 +1,8 @@
+(import (lone print) (math -))
+
+; Original regression: (- 100 58) must equal 42.
+; Bug: accumulator started at 0, giving 0 - 100 - 58 = -158.
+
+(print (- 100 58))
+(print (- 1000 1))
+(print (- 50 25 10))

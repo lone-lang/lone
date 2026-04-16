@@ -1,0 +1,8 @@
+(import (lone print) (math +))
+
+; Numbers near the 56-bit signed integer minimum.
+; Min: -2^55 = -36028797018963968.
+; Regression: parser and arithmetic with large negative numbers.
+
+(print -36028797018963967)
+(print (+ -36028797018963967 0))

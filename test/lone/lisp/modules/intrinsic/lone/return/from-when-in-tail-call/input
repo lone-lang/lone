@@ -1,0 +1,10 @@
+(import (lone print set lambda when return) (math - <= +))
+
+; Return from when in tail position during deep recursion.
+; Regression: return must correctly unwind past TCO frames.
+
+(set f (lambda (n acc)
+  (when (<= n 0) (return acc))
+  (f (- n 1) (+ acc 1))))
+
+(print (f 100000 0))
