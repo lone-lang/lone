@@ -100,7 +100,7 @@ LONE_LISP_PRIMITIVE(list_flatten)
 
 LONE_LISP_PRIMITIVE(list_map)
 {
-	struct lone_lisp_value arguments, function, list, entry, expression;
+	struct lone_lisp_value arguments, function, list, entry;
 	lone_lisp_integer count, i;
 
 	switch (step) {
@@ -127,10 +127,10 @@ LONE_LISP_PRIMITIVE(list_map)
 	application: /* apply value to function */
 
 		entry = lone_lisp_list_first(lone, list);
-		expression = lone_lisp_list_build(lone, 2, &function, &entry);
 
-		machine->step = LONE_LISP_MACHINE_STEP_EXPRESSION_EVALUATION;
-		machine->expression = expression;
+		machine->applicable = function;
+		machine->list = lone_lisp_list_build(lone, 1, &entry);
+		machine->step = LONE_LISP_MACHINE_STEP_APPLY;
 
 		lone_lisp_machine_push_value(lone, machine, function);
 		lone_lisp_machine_push_value(lone, machine, list);
@@ -197,8 +197,9 @@ LONE_LISP_PRIMITIVE(list_reduce)
 
 		entry = lone_lisp_list_first(lone, list);
 
-		machine->step = LONE_LISP_MACHINE_STEP_EXPRESSION_EVALUATION;
-		machine->expression = lone_lisp_list_build(lone, 3, &function, &accumulator, &entry);
+		machine->applicable = function;
+		machine->list = lone_lisp_list_build(lone, 2, &accumulator, &entry);
+		machine->step = LONE_LISP_MACHINE_STEP_APPLY;
 
 		lone_lisp_machine_push_value(lone, machine, function);
 		lone_lisp_machine_push_value(lone, machine, list);
