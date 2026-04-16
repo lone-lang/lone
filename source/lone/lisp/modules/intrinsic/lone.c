@@ -76,6 +76,9 @@ void lone_lisp_modules_intrinsic_lone_initialize(struct lone_lisp *lone)
 	lone_lisp_module_export_primitive(lone, module, "signal",
 			"signal", lone_lisp_primitive_lone_signal, module, flags);
 
+	lone_lisp_module_export_primitive(lone, module, "apply",
+			"apply", lone_lisp_primitive_lone_apply, module, flags);
+
 	lone_lisp_module_export_primitive(lone, module, "print",
 			"print", lone_lisp_primitive_lone_print, module, flags);
 
@@ -1526,6 +1529,30 @@ LONE_LISP_PRIMITIVE(lone_is_equal)
 			lone_lisp_apply_comparator(lone,
 				lone_lisp_machine_pop_value(lone, machine), lone_lisp_is_equal));
 	return 0;
+}
+
+LONE_LISP_PRIMITIVE(lone_apply)
+{
+	struct lone_lisp_value arguments, function, list;
+
+	arguments = lone_lisp_machine_pop_value(lone, machine);
+
+	if (lone_lisp_list_destructure(lone, arguments, 2, &function, &list)) {
+		/* wrong number of arguments */ linux_exit(-1);
+	}
+
+	if (!lone_lisp_is_applicable(lone, function)) {
+		/* not given an applicable value */ linux_exit(-1);
+	}
+
+	if (!lone_lisp_is_list(lone, list) && !lone_lisp_is_nil(list)) {
+		/* second argument must be a list */ linux_exit(-1);
+	}
+
+	machine->applicable = function;
+	machine->list = list;
+
+	return -2;
 }
 
 LONE_LISP_PRIMITIVE(lone_print)
