@@ -117,6 +117,12 @@ void lone_lisp_modules_intrinsic_lone_initialize(struct lone_lisp *lone)
 
 	lone_lisp_module_export_primitive(lone, module, "equal?",
 			"is_equal", lone_lisp_primitive_lone_is_equal, module, flags);
+
+	lone_lisp_module_export_primitive(lone, module, "freeze",
+			"freeze", lone_lisp_primitive_lone_freeze, module, flags);
+
+	lone_lisp_module_export_primitive(lone, module, "frozen?",
+			"is_frozen", lone_lisp_primitive_lone_is_frozen, module, flags);
 }
 
 
@@ -1528,6 +1534,41 @@ LONE_LISP_PRIMITIVE(lone_is_equal)
 	lone_lisp_machine_push_value(lone, machine,
 			lone_lisp_apply_comparator(lone,
 				lone_lisp_machine_pop_value(lone, machine), lone_lisp_is_equal));
+	return 0;
+}
+
+LONE_LISP_PRIMITIVE(lone_freeze)
+{
+	struct lone_lisp_value arguments, value;
+	struct lone_lisp_heap_value *heap_value;
+
+	arguments = lone_lisp_machine_pop_value(lone, machine);
+
+	if (lone_lisp_list_destructure(lone, arguments, 1, &value)) {
+		/* wrong number of arguments */ linux_exit(-1);
+	}
+
+	if (lone_lisp_is_inline_bytes(value)) {
+		/* inline bytes are implicitly frozen, nothing to do */
+		lone_lisp_machine_push_value(lone, machine, value);
+		return 0;
+	}
+
+	if (lone_lisp_type_of(value) == LONE_LISP_TAG_BYTES) {
+		heap_value = lone_lisp_heap_value_of(lone, value);
+		heap_value->frozen = true;
+		lone_lisp_machine_push_value(lone, machine, value);
+		return 0;
+	}
+
+	/* not a freezable type */ linux_exit(-1);
+}
+
+LONE_LISP_PRIMITIVE(lone_is_frozen)
+{
+	lone_lisp_machine_push_value(lone, machine,
+			lone_lisp_apply_predicate(lone,
+				lone_lisp_machine_pop_value(lone, machine), lone_lisp_is_frozen));
 	return 0;
 }
 
