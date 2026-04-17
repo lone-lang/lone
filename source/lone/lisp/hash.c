@@ -48,7 +48,12 @@ static size_t lone_lisp_hash_value_recursively(struct lone_lisp *lone,
 		bytes.count = sizeof(symbol_hash);
 		break;
 	case LONE_LISP_TAG_TEXT:
+		bytes = lone_lisp_bytes_of(lone, &value);
+		break;
 	case LONE_LISP_TAG_BYTES:
+		if (!lone_lisp_is_frozen(lone, value)) {
+			/* mutable bytes cannot be hashed safely */ linux_exit(-1);
+		}
 		bytes = lone_lisp_bytes_of(lone, &value);
 		break;
 	case LONE_LISP_TAG_MODULE:
