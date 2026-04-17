@@ -288,6 +288,7 @@ struct lone_lisp_table {
 struct lone_lisp_heap_value {
 	struct {
 		bool should_deallocate_bytes: 1;
+		bool frozen: 1;
 	};
 
 	enum lone_lisp_tag type; /* tag byte, set at allocation for GC sweep */
@@ -387,6 +388,7 @@ bool lone_lisp_has_same_type(struct lone_lisp *lone, struct lone_lisp_value x, s
 bool lone_lisp_is_identical(struct lone_lisp *lone, struct lone_lisp_value x, struct lone_lisp_value y);
 bool lone_lisp_is_equivalent(struct lone_lisp *lone, struct lone_lisp_value x, struct lone_lisp_value y);
 bool lone_lisp_is_equal(struct lone_lisp *lone, struct lone_lisp_value x, struct lone_lisp_value y);
+bool lone_lisp_is_frozen(struct lone_lisp *lone, struct lone_lisp_value value);
 
 /* ╭────────────────────────────────────────────────────────────────────────╮
    │                                                                        │

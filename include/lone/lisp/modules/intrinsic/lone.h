@@ -43,6 +43,8 @@ LONE_LISP_PRIMITIVE(lone_is_integer);
 LONE_LISP_PRIMITIVE(lone_is_identical);
 LONE_LISP_PRIMITIVE(lone_is_equivalent);
 LONE_LISP_PRIMITIVE(lone_is_equal);
+LONE_LISP_PRIMITIVE(lone_freeze);
+LONE_LISP_PRIMITIVE(lone_is_frozen);
 LONE_LISP_PRIMITIVE(lone_apply);
 LONE_LISP_PRIMITIVE(lone_print);
 

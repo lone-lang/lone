@@ -1,0 +1,4 @@
+(import (lone freeze frozen? print set) (bytes new))
+(set b (new 4))
+(freeze b)
+(print (frozen? b))

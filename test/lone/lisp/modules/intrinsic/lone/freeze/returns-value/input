@@ -1,0 +1,3 @@
+(import (lone freeze identical? print set) (bytes new))
+(set b (new 4))
+(print (identical? b (freeze b)))

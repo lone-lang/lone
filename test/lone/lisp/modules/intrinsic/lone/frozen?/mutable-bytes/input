@@ -1,0 +1,2 @@
+(import (lone frozen? print) (bytes new))
+(print (frozen? (new 4)))

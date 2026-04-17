@@ -151,6 +151,10 @@ static void lone_lisp_bytes_check_write_arguments(struct lone_lisp *lone,
 	if (!lone_lisp_is_integer(lone, value)) {
 		/* invalid value: (writer bytes 0 "invalid"), (writer bytes 0 []) */ linux_exit(-1);
 	}
+
+	if (lone_lisp_is_frozen(lone, bytes)) {
+		/* writes to frozen bytes are forbidden */ linux_exit(-1);
+	}
 }
 
 #define LONE_LISP_BYTES_READER_PRIMITIVE(sign, bits, endian) \
