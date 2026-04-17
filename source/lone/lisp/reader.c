@@ -418,6 +418,42 @@ error:
 	return lone_lisp_nil();
 }
 
+static struct lone_lisp_value lone_lisp_reader_consume_byte_literal(struct lone_lisp *lone, struct lone_lisp_reader *reader)
+{
+	unsigned char *current;
+	struct lone_bytes content;
+	struct lone_lisp_value value;
+
+	current = lone_lisp_reader_peek(lone, reader);
+	if (!current || *current != '"') { goto error; }
+
+	/* skip leading " */
+	lone_lisp_reader_consume(reader);
+
+	content = lone_lisp_reader_consume_escaped_content(lone, reader);
+	if (!content.pointer) { goto error; }
+
+	/* byte literal must be followed by a delimiter, space, comment or the end of input */
+	current = lone_lisp_reader_peek(lone, reader);
+	if (current && !lone_lisp_reader_is_token_separator(*current)) { goto deallocate_and_error; }
+
+	if (content.count <= LONE_LISP_INLINE_MAX_LENGTH) {
+		value = lone_lisp_inline_bytes_create(content.pointer, content.count);
+		lone_memory_deallocate(lone->system, content.pointer, content.count + 1, 1, 1);
+		return value;
+	}
+
+	value = lone_lisp_bytes_transfer(lone, content.pointer, content.count, true);
+	lone_lisp_heap_value_of(lone, value)->frozen = true;
+	return value;
+
+deallocate_and_error:
+	lone_memory_deallocate(lone->system, content.pointer, content.count + 1, 1, 1);
+error:
+	reader->status.error = true;
+	return lone_lisp_nil();
+}
+
 /* ╭────────────────────────────────────────────────────────────────────────╮
    │                                                                        │
    │    Analyzes a single character token,                                  │
@@ -518,6 +554,14 @@ static struct lone_lisp_value lone_lisp_lex(struct lone_lisp *lone, struct lone_
 				}
 				found = false;
 				continue;
+			case 'b':
+				if ((c1 = lone_lisp_reader_peek_k(lone, reader, 1)) && *c1 == '"') {
+					lone_lisp_reader_consume(reader); /* consume 'b' */
+					token = lone_lisp_reader_consume_byte_literal(lone, reader);
+				} else {
+					token = lone_lisp_reader_consume_symbol(lone, reader);
+				}
+				break;
 			default:
 				token = lone_lisp_reader_consume_symbol(lone, reader);
 				break;
