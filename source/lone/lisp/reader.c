@@ -274,16 +274,22 @@ error:
    │    ("(\\[\\\"nt0]|[^"\\])*")[)}\]; \t\n]                               │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
-static struct lone_lisp_value lone_lisp_reader_consume_text(struct lone_lisp *lone, struct lone_lisp_reader *reader)
+
+/* Consume escaped content terminated by a double quote.
+ * Caller must have already consumed the opening ".
+ * On success, the trailing " is consumed and the result
+ * is returned in a bytes structure. The result is dynamically
+ * allocated and the caller takes ownership of it.
+ * On failure, returns null bytes and sets reader->status.error.
+ * NUL terminator is added for C string compatibility.
+ * The NUL terminator is also required for the transfer functions.
+ */
+static struct lone_bytes lone_lisp_reader_consume_escaped_content(
+		struct lone_lisp *lone, struct lone_lisp_reader *reader)
 {
 	unsigned char *current, *output, character;
-	size_t input_length, output_length, escapes;
-
-	current = lone_lisp_reader_peek(lone, reader);
-	if (!current || *current != '"') { goto error; }
-
-	/* skip leading " */
-	lone_lisp_reader_consume(reader);
+	size_t input_length, output_length, escapes, buffer_size;
+	struct lone_bytes result = { .pointer = 0, .count = 0 };
 
 	/* determine input size before allocating buffer */
 	input_length = 0;
@@ -306,7 +312,8 @@ static struct lone_lisp_value lone_lisp_reader_consume_text(struct lone_lisp *lo
 
 	/* escape sequences squeeze two characters into one
 	 * also don't forget the hidden null terminator */
-	output = lone_memory_allocate(lone->system, input_length - escapes + 1, 1, 1, LONE_MEMORY_ALLOCATION_FLAGS_NONE);
+	buffer_size = input_length - escapes + 1;
+	output = lone_memory_allocate(lone->system, buffer_size, 1, 1, LONE_MEMORY_ALLOCATION_FLAGS_NONE);
 	output_length = 0;
 
 	/* consume input and process escape sequences */
@@ -335,17 +342,42 @@ static struct lone_lisp_value lone_lisp_reader_consume_text(struct lone_lisp *lo
 	/* null terminate for C string compatibility */
 	output[output_length] = '\0';
 
-	/* skip trailing " */
+	/* consume trailing " */
 	lone_lisp_reader_consume(reader);
+
+	result.pointer = output;
+	result.count = output_length;
+	return result;
+
+deallocate_and_error:
+	lone_memory_deallocate(lone->system, output, buffer_size, 1, 1);
+error:
+	reader->status.error = true;
+	return result;
+}
+
+static struct lone_lisp_value lone_lisp_reader_consume_text(struct lone_lisp *lone, struct lone_lisp_reader *reader)
+{
+	unsigned char *current;
+	struct lone_bytes content;
+
+	current = lone_lisp_reader_peek(lone, reader);
+	if (!current || *current != '"') { goto error; }
+
+	/* skip leading " */
+	lone_lisp_reader_consume(reader);
+
+	content = lone_lisp_reader_consume_escaped_content(lone, reader);
+	if (!content.pointer) { goto error; }
 
 	/* text must be followed by a delimiter, space, comment or the end of input */
 	current = lone_lisp_reader_peek(lone, reader);
 	if (current && !lone_lisp_reader_is_token_separator(*current)) { goto deallocate_and_error; }
 
-	return lone_lisp_text_transfer(lone, output, output_length, true);
+	return lone_lisp_text_transfer(lone, content.pointer, content.count, true);
 
 deallocate_and_error:
-	lone_memory_deallocate(lone->system, output, input_length - escapes + 1, 1, 1);
+	lone_memory_deallocate(lone->system, content.pointer, content.count + 1, 1, 1);
 error:
 	reader->status.error = true;
 	return lone_lisp_nil();
