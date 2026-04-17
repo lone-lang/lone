@@ -143,6 +143,14 @@ static inline bool lone_lisp_reader_is_digit(unsigned char character)
 	return character >= '0' && character <= '9';
 }
 
+static inline bool lone_lisp_reader_hex_digit_value(unsigned char character, unsigned char *value)
+{
+	if (character >= '0' && character <= '9') { *value = character - '0';      return true; }
+	if (character >= 'a' && character <= 'f') { *value = character - 'a' + 10; return true; }
+	if (character >= 'A' && character <= 'F') { *value = character - 'A' + 10; return true; }
+	return false;
+}
+
 static inline bool lone_lisp_reader_is_opening_bracket(unsigned char character)
 {
 	switch (character) {
@@ -299,12 +307,22 @@ static struct lone_bytes lone_lisp_reader_consume_escaped_content(
 
 		++input_length;
 		if (*current == '\\') {
-			/* skip past escaped character */
-			if (!lone_lisp_reader_peek_k(lone, reader, input_length)) {
+			unsigned char *next;
+			if (!(next = lone_lisp_reader_peek_k(lone, reader, input_length))) {
 				/* backslash before end of input */ goto error;
 			}
 			++input_length;
 			++escapes;
+
+			if (*next == 'x') {
+				/* \xNN consumes two additional hex digits */
+				if (!lone_lisp_reader_peek_k(lone, reader, input_length) ||
+				    !lone_lisp_reader_peek_k(lone, reader, input_length + 1)) {
+					goto error;
+				}
+				input_length += 2;
+				escapes += 2;
+			}
 		}
 	}
 
@@ -329,6 +347,23 @@ static struct lone_bytes lone_lisp_reader_consume_escaped_content(
 			case 'n':  character = '\n'; break;
 			case 't':  character = '\t'; break;
 			case '0':  character = '\0'; break;
+			case 'x': {
+				unsigned char hi, lo;
+				/* consume 'x', peek high nibble */
+				lone_lisp_reader_consume(reader);
+				current = lone_lisp_reader_peek(lone, reader);
+				if (!current || !lone_lisp_reader_hex_digit_value(*current, &hi)) {
+					goto deallocate_and_error;
+				}
+				/* consume high nibble, peek low nibble */
+				lone_lisp_reader_consume(reader);
+				current = lone_lisp_reader_peek(lone, reader);
+				if (!current || !lone_lisp_reader_hex_digit_value(*current, &lo)) {
+					goto deallocate_and_error;
+				}
+				character = (hi << 4) | lo;
+				break;
+			}
 			default:   goto deallocate_and_error; /* unknown escape sequence */
 			}
 		} else {

@@ -161,9 +161,12 @@ static void lone_lisp_print_function(struct lone_lisp *lone, struct lone_lisp_va
 
 static void lone_lisp_print_text(struct lone_lisp *lone, struct lone_lisp_value value, int fd)
 {
+	static const char hex[] = "0123456789abcdef";
 	struct lone_bytes text;
 	unsigned char *byte;
-	size_t i, run_start;
+	unsigned char hex_buffer[4];
+	char *escape;
+	size_t i, run_start, escape_length;
 
 	text = lone_lisp_bytes_of(lone, &value);
 
@@ -172,25 +175,39 @@ static void lone_lisp_print_text(struct lone_lisp *lone, struct lone_lisp_value 
 	run_start = 0;
 
 	for (i = 0; i < text.count; ++i) {
-		char *escape;
-
 		byte = &text.pointer[i];
 
+		#define ESCAPE(character, escaped) \
+			case character: \
+			escape = escaped; \
+			escape_length = sizeof(escaped) - 1; \
+			break
+
 		switch (*byte) {
-		case '\\': escape = "\\\\"; break;
-		case '"':  escape = "\\\""; break;
-		case '\n': escape = "\\n";  break;
-		case '\t': escape = "\\t";  break;
-		case '\0': escape = "\\0";  break;
-		default:   continue;
+		ESCAPE('\\', "\\\\");
+		ESCAPE('"',  "\\\"");
+		ESCAPE('\n', "\\n");
+		ESCAPE('\t', "\\t");
+		ESCAPE('\0', "\\0");
+		default:
+			if (*byte >= 0x20 && *byte <= 0x7E) { continue; }
+			hex_buffer[0] = '\\';
+			hex_buffer[1] = 'x';
+			hex_buffer[2] = hex[(*byte >> 4) & 0xF];
+			hex_buffer[3] = hex[*byte & 0xF];
+			escape = (char *) hex_buffer;
+			escape_length = 4;
+			break;
 		}
+
+		#undef ESCAPE
 
 		/* flush preceding unescaped run */
 		if (i > run_start) {
 			linux_write(fd, text.pointer + run_start, i - run_start);
 		}
 
-		linux_write(fd, escape, 2);
+		linux_write(fd, escape, escape_length);
 		run_start = i + 1;
 	}
 
