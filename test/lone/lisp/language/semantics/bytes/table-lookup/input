@@ -1,0 +1,11 @@
+(import (lone freeze print set) (bytes new write-u8) prefixed (table set get))
+
+(set b (new 3))
+(write-u8 b 0 97)
+(write-u8 b 1 98)
+(write-u8 b 2 99)
+(freeze b)
+
+(set t {})
+(table.set t b 42)
+(print (table.get t b"abc"))
