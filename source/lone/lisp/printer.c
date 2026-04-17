@@ -40,42 +40,66 @@ static void lone_lisp_print_integer(int fd, long n)
 	linux_write(fd, digit, count);
 }
 
+static void lone_lisp_print_escaped_content(struct lone_bytes content, int fd)
+{
+	static const char hex[] = "0123456789abcdef";
+	unsigned char *byte;
+	unsigned char hex_buffer[4];
+	char *escape;
+	size_t i, run_start, escape_length;
+
+	run_start = 0;
+
+	for (i = 0; i < content.count; ++i) {
+		byte = &content.pointer[i];
+
+		#define ESCAPE(character, escaped) \
+			case character: \
+			escape = escaped; \
+			escape_length = sizeof(escaped) - 1; \
+			break
+
+		switch (*byte) {
+		ESCAPE('\\', "\\\\");
+		ESCAPE('"',  "\\\"");
+		ESCAPE('\n', "\\n");
+		ESCAPE('\t', "\\t");
+		ESCAPE('\0', "\\0");
+		default:
+			if (*byte >= 0x20 && *byte <= 0x7E) { continue; }
+			hex_buffer[0] = '\\';
+			hex_buffer[1] = 'x';
+			hex_buffer[2] = hex[(*byte >> 4) & 0xF];
+			hex_buffer[3] = hex[*byte & 0xF];
+			escape = (char *) hex_buffer;
+			escape_length = 4;
+			break;
+		}
+
+		#undef ESCAPE
+
+		if (i > run_start) {
+			linux_write(fd, content.pointer + run_start, i - run_start);
+		}
+
+		linux_write(fd, escape, escape_length);
+		run_start = i + 1;
+	}
+
+	if (content.count > run_start) {
+		linux_write(fd, content.pointer + run_start, content.count - run_start);
+	}
+}
+
 static void lone_lisp_print_bytes(struct lone_lisp *lone, struct lone_lisp_value bytes, int fd)
 {
-	static unsigned char hexadecimal[] = "0123456789ABCDEF";
-	unsigned char *text, *byte, low, high;
-	size_t size, count, i;
 	struct lone_bytes content;
 
 	content = lone_lisp_bytes_of(lone, &bytes);
-	count = content.count;
 
-	if (count == 0) { linux_write(fd, "bytes[]", 7); return; }
-
-	if (__builtin_mul_overflow(count, 2, &size)) { goto overflow; }
-	if (__builtin_add_overflow(size, 2, &size)) { goto overflow; } /* "0x" prefix */
-	text = lone_memory_allocate(lone->system, size, 1, 1, LONE_MEMORY_ALLOCATION_FLAGS_NONE);
-	byte = content.pointer;
-
-	text[0] = '0';
-	text[1] = 'x';
-
-	for (i = 0; i < count; ++i) {
-		low  = (byte[i] & 0x0F) >> 0;
-		high = (byte[i] & 0xF0) >> 4;
-		text[2 + (2 * i + 0)] = hexadecimal[high];
-		text[2 + (2 * i + 1)] = hexadecimal[low];
-	}
-
-	linux_write(fd, "bytes[", 6);
-	linux_write(fd, text, size);
-	linux_write(fd, "]", 1);
-
-	lone_memory_deallocate(lone->system, text, size, 1, 1);
-	return;
-
-overflow:
-	linux_exit(-1);
+	linux_write(fd, "b\"", 2);
+	lone_lisp_print_escaped_content(content, fd);
+	linux_write(fd, "\"", 1);
 }
 
 static void lone_lisp_print_list(struct lone_lisp *lone, struct lone_lisp_value list, int fd)
@@ -162,43 +186,11 @@ static void lone_lisp_print_function(struct lone_lisp *lone, struct lone_lisp_va
 static void lone_lisp_print_text(struct lone_lisp *lone, struct lone_lisp_value value, int fd)
 {
 	struct lone_bytes text;
-	unsigned char *byte;
-	size_t i, run_start;
 
 	text = lone_lisp_bytes_of(lone, &value);
 
 	linux_write(fd, "\"", 1);
-
-	run_start = 0;
-
-	for (i = 0; i < text.count; ++i) {
-		char *escape;
-
-		byte = &text.pointer[i];
-
-		switch (*byte) {
-		case '\\': escape = "\\\\"; break;
-		case '"':  escape = "\\\""; break;
-		case '\n': escape = "\\n";  break;
-		case '\t': escape = "\\t";  break;
-		case '\0': escape = "\\0";  break;
-		default:   continue;
-		}
-
-		/* flush preceding unescaped run */
-		if (i > run_start) {
-			linux_write(fd, text.pointer + run_start, i - run_start);
-		}
-
-		linux_write(fd, escape, 2);
-		run_start = i + 1;
-	}
-
-	/* flush remaining unescaped run */
-	if (text.count > run_start) {
-		linux_write(fd, text.pointer + run_start, text.count - run_start);
-	}
-
+	lone_lisp_print_escaped_content(text, fd);
 	linux_write(fd, "\"", 1);
 }
 

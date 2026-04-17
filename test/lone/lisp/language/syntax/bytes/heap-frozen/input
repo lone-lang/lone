@@ -1,0 +1,2 @@
+(import (lone frozen? print))
+(print (frozen? b"abcdefgh"))

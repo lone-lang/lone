@@ -1,0 +1,3 @@
+(import (lone print))
+(print b"\n\t\"\\")
+(print b"\x01\x02\xff")

@@ -1,0 +1,8 @@
+(import (lone print set equivalent? freeze) (bytes new write-u8))
+
+(set b (new 3))
+(write-u8 b 0 97)
+(write-u8 b 1 98)
+(write-u8 b 2 99)
+(freeze b)
+(print (equivalent? b b"abc"))

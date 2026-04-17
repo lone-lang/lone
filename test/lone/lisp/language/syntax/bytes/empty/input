@@ -1,0 +1,2 @@
+(import (lone print))
+(print b"")
