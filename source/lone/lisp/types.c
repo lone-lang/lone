@@ -250,6 +250,20 @@ bool lone_lisp_is_identical(struct lone_lisp *lone, struct lone_lisp_value x, st
 	return x.tagged == y.tagged;
 }
 
+bool lone_lisp_is_frozen(struct lone_lisp *lone, struct lone_lisp_value value)
+{
+	if (lone_lisp_is_inline_bytes(value)) { return true; }
+
+	if (lone_lisp_type_of(value) == LONE_LISP_TAG_BYTES) {
+		return lone_lisp_heap_value_of(lone, value)->frozen;
+	}
+
+	if (lone_lisp_is_vector(lone, value)) { return false; }
+	if (lone_lisp_is_table(lone, value))  { return false; }
+
+	return true;
+}
+
 struct lone_bytes lone_lisp_bytes_of(struct lone_lisp *lone, struct lone_lisp_value *value)
 {
 	struct lone_lisp_heap_value *heap_value;

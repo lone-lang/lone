@@ -388,6 +388,7 @@ bool lone_lisp_has_same_type(struct lone_lisp *lone, struct lone_lisp_value x, s
 bool lone_lisp_is_identical(struct lone_lisp *lone, struct lone_lisp_value x, struct lone_lisp_value y);
 bool lone_lisp_is_equivalent(struct lone_lisp *lone, struct lone_lisp_value x, struct lone_lisp_value y);
 bool lone_lisp_is_equal(struct lone_lisp *lone, struct lone_lisp_value x, struct lone_lisp_value y);
+bool lone_lisp_is_frozen(struct lone_lisp *lone, struct lone_lisp_value value);
 
 /* ╭────────────────────────────────────────────────────────────────────────╮
    │                                                                        │
