@@ -1,0 +1,2 @@
+(import (lone frozen? print quote))
+(print (frozen? '(1 2 3)))

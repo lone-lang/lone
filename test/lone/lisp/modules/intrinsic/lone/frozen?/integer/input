@@ -1,0 +1,2 @@
+(import (lone frozen? print))
+(print (frozen? 42))
