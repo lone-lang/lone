@@ -104,18 +104,25 @@ else
   flags.lto :=
 endif
 
+ifdef STACK_PROTECTOR
+  flags.stack_protector := -fstack-protector-strong -mstack-protector-guard=global
+else
+  flags.stack_protector := -fno-stack-protector
+endif
+
 flags.definitions := -D LONE_ARCH=$(ARCH)
 flags.include_directories := $(foreach directory,$(directories.include),-I $(directory))
 flags.system_include_directories := $(if $(UAPI),-isystem $(UAPI))
 flags.prerequisites_generation = -MMD -MF $(call source_to_prerequisite,$(<))
 flags.sanitizer := -fsanitize-trap=all
-flags.common := -static -ffreestanding -nostdlib -fno-omit-frame-pointer -fshort-enums $(flags.lto) $(flags.sanitizer)
+flags.sections := -ffunction-sections -fdata-sections
+flags.common := -static -ffreestanding -nostdlib -fno-omit-frame-pointer -fshort-enums $(flags.lto) $(flags.sanitizer) $(flags.sections)
 flags.object = $(flags.system_include_directories) $(flags.include_directories) $(flags.prerequisites_generation) $(flags.definitions) $(flags.common)
-flags.executable := $(flags.common) $(flags.whole_program) $(flags.use_ld) -Wl,-elone_start
+flags.executable := $(flags.common) $(flags.whole_program) $(flags.use_ld) -Wl,-elone_start -Wl,--gc-sections
 
 # Disable strict aliasing and assume two's complement integers
 # even if CFLAGS contains options that affect this such as -O3
-CFLAGS.overrides := -fno-strict-aliasing -fwrapv -fno-stack-protector
+CFLAGS.overrides := -fno-strict-aliasing -fwrapv $(flags.stack_protector)
 CFLAGS.with_overrides := $(CFLAGS) $(CFLAGS.overrides)
 
 $(directories.build.objects)/%.o: $(directories.source)/%.c | directories
