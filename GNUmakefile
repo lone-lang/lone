@@ -145,7 +145,7 @@ targets.phony += tools
 tools: $(targets.tools)
 
 targets.phony += all
-all: lone tools
+all: lone tools tests
 
 targets.phony += clean
 clean:
