@@ -80,23 +80,25 @@ despite the fact nothing smashed anything.
 
 ## Compilation
 
-The stack protector functions are compiled in unconditionally.
-The build system arranges for all functions and global variables
-to be placed in their own sections via `-ffunction-sections` and
-`-fdata-sections`. Then it arranges for the deletion of unlinked
-sections via `-Wl,--gc-sections`. This garbage collection deletes
-all unused global variables and functions in the final executable,
-deleting the stack protector machinery if it's disabled.
+The stack protector functions are compiled unconditionally.
+The build system places each function and global variable
+into its own ELF section via `-ffunction-sections` and
+`-fdata-sections`, then garbage-collects unused sections
+via `-Wl,--gc-sections`. Unreferenced symbols are dropped
+from the final executable.
 
-Without `-fstack-protector`, the compiler does not emit
-calls to `__stack_chk_fail`, so the linker deletes it.
-`__stack_chk_guard` remains in the final executable
-since the stack protector initializer writes to it,
-making it always reachable from the program.
+The call to the initializer from `lone_start` is
+guarded by `#ifdef LONE_COMPILER_STACK_PROTECTOR`.
+The macro is defined only when stack protection
+is enabled. Without the definition `lone_start`
+skips both the auxiliary-vector walk and the
+initializer call entirely.
 
-This design keeps the initializer uniform
-regardless of compiler flags and avoids
-conditional compilation scaffolding.
+Nothing reachable references `__stack_chk_guard`, nothing
+calls `__stack_chk_fail`, and nothing calls
+`lone_compiler_stack_protector_initialize`. The linker
+drops all three along with the initializer function
+itself. Runtime cost is zero.
 
 ## Build system integration
 

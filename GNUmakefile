@@ -105,7 +105,7 @@ else
 endif
 
 ifdef STACK_PROTECTOR
-  flags.stack_protector := -fstack-protector-strong -mstack-protector-guard=global
+  flags.stack_protector := -fstack-protector-strong -mstack-protector-guard=global -DLONE_COMPILER_STACK_PROTECTOR
 else
   flags.stack_protector := -fno-stack-protector
 endif

@@ -9,6 +9,8 @@ long
 __attribute__((no_stack_protector))
 lone_start(int argc, char **argv, char **envp, struct lone_auxiliary_vector *auxv)
 {
+#ifdef LONE_COMPILER_STACK_PROTECTOR
 	lone_compiler_stack_protector_initialize(lone_auxiliary_vector_random(auxv));
+#endif
 	return lone(argc, argv, envp, auxv);
 }
