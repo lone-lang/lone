@@ -34,7 +34,9 @@
 
 #include <lone/architecture/linux/entry_point.c>
 
-long lone(int argc, char **argv, char **envp, struct lone_auxiliary_vector *auxv)
+long
+__attribute__((no_stack_protector))
+lone(int argc, char **argv, char **envp, struct lone_auxiliary_vector *auxv)
 {
 	void *stack = __builtin_frame_address(0);
 	struct lone_system system;
