@@ -1,0 +1,19 @@
+(import (lone print set lambda generator yield))
+
+(set g (lambda ()
+  (yield 3)
+  (yield 4)
+  ()))
+
+(set f (lambda ()
+  (yield 1)
+  (yield 2)
+  (g)))
+
+(set gen (generator f))
+
+(print (gen))
+(print (gen))
+(print (gen))
+(print (gen))
+(print (gen))
