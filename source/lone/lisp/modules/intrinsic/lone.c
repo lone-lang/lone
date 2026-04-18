@@ -1406,6 +1406,16 @@ LONE_LISP_PRIMITIVE(lone_signal)
 			frame = delimiter - 2;
 			frame_count = (machine->stack.top - 1) - frame;
 
+			/* clear the dispatching flag on every interceptor
+			 * delimiter in the captured range so that emissions
+			 * after the continuation resumes find all restored
+			 * interceptors as valid candidates */
+			for (next = frame; next < frame + frame_count; next++) {
+				if ((next->tagged & LONE_LISP_TAG_MASK) == LONE_LISP_TAG_INTERCEPTOR_DELIMITER) {
+					next->tagged &= ~LONE_LISP_INTERCEPTOR_DISPATCHING_FLAG;
+				}
+			}
+
 			frames = lone_memory_array(
 				lone->system,
 				0,
