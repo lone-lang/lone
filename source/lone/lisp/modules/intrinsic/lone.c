@@ -935,6 +935,12 @@ LONE_LISP_PRIMITIVE(lone_intercept)
  * or null if none was found before hitting the stack base
  * or a generator delimiter. If a generator delimiter is found,
  * *generator is set to the generator heap struct.
+ *
+ * Interceptor delimiters currently dispatching a signal carry the
+ * INTERCEPTOR_DISPATCHING flag which cause them to be skipped.
+ * This means a signal emitted during an interceptor's dispatch
+ * must propagate to the next enclosing interceptor instead of
+ * reentering the current one.
  */
 static struct lone_lisp_machine_stack_frame *
 lone_lisp_signal_find_interceptor_delimiter_from(
@@ -950,6 +956,9 @@ lone_lisp_signal_find_interceptor_delimiter_from(
 
 		switch (frame->tagged & LONE_LISP_TAG_MASK) {
 		case LONE_LISP_TAG_INTERCEPTOR_DELIMITER:
+			if (frame->tagged & LONE_LISP_INTERCEPTOR_DISPATCHING_FLAG) {
+				continue;
+			}
 			return frame;
 		case LONE_LISP_TAG_GENERATOR_DELIMITER:
 			*generator = &lone_lisp_heap_value_of(
