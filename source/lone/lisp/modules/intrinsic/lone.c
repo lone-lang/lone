@@ -1037,12 +1037,16 @@ static void lone_lisp_signal_terminate_generator(
 
 /* Push an interceptor's dispatch state onto the machine stack:
  * delimiter offset, environment and clause list.
+ * Marks the delimiter as dispatching so that the stack walker
+ * skips it if another signal is emitted during this dispatch.
  */
 static void lone_lisp_signal_push_interceptor_state(
 		struct lone_lisp *lone,
 		struct lone_lisp_machine *machine,
 		struct lone_lisp_machine_stack_frame *delimiter)
 {
+	delimiter->tagged |= LONE_LISP_INTERCEPTOR_DISPATCHING_FLAG;
+
 	lone_lisp_machine_push_integer(lone, machine,
 		delimiter - machine->stack.base);
 
