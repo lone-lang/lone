@@ -1,0 +1,7 @@
+(import (lone print intercept lambda quote)
+        (list first))
+
+(print
+  (intercept
+    (('type-error (lambda (v) v)))
+    (first 99)))
