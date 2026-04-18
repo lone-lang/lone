@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later */
 
-#include <lone/architecture/linux/entry_point.c>
+#include <lone/architecture/linux/entry.c>
 #include <lone/linux.h>
 
 long lone(int argc, char **argv, char **envp, struct lone_auxiliary_vector *auxvec)

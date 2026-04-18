@@ -5,7 +5,6 @@
 
 #include <lone/types.h>
 
-__attribute__((externally_visible))
 long lone(int argc, char **argv, char **envp, struct lone_auxiliary_vector *auxv);
 
 #endif /* LONE_HEADER */

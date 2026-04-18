@@ -416,4 +416,4 @@ long lone(int argc, char **argv, char **envp, struct lone_auxiliary_vector *auxv
 	}
 }
 
-#include <lone/architecture/linux/entry_point.c>
+#include <lone/architecture/linux/entry.c>

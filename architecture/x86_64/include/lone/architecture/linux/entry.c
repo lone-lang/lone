@@ -2,7 +2,7 @@
 
 #include <linux/unistd.h>
 
-#include <lone.h>
+#include <lone/start.h>
 
 /**
  *
@@ -24,8 +24,8 @@
 __asm__
 (
 
-".global lone_start"             "\n"  // place lone_start in the symbol table
-"lone_start:"                    "\n"  // program entry point
+".global lone_entry"             "\n"  // place lone_entry in the symbol table
+"lone_entry:"                    "\n"  // program entry point
 
                                        // compute argc, argv, envp and auxv
 
@@ -45,7 +45,7 @@ __asm__
 "xor %rbp, %rbp"                 "\n"  // zero the deepest stack frame
 "and $-16, %rsp"                 "\n"  // ensure 16 byte stack alignment
 
-"call lone"                      "\n"  // call lone
+"call lone_start"                "\n"  // call lone_start
 "mov %rax, %rdi"                 "\n"  // status code returned in rax
 
 #define S2(s) #s

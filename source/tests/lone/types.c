@@ -1256,4 +1256,4 @@ long lone(int argc, char **argv, char **envp, struct lone_auxiliary_vector *auxv
 #undef LONE_TYPES_TEST_NAME
 #undef LONE_TYPES_TEST_FUNCTION
 
-#include <lone/architecture/linux/entry_point.c>
+#include <lone/architecture/linux/entry.c>

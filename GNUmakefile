@@ -118,7 +118,7 @@ flags.sanitizer := -fsanitize-trap=all
 flags.sections := -ffunction-sections -fdata-sections
 flags.common := -static -ffreestanding -nostdlib -fno-omit-frame-pointer -fshort-enums $(flags.lto) $(flags.sanitizer) $(flags.sections)
 flags.object = $(flags.system_include_directories) $(flags.include_directories) $(flags.prerequisites_generation) $(flags.definitions) $(flags.common)
-flags.executable := $(flags.common) $(flags.whole_program) $(flags.use_ld) -Wl,-elone_start -Wl,--gc-sections
+flags.executable := $(flags.common) $(flags.whole_program) $(flags.use_ld) -Wl,-elone_entry -Wl,--gc-sections
 
 # Disable strict aliasing and assume two's complement integers
 # even if CFLAGS contains options that affect this such as -O3

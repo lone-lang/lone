@@ -8,8 +8,6 @@
 
 #include <lone.h>
 
-#include <lone/compiler/stack_protector.h>
-
 #include <lone/system.h>
 #include <lone/auxiliary_vector.h>
 
@@ -34,17 +32,13 @@
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
 
-#include <lone/architecture/linux/entry_point.c>
+#include <lone/architecture/linux/entry.c>
 
-long
-__attribute__((no_stack_protector))
-lone(int argc, char **argv, char **envp, struct lone_auxiliary_vector *auxv)
+long lone(int argc, char **argv, char **envp, struct lone_auxiliary_vector *auxv)
 {
 	void *stack = __builtin_frame_address(0);
 	struct lone_system system;
 	struct lone_lisp lone;
-
-	lone_compiler_stack_protector_initialize(lone_auxiliary_vector_random(auxv));
 
 	lone_system_initialize(&system, auxv);
 	lone_lisp_initialize(&lone, &system, stack);

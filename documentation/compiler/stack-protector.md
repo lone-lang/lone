@@ -53,22 +53,30 @@ used to seed the FNV-1a hash with a random initial offset basis.
 ## Initialization
 
 The canary's initialization must happen before any compiler-generated
-epilogue reads `__stack_chk_guard` for the first time. The entry point
-of the program is the natural place for this. To that end, the `lone`
-function is exempted from stack protection.
+epilogue reads `__stack_chk_guard` for the first time. This happens
+in a dedicated `lone_start` function invoked directly by the
+architecture-specific entry assembly before `lone` runs.
 
 ```c
 __attribute__((no_stack_protector))
-long lone(int argc, char **argv, char **envp, struct lone_auxiliary_vector *auxv);
+long lone_start(int argc, char **argv, char **envp, struct lone_auxiliary_vector *auxv);
 ```
 
-Without this attribute, `lone` will receive stack protection.
-If this happens, it will read the stack protector canary,
-which is zero at first, then it will overwrite the canary
-when it initializes it. The epilogue will then trigger
-stack protection when it compares the initialized
-canary with zero: `__stack_chk_fail` will be called
-and the process will be aborted.
+`lone` itself is an ordinary function.
+Programs that provide their own `lone`
+functions, such as `lone-embed`, inherit
+canary initialization from `lone_start`
+automatically without needing any boilerplate.
+
+The `lone_start` function serves as the only function in the program
+that is marked with `no_stack_protector`. Without this attribute,
+the function will receive stack protection. If this happens,
+it will read the stack canary, which is zero at first,
+then it will overwrite the canary by initializing it.
+The epilogue will then trigger stack protection
+when it compares the initialized canary with zero:
+`__stack_chk_fail` will be called, aborting the process
+despite the fact nothing smashed anything.
 
 ## Compilation
 
