@@ -139,6 +139,10 @@ static void lone_lisp_bytes_check_read_arguments(struct lone_lisp *lone,
 	if (!lone_lisp_is_integer(lone, offset)) {
 		/* invalid offset: (reader bytes "invalid"), (reader bytes []) */ linux_exit(-1);
 	}
+
+	if (lone_lisp_integer_of(offset) < 0) {
+		/* negative offset not supported: (reader bytes -1) */ linux_exit(-1);
+	}
 }
 
 static void lone_lisp_bytes_check_write_arguments(struct lone_lisp *lone,
