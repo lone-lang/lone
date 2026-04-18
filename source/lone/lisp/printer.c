@@ -207,7 +207,7 @@ void lone_lisp_print(struct lone_lisp *lone, struct lone_lisp_value value, int f
 {
 	switch (lone_lisp_type_of(value)) {
 	case LONE_LISP_TAG_NIL:
-		linux_write(fd, "nil", 3);
+		linux_write(fd, "()", 2);
 		return;
 	case LONE_LISP_TAG_FALSE:
 		linux_write(fd, "false", 5);
