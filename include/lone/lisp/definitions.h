@@ -162,4 +162,7 @@ long lone_lisp_primitive_ ## name                       \
 	long step                                       \
 )
 
+#define LONE_LISP_INTEGER_MIN (-(1L << (LONE_LISP_DATA_BITS - 1)))
+#define LONE_LISP_INTEGER_MAX ((1L << (LONE_LISP_DATA_BITS - 1)) - 1)
+
 #endif /* LONE_LISP_DEFINITIONS_HEADER */
