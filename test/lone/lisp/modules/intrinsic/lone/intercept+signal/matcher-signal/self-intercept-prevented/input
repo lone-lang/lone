@@ -1,0 +1,12 @@
+(import (lone print intercept signal lambda quote)
+        (math +))
+
+; an inner interceptor whose matcher triggers the same tag that
+; its own handler would match must not self-intercept. the walker
+; skips the in-flight inner and the outer handles the signal.
+
+(print
+  (intercept (('type-error (lambda (v) 'outer-intercepted)))
+    (intercept (((lambda (tag) (+ 'x 1))
+                 (lambda (v) 'self-never)))
+      (signal 'other 1))))

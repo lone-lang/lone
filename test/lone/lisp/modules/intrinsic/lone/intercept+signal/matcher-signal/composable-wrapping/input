@@ -1,0 +1,11 @@
+(import (lone print intercept signal lambda quote))
+
+; composable error wrapping: inner matcher re-signals under a
+; different tag; outer intercepts the wrapped tag. the signal value
+; passes through the outer handler's arity-1 return.
+
+(print
+  (intercept (('wrapped (lambda (v) v)))
+    (intercept (((lambda (tag) (signal 'wrapped 'wrapped-fired))
+                 (lambda (v) 'never)))
+      (signal 'original 'x))))

@@ -1,0 +1,20 @@
+(import (lone print intercept signal lambda quote))
+
+; matcher emits a signal; outer intercepts with an arity-2
+; handler and invokes the continuation with a value. under
+; the relative delim-offset encoding, the captured inner
+; dispatch state locates its delimiter correctly on the
+; resumed stack, so inner's matcher receives the resume
+; value as its predicate verdict and inner's dispatch
+; continues normally.
+
+; the matcher body returns 'resumed (from the continuation),
+; which is truthy; inner case 3 matches; inner's arity-1
+; handler runs with v = 1 and returns 'never; inner
+; intercept returns 'never; outer body returns 'never.
+
+(print
+  (intercept (('wrapped (lambda (e k) (k 'resumed))))
+    (intercept (((lambda (tag) (signal 'wrapped ()))
+                 (lambda (v) 'never)))
+      (signal 'original 1))))

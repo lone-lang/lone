@@ -1,0 +1,15 @@
+(import (lone print intercept signal lambda quote)
+        (math +))
+
+; three-level nesting where both middle and innermost matchers
+; emit type-error during evaluation. the walker skips each
+; dispatching interceptor in turn and the outermost handler
+; intercepts the emission.
+
+(print
+  (intercept (('type-error (lambda (v) 'outermost)))
+    (intercept (((lambda (tag) (+ 'x 1))
+                 (lambda (v) 'middle-never)))
+      (intercept (((lambda (tag) (+ 'y 2))
+                   (lambda (v) 'inner-never)))
+        (signal 'trigger 1)))))
