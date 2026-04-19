@@ -1048,6 +1048,13 @@ static void lone_lisp_signal_terminate_generator(
  * delimiter offset, environment and clause list.
  * Marks the delimiter as dispatching so that the stack walker
  * skips it if another signal is emitted during this dispatch.
+ *
+ * The offset pushed is the relative distance from the
+ * delimiter-offset frame itself down to the delimiter.
+ * Both frames are in the captured range during arity-2
+ * continuation capture, so this is required for the
+ * distance to survive lone_memory_move and push_frames
+ * when resuming.
  */
 static void lone_lisp_signal_push_interceptor_state(
 		struct lone_lisp *lone,
@@ -1057,7 +1064,7 @@ static void lone_lisp_signal_push_interceptor_state(
 	delimiter->tagged |= LONE_LISP_INTERCEPTOR_DISPATCHING_FLAG;
 
 	lone_lisp_machine_push_integer(lone, machine,
-		delimiter - machine->stack.base);
+		machine->stack.top - delimiter);
 
 	lone_lisp_machine_push_value(lone, machine,
 		lone_lisp_signal_read_environment(delimiter));
@@ -1207,12 +1214,17 @@ LONE_LISP_PRIMITIVE(lone_signal)
 
 			current_offset = lone_lisp_machine_pop_integer(lone, machine);
 
-			/* search above the current delimiter's data */
+			/* reconstruct the delimiter pointer
+			 * from the relative offset and the
+			 * position of the popped frame */
+			delimiter = machine->stack.top - current_offset;
+
+			/* search below the current delimiter's data */
 			next =
 				lone_lisp_signal_find_interceptor_delimiter_from(
 					lone,
 					machine,
-					machine->stack.base + current_offset - 3,
+					delimiter - 3,
 					&generator
 				);
 
@@ -1391,12 +1403,16 @@ LONE_LISP_PRIMITIVE(lone_signal)
 
 		arity = lone_lisp_function_arity(handler);
 		intercept_environment = lone_lisp_machine_pop_value(lone, machine);
-
 		delimiter_offset = lone_lisp_machine_pop_integer(lone, machine);
+
+		/* reconstruct the delimiter pointer from the relative offset
+		 * and the position of the popped delimiter-offset frame.
+		 * The tag and value are popped afterwards since they shift
+		 * stack.top further and would invalidate the computation. */
+		delimiter = machine->stack.top - delimiter_offset;
+
 		tag = lone_lisp_machine_pop_value(lone, machine);
 		value = lone_lisp_machine_pop_value(lone, machine);
-
-		delimiter = machine->stack.base + delimiter_offset;
 
 		if (arity >= 2) {
 			/* arity 2 handler: capture continuation then unwind */
