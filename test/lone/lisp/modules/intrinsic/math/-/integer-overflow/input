@@ -1,0 +1,7 @@
+(import (lone print intercept lambda quote)
+        (math -))
+
+(print
+  (intercept
+    (('integer-overflow (lambda (v) v)))
+    (- -36028797018963968 1)))
