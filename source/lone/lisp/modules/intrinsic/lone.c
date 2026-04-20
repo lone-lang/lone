@@ -1120,6 +1120,44 @@ long lone_lisp_signal_hail(
 	return step;
 }
 
+static void lone_lisp_signal_dispatch(struct lone_lisp *lone,
+		struct lone_lisp_machine *machine,
+		struct lone_lisp_value tag,
+		struct lone_lisp_value value)
+{
+	struct lone_lisp_machine_stack_frame *delimiter;
+	struct lone_lisp_generator *generator;
+
+	if (lone_lisp_is_nil(tag)) {
+		linux_exit(-1);
+	}
+
+	delimiter = lone_lisp_signal_find_interceptor_delimiter(
+		lone,
+		machine,
+		&generator
+	);
+
+	while (!delimiter) {
+		if (!generator) {
+			linux_exit(-1);
+		}
+
+		lone_lisp_signal_terminate_generator(lone, machine, generator);
+
+		delimiter = lone_lisp_signal_find_interceptor_delimiter(
+			lone,
+			machine,
+			&generator
+		);
+	}
+
+	lone_lisp_machine_push_value(lone, machine, value);
+	lone_lisp_machine_push_value(lone, machine, tag);
+
+	lone_lisp_signal_push_interceptor_state(lone, machine, delimiter);
+}
+
 LONE_LISP_PRIMITIVE(lone_signal)
 {
 	struct lone_lisp_machine_stack_frame *delimiter, *next, *frame, *frames;
@@ -1134,7 +1172,7 @@ LONE_LISP_PRIMITIVE(lone_signal)
 	unsigned arity;
 
 	switch (step) {
-	case 0: /* pop and destructure arguments, walk the stack */
+	case 0: /* destructure arguments, dispatch */
 
 		arguments = lone_lisp_machine_pop_value(lone, machine);
 
@@ -1142,42 +1180,7 @@ LONE_LISP_PRIMITIVE(lone_signal)
 			/* wrong number of arguments */ linux_exit(-1);
 		}
 
-		if (lone_lisp_is_nil(tag)) {
-			/* signal tag must not be nil */ linux_exit(-1);
-		}
-
-		/* find first interceptor delimiter */
-		delimiter = lone_lisp_signal_find_interceptor_delimiter(
-			lone,
-			machine,
-			&generator
-		);
-
-		while (!delimiter) {
-			if (!generator) {
-				/* no interceptor or generator delimiter found
-				   signal cannot be handled */
-				linux_exit(-1);
-			}
-
-			lone_lisp_signal_terminate_generator(lone, machine, generator);
-
-			/* search for interceptor delimiter on the caller's stack */
-			delimiter =
-				lone_lisp_signal_find_interceptor_delimiter(
-					lone,
-					machine,
-					&generator
-				);
-
-			/* loop continues */
-		}
-
-		/* push tag and value now that we have a delimiter to unwind to */
-		lone_lisp_machine_push_value(lone, machine, value);
-		lone_lisp_machine_push_value(lone, machine, tag);
-
-		lone_lisp_signal_push_interceptor_state(lone, machine, delimiter);
+		lone_lisp_signal_dispatch(lone, machine, tag, value);
 
 	evaluate_next_clause:
 
