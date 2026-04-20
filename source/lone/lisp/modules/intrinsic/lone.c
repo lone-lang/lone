@@ -1086,6 +1086,22 @@ static void lone_lisp_signal_push_interceptor_state(
  * rather than popping and re-pushing the entire stack.
  */
 
+long lone_lisp_signal_cast(
+		struct lone_lisp *lone,
+		struct lone_lisp_machine *machine,
+		struct lone_lisp_value tag,
+		struct lone_lisp_value value)
+{
+	if (lone_lisp_is_nil(tag)) {
+		linux_exit(-1);
+	}
+
+	machine->applicable = lone->modules.signal_primitive;
+	machine->list = lone_lisp_list_build(lone, 2, &tag, &value);
+
+	return -2;
+}
+
 LONE_LISP_PRIMITIVE(lone_signal)
 {
 	struct lone_lisp_machine_stack_frame *delimiter, *next, *frame, *frames;

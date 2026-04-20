@@ -14,6 +14,12 @@
 
 void lone_lisp_modules_intrinsic_lone_initialize(struct lone_lisp *lone);
 
+long lone_lisp_signal_cast(
+		struct lone_lisp *lone,
+		struct lone_lisp_machine *machine,
+		struct lone_lisp_value tag,
+		struct lone_lisp_value value);
+
 LONE_LISP_PRIMITIVE(lone_begin);
 LONE_LISP_PRIMITIVE(lone_when);
 LONE_LISP_PRIMITIVE(lone_unless);
