@@ -26,6 +26,7 @@ void lone_lisp_initialize(struct lone_lisp *lone, struct lone_system *system, vo
 	lone->modules.embedded = lone_lisp_nil();
 	lone->modules.top_level_environment = lone_lisp_table_create(lone, 8, lone_lisp_nil());
 	lone->modules.path = lone_lisp_vector_create(lone, 8);
+	lone->modules.signal_primitive = lone_lisp_nil();
 
 	import = lone_lisp_primitive_create(lone, "import", lone_lisp_primitive_module_import, lone_lisp_nil(), flags);
 	export = lone_lisp_primitive_create(lone, "export", lone_lisp_primitive_module_export, lone_lisp_nil(), flags);

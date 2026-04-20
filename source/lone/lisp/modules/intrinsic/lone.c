@@ -73,8 +73,9 @@ void lone_lisp_modules_intrinsic_lone_initialize(struct lone_lisp *lone)
 	lone_lisp_module_export_primitive(lone, module, "yield",
 			"yield", lone_lisp_primitive_lone_yield, module, flags);
 
-	lone_lisp_module_export_primitive(lone, module, "signal",
-			"signal", lone_lisp_primitive_lone_signal, module, flags);
+	lone->modules.signal_primitive =
+		lone_lisp_module_export_primitive(lone, module, "signal",
+				"signal", lone_lisp_primitive_lone_signal, module, flags);
 
 	lone_lisp_module_export_primitive(lone, module, "apply",
 			"apply", lone_lisp_primitive_lone_apply, module, flags);

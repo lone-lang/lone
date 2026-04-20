@@ -843,6 +843,7 @@ struct lone_lisp {
 		struct lone_lisp_value null;
 		struct lone_lisp_value top_level_environment;
 		struct lone_lisp_value path;
+		struct lone_lisp_value signal_primitive;
 	} modules;
 };
 
