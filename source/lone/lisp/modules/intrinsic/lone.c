@@ -1197,7 +1197,13 @@ LONE_LISP_PRIMITIVE(lone_signal)
 		arguments = lone_lisp_machine_pop_value(lone, machine);
 
 		if (lone_lisp_list_destructure(lone, arguments, 2, &tag, &value)) {
-			/* wrong number of arguments */ linux_exit(-1);
+			return
+				lone_lisp_signal_cast(
+					lone,
+					machine,
+					lone_lisp_intern_c_string(lone, "arity-error"),
+					arguments
+				);
 		}
 
 		lone_lisp_signal_dispatch(lone, machine, tag, value);
