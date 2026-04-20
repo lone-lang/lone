@@ -1,0 +1,7 @@
+(import (lone print intercept lambda quote)
+        (list flatten))
+
+(print
+  (intercept
+    (('type-error (lambda (v) v)))
+    (flatten 99)))
