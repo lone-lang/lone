@@ -1,6 +1,7 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later */
 
 #include <lone/lisp/modules/intrinsic/list.h>
+#include <lone/lisp/modules/intrinsic/lone.h>
 
 #include <lone/lisp/machine.h>
 #include <lone/lisp/machine/stack.h>
@@ -61,6 +62,16 @@ LONE_LISP_PRIMITIVE(list_first)
 
 	if (lone_lisp_list_destructure(lone, arguments, 1, &argument)) {
 		/* wrong number of arguments */ linux_exit(-1);
+	}
+
+	if (!lone_lisp_is_nil(argument) && !lone_lisp_is_list(lone, argument)) {
+		return
+			lone_lisp_signal_cast(
+				lone,
+				machine,
+				lone_lisp_intern_c_string(lone, "type-error"),
+				argument
+			);
 	}
 
 	lone_lisp_machine_push_value(lone, machine, lone_lisp_list_first(lone, argument));
