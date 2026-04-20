@@ -122,6 +122,7 @@ static void lone_lisp_mark_known_roots(struct lone_lisp *lone)
 	lone_lisp_mark_value(lone, lone->modules.null);
 	lone_lisp_mark_value(lone, lone->modules.top_level_environment);
 	lone_lisp_mark_value(lone, lone->modules.path);
+	lone_lisp_mark_value(lone, lone->modules.signal_primitive);
 }
 
 static bool lone_points_within_range(void *pointer, void *start, void *end)
@@ -456,6 +457,7 @@ static void lone_lisp_rewrite_all_references(struct lone_lisp *lone, struct lone
 	lone->modules.null = lone_lisp_forward_value(lone, lone->modules.null);
 	lone->modules.top_level_environment = lone_lisp_forward_value(lone, lone->modules.top_level_environment);
 	lone->modules.path = lone_lisp_forward_value(lone, lone->modules.path);
+	lone->modules.signal_primitive = lone_lisp_forward_value(lone, lone->modules.signal_primitive);
 
 	/* lisp machine registers */
 	machine->value = lone_lisp_forward_value(lone, machine->value);
