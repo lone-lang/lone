@@ -89,6 +89,16 @@ LONE_LISP_PRIMITIVE(list_rest)
 		/* wrong number of arguments */ linux_exit(-1);
 	}
 
+	if (!lone_lisp_is_nil(argument) && !lone_lisp_is_list(lone, argument)) {
+		return
+			lone_lisp_signal_cast(
+				lone,
+				machine,
+				lone_lisp_intern_c_string(lone, "type-error"),
+				argument
+			);
+	}
+
 	lone_lisp_machine_push_value(lone, machine, lone_lisp_list_rest(lone, argument));
 
 	return 0;
