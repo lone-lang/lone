@@ -1,0 +1,22 @@
+(import (lone print intercept signal lambda set quote symbol?))
+
+; Matchers are not restricted to symbols and lambdas.
+; Any applicable value works: primitives, vectors and
+; tables are also accepted. The dispatcher applies the
+; matcher to the tag and treats the return as the match
+; decision: truthy dispatches, falsy tries the next clause.
+
+(set identity (lambda (v) v))
+
+; Function matcher: explicit predicate, always truthy
+(set always (lambda (t) 1))
+(print (intercept ((always identity)) (signal 'tag 'function)))
+
+; Primitive matcher: symbol? is truthy for symbol tags
+(print (intercept ((symbol? identity)) (signal 'tag 'primitive)))
+
+; Vector matcher: index lookup; slot 1 holds 1 (truthy)
+(print (intercept (([() 1] identity)) (signal 1 'vector)))
+
+; Table matcher: key lookup; 'x maps to 1 (truthy)
+(print (intercept (({ x 1 } identity)) (signal 'x 'table)))
