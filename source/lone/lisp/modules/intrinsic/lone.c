@@ -1061,16 +1061,22 @@ static void lone_lisp_signal_push_interceptor_state(
 		struct lone_lisp_machine *machine,
 		struct lone_lisp_machine_stack_frame *delimiter)
 {
+	struct lone_lisp_value environment, clauses;
+	long offset;
+
+	/* Read everything from the delimiter before any push.
+	 * A push that grows the stack may relocate it via mremap,
+	 * invalidating the delimiter pointer and the offset that
+	 * refers to the old address. */
+	offset = machine->stack.top - delimiter;
+	environment = lone_lisp_signal_read_environment(delimiter);
+	clauses = lone_lisp_signal_read_clause_list(delimiter);
+
 	delimiter->tagged |= LONE_LISP_INTERCEPTOR_DISPATCHING_FLAG;
 
-	lone_lisp_machine_push_integer(lone, machine,
-		machine->stack.top - delimiter);
-
-	lone_lisp_machine_push_value(lone, machine,
-		lone_lisp_signal_read_environment(delimiter));
-
-	lone_lisp_machine_push_value(lone, machine,
-		lone_lisp_signal_read_clause_list(delimiter));
+	lone_lisp_machine_push_integer(lone, machine, offset);
+	lone_lisp_machine_push_value(lone, machine, environment);
+	lone_lisp_machine_push_value(lone, machine, clauses);
 }
 
 /* Signal dispatch stack layout (stable base, variable top):
@@ -1139,6 +1145,7 @@ static void lone_lisp_signal_dispatch(struct lone_lisp *lone,
 {
 	struct lone_lisp_machine_stack_frame *delimiter;
 	struct lone_lisp_generator *generator;
+	long delimiter_index;
 
 	if (lone_lisp_is_nil(tag)) {
 		linux_exit(-1);
@@ -1164,8 +1171,16 @@ static void lone_lisp_signal_dispatch(struct lone_lisp *lone,
 		);
 	}
 
+	/* Capture the delimiter's position as an index from stack.base.
+	 * Pointers into the stack may be invalidated by the pushes below
+	 * if the stack grows via mremap and relocates. The index is a
+	 * relative position and survives the move. */
+	delimiter_index = delimiter - machine->stack.base;
+
 	lone_lisp_machine_push_value(lone, machine, value);
 	lone_lisp_machine_push_value(lone, machine, tag);
+
+	delimiter = machine->stack.base + delimiter_index;
 
 	lone_lisp_signal_push_interceptor_state(lone, machine, delimiter);
 }
