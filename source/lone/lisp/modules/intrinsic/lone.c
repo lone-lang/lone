@@ -1112,10 +1112,6 @@ long lone_lisp_signal_cast(
 		struct lone_lisp_value tag,
 		struct lone_lisp_value value)
 {
-	if (lone_lisp_is_nil(tag)) {
-		linux_exit(-1);
-	}
-
 	machine->applicable = lone->modules.signal_primitive;
 	machine->list = lone_lisp_list_build(lone, 2, &tag, &value);
 
@@ -1129,10 +1125,6 @@ long lone_lisp_signal_hail(
 		struct lone_lisp_value tag,
 		struct lone_lisp_value value)
 {
-	if (lone_lisp_is_nil(tag)) {
-		linux_exit(-1);
-	}
-
 	machine->applicable = lone->modules.signal_primitive;
 	machine->list = lone_lisp_list_build(lone, 2, &tag, &value);
 	machine->step = LONE_LISP_MACHINE_STEP_APPLY;
