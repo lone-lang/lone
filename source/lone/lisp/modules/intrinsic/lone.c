@@ -1318,8 +1318,9 @@ LONE_LISP_PRIMITIVE(lone_signal)
 			goto evaluate_handler;
 		}
 
-		if (lone_lisp_is_function(lone, matcher)) {
-			/* function matcher is a predicate, needs application */
+		if (lone_lisp_is_applicable(lone, matcher)) {
+			/* rig the machine to apply the matcher to the tag */
+
 			lone_lisp_machine_push_value(lone, machine, handler_expression);
 
 			/* tag is at a known and stable location */
@@ -1339,7 +1340,7 @@ LONE_LISP_PRIMITIVE(lone_signal)
 		}
 
 		if (!lone_lisp_is_symbol(lone, matcher)) {
-			/* matcher must be nil, function, or symbol */ linux_exit(-1);
+			/* matcher must be nil, applicable, or symbol */ linux_exit(-1);
 		}
 
 		/* symbol matcher, exact comparison */
