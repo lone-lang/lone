@@ -548,7 +548,12 @@ static void set_lone_segments(struct elf *elf)
 
 static void set_page_size(struct elf *elf, struct lone_auxiliary_vector *auxvec)
 {
+	/* Linux has no syscall that reports the page size. The auxv
+	 * AT_PAGESZ entry is the only runtime source. If it's absent
+	 * or zero, fall back to the smallest Linux page size so that
+	 * alignment math is never a division by zero. */
 	elf->page_size = lone_auxiliary_vector_page_size(auxvec);
+	if (elf->page_size == 0) { elf->page_size = 4096; }
 }
 
 static void open_files(struct elf *elf, char *elf_path, char *data_path)
