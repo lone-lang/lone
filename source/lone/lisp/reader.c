@@ -235,6 +235,14 @@ error:
    │                                                                        │
    │    [^ \t\n()[\]{};"]+[)}\] \t\n]                                       │
    │                                                                        │
+   │    The grammar for symbols is stricter because it is hard              │
+   │    to visually distinguish symbols such as symbol;comment.             │
+   │    The eye cannot immediately understand whether ;comment              │
+   │    is part of the symbol;comment symbol or just a comment.             │
+   │    So I decided to require spaces after symbols before                 │
+   │    comments can be written: symbol ;comment. This makes it             │
+   │    clear where the symbol ends.                                        │
+   │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
 static struct lone_lisp_value lone_lisp_reader_consume_symbol(struct lone_lisp *lone, struct lone_lisp_reader *reader)
 {
