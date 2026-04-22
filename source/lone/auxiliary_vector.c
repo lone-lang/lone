@@ -2,9 +2,21 @@
 
 #include <lone/auxiliary_vector.h>
 
+/* Upper bound on auxv entries.
+ * Linux typically emits ~20 entries.
+ * A maximum of 64 leaves plenty of room.
+ *
+ * TODO: check the highest AT_ constant
+ * in the Linux UAPI headers that lone
+ * is being compiled against.
+ */
+#define LONE_AUXILIARY_VECTOR_MAX_ENTRIES 64
+
 struct lone_auxiliary_value lone_auxiliary_vector_value(struct lone_auxiliary_vector *auxiliary, unsigned long type)
 {
-	for (/* auxiliary */; auxiliary->type != AT_NULL; ++auxiliary) {
+	size_t i;
+
+	for (i = 0; i < LONE_AUXILIARY_VECTOR_MAX_ENTRIES && auxiliary->type != AT_NULL; ++i, ++auxiliary) {
 		if (auxiliary->type == type) {
 			return auxiliary->value;
 		}
