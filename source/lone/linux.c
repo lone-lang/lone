@@ -56,3 +56,23 @@ intptr_t linux_mremap(void *address, size_t old_length, size_t new_length, unsig
 		(long) new_address
 	);
 }
+
+long linux_dev_urandom(struct lone_bytes buffer)
+{
+	int fd;
+	ssize_t n;
+	size_t total;
+
+	fd = linux_openat(AT_FDCWD, (unsigned char *) "/dev/urandom", O_RDONLY | O_CLOEXEC);
+	if (fd < 0) { return fd; }
+
+	total = 0;
+	while (total < buffer.count) {
+		n = linux_read(fd, buffer.pointer + total, buffer.count - total);
+		if (n <= 0) { linux_close(fd); return n == 0 ? -EIO : n; }
+		total += (size_t) n;
+	}
+
+	linux_close(fd);
+	return 0;
+}

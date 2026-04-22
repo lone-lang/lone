@@ -35,6 +35,10 @@ ssize_t
 __attribute__((fd_arg_read(1), tainted_args))
 linux_read(int fd, const void *buffer, size_t count);
 
+/* Fills a lone bytes structure by reading /dev/urandom.
+ * Returns 0 on success or the error code from the failing system call. */
+long linux_dev_urandom(struct lone_bytes buffer);
+
 ssize_t
 __attribute__((fd_arg_write(1), tainted_args))
 linux_write(int fd, const void *buffer, size_t count);
