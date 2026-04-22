@@ -784,24 +784,20 @@ LONE_LISP_PRIMITIVE(lone_transfer)
 
 		return 1;
 
-	case 1: /* handler evaluated, apply it to value and continuation */
+	case 1: /* handler evaluated, tail-apply it to value and continuation */
 
 		handler = machine->value;
 
 		continuation = lone_lisp_machine_pop_value(lone, machine);
 		value = lone_lisp_machine_pop_value(lone, machine);
 
-		/* apply directly so value and continuation reach the handler
-		 * without passing through the evaluator */
+		/* the handler's result becomes the result of transfer
+		 * tail apply directly so value and continuation reach
+		 * the handler without passing through the evaluator */
 		machine->applicable = handler;
 		machine->list = lone_lisp_list_build(lone, 2, &value, &continuation);
-		machine->step = LONE_LISP_MACHINE_STEP_APPLY;
 
-		return 2;
-
-	case 2:
-		lone_lisp_machine_push_value(lone, machine, machine->value);
-		return 0;
+		return -2;
 
 	default:
 		break;
