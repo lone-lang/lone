@@ -728,9 +728,10 @@ LONE_LISP_PRIMITIVE(lone_transfer)
 			/* wrong number of arguments: (transfer), (transfer value extra) */ linux_exit(-1);
 		}
 
-		/* top - 1 reaches the topmost frame;
-		   the extra - 1 skips transfer's own save step.
-		   Search below for the continuation delimiter pushed by control */
+		/* stack.top - 1 is the topmost frame
+		 * subtract another frame to skip it
+		 * and search for the continuation delimiter
+		 * pushed by control further down the stack */
 		for (frame = machine->stack.top - 1 - 1,
 		     frame_count = 1;
 		     frame >= machine->stack.base;
