@@ -328,15 +328,6 @@ bool lone_lisp_machine_top_is_tail_return(struct lone_lisp_machine *machine)
 	       && (machine->stack.top[-1].tagged >> LONE_LISP_DATA_SHIFT) == LONE_LISP_MACHINE_STEP_TAIL_RETURN;
 }
 
-void lone_lisp_machine_unwind_to(struct lone_lisp *lone, struct lone_lisp_machine *machine, enum lone_lisp_tag tag)
-{
-	struct lone_lisp_machine_stack_frame frame;
-
-	while (tag != ((enum lone_lisp_tag) ((frame = lone_lisp_machine_pop(lone, machine)).tagged & LONE_LISP_TAG_MASK)));
-
-	lone_lisp_machine_push(lone, machine, frame);
-}
-
 bool lone_lisp_machine_unwind_to_function_delimiter(struct lone_lisp *lone, struct lone_lisp_machine *machine)
 {
 	struct lone_lisp_machine_stack_frame *frame;
@@ -368,9 +359,4 @@ bool lone_lisp_machine_unwind_to_function_delimiter(struct lone_lisp *lone, stru
 
 	/* no function delimiter or tail return marker found */
 	linux_exit(-1);
-}
-
-void lone_lisp_machine_unwind_to_interceptor_delimiter(struct lone_lisp *lone, struct lone_lisp_machine *machine)
-{
-	lone_lisp_machine_unwind_to(lone, machine, LONE_LISP_TAG_INTERCEPTOR_DELIMITER);
 }
