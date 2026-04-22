@@ -482,6 +482,8 @@ struct lone_lisp_value lone_lisp_function_create(struct lone_lisp *lone,
 		struct lone_lisp_value arguments, struct lone_lisp_value code,
 		struct lone_lisp_value environment, struct lone_lisp_function_flags flags);
 
+unsigned long lone_lisp_function_arity(struct lone_lisp *lone, struct lone_lisp_value function);
+
 /* ╭────────────────────────────────────────────────────────────────────────╮
    │                                                                        │
    │    Primitives are lone functions implemented in C.                     │

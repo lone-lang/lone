@@ -23,6 +23,24 @@ static unsigned long lone_lisp_count_arguments(struct lone_lisp *lone,
 	return count;
 }
 
+unsigned long lone_lisp_function_arity(struct lone_lisp *lone, struct lone_lisp_value function)
+{
+	unsigned long arity;
+	struct lone_lisp_value arguments;
+
+	arity = (function.tagged >> LONE_LISP_METADATA_ARITY_SHIFT)
+	                          & LONE_LISP_METADATA_ARITY_MASK;
+
+	if (arity == LONE_LISP_METADATA_ARITY_OVERFLOW) {
+		/* Metadata saturated at creation: count the formal
+		 * arguments list on the heap to recover the real arity. */
+		arguments = lone_lisp_heap_value_of(lone, function)->as.function.arguments;
+		arity = lone_lisp_count_arguments(lone, arguments);
+	}
+
+	return arity;
+}
+
 struct lone_lisp_value lone_lisp_function_create(struct lone_lisp *lone,
 		struct lone_lisp_value arguments, struct lone_lisp_value code,
 		struct lone_lisp_value environment, struct lone_lisp_function_flags flags)

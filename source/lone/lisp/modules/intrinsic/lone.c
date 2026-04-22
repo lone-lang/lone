@@ -1028,12 +1028,6 @@ static struct lone_lisp_value lone_lisp_signal_read_environment(
 	return (struct lone_lisp_value) { .tagged = (delimiter - 2)->tagged };
 }
 
-static unsigned lone_lisp_function_arity(struct lone_lisp_value function)
-{
-	return (function.tagged >> LONE_LISP_METADATA_ARITY_SHIFT)
-	                         & LONE_LISP_METADATA_ARITY_MASK;
-}
-
 /* Terminate a generator and propagate signal to the caller's stack.
  * Saves the current stack as the generator's own,
  * switches to the caller's stack and terminates the generator.
@@ -1204,7 +1198,7 @@ LONE_LISP_PRIMITIVE(lone_signal)
 	struct lone_lisp_generator *generator;
 	long current_offset, delimiter_offset;
 	size_t frame_count;
-	unsigned arity;
+	unsigned long arity;
 
 	switch (step) {
 	case 0: /* destructure arguments, dispatch */
@@ -1416,7 +1410,7 @@ LONE_LISP_PRIMITIVE(lone_signal)
 			/* handler must be a lambda */ linux_exit(-1);
 		}
 
-		arity = lone_lisp_function_arity(handler);
+		arity = lone_lisp_function_arity(lone, handler);
 		intercept_environment = lone_lisp_machine_pop_value(lone, machine);
 		delimiter_offset = lone_lisp_machine_pop_integer(lone, machine);
 
