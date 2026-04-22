@@ -1014,17 +1014,6 @@ static unsigned lone_lisp_function_arity(struct lone_lisp_value function)
 	                         & LONE_LISP_METADATA_ARITY_MASK;
 }
 
-/* Wrap a value in (quote value) so it survives evaluation.
- * Necessary when building expressions that the machine will evaluate,
- * because symbols would otherwise be looked up in the environment.
- */
-static struct lone_lisp_value lone_lisp_signal_quote(struct lone_lisp *lone,
-		struct lone_lisp_value value)
-{
-	struct lone_lisp_value quote = lone_lisp_intern_c_string(lone, "quote");
-	return lone_lisp_list_build(lone, 2, &quote, &value);
-}
-
 /* Terminate a generator and propagate signal to the caller's stack.
  * Saves the current stack as the generator's own,
  * switches to the caller's stack and terminates the generator.
@@ -1192,7 +1181,6 @@ LONE_LISP_PRIMITIVE(lone_signal)
 	struct lone_lisp_value clauses, clause, matcher, handler;
 	struct lone_lisp_value matcher_expression, handler_expression;
 	struct lone_lisp_value intercept_environment, continuation;
-	struct lone_lisp_value quoted_tag, quoted_value;
 	struct lone_lisp_generator *generator;
 	long current_offset, delimiter_offset;
 	size_t frame_count;
@@ -1326,16 +1314,9 @@ LONE_LISP_PRIMITIVE(lone_signal)
 			/* tag is at a known and stable location */
 			tag = lone_lisp_machine_peek_value(lone, machine, 5);
 
-			/* build and evaluate (predicate (quote tag)) */
-			quoted_tag = lone_lisp_signal_quote(lone, tag);
-			machine->expression = lone_lisp_list_build(
-				lone,
-				2,
-				&matcher,
-				&quoted_tag
-			);
-
-			machine->step = LONE_LISP_MACHINE_STEP_EVALUATE;
+			machine->applicable = matcher;
+			machine->list = lone_lisp_list_build(lone, 1, &tag);
+			machine->step = LONE_LISP_MACHINE_STEP_APPLY;
 			return 3;
 		}
 
@@ -1477,30 +1458,14 @@ LONE_LISP_PRIMITIVE(lone_signal)
 			machine->stack.top = delimiter - 2;
 		}
 
-		/* build handler application
-		 * value must be quoted,
-		 * otherwise symbols will
-		 * be dereferenced */
-		quoted_value = lone_lisp_signal_quote(lone, value);
+		/* rig the machine to apply the handler to the value */
+		machine->applicable = handler;
 		if (arity >= 2) {
-			machine->expression =
-				lone_lisp_list_build(
-					lone,
-					3,
-					&handler,
-					&quoted_value,
-					&continuation
-				);
+			machine->list = lone_lisp_list_build(lone, 2, &value, &continuation);
 		} else {
-			machine->expression =
-				lone_lisp_list_build(
-					lone,
-					2,
-					&handler,
-					&quoted_value
-				);
+			machine->list = lone_lisp_list_build(lone, 1, &value);
 		}
-		machine->step = LONE_LISP_MACHINE_STEP_EVALUATE;
+		machine->step = LONE_LISP_MACHINE_STEP_APPLY;
 		return 5;
 
 	case 5: /* handler has returned */
