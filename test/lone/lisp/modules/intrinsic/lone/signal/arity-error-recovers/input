@@ -1,0 +1,12 @@
+(import (lone print intercept signal lambda quote))
+
+; (signal) emits arity-error; outer handler provides a well-formed
+; (tag value) list; signal re-destructures and dispatches the new
+; tag. The inner interceptor catches it.
+
+(print
+  (intercept
+    (('arity-error (lambda (e k) (k '(my-tag my-value)))))
+    (intercept
+      (('my-tag (lambda (v) 'my-tag-caught)))
+      (signal))))

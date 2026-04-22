@@ -1,0 +1,18 @@
+(import (lone print intercept signal lambda quote set))
+
+; arity-2 handler resumes via (k v); after the body regains
+; control it emits the same signal again. the same interceptor
+; must dispatch the second emission, which requires the
+; dispatching flag to have been cleared on the captured
+; delimiter before the continuation was built. the restored
+; delimiter is a valid candidate on the resumed stack, so the
+; second signal does not escape to the system interceptor.
+
+(print
+  (intercept
+    (('tag (lambda (e k) (k 'resumed))))
+    (set first  (signal 'tag ()))
+    (print first)
+    (set second (signal 'tag ()))
+    (print second)
+    'done))

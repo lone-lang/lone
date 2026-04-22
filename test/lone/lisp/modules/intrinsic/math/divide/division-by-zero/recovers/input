@@ -1,0 +1,9 @@
+(import (lone print intercept signal lambda quote) (math /))
+
+; arity-2 handler provides a replacement divisor;
+; / retries with it and produces the quotient.
+
+(print
+  (intercept
+    (('division-by-zero (lambda (dividend k) (k 2))))
+    (/ 10 0)))

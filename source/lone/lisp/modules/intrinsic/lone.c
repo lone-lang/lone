@@ -1115,19 +1115,7 @@ static void lone_lisp_signal_push_interceptor_state(
  * rather than popping and re-pushing the entire stack.
  */
 
-long lone_lisp_signal_cast(
-		struct lone_lisp *lone,
-		struct lone_lisp_machine *machine,
-		struct lone_lisp_value tag,
-		struct lone_lisp_value value)
-{
-	machine->applicable = lone->modules.signal_primitive;
-	machine->list = lone_lisp_list_build(lone, 2, &tag, &value);
-
-	return -2;
-}
-
-long lone_lisp_signal_hail(
+long lone_lisp_signal_emit(
 		struct lone_lisp *lone,
 		struct lone_lisp_machine *machine,
 		long step,
@@ -1136,7 +1124,10 @@ long lone_lisp_signal_hail(
 {
 	machine->applicable = lone->modules.signal_primitive;
 	machine->list = lone_lisp_list_build(lone, 2, &tag, &value);
-	machine->step = LONE_LISP_MACHINE_STEP_APPLY;
+
+	if (step > 0) {
+		machine->step = LONE_LISP_MACHINE_STEP_APPLY;
+	}
 
 	return step;
 }
@@ -1205,11 +1196,14 @@ LONE_LISP_PRIMITIVE(lone_signal)
 
 		arguments = lone_lisp_machine_pop_value(lone, machine);
 
+	destructure_arguments:
+
 		if (lone_lisp_list_destructure(lone, arguments, 2, &tag, &value)) {
 			return
-				lone_lisp_signal_cast(
+				lone_lisp_signal_emit(
 					lone,
 					machine,
+					1,
 					lone_lisp_intern_c_string(lone, "arity-error"),
 					arguments
 				);
@@ -1298,6 +1292,12 @@ LONE_LISP_PRIMITIVE(lone_signal)
 		machine->expression = matcher_expression;
 		machine->step = LONE_LISP_MACHINE_STEP_EVALUATE;
 		return 2;
+
+	case 1: /* resumed with a replacement (tag value) argument list */
+
+		arguments = machine->value;
+
+		goto destructure_arguments;
 
 	case 2: /* matcher evaluated */
 

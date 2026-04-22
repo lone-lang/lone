@@ -1,0 +1,9 @@
+(import (lone print intercept signal lambda quote) (list first))
+
+; handler provides a list as replacement argument;
+; first retries and returns the list's head.
+
+(print
+  (intercept
+    (('type-error (lambda (v k) (k '(1 2 3)))))
+    (first 'not-a-list)))

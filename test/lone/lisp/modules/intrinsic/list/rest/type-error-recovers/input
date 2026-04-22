@@ -1,0 +1,6 @@
+(import (lone print intercept signal lambda quote) (list rest))
+
+(print
+  (intercept
+    (('type-error (lambda (v k) (k '(1 2 3)))))
+    (rest 'not-a-list)))

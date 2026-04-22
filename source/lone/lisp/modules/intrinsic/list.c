@@ -58,17 +58,33 @@ LONE_LISP_PRIMITIVE(list_first)
 {
 	struct lone_lisp_value arguments, argument;
 
-	arguments = lone_lisp_machine_pop_value(lone, machine);
+	switch (step) {
+	case 0:
 
-	if (lone_lisp_list_destructure(lone, arguments, 1, &argument)) {
-		/* wrong number of arguments */ linux_exit(-1);
+		arguments = lone_lisp_machine_pop_value(lone, machine);
+
+		if (lone_lisp_list_destructure(lone, arguments, 1, &argument)) {
+			/* wrong number of arguments */ linux_exit(-1);
+		}
+
+		break;
+
+	case 1: /* resumed with a replacement argument */
+
+		argument = machine->value;
+
+		break;
+
+	default:
+		linux_exit(-1);
 	}
 
 	if (!lone_lisp_is_nil(argument) && !lone_lisp_is_list(lone, argument)) {
 		return
-			lone_lisp_signal_cast(
+			lone_lisp_signal_emit(
 				lone,
 				machine,
+				1,
 				lone_lisp_intern_c_string(lone, "type-error"),
 				argument
 			);
@@ -83,17 +99,33 @@ LONE_LISP_PRIMITIVE(list_rest)
 {
 	struct lone_lisp_value arguments, argument;
 
-	arguments = lone_lisp_machine_pop_value(lone, machine);
+	switch (step) {
+	case 0:
 
-	if (lone_lisp_list_destructure(lone, arguments, 1, &argument)) {
-		/* wrong number of arguments */ linux_exit(-1);
+		arguments = lone_lisp_machine_pop_value(lone, machine);
+
+		if (lone_lisp_list_destructure(lone, arguments, 1, &argument)) {
+			/* wrong number of arguments */ linux_exit(-1);
+		}
+
+		break;
+
+	case 1: /* resumed with a replacement argument */
+
+		argument = machine->value;
+
+		break;
+
+	default:
+		linux_exit(-1);
 	}
 
 	if (!lone_lisp_is_nil(argument) && !lone_lisp_is_list(lone, argument)) {
 		return
-			lone_lisp_signal_cast(
+			lone_lisp_signal_emit(
 				lone,
 				machine,
+				1,
 				lone_lisp_intern_c_string(lone, "type-error"),
 				argument
 			);
@@ -108,17 +140,33 @@ LONE_LISP_PRIMITIVE(list_flatten)
 {
 	struct lone_lisp_value arguments, argument;
 
-	arguments = lone_lisp_machine_pop_value(lone, machine);
+	switch (step) {
+	case 0:
 
-	if (lone_lisp_list_destructure(lone, arguments, 1, &argument)) {
-		/* wrong number of arguments */ linux_exit(-1);
+		arguments = lone_lisp_machine_pop_value(lone, machine);
+
+		if (lone_lisp_list_destructure(lone, arguments, 1, &argument)) {
+			/* wrong number of arguments */ linux_exit(-1);
+		}
+
+		break;
+
+	case 1: /* resumed with a replacement argument */
+
+		argument = machine->value;
+
+		break;
+
+	default:
+		linux_exit(-1);
 	}
 
 	if (!lone_lisp_is_nil(argument) && !lone_lisp_is_list(lone, argument)) {
 		return
-			lone_lisp_signal_cast(
+			lone_lisp_signal_emit(
 				lone,
 				machine,
+				1,
 				lone_lisp_intern_c_string(lone, "type-error"),
 				argument
 			);

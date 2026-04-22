@@ -1,0 +1,9 @@
+(import (lone print intercept signal lambda quote) (math /))
+
+; dividend has wrong type; handler provides replacement.
+; (/ 'x 2) with 'x replaced by 10 = 10 / 2 = 5.
+
+(print
+  (intercept
+    (('type-error (lambda (v k) (k 10))))
+    (/ 'x 2)))

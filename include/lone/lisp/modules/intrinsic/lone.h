@@ -14,13 +14,7 @@
 
 void lone_lisp_modules_intrinsic_lone_initialize(struct lone_lisp *lone);
 
-long lone_lisp_signal_cast(
-		struct lone_lisp *lone,
-		struct lone_lisp_machine *machine,
-		struct lone_lisp_value tag,
-		struct lone_lisp_value value);
-
-long lone_lisp_signal_hail(
+long lone_lisp_signal_emit(
 		struct lone_lisp *lone,
 		struct lone_lisp_machine *machine,
 		long step,

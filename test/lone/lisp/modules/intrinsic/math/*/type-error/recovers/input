@@ -1,0 +1,8 @@
+(import (lone print intercept signal lambda quote) (math *))
+
+; (* 2 'x 3) with 'x replaced by 5 = 2 * 5 * 3 = 30.
+
+(print
+  (intercept
+    (('type-error (lambda (v k) (k 5))))
+    (* 2 'x 3)))

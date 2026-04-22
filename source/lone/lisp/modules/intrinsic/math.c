@@ -122,88 +122,251 @@ static struct lone_lisp_value error_tag_for(struct lone_lisp *lone, struct lone_
 	return lone_lisp_intern_c_string(lone, tag);
 }
 
+/* Combine one integer into the accumulator.
+ * Caller must ensure accumulator is itself an integer.
+ * On failure, returns the offending argument as the signal value:
+ * either because argument was not an integer (type-error tag)
+ * or because the operation overflowed (integer-overflow tag). */
+static struct lone_lisp_optional_value combine_integers(struct lone_lisp *lone,
+		struct lone_lisp_value accumulator, struct lone_lisp_value argument, char operation)
+{
+	lone_lisp_integer x, y, result;
+
+	if (lone_lisp_type_of(argument) != LONE_LISP_TAG_INTEGER) { goto offending; }
+	if (lone_lisp_type_of(accumulator) != LONE_LISP_TAG_INTEGER) { linux_exit(-1); }
+
+	x = lone_lisp_integer_of(accumulator);
+	y = lone_lisp_integer_of(argument);
+
+	switch (operation) {
+	case '+':
+		if (__builtin_add_overflow(x, y, &result)) { goto offending; }
+		break;
+	case '-':
+		if (__builtin_sub_overflow(x, y, &result)) { goto offending; }
+		break;
+	case '*':
+		if (__builtin_mul_overflow(x, y, &result)) { goto offending; }
+		break;
+	default:
+		/* invalid primitive integer operation */ linux_exit(-1);
+	}
+
+	if (result < LONE_LISP_INTEGER_MIN || result > LONE_LISP_INTEGER_MAX) { goto offending; }
+
+	return (struct lone_lisp_optional_value) { .present = true, .value = lone_lisp_integer_create(result) };
+
+offending:
+	return (struct lone_lisp_optional_value) { .present = false, .value = argument };
+}
+
 LONE_LISP_PRIMITIVE(math_add)
 {
-	struct lone_lisp_value arguments;
+	struct lone_lisp_value arguments, argument, accumulator;
 	struct lone_lisp_optional_value result;
 
-	arguments = lone_lisp_machine_pop_value(lone, machine);
+	switch (step) {
+	case 0:
 
-	result = lone_lisp_primitive_integer_operation(lone, arguments, '+', lone_lisp_zero());
+		arguments = lone_lisp_machine_pop_value(lone, machine);
+		accumulator = lone_lisp_zero();
+
+		goto iterate;
+
+	case 1: /* resumed with a replacement argument */
+
+		arguments   = lone_lisp_machine_pop_value(lone, machine);
+		accumulator = lone_lisp_machine_pop_value(lone, machine);
+		argument    = machine->value;
+
+		goto combine;
+
+	default:
+		break;
+	}
+
+	linux_exit(-1);
+
+iterate:
+
+	if (lone_lisp_is_nil(arguments)) {
+		lone_lisp_machine_push_value(lone, machine, accumulator);
+		return 0;
+	}
+
+	argument = lone_lisp_list_first(lone, arguments);
+
+combine:
+
+	result = combine_integers(lone, accumulator, argument, '+');
+
 	if (!result.present) {
+		lone_lisp_machine_push_value(lone, machine, accumulator);
+		lone_lisp_machine_push_value(lone, machine, arguments);
 		return
-			lone_lisp_signal_cast(
+			lone_lisp_signal_emit(
 				lone,
 				machine,
+				1,
 				error_tag_for(lone, result.value),
 				result.value
 			);
 	}
 
-	lone_lisp_machine_push_value(lone, machine, result.value);
-	return 0;
+	accumulator = result.value;
+	arguments = lone_lisp_list_rest(lone, arguments);
+
+	goto iterate;
 }
 
 LONE_LISP_PRIMITIVE(math_subtract)
 {
-	struct lone_lisp_value arguments, first, accumulator;
+	struct lone_lisp_value arguments, argument, accumulator;
 	struct lone_lisp_optional_value result;
 
-	arguments = lone_lisp_machine_pop_value(lone, machine);
+	switch (step) {
+	case 0:
 
-	if (!lone_lisp_is_nil(arguments) && !lone_lisp_is_nil(lone_lisp_list_rest(lone, arguments))) {
-		/* at least two arguments, set initial value to the first argument: (- 100 58) */
-		first = lone_lisp_list_first(lone, arguments);
-		if (!lone_lisp_is_integer(lone, first)) {
-			return
-				lone_lisp_signal_cast(
-					lone,
-					machine,
-					lone_lisp_intern_c_string(lone, "type-error"),
-					first
-				);
+		arguments = lone_lisp_machine_pop_value(lone, machine);
+
+		if (!lone_lisp_is_nil(arguments) && !lone_lisp_is_nil(lone_lisp_list_rest(lone, arguments))) {
+			/* at least two arguments, set initial value to the first argument: (- 100 58) */
+			argument  = lone_lisp_list_first(lone, arguments);
+			arguments = lone_lisp_list_rest(lone, arguments);
+
+			goto validate_first;
 		}
-		accumulator = first;
-		arguments = lone_lisp_list_rest(lone, arguments);
-	} else {
+
 		accumulator = lone_lisp_zero();
+
+		goto iterate;
+
+	case 1: /* resumed with a replacement for the first argument */
+
+		arguments = lone_lisp_machine_pop_value(lone, machine);
+		argument  = machine->value;
+
+		goto validate_first;
+
+	case 2: /* resumed with a replacement argument mid-iteration */
+
+		arguments   = lone_lisp_machine_pop_value(lone, machine);
+		accumulator = lone_lisp_machine_pop_value(lone, machine);
+		argument    = machine->value;
+
+		goto combine;
+
+	default:
+		break;
 	}
 
-	result = lone_lisp_primitive_integer_operation(lone, arguments, '-', accumulator);
-	if (!result.present) {
+	linux_exit(-1);
+
+validate_first:
+
+	if (!lone_lisp_is_integer(lone, argument)) {
+		lone_lisp_machine_push_value(lone, machine, arguments);
 		return
-			lone_lisp_signal_cast(
+			lone_lisp_signal_emit(
 				lone,
 				machine,
+				1,
+				lone_lisp_intern_c_string(lone, "type-error"),
+				argument
+			);
+	}
+
+	accumulator = argument;
+
+iterate:
+
+	if (lone_lisp_is_nil(arguments)) {
+		lone_lisp_machine_push_value(lone, machine, accumulator);
+		return 0;
+	}
+
+	argument = lone_lisp_list_first(lone, arguments);
+
+combine:
+
+	result = combine_integers(lone, accumulator, argument, '-');
+
+	if (!result.present) {
+		lone_lisp_machine_push_value(lone, machine, accumulator);
+		lone_lisp_machine_push_value(lone, machine, arguments);
+		return
+			lone_lisp_signal_emit(
+				lone,
+				machine,
+				2,
 				error_tag_for(lone, result.value),
 				result.value
 			);
 	}
 
-	lone_lisp_machine_push_value(lone, machine, result.value);
-	return 0;
+	accumulator = result.value;
+	arguments = lone_lisp_list_rest(lone, arguments);
+
+	goto iterate;
 }
 
 LONE_LISP_PRIMITIVE(math_multiply)
 {
-	struct lone_lisp_value arguments;
+	struct lone_lisp_value arguments, argument, accumulator;
 	struct lone_lisp_optional_value result;
 
-	arguments = lone_lisp_machine_pop_value(lone, machine);
+	switch (step) {
+	case 0:
 
-	result = lone_lisp_primitive_integer_operation(lone, arguments, '*', lone_lisp_one());
+		arguments = lone_lisp_machine_pop_value(lone, machine);
+		accumulator = lone_lisp_one();
+
+		goto iterate;
+
+	case 1: /* resumed with a replacement argument */
+
+		arguments   = lone_lisp_machine_pop_value(lone, machine);
+		accumulator = lone_lisp_machine_pop_value(lone, machine);
+		argument    = machine->value;
+
+		goto combine;
+
+	default:
+		break;
+	}
+
+	linux_exit(-1);
+
+iterate:
+
+	if (lone_lisp_is_nil(arguments)) {
+		lone_lisp_machine_push_value(lone, machine, accumulator);
+		return 0;
+	}
+
+	argument = lone_lisp_list_first(lone, arguments);
+
+combine:
+
+	result = combine_integers(lone, accumulator, argument, '*');
+
 	if (!result.present) {
+		lone_lisp_machine_push_value(lone, machine, accumulator);
+		lone_lisp_machine_push_value(lone, machine, arguments);
 		return
-			lone_lisp_signal_cast(
+			lone_lisp_signal_emit(
 				lone,
 				machine,
+				1,
 				error_tag_for(lone, result.value),
 				result.value
 			);
 	}
 
-	lone_lisp_machine_push_value(lone, machine, result.value);
-	return 0;
+	accumulator = result.value;
+	arguments = lone_lisp_list_rest(lone, arguments);
+
+	goto iterate;
 }
 
 LONE_LISP_PRIMITIVE(math_divide)
@@ -212,11 +375,38 @@ LONE_LISP_PRIMITIVE(math_divide)
 	struct lone_lisp_optional_value divisor_result;
 	lone_lisp_integer x, y, quotient;
 
-	arguments = lone_lisp_machine_pop_value(lone, machine);
+	switch (step) {
+	case 0:
 
-	if (lone_lisp_is_nil(arguments)) { /* at least the dividend is required, (/) is invalid */ goto no_arguments; }
-	dividend = lone_lisp_list_first(lone, arguments);
-	arguments = lone_lisp_list_rest(lone, arguments);
+		arguments = lone_lisp_machine_pop_value(lone, machine);
+
+		if (lone_lisp_is_nil(arguments)) { /* at least the dividend is required, (/) is invalid */ goto no_arguments; }
+		dividend = lone_lisp_list_first(lone, arguments);
+		arguments = lone_lisp_list_rest(lone, arguments);
+
+		goto validate_dividend;
+
+	case 1: /* resumed with a replacement divisor */
+
+		dividend = lone_lisp_machine_pop_value(lone, machine);
+		divisor  = machine->value;
+
+		goto validate_divisor;
+
+	case 2: /* resumed with a replacement dividend */
+
+		arguments = lone_lisp_machine_pop_value(lone, machine);
+		dividend  = machine->value;
+
+		goto validate_dividend;
+
+	default:
+		break;
+	}
+
+	linux_exit(-1);
+
+validate_dividend:
 
 	switch (lone_lisp_type_of(dividend)) {
 	case LONE_LISP_TAG_INTEGER:
@@ -229,10 +419,12 @@ LONE_LISP_PRIMITIVE(math_divide)
 			/* (/ x a b c ...) = x / (a * b * c * ...) */
 			divisor_result = lone_lisp_primitive_integer_operation(lone, arguments, '*', lone_lisp_one());
 			if (!divisor_result.present) {
+				lone_lisp_machine_push_value(lone, machine, dividend);
 				return
-					lone_lisp_signal_cast(
+					lone_lisp_signal_emit(
 						lone,
 						machine,
+						1,
 						error_tag_for(lone, divisor_result.value),
 						divisor_result.value
 					);
@@ -241,20 +433,38 @@ LONE_LISP_PRIMITIVE(math_divide)
 			break;
 		}
 	default:
+		lone_lisp_machine_push_value(lone, machine, arguments);
 		return
-			lone_lisp_signal_cast(
+			lone_lisp_signal_emit(
 				lone,
 				machine,
+				2,
 				lone_lisp_intern_c_string(lone, "type-error"),
 				dividend
 			);
 	}
 
-	if (lone_lisp_integer_of(divisor) == 0) {
+validate_divisor:
+
+	if (!lone_lisp_is_integer(lone, divisor)) {
+		lone_lisp_machine_push_value(lone, machine, dividend);
 		return
-			lone_lisp_signal_cast(
+			lone_lisp_signal_emit(
 				lone,
 				machine,
+				1,
+				lone_lisp_intern_c_string(lone, "type-error"),
+				divisor
+			);
+	}
+
+	if (lone_lisp_integer_of(divisor) == 0) {
+		lone_lisp_machine_push_value(lone, machine, dividend);
+		return
+			lone_lisp_signal_emit(
+				lone,
+				machine,
+				1,
 				lone_lisp_intern_c_string(lone, "division-by-zero"),
 				dividend
 			);
@@ -266,10 +476,12 @@ LONE_LISP_PRIMITIVE(math_divide)
 	quotient = x / y;
 
 	if (quotient < LONE_LISP_INTEGER_MIN || quotient > LONE_LISP_INTEGER_MAX) {
+		lone_lisp_machine_push_value(lone, machine, dividend);
 		return
-			lone_lisp_signal_cast(
+			lone_lisp_signal_emit(
 				lone,
 				machine,
+				1,
 				lone_lisp_intern_c_string(lone, "integer-overflow"),
 				divisor
 			);

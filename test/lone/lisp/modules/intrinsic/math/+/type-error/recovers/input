@@ -1,0 +1,10 @@
+(import (lone print intercept signal lambda quote) (math +))
+
+; handler provides a replacement for the offending argument;
+; + retries the combination and continues the accumulation.
+; (+ 1 'x 3) with 'x replaced by 2 = 1 + 2 + 3 = 6.
+
+(print
+  (intercept
+    (('type-error (lambda (v k) (k 2))))
+    (+ 1 'x 3)))

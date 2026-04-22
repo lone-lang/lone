@@ -1,0 +1,9 @@
+(import (lone print intercept signal lambda quote) (math -))
+
+; mid-iteration type-error; handler provides replacement.
+; (- 100 'x 5) with 'x replaced by 20 = 100 - 20 - 5 = 75.
+
+(print
+  (intercept
+    (('type-error (lambda (v k) (k 20))))
+    (- 100 'x 5)))

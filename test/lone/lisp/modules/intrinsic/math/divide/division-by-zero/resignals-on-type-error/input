@@ -1,0 +1,11 @@
+(import (lone print intercept signal lambda quote) (math /))
+
+; handler provides a non-integer as the replacement divisor;
+; / resignals type-error; outer interceptor catches it.
+
+(print
+  (intercept
+    (('type-error (lambda (v) 'type-error-caught)))
+    (intercept
+      (('division-by-zero (lambda (d k) (k 'not-a-number))))
+      (/ 10 0))))
