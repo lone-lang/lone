@@ -8,6 +8,8 @@
 #include <linux/fs.h>
 #include <linux/fcntl.h>
 #include <linux/mman.h>
+#include <linux/stat.h>
+#include <asm/stat.h>
 
 #include <lone/types.h>
 
@@ -30,6 +32,10 @@ linux_openat(int dirfd, unsigned char *path, int flags);
 long
 __attribute__((tainted_args))
 linux_close(int fd);
+
+long
+__attribute__((fd_arg_read(1), tainted_args))
+linux_fstat(int fd, struct stat *buffer);
 
 ssize_t
 __attribute__((fd_arg_read(1), tainted_args))
