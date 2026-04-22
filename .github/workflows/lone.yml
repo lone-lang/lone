@@ -39,15 +39,29 @@ jobs:
             env:
               LD: mold
               LDFLAGS: -Wl,--spare-program-headers,2
+        lto:
+          - name: no-lto
+            env: {}
+          - name: lto
+            env:
+              LTO: "yes"
+        stack-protector:
+          - name: no-stack-protector
+            env: {}
+          - name: stack-protector
+            env:
+              STACK_PROTECTOR: "yes"
 
     env:
-      CONFIGURATION: ${{ matrix.compiler.name }}-${{ matrix.linker.name }}
+      CONFIGURATION: x86_64+${{ matrix.compiler.name }}+${{ matrix.linker.name }}+${{ matrix.lto.name }}+${{ matrix.stack-protector.name }}
       CC: ${{ matrix.compiler.env.CC }}
       LD: ${{ matrix.linker.env.LD }}
       CFLAGS: ${{ matrix.compiler.env.CFLAGS }}
       LDFLAGS: ${{ matrix.linker.env.LDFLAGS }}
+      LTO: ${{ matrix.lto.env.LTO }}
+      STACK_PROTECTOR: ${{ matrix.stack-protector.env.STACK_PROTECTOR }}
 
-    name: ${{ matrix.compiler.name }} ${{ matrix.linker.name }}
+    name: x86_64 / ${{ matrix.compiler.name }} / ${{ matrix.linker.name }} / ${{ matrix.lto.name }} / ${{ matrix.stack-protector.name }}
 
     steps:
     - name: Set up pacman keys
@@ -65,8 +79,8 @@ jobs:
     - name: Upload lone interpreter artifact
       uses: actions/upload-artifact@v4
       with:
-        name: ${{ matrix.compiler.name }}-${{ matrix.linker.name }}-lone
-        path: build/${{ matrix.compiler.name }}-${{ matrix.linker.name }}/lone
+        name: x86_64+${{ matrix.compiler.name }}+${{ matrix.linker.name }}+${{ matrix.lto.name }}+${{ matrix.stack-protector.name }}
+        path: build/x86_64+${{ matrix.compiler.name }}+${{ matrix.linker.name }}+${{ matrix.lto.name }}+${{ matrix.stack-protector.name }}/lone
         compression-level: 9
         overwrite: false
 
