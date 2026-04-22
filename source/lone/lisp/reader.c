@@ -403,6 +403,7 @@ static struct lone_lisp_value lone_lisp_reader_consume_text(struct lone_lisp *lo
 {
 	unsigned char *current;
 	struct lone_bytes content;
+	struct lone_lisp_value value;
 
 	current = lone_lisp_reader_peek(lone, reader);
 	if (!current || *current != '"') { goto error; }
@@ -416,6 +417,12 @@ static struct lone_lisp_value lone_lisp_reader_consume_text(struct lone_lisp *lo
 	/* text must be followed by a delimiter, space, comment or the end of input */
 	current = lone_lisp_reader_peek(lone, reader);
 	if (current && !lone_lisp_reader_is_token_separator(*current)) { goto deallocate_and_error; }
+
+	if (content.count <= LONE_LISP_INLINE_MAX_LENGTH) {
+		value = lone_lisp_inline_text_create(content.pointer, content.count);
+		lone_memory_deallocate(lone->system, content.pointer, content.count + 1, 1, 1);
+		return value;
+	}
 
 	return lone_lisp_text_transfer(lone, content.pointer, content.count, true);
 
