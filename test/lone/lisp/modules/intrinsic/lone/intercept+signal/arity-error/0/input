@@ -1,0 +1,6 @@
+(import (lone print intercept signal lambda quote))
+
+(print
+  (intercept
+    (('arity-error (lambda (e) 42)))
+    (signal)))

@@ -1,0 +1,21 @@
+(import (lone print intercept signal lambda quote set)
+        (math +))
+
+; when an interceptor's matcher signals during its evaluation,
+; the walker must skip the currently dispatching interceptor
+; and propagate the new emission to the next enclosing one.
+;
+; bad-matcher triggers a type-error by adding a symbol and an
+; integer. the inner interceptor's matcher runs bad-matcher,
+; which emits type-error. the inner interceptor is dispatching
+; at that moment, so the walker skips it. the outer interceptor
+; intercepts type-error and returns outer-intercepted.
+
+(set bad-matcher (lambda (tag) (+ 'x 1)))
+
+(print
+  (intercept
+    (('type-error (lambda (v) 'outer-intercepted)))
+    (intercept
+      ((bad-matcher (lambda (v) 'inner-intercepted)))
+      (signal 'some-tag 1))))

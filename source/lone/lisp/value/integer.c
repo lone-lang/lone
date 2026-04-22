@@ -6,9 +6,7 @@
 
 struct lone_lisp_value lone_lisp_integer_create(lone_lisp_integer integer)
 {
-	/* see if integer survives the tag being shifted in and out of it */
-	if ((integer << LONE_LISP_DATA_SHIFT) >> LONE_LISP_DATA_SHIFT != integer) {
-		/* number is too large for lone's tagged value representation */
+	if (integer < LONE_LISP_INTEGER_MIN || integer > LONE_LISP_INTEGER_MAX) {
 		linux_exit(-1);
 	}
 

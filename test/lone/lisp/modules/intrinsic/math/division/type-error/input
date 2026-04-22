@@ -1,0 +1,7 @@
+(import (lone print intercept lambda quote)
+        (math /))
+
+(print
+  (intercept
+    (('type-error (lambda (v) v)))
+    (/ 'not-a-number 1)))

@@ -105,6 +105,16 @@
 #define LONE_LISP_INLINE_LENGTH_MASK       0x07  /* 3 bits for length 0-7 */
 #define LONE_LISP_INLINE_MAX_LENGTH        7
 
+/* Flag bit in an INTERCEPTOR_DELIMITER stack frame.
+ * Set while that interceptor is dispatching a signal.
+ * The stack walker skips dispatching delimiters so that
+ * a signal emitted from a matcher expression propagates
+ * to the next interceptor rather than reentering the
+ * current one.
+ */
+#define LONE_LISP_INTERCEPTOR_DISPATCHING_FLAG \
+	((long) 1 << LONE_LISP_DATA_SHIFT)
+
 #ifndef LONE_LISP_BUFFER_SIZE
 	#define LONE_LISP_BUFFER_SIZE 4096
 #endif
@@ -161,5 +171,8 @@ long lone_lisp_primitive_ ## name                       \
 	struct lone_lisp_machine *machine,              \
 	long step                                       \
 )
+
+#define LONE_LISP_INTEGER_MIN (-(1L << (LONE_LISP_DATA_BITS - 1)))
+#define LONE_LISP_INTEGER_MAX ((1L << (LONE_LISP_DATA_BITS - 1)) - 1)
 
 #endif /* LONE_LISP_DEFINITIONS_HEADER */

@@ -1,0 +1,16 @@
+(import (lone print intercept signal lambda quote))
+
+; coroutine composition: an inner matcher signals the outer to
+; ask whether the tag should match. the outer handler replies
+; with a truthy value via the continuation; the matcher uses
+; that value as its predicate verdict. inner's handler runs
+; and its return flows back out.
+
+; outer replies (k 1) = truthy, so inner matches. inner's
+; handler returns 'inner-matched.
+
+(print
+  (intercept (('decide? (lambda (e k) (k 1))))
+    (intercept (((lambda (tag) (signal 'decide? tag))
+                 (lambda (v) 'inner-matched)))
+      (signal 'some-tag 42))))

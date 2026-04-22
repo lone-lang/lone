@@ -1,0 +1,11 @@
+(import (lone print intercept signal lambda quote))
+
+; matcher emission carries a symbol value; outer handler
+; receives it as v and returns it. exercises the signal
+; value path through matcher-emitted signals.
+
+(print
+  (intercept (('err (lambda (v) v)))
+    (intercept (((lambda (tag) (signal 'err 'wrapped-value))
+                 (lambda (v) 'never)))
+      (signal 'other 1))))

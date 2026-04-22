@@ -1,0 +1,29 @@
+(import (lone print intercept signal lambda set generator quote))
+
+; The tag passed to signal does not have to be a symbol.
+; Applicable values like functions, primitives, generators,
+; vectors and tables are also accepted. A function matcher
+; receives the tag as its argument and decides for itself
+; whether to match.
+
+(set match-all (lambda (t) 1))
+(set identity (lambda (v) v))
+
+; Function as tag
+(set f (lambda () 'f))
+(print (intercept ((match-all identity)) (signal f 'function)))
+
+; Primitive as tag
+(print (intercept ((match-all identity)) (signal print 'primitive)))
+
+; Generator as tag
+(set g (generator (lambda () 42)))
+(print (intercept ((match-all identity)) (signal g 'generator)))
+
+; Vector as tag
+(set v [1 2 3])
+(print (intercept ((match-all identity)) (signal v 'vector)))
+
+; Table as tag
+(set t { x 10 })
+(print (intercept ((match-all identity)) (signal t 'table)))

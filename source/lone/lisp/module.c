@@ -272,7 +272,7 @@ void lone_lisp_module_set_and_export_c_string(struct lone_lisp *lone,
 	lone_lisp_module_set_and_export(lone, module, lone_lisp_intern_c_string(lone, symbol), value);
 }
 
-void lone_lisp_module_export_primitive(struct lone_lisp *lone,
+struct lone_lisp_value lone_lisp_module_export_primitive(struct lone_lisp *lone,
 		struct lone_lisp_value module, char *symbol, char *name,
 		lone_lisp_primitive_function function, struct lone_lisp_value closure,
 		struct lone_lisp_function_flags flags)
@@ -281,6 +281,8 @@ void lone_lisp_module_export_primitive(struct lone_lisp *lone,
 
 	primitive = lone_lisp_primitive_create(lone, name, function, closure, flags);
 	lone_lisp_module_set_and_export_c_string(lone, module, symbol, primitive);
+
+	return primitive;
 }
 
 LONE_LISP_PRIMITIVE(module_export)

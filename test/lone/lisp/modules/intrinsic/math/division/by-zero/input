@@ -1,0 +1,7 @@
+(import (lone print intercept lambda quote)
+        (math /))
+
+(print
+  (intercept
+    (('division-by-zero (lambda (v) v)))
+    (/ 42 0)))

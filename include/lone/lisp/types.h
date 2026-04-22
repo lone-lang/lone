@@ -174,6 +174,21 @@ struct lone_lisp_value {
 	long tagged;
 };
 
+/* Returned by fallible functions.
+ * `present` indicates whether
+ * `value` is valid.
+ *
+ * Both fields together fit in 16 bytes
+ * and are returned in registers on both
+ * x86_64 and aarch64, so the convention
+ * has about the same cost as a plain
+ * struct lone_lisp_value return.
+ */
+struct lone_lisp_optional_value {
+	bool present;
+	struct lone_lisp_value value;
+};
+
 struct lone_lisp_module {
 	struct lone_lisp_value name;
 	struct lone_lisp_value environment;
@@ -828,6 +843,7 @@ struct lone_lisp {
 		struct lone_lisp_value null;
 		struct lone_lisp_value top_level_environment;
 		struct lone_lisp_value path;
+		struct lone_lisp_value signal_primitive;
 	} modules;
 };
 
