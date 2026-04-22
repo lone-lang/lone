@@ -225,7 +225,7 @@ struct lone_lisp_primitive {
 };
 
 struct lone_lisp_machine_stack_frame;
-enum lone_lisp_machine_step;
+__extension__ enum lone_lisp_machine_step;
 
 struct lone_lisp_continuation {
 	size_t frame_count;
