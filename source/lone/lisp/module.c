@@ -142,8 +142,10 @@ static int lone_lisp_module_search(struct lone_lisp *lone, struct lone_lisp_valu
 	struct lone_lisp_value arguments, package, search_path;
 	struct lone_lisp_value slash, ln;
 	struct lone_bytes path;
+	struct stat status;
 	long result;
 	size_t i;
+	int fd;
 
 	symbols = lone_lisp_module_name_to_key(lone, symbols);
 	package = lone_lisp_list_first(lone, symbols);
@@ -171,7 +173,19 @@ static int lone_lisp_module_search(struct lone_lisp *lone, struct lone_lisp_valu
 			}
 		}
 
-		return (int) result;
+		fd = (int) result;
+
+		/* only regular files are accepted as modules
+		 * symbolic links were resolved by openat
+		 * reject directories, FIFOs, sockets
+		 * and device nodes that somehow made
+		 * their way into the module path */
+		if (linux_fstat(fd, &status) < 0 || !S_ISREG(status.st_mode)) {
+			linux_close(fd);
+			continue;
+		}
+
+		return fd;
 	}
 
 	linux_exit(-1); /* module not found */
