@@ -1,0 +1,6 @@
+(import (lone print lambda control transfer quote))
+
+(control
+  (transfer 'foo)
+  (lambda (value continuation)
+    (print value)))

@@ -754,7 +754,7 @@ LONE_LISP_PRIMITIVE(lone_transfer)
 
 	found:
 
-		/* recover the handler function */
+		/* recover the handler source pushed by control */
 		--frame; ++frame_count;
 		handler = (struct lone_lisp_value) { .tagged = frame->tagged };
 
@@ -768,15 +768,38 @@ LONE_LISP_PRIMITIVE(lone_transfer)
 		/* reset stack to control's application save steps */
 		machine->stack.top = frame;
 
-		/* configure machine to evaluate handler function with value and continuation */
-		machine->expression = lone_lisp_list_build(lone, 3, &handler, &value, &continuation);
+		/* preserve value and continuation
+		 * across the handler evaluation
+		 * so that case 1 can recover them */
+		lone_lisp_machine_push_value(lone, machine, value);
+		lone_lisp_machine_push_value(lone, machine, continuation);
+
+		/* evaluate the handler source into an applicable value
+		 * control is an fexpr and pushes the unevaluated handler
+		 * expression on the stack, transfer must evaluate it now
+		 * transfer will evaluate it every time it is called,
+		 * programmers may make creative use of this fact */
+		machine->expression = handler;
 		machine->step = LONE_LISP_MACHINE_STEP_EVALUATE;
 
 		return 1;
 
-	case 1:
+	case 1: /* handler evaluated, apply it to value and continuation */
 
-		/* handler has finished evaluation, return the value returned by it */
+		handler = machine->value;
+
+		continuation = lone_lisp_machine_pop_value(lone, machine);
+		value = lone_lisp_machine_pop_value(lone, machine);
+
+		/* apply directly so value and continuation reach the handler
+		 * without passing through the evaluator */
+		machine->applicable = handler;
+		machine->list = lone_lisp_list_build(lone, 2, &value, &continuation);
+		machine->step = LONE_LISP_MACHINE_STEP_APPLY;
+
+		return 2;
+
+	case 2:
 		lone_lisp_machine_push_value(lone, machine, machine->value);
 		return 0;
 
