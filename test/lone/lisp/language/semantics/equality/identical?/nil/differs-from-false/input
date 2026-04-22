@@ -1,0 +1,3 @@
+(import (lone identical? print set))
+(set false-value (identical? 1 2))
+(print (identical? nil false-value))

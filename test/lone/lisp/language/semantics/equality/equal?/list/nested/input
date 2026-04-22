@@ -1,0 +1,2 @@
+(import (lone equal? print quote))
+(print (equal? '(1 (2 (3))) '(1 (2 (3)))))

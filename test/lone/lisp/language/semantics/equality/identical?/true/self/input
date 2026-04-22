@@ -1,0 +1,3 @@
+(import (lone identical? print set))
+(set true-value (identical? 1 1))
+(print (identical? true-value true-value))

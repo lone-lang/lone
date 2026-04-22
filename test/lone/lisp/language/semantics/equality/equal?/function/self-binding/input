@@ -1,0 +1,3 @@
+(import (lone equal? print set lambda))
+(set f (lambda (x) x))
+(print (equal? f f))

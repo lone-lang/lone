@@ -1,0 +1,3 @@
+(import (lone identical? print set))
+(set t { "k" "v" })
+(print (identical? t t))

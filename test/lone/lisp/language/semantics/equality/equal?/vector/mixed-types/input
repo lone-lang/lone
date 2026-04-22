@@ -1,0 +1,2 @@
+(import (lone equal? print))
+(print (equal? [1 "abc" b"xy"] [1 "abc" b"xy"]))

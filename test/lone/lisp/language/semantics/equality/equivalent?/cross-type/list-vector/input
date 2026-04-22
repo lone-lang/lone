@@ -1,0 +1,2 @@
+(import (lone equivalent? print quote))
+(print (equivalent? '(1 2) [1 2]))

@@ -1,0 +1,2 @@
+(import (lone equal? print))
+(print (equal? 42 43))

@@ -1,0 +1,2 @@
+(import (lone equivalent? print quote))
+(print (equivalent? 42 'a))

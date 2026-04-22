@@ -1,0 +1,3 @@
+(import (lone equivalent? print set identical?))
+(set f-val (identical? 1 2))
+(print (equivalent? f-val f-val))

@@ -1,0 +1,2 @@
+(import (lone equal? print))
+(print (equal? "abc" b"abc"))

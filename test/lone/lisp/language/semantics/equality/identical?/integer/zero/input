@@ -1,0 +1,2 @@
+(import (lone identical? print))
+(print (identical? 0 0))

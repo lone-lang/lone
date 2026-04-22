@@ -1,0 +1,4 @@
+(import (lone equivalent? print set lambda))
+(set f (lambda (x) x))
+(set g (lambda (x) x))
+(print (equivalent? f g))

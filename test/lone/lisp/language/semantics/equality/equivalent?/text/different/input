@@ -1,0 +1,2 @@
+(import (lone equivalent? print))
+(print (equivalent? "abc" "xyz"))
