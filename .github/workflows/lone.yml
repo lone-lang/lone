@@ -52,6 +52,30 @@ jobs:
             env:
               STACK_PROTECTOR: "yes"
 
+        # GCC with LTO emits its own IR in .gnu.lto_* sections.
+        # LLD only consumes LLVM bitcode and ignores GCC's IR.
+        # When combined with GCC and LTO, the result is an empty
+        # .text and a binary with no entry point. The LTO plugin
+        # path does not help because LLD will not load GCC's plugin.
+        # Using -ffat-lto-objects would result in no actual LTO
+        # being performed, hiding rather than solving the problem.
+        # The combination is a known upstream incompatibility.
+        # Clang+LLD+LTO and GCC+{ld,mold}+LTO both still run
+        # and cover the LTO surface this would have tested.
+        exclude:
+          - compiler:
+              name: cc
+            linker:
+              name: lld
+            lto:
+              name: lto
+          - compiler:
+              name: gcc
+            linker:
+              name: lld
+            lto:
+              name: lto
+
     env:
       CONFIGURATION: x86_64+${{ matrix.compiler.name }}+${{ matrix.linker.name }}+${{ matrix.lto.name }}+${{ matrix.stack-protector.name }}
       CC: ${{ matrix.compiler.env.CC }}
