@@ -21,40 +21,54 @@
  *      &(*envp++ == 0) + 8       | auxv
  *
  **/
-__asm__
-(
 
-".global lone_entry"             "\n"  // place lone_entry in the symbol table
-"lone_entry:"                    "\n"  // program entry point
+/* Function attributes:
+ *
+ * 	naked                 suppresses compiler-emitted prologue and epilogue
+ * 	                      the asm body is the entire function
+ *
+ * 	externally_visible    stops -flto from internalizing the symbol
+ * 	                      under -fvisibility=hidden so the ELF entry
+ * 	                      point reference still resolves
+ *
+ * 	used, retain          stops the optimizer and linker from dropping
+ * 	                      the function's code and section respectively
+ * 	                      when they find that no C code calls lone_entry
+ */
+__attribute__((naked, externally_visible, used, retain))
+void lone_entry(void)
+{
+	__asm__
+	(
+	                                       // compute argc, argv, envp and auxv
 
-                                       // compute argc, argv, envp and auxv
+	"pop %rdi"                       "\n"  // argc: rdi = pop
+	"mov %rsp, %rsi"                 "\n"  // argv: rsi = sp
+	"lea 8(%rsi, %rdi, 8), %rdx"     "\n"  // envp: rdx = rsi + (rdi * 8) + 8
 
-"pop %rdi"                       "\n"  // argc: rdi = pop
-"mov %rsp, %rsi"                 "\n"  // argv: rsi = sp
-"lea 8(%rsi, %rdi, 8), %rdx"     "\n"  // envp: rdx = rsi + (rdi * 8) + 8
+	"lea 0(%rdx), %rcx"              "\n"  //       rcx = rdx
+	"0:"                             "\n"  // loop:
+	"add $8, %rcx"                   "\n"  //       rcx = rcx + 8
+	"cmpq $0, -8(%rcx)"              "\n"  //       *(rcx - 8) == 0 ?
+	"jnz 0b"                         "\n"  //       loop if not zero
+	                                       //       rcx - 8 == 0
+	                                       // auxv: rcx
 
-"lea 0(%rdx), %rcx"              "\n"  //       rcx = rdx
-"0:"                             "\n"  // loop:
-"add $8, %rcx"                   "\n"  //       rcx = rcx + 8
-"cmpq $0, -8(%rcx)"              "\n"  //       *(rcx - 8) == 0 ?
-"jnz 0b"                         "\n"  //       loop if not zero
-                                       //       rcx - 8 == 0
-                                       // auxv: rcx
+	                                       // x86_64 SysV ABI requirements:
+	"xor %rbp, %rbp"                 "\n"  // zero the deepest stack frame
+	"and $-16, %rsp"                 "\n"  // ensure 16 byte stack alignment
 
-                                       // x86_64 SysV ABI requirements:
-"xor %rbp, %rbp"                 "\n"  // zero the deepest stack frame
-"and $-16, %rsp"                 "\n"  // ensure 16 byte stack alignment
-
-"call lone_start"                "\n"  // call lone_start
-"mov %rax, %rdi"                 "\n"  // status code returned in rax
+	"call lone_start"                "\n"  // call lone_start
+	"mov %rax, %rdi"                 "\n"  // status code returned in rax
 
 #define S2(s) #s
 #define S(s) S2(s)
 
-"mov $" S(__NR_exit) ", %rax"    "\n"  // ensure clean process termination
-"syscall"                        "\n"  // exit with returned status code
+	"mov $" S(__NR_exit) ", %rax"    "\n"  // ensure clean process termination
+	"syscall"                        "\n"  // exit with returned status code
 
 #undef S2
 #undef S
 
-);
+	);
+}
