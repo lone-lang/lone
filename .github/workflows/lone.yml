@@ -8,13 +8,26 @@ on:
 
 jobs:
   build-and-test:
-    runs-on: ubuntu-latest
-    container: archlinux:base-devel
+    runs-on: ${{ matrix.platform.runs-on }}
+    container: ${{ matrix.platform.container }}
 
     strategy:
       fail-fast: false
 
       matrix:
+        platform:
+          - name: x86_64
+            runs-on: ubuntu-latest
+            container: archlinux:base-devel
+
+          # Official Arch Linux ships x86_64 only.
+          # Arch Linux ARM is a separate community
+          # project at archlinuxarm.org. Menci's
+          # image tracks the Arch Linux ARM repos
+          # and rebuilds daily.
+          - name: aarch64
+            runs-on: ubuntu-24.04-arm
+            container: menci/archlinuxarm
         compiler:
           - name: cc
             env:
@@ -77,7 +90,7 @@ jobs:
               name: lto
 
     env:
-      CONFIGURATION: x86_64+${{ matrix.compiler.name }}+${{ matrix.linker.name }}+${{ matrix.lto.name }}+${{ matrix.stack-protector.name }}
+      CONFIGURATION: ${{ matrix.platform.name }}+${{ matrix.compiler.name }}+${{ matrix.linker.name }}+${{ matrix.lto.name }}+${{ matrix.stack-protector.name }}
       CC: ${{ matrix.compiler.env.CC }}
       LD: ${{ matrix.linker.env.LD }}
       CFLAGS: ${{ matrix.compiler.env.CFLAGS }}
@@ -85,14 +98,14 @@ jobs:
       LTO: ${{ matrix.lto.env.LTO }}
       STACK_PROTECTOR: ${{ matrix.stack-protector.env.STACK_PROTECTOR }}
 
-    name: x86_64 / ${{ matrix.compiler.name }} / ${{ matrix.linker.name }} / ${{ matrix.lto.name }} / ${{ matrix.stack-protector.name }}
+    name: ${{ matrix.platform.name }} / ${{ matrix.compiler.name }} / ${{ matrix.linker.name }} / ${{ matrix.lto.name }} / ${{ matrix.stack-protector.name }}
 
     steps:
     - name: Set up pacman keys
       run: pacman-key --init
 
     - name: Update packages and install dependencies
-      run: pacman -Syu --noconfirm clang lld llvm mold
+      run: pacman -Syu --noconfirm base-devel clang lld llvm mold
 
     - name: Checkout lone repository
       uses: actions/checkout@v4
@@ -103,8 +116,8 @@ jobs:
     - name: Upload lone interpreter artifact
       uses: actions/upload-artifact@v4
       with:
-        name: x86_64+${{ matrix.compiler.name }}+${{ matrix.linker.name }}+${{ matrix.lto.name }}+${{ matrix.stack-protector.name }}
-        path: build/x86_64+${{ matrix.compiler.name }}+${{ matrix.linker.name }}+${{ matrix.lto.name }}+${{ matrix.stack-protector.name }}/lone
+        name: ${{ matrix.platform.name }}+${{ matrix.compiler.name }}+${{ matrix.linker.name }}+${{ matrix.lto.name }}+${{ matrix.stack-protector.name }}
+        path: build/${{ matrix.platform.name }}+${{ matrix.compiler.name }}+${{ matrix.linker.name }}+${{ matrix.lto.name }}+${{ matrix.stack-protector.name }}/lone
         compression-level: 9
         overwrite: false
 
@@ -137,7 +150,7 @@ jobs:
       run: pacman-key --init
 
     - name: Update packages and install dependencies
-      run: pacman -Syu --noconfirm clang lld llvm mold
+      run: pacman -Syu --noconfirm base-devel clang lld llvm mold
 
     - name: Checkout lone repository
       uses: actions/checkout@v4
