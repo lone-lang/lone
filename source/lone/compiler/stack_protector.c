@@ -23,7 +23,7 @@ lone_compiler_stack_protector_initialize(struct lone_bytes random)
 		 * exit if that fails since the canary
 		 * cannot be initialized safely and a
 		 * predictable stack canary is pointless */
-		random = LONE_BYTES_FROM_ARRAY(fallback);
+		random = LONE_BYTES_VALUE_FROM_ARRAY(fallback);
 		if (linux_dev_urandom(random) < 0) { linux_exit(-1); }
 	}
 
