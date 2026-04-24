@@ -23,7 +23,6 @@ struct elf {
 	struct lone_bytes header;
 	enum lone_elf_ident_class class;
 	size_t page_size;
-	lone_elf_umax load_address;
 
 	struct {
 		struct {
@@ -306,7 +305,6 @@ static void analyze(struct elf *elf)
 	lone_u16 entry_count = elf->segments.table.segment.count;
 	struct lone_elf_segment *segment;
 	struct lone_optional_u32 type;
-	bool found_first_load;
 	lone_u16 i;
 
 	elf->limits.start.file = -1ULL;
@@ -317,8 +315,6 @@ static void analyze(struct elf *elf)
 	elf->limits.end.physical = 0;
 	elf->segments.nulls_count = 0;
 	elf->segments.has_phdr = false;
-	elf->load_address = 0;
-	found_first_load = false;
 
 	for (i = 0; i < entry_count; ++i) {
 		segment = lone_elf_segment_at(elf->segments.table, i);
@@ -328,13 +324,6 @@ static void analyze(struct elf *elf)
 		if (!type.present) { invalid_elf(); }
 
 		if (type.value == LONE_ELF_SEGMENT_TYPE_LOADABLE) {
-
-			if (!found_first_load) {
-				elf->load_address =
-					  segment_read_umax(header, segment, lone_elf_segment_read_virtual_address)
-					- segment_read_umax(header, segment, lone_elf_segment_read_file_offset);
-				found_first_load = true;
-			}
 
 			set_start_end(&elf->limits.start.file, &elf->limits.end.file,
 			              segment_read_umax(header, segment, lone_elf_segment_read_file_offset),
