@@ -553,30 +553,21 @@ static void set_lone_segments(struct elf *elf)
 	set_lone_segment = false;
 
 	for (i = 0; i < segments.segment.count; ++i) {
+		if (set_load_segment && set_lone_segment) { break; }
+
 		segment = lone_elf_segment_at(segments, i);
 		if (!segment) { overflow(); }
 		type = lone_elf_segment_read_type(header, segment);
 		if (!type.present) { invalid_elf(); }
 
-		switch ((enum lone_elf_segment_type) type.value) {
-		case LONE_ELF_SEGMENT_TYPE_NULL: // linker allocated spare segment
-			if (!set_load_segment) {
-				set_segment(elf, header, segment, LONE_ELF_SEGMENT_TYPE_LOAD);
-				set_load_segment = true;
-			} else if (!set_lone_segment) {
-				set_segment(elf, header, segment, LONE_ELF_SEGMENT_TYPE_LONE);
-				set_lone_segment = true;
-			} else {
-				break;
-			}
+		if (type.value != LONE_ELF_SEGMENT_TYPE_NULL) { continue; }
 
-		__attribute__((fallthrough));
-		default:
-			continue;
-		}
-
-		if (set_lone_segment && set_load_segment) {
-			break;
+		if (!set_load_segment) {
+			set_segment(elf, header, segment, LONE_ELF_SEGMENT_TYPE_LOAD);
+			set_load_segment = true;
+		} else {
+			set_segment(elf, header, segment, LONE_ELF_SEGMENT_TYPE_LONE);
+			set_lone_segment = true;
 		}
 	}
 }
