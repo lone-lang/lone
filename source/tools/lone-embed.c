@@ -414,8 +414,8 @@ static void adjust_phdr_entry(struct elf *elf)
 	size = pht_size(elf);
 	size_aligned = align_to_page(elf, size);
 	offset = elf->segments.offset;
-	virtual = elf->load_address + offset;
-	physical = virtual;
+	virtual = align_to_page(elf, elf->limits.end.virtual);
+	physical = align_to_page(elf, elf->limits.end.physical);
 
 	if (created_phdr) {
 		segment_write_u32(
