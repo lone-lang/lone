@@ -123,7 +123,8 @@ static void not_enough_nulls(void)
 
 static void check_arguments(int argc, char **argv)
 {
-	if (argc <= 2) { /* at least 2 arguments are needed */ linux_exit(1); }
+	/* argv[1] is the ELF path, argv[2] the segment data path */
+	if (argc <= 2) { linux_exit(1); }
 }
 
 static int open_path(char *path, int flags)
