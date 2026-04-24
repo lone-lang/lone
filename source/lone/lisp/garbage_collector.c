@@ -11,8 +11,6 @@
 
 #include <lone/architecture/garbage_collector.c>
 
-#include <limits.h>
-
 static void lone_lisp_mark_heap_value(struct lone_lisp *lone, struct lone_lisp_heap_value *value);
 static void lone_lisp_mark_lisp_stack_values(struct lone_lisp *lone,
 		struct lone_lisp_machine_stack_frame *base, struct lone_lisp_machine_stack_frame *limit);

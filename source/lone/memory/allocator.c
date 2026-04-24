@@ -7,8 +7,6 @@
 #include <lone/memory/functions.h>
 #include <lone/utilities.h>
 
-#include <limits.h>
-
 static inline size_t lone_memory_size_class(size_t size)
 {
 	size_t log2_ceil;

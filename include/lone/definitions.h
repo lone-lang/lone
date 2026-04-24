@@ -7,7 +7,21 @@
 #include <linux/elf.h>
 #include <asm/bitsperlong.h>
 
-#include <assert.h>
+/* Alias a handful of names that ordinarily come from glibc's
+ * <assert.h> and <limits.h>. Both headers transitively pull
+ * in <features.h> and define __GLIBC__ even under
+ * -ffreestanding -nostdlib, which then causes kernel UAPI
+ * headers like <linux/stat.h> to hide POSIX-shared macros
+ * behind !defined(__GLIBC__). Provide compiler-intrinsic
+ * equivalents instead and leave glibc out of the picture. */
+
+#ifndef static_assert
+#define static_assert _Static_assert
+#endif
+
+#ifndef CHAR_BIT
+#define CHAR_BIT __CHAR_BIT__
+#endif
 
 /* ╭────────────────────────────────────────────────────────────────────────╮
    │                                                                        │

@@ -1,7 +1,6 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later */
 
 #include <lone/bits.h>
-#include <limits.h>
 
 #define BITS_PER_LONG (sizeof(unsigned long) * CHAR_BIT)
 

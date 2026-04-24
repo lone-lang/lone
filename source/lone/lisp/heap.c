@@ -7,8 +7,6 @@
 #include <lone/bits.h>
 #include <lone/linux.h>
 
-#include <limits.h>
-
 /* ╭────────────────────────────────────────────────────────────────────────╮
    │                                                                        │
    │    Calculates bitmap size for a given heap value capacity.             │

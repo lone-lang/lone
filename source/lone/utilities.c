@@ -1,8 +1,7 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later */
 
+#include <lone/definitions.h>
 #include <lone/utilities.h>
-
-#include <limits.h>
 
 long lone_min(long x, long y)
 {
