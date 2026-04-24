@@ -38,28 +38,25 @@ void lone_lisp_reader_finalize(struct lone_lisp *lone, struct lone_lisp_reader *
 
 static size_t lone_lisp_reader_fill_buffer(struct lone_lisp *lone, struct lone_lisp_reader *reader)
 {
-	unsigned char *buffer = reader->buffer.bytes.pointer;
-	size_t size = reader->buffer.bytes.count, position = reader->buffer.position.write,
-	       allocated = size, bytes_read = 0, total_read = 0, old_allocated;
-	ssize_t read_result = 0;
+	unsigned char *buffer;
+	size_t allocated, position, available, bytes_read, total_read, old_allocated;
+	ssize_t read_result;
 
 	if (reader->file_descriptor == -1) {
 		/* reading from a fixed buffer, can't read more */
 		return 0;
 	}
 
+	buffer = reader->buffer.bytes.pointer;
+	allocated = reader->buffer.bytes.count;
+	position = reader->buffer.position.write;
+	total_read = 0;
+
 	while (1) {
-		read_result = linux_read(reader->file_descriptor, buffer + position, size);
+		available = allocated - position;
 
-		if (read_result < 0) {
-			linux_exit(-1);
-		}
-
-		bytes_read = (size_t) read_result;
-		total_read += bytes_read;
-		position += bytes_read;
-
-		if (bytes_read == size) {
+		if (available == 0) {
+			/* buffer is full, grow it before reading more */
 			old_allocated = allocated;
 
 			if (__builtin_mul_overflow(allocated, (size_t) 2, &allocated)) {
@@ -73,9 +70,25 @@ static size_t lone_lisp_reader_fill_buffer(struct lone_lisp *lone, struct lone_l
 				1,
 				LONE_MEMORY_ALLOCATION_FLAGS_NONE
 			);
-		} else {
+
+			available = allocated - position;
+		}
+
+		read_result = linux_read(reader->file_descriptor, buffer + position, available);
+
+		if (read_result < 0) {
+			linux_exit(-1);
+		}
+
+		bytes_read  = (size_t) read_result;
+		total_read += bytes_read;
+		position   += bytes_read;
+
+		if (bytes_read < available) {
+			/* short read: end of input or no more data available right now */
 			break;
 		}
+		/* full read: loop to grow and read more */
 	}
 
 	reader->buffer.bytes.pointer = buffer;
