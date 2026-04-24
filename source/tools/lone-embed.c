@@ -203,7 +203,9 @@ static off_t file_size(int fd)
 
 static void read_elf_header(struct elf *elf)
 {
-	read_bytes(elf->file.descriptor, elf->header);
+	if (read_bytes(elf->file.descriptor, elf->header) != elf->header.count) {
+		invalid_elf();
+	}
 }
 
 static void validate_elf_header(struct elf *elf)
@@ -221,6 +223,7 @@ static void load_program_header_table(struct elf *elf)
 {
 	struct lone_elf_optional_umax offset;
 	struct lone_optional_u16 entry_size, entry_count;
+	struct lone_bytes target;
 	lone_elf_umax size;
 	void *address;
 
@@ -246,7 +249,8 @@ static void load_program_header_table(struct elf *elf)
 	elf->segments.memory.count = size;
 
 	seek_to(elf->file.descriptor, offset.value);
-	read_bytes(elf->file.descriptor, (struct lone_bytes) { pht_size(elf), elf->segments.memory.pointer });
+	target = (struct lone_bytes) { pht_size(elf), elf->segments.memory.pointer };
+	if (read_bytes(elf->file.descriptor, target) != target.count) { invalid_elf(); }
 }
 
 static lone_u32 segment_read_u32(struct lone_elf_header *header,
