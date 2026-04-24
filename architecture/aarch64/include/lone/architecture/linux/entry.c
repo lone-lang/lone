@@ -53,11 +53,14 @@ void lone_entry(void)
 	"cbnz x8, 0b"                    "\n"  //       goto loop if x8 != 0
 	                                       // auxv: x3
 
-	                                       // AND (immediate) forbids sp
-	                                       // as the source register
-	                                       // move sp to x8 so the AND
-	                                       // reads from a general purpose
-	                                       // register and writes back to sp
+	                                       // aarch64 AAPCS64 requirements:
+	                                       //
+	"mov x29, #0"                    "\n"  // zero the deepest stack frame
+	                                       //
+	                                       // AND (immediate) forbids sp as the
+	                                       // source register; stage sp through
+	                                       // x8 so the AND reads from a GP
+	                                       // register and writes back to sp.
 	"mov x8, sp"                     "\n"  // x8 = sp
 	"and sp, x8, #-16"               "\n"  // ensure 16 byte alignment
 
