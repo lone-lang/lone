@@ -108,9 +108,9 @@ static void check_arguments(int argc, char **argv)
 	if (argc <= 2) { /* at least 2 arguments are needed */ linux_exit(1); }
 }
 
-static int open_path(char *path)
+static int open_path(char *path, int flags)
 {
-	int fd = linux_openat(AT_FDCWD, (unsigned char *) path, O_RDWR | O_CLOEXEC);
+	int fd = linux_openat(AT_FDCWD, (unsigned char *) path, flags | O_CLOEXEC);
 	if (fd < 0) { /* error opening file descriptor */ linux_exit(2); }
 	return fd;
 }
@@ -548,8 +548,8 @@ static void set_page_size(struct elf *elf, struct lone_auxiliary_vector *auxvec)
 
 static void open_files(struct elf *elf, char *elf_path, char *data_path)
 {
-	elf->file.descriptor = open_path(elf_path);
-	elf->data.file_descriptor = open_path(data_path);
+	elf->file.descriptor = open_path(elf_path, O_RDWR);
+	elf->data.file_descriptor = open_path(data_path, O_RDONLY);
 }
 
 static void query_file_sizes(struct elf *elf)
