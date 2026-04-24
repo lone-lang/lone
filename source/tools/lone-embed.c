@@ -509,6 +509,7 @@ static void set_lone_segments(struct elf *elf)
 
 	for (i = 0; i < segments.segment.count; ++i) {
 		segment = lone_elf_segment_at(segments, i);
+		if (!segment) { overflow(); }
 		type = lone_elf_segment_read_type(header, segment);
 		if (!type.present) { invalid_elf(); }
 
