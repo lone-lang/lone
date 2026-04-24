@@ -53,7 +53,13 @@ void lone_entry(void)
 	"cbnz x8, 0b"                    "\n"  //       goto loop if x8 != 0
 	                                       // auxv: x3
 
-	"and sp, sp, -16"                "\n"  // ensure 16 byte alignment
+	                                       // AND (immediate) forbids sp
+	                                       // as the source register
+	                                       // move sp to x8 so the AND
+	                                       // reads from a general purpose
+	                                       // register and writes back to sp
+	"mov x8, sp"                     "\n"  // x8 = sp
+	"and sp, x8, #-16"               "\n"  // ensure 16 byte alignment
 
 	"bl lone_start"                  "\n"  // call lone_start; returns status code in x0
 
