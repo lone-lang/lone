@@ -399,7 +399,14 @@ static void adjust_phdr_entry(struct elf *elf)
 		load = null_1;
 		created_phdr = false;
 	} else {
-		/* No PT_PHDR, create one from first NULL, use second for PT_LOAD */
+		/* no PHDR found so repurpose the first NULL entry
+		 * as one and use the second NULL for the LOAD entry
+		 * guarantees every patched ELF contains a PHDR entry
+		 * pointing at the relocated program header table
+		 * the kernel's PHDR lookup prefers PHDR.p_vaddr
+		 * over the load_address + e_phoff fallback
+		 * so maintaining the entry keeps the two
+		 * addresses consistent regardless of layout */
 		phdr = null_1;
 		load = null_2;
 		created_phdr = true;
