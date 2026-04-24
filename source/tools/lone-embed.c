@@ -232,13 +232,23 @@ static void read_elf_header(struct elf *elf)
 
 static void validate_elf_header(struct elf *elf)
 {
+	struct lone_optional_u16 type;
+
 	elf->class = LONE_ELF_IDENT_CLASS_INVALID;
 
-	if (lone_elf_header_is_valid(hdr(elf))) {
-		elf->class = elf->header.pointer[LONE_ELF_IDENT_INDEX_CLASS];
-	} else {
-		invalid_elf();
-	}
+	if (!lone_elf_header_is_valid(hdr(elf))) { invalid_elf(); }
+
+	/* lone_elf_header_is_valid certifies
+	   the ELF header against the ELF spec
+	   which includes ET_REL or ET_CORE
+	   lone-embed can only meaningfully
+	   patch runnable binaries though        */
+	type = lone_elf_header_read_type(hdr(elf));
+	if (!type.present) { invalid_elf(); }
+	if (   type.value != LONE_ELF_TYPE_EXECUTABLE
+	    && type.value != LONE_ELF_TYPE_DYNAMIC) { invalid_elf(); }
+
+	elf->class = elf->header.pointer[LONE_ELF_IDENT_INDEX_CLASS];
 }
 
 static void load_program_header_table(struct elf *elf)
