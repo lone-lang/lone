@@ -152,7 +152,11 @@ static size_t write_bytes(int fd, struct lone_bytes buffer)
 		if (written_or_error > 0) {
 			total += written_or_error;
 		} else if (written_or_error == 0) {
-			break;
+			/* regular files never write zero bytes
+			 * accepting it would return a short count
+			 * that callers already ignored, silently
+			 * corrupting the output ELF */
+			linux_exit(4);
 		} else {
 			switch (written_or_error) {
 			case -EINTR:
