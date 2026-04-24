@@ -12,7 +12,25 @@
 #define IO_BUFFER_SIZE (1024 * 4096)
 #endif
 
+/* REQUIRED_PT_NULLS encodes the number of PT_NULL entries
+ * that set_lone_segments later repurposes into the new
+ * PT_LOAD and the PT_LONE describing the embedded segment.
+ *
+ * MAX_NEW_SEGMENTS encodes the upper bound on segments table
+ * entries appended by move_and_expand_pht_if_needed:
+ *
+ *     REQUIRED_PT_NULLS - if missing
+ *     PT_PHDR           - if missing
+ *     PT_LOAD           - covering the relocated segments
+ *
+ * load_program_header_table allocates room for every original entry
+ * plus this upper bound so pht_end and the null-zeroing write never
+ * walk off the mapped buffer. If the expansion logic ever needs more
+ * slots, these constants must be adjusted, or the runtime check in
+ * move_and_expand_pht_if_needed will trip and abort.
+ */
 #define REQUIRED_PT_NULLS 2
+#define MAX_NEW_SEGMENTS (REQUIRED_PT_NULLS + 2)
 
 #define LONE_TOOLS_EMBED_EXIT_INVALID_ELF           8
 #define LONE_TOOLS_EMBED_EXIT_MISSING_NULL_ENTRY    9
@@ -245,7 +263,7 @@ static void load_program_header_table(struct elf *elf)
 	elf->segments.table.segment.size = entry_size.value;
 	elf->segments.table.segment.count = entry_count.value;
 
-	size = pht_size_for(elf, entry_count.value + REQUIRED_PT_NULLS + 2);
+	size = pht_size_for(elf, entry_count.value + MAX_NEW_SEGMENTS);
 	address = map(size);
 
 	elf->segments.table.segments = address;
@@ -467,6 +485,7 @@ static void move_and_expand_pht_if_needed(struct elf *elf)
 
 	extra = REQUIRED_PT_NULLS + 1;
 	if (!elf->segments.has_phdr) { extra += 1; }
+	if (extra > MAX_NEW_SEGMENTS) { overflow(); }
 
 	new_nulls = pht_end(elf);
 
