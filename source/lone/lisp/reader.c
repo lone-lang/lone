@@ -204,12 +204,16 @@ static inline bool lone_lisp_reader_is_symbol_terminator(unsigned char character
 static struct lone_lisp_value lone_lisp_reader_consume_number(struct lone_lisp *lone, struct lone_lisp_reader *reader)
 {
 	unsigned char *start, *current;
-	size_t end;
+	size_t start_offset, end;
 
 	start = lone_lisp_reader_peek(lone, reader);
 
 	if (!start) { goto error; }
 
+	/* remember where the token starts as an offset into the buffer
+	   peeking may grow the buffer and move its backing storage
+	   thereby invalidating any pointer from before that call       */
+	start_offset = reader->buffer.position.read;
 	end = 0;
 
 	switch (*start) {
@@ -235,6 +239,9 @@ static struct lone_lisp_value lone_lisp_reader_consume_number(struct lone_lisp *
 
 	if (current && !lone_lisp_reader_is_token_separator(*current)) { goto error; }
 
+	/* buffer may have been reallocated
+	   recalculate pointer from offset */
+	start = reader->buffer.bytes.pointer + start_offset;
 	return lone_lisp_integer_parse(lone, start, end);
 
 error:
@@ -260,12 +267,14 @@ error:
 static struct lone_lisp_value lone_lisp_reader_consume_symbol(struct lone_lisp *lone, struct lone_lisp_reader *reader)
 {
 	unsigned char *start, *current;
-	size_t end;
+	size_t start_offset, end;
 
-	start = lone_lisp_reader_peek(lone, reader);
+	if (!lone_lisp_reader_peek(lone, reader)) { goto error; }
 
-	if (!start) { goto error; }
-
+	/* remember where the token starts as an offset into the buffer
+	   peeking may grow the buffer and move its backing storage
+	   thereby invalidating any pointer from before that call       */
+	start_offset = reader->buffer.position.read;
 	end = 0;
 
 	while ((current = lone_lisp_reader_peek(lone, reader)) &&
@@ -282,6 +291,9 @@ static struct lone_lisp_value lone_lisp_reader_consume_symbol(struct lone_lisp *
 	if (current && !lone_lisp_reader_is_whitespace(*current)
 	            && !lone_lisp_reader_is_closing_bracket(*current)) { goto error; }
 
+	/* buffer may have been reallocated
+	   recalculate pointer from offset */
+	start = reader->buffer.bytes.pointer + start_offset;
 	return lone_lisp_intern(lone, start, end, true);
 
 error:
