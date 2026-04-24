@@ -364,17 +364,17 @@ static void analyze(struct elf *elf)
 			set_start_end(&elf->limits.start.file, &elf->limits.end.file,
 			              segment_read_umax(header, segment, lone_elf_segment_read_file_offset),
 			              segment_read_umax(header, segment, lone_elf_segment_read_size_in_file),
-			              8);
+			              LONE_TOOLS_EMBED_EXIT_INVALID_ELF);
 
 			set_start_end(&elf->limits.start.virtual, &elf->limits.end.virtual,
 			              segment_read_umax(header, segment, lone_elf_segment_read_virtual_address),
 			              segment_read_umax(header, segment, lone_elf_segment_read_size_in_memory),
-			              8);
+			              LONE_TOOLS_EMBED_EXIT_INVALID_ELF);
 
 			set_start_end(&elf->limits.start.physical, &elf->limits.end.physical,
 			              segment_read_umax(header, segment, lone_elf_segment_read_physical_address),
 			              segment_read_umax(header, segment, lone_elf_segment_read_size_in_memory),
-			              8);
+			              LONE_TOOLS_EMBED_EXIT_INVALID_ELF);
 
 		} else if (type.value == LONE_ELF_SEGMENT_TYPE_PHDR) {
 			elf->segments.has_phdr = true;
