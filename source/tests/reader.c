@@ -579,6 +579,276 @@ READER_EOF_BYTES_TEST(whitespace_only,    "  \t\n  ")
 READER_EOF_BYTES_TEST(comment,            ";line comment\n")
 READER_EOF_BYTES_TEST(comment_no_newline, ";trailing")
 
+/* ╭────────────────────────────────────────────────────────────────────────╮
+   │                                                                        │
+   │    Scale tests stress sustained correctness under volume: large        │
+   │    single tokens that force several buffer doublings, many small       │
+   │    tokens read in a loop, and skip-paths fed pathological volumes      │
+   │    of comments and whitespace. The pipe-based variants additionally    │
+   │    exercise repeated fill_buffer invocations.                          │
+   │                                                                        │
+   ╰────────────────────────────────────────────────────────────────────────╯ */
+static LONE_TEST_FUNCTION(test_reader_scale_huge_symbol)
+{
+	struct reader_test_context *ctx = test->context;
+	struct lone_lisp *lone = ctx->lone;
+	struct lone_lisp_reader reader;
+	struct lone_lisp_value value;
+	struct lone_bytes name;
+	size_t i;
+	int fds[2];
+	unsigned char pipe_data[65536];
+
+	for (i = 0; i < sizeof(pipe_data); ++i) { pipe_data[i] = 'x'; }
+
+	if (!lone_test_assert_long_equal(suite, test,
+			pipe_reader_open(lone, &reader, fds), 0)) { return; }
+
+	pipe_write_then_close(fds[1], pipe_data, sizeof(pipe_data));
+
+	value = lone_lisp_read(lone, &reader);
+
+	lone_test_assert_true(suite, test, !reader.status.error);
+	lone_test_assert_true(suite, test, lone_lisp_is_symbol(lone, value));
+	name = lone_lisp_bytes_of(lone, &value);
+	lone_test_assert_unsigned_long_equal(suite, test, name.count, sizeof(pipe_data));
+
+	linux_close(fds[0]);
+	lone_lisp_reader_finalize(lone, &reader);
+}
+
+static LONE_TEST_FUNCTION(test_reader_scale_huge_text)
+{
+	struct reader_test_context *ctx = test->context;
+	struct lone_lisp *lone = ctx->lone;
+	struct lone_lisp_reader reader;
+	struct lone_lisp_value value;
+	struct lone_bytes content;
+	size_t i;
+	int fds[2];
+	unsigned char prefix[] = { '"' };
+	unsigned char pipe_data[65536];
+
+	for (i = 0; i < sizeof(pipe_data) - 1; ++i) { pipe_data[i] = 'x'; }
+	pipe_data[sizeof(pipe_data) - 1] = '"';
+
+	if (!lone_test_assert_long_equal(suite, test,
+			pipe_reader_open(lone, &reader, fds), 0)) { return; }
+
+	seed_buffer(&reader, prefix, sizeof(prefix));
+	pipe_write_then_close(fds[1], pipe_data, sizeof(pipe_data));
+
+	value = lone_lisp_read(lone, &reader);
+
+	lone_test_assert_true(suite, test, !reader.status.error);
+	lone_test_assert_true(suite, test, lone_lisp_is_text(lone, value));
+	content = lone_lisp_bytes_of(lone, &value);
+	lone_test_assert_unsigned_long_equal(suite, test,
+		content.count, sizeof(pipe_data) - 1);
+
+	linux_close(fds[0]);
+	lone_lisp_reader_finalize(lone, &reader);
+}
+
+static LONE_TEST_FUNCTION(test_reader_scale_huge_bytes_literal)
+{
+	struct reader_test_context *ctx = test->context;
+	struct lone_lisp *lone = ctx->lone;
+	struct lone_lisp_reader reader;
+	struct lone_lisp_value value;
+	struct lone_bytes content;
+	size_t i;
+	int fds[2];
+	unsigned char prefix[] = { 'b', '"' };
+	unsigned char pipe_data[65536];
+
+	for (i = 0; i < sizeof(pipe_data) - 1; ++i) { pipe_data[i] = 'x'; }
+	pipe_data[sizeof(pipe_data) - 1] = '"';
+
+	if (!lone_test_assert_long_equal(suite, test,
+			pipe_reader_open(lone, &reader, fds), 0)) { return; }
+
+	seed_buffer(&reader, prefix, sizeof(prefix));
+	pipe_write_then_close(fds[1], pipe_data, sizeof(pipe_data));
+
+	value = lone_lisp_read(lone, &reader);
+
+	lone_test_assert_true(suite, test, !reader.status.error);
+	lone_test_assert_true(suite, test, lone_lisp_is_bytes(lone, value));
+	content = lone_lisp_bytes_of(lone, &value);
+	lone_test_assert_unsigned_long_equal(suite, test,
+		content.count, sizeof(pipe_data) - 1);
+
+	linux_close(fds[0]);
+	lone_lisp_reader_finalize(lone, &reader);
+}
+
+static LONE_TEST_FUNCTION(test_reader_scale_many_tokens)
+{
+	struct reader_test_context *ctx = test->context;
+	struct lone_lisp *lone = ctx->lone;
+	struct lone_lisp_reader reader;
+	struct lone_lisp_value value;
+	struct lone_bytes bytes;
+	size_t i, count;
+	unsigned char input[20000];
+
+	/* "a a a a ... " with 10000 occurrences of 'a' separated by spaces. */
+	for (i = 0; i < 10000; ++i) {
+		input[2 * i]     = 'a';
+		input[2 * i + 1] = ' ';
+	}
+	bytes.pointer = input;
+	bytes.count   = sizeof(input);
+
+	lone_lisp_reader_for_bytes(lone, &reader, bytes);
+
+	count = 0;
+	while (1) {
+		value = lone_lisp_read(lone, &reader);
+		if (reader.status.error) { break; }
+		if (reader.status.end_of_input) { break; }
+		if (lone_lisp_is_symbol(lone, value)) { ++count; }
+	}
+
+	lone_test_assert_true(suite, test, !reader.status.error);
+	lone_test_assert_unsigned_long_equal(suite, test, count, 10000);
+}
+
+static LONE_TEST_FUNCTION(test_reader_scale_long_flat_list)
+{
+	struct reader_test_context *ctx = test->context;
+	struct lone_lisp *lone = ctx->lone;
+	struct lone_lisp_reader reader;
+	struct lone_lisp_value value, list;
+	struct lone_bytes bytes;
+	size_t i, count;
+	unsigned char input[10001];
+
+	/* "(1 1 1 ... 1)" with 5000 ones. */
+	input[0] = '(';
+	for (i = 0; i < 5000; ++i) {
+		input[1 + 2 * i] = '1';
+		if (i < 4999) { input[2 + 2 * i] = ' '; }
+	}
+	input[10000] = ')';
+
+	bytes.pointer = input;
+	bytes.count   = sizeof(input);
+
+	lone_lisp_reader_for_bytes(lone, &reader, bytes);
+
+	value = lone_lisp_read(lone, &reader);
+
+	lone_test_assert_true(suite, test, !reader.status.error);
+	lone_test_assert_true(suite, test, lone_lisp_is_list(lone, value));
+
+	list  = value;
+	count = 0;
+	while (!lone_lisp_is_nil(list)) {
+		++count;
+		list = lone_lisp_list_rest(lone, list);
+	}
+	lone_test_assert_unsigned_long_equal(suite, test, count, 5000);
+}
+
+static LONE_TEST_FUNCTION(test_reader_scale_comment_storm)
+{
+	struct reader_test_context *ctx = test->context;
+	struct lone_lisp *lone = ctx->lone;
+	struct lone_lisp_reader reader;
+	struct lone_lisp_value value;
+	struct lone_bytes bytes;
+	size_t i;
+	unsigned char input[3001];
+
+	/* 1000 lines of ";c\n" then a final 'x' token. */
+	for (i = 0; i < 1000; ++i) {
+		input[3 * i]     = ';';
+		input[3 * i + 1] = 'c';
+		input[3 * i + 2] = '\n';
+	}
+	input[3000] = 'x';
+
+	bytes.pointer = input;
+	bytes.count   = sizeof(input);
+
+	lone_lisp_reader_for_bytes(lone, &reader, bytes);
+
+	value = lone_lisp_read(lone, &reader);
+
+	lone_test_assert_true(suite, test, !reader.status.error);
+	lone_test_assert_true(suite, test, lone_lisp_is_symbol(lone, value));
+}
+
+static LONE_TEST_FUNCTION(test_reader_scale_whitespace_storm)
+{
+	struct reader_test_context *ctx = test->context;
+	struct lone_lisp *lone = ctx->lone;
+	struct lone_lisp_reader reader;
+	struct lone_lisp_value value;
+	struct lone_bytes bytes;
+	size_t i;
+	unsigned char input[20000];
+
+	/* Cycle through space, tab, newline. Final byte is the token. */
+	for (i = 0; i < sizeof(input) - 1; ++i) {
+		switch (i % 3) {
+		case 0:  input[i] = ' ';  break;
+		case 1:  input[i] = '\t'; break;
+		case 2:  input[i] = '\n'; break;
+		}
+	}
+	input[sizeof(input) - 1] = 'x';
+
+	bytes.pointer = input;
+	bytes.count   = sizeof(input);
+
+	lone_lisp_reader_for_bytes(lone, &reader, bytes);
+
+	value = lone_lisp_read(lone, &reader);
+
+	lone_test_assert_true(suite, test, !reader.status.error);
+	lone_test_assert_true(suite, test, lone_lisp_is_symbol(lone, value));
+}
+
+static LONE_TEST_FUNCTION(test_reader_scale_sustained_reads)
+{
+	struct reader_test_context *ctx = test->context;
+	struct lone_lisp *lone = ctx->lone;
+	struct lone_lisp_reader reader;
+	struct lone_lisp_value value;
+	size_t i, count;
+	int fds[2];
+	unsigned char pipe_data[20000];
+
+	/* "a a a ... " — 10000 tokens piped through. The reader must
+	 * call fill_buffer many times across the stream. */
+	for (i = 0; i < 10000; ++i) {
+		pipe_data[2 * i]     = 'a';
+		pipe_data[2 * i + 1] = ' ';
+	}
+
+	if (!lone_test_assert_long_equal(suite, test,
+			pipe_reader_open(lone, &reader, fds), 0)) { return; }
+
+	pipe_write_then_close(fds[1], pipe_data, sizeof(pipe_data));
+
+	count = 0;
+	while (1) {
+		value = lone_lisp_read(lone, &reader);
+		if (reader.status.error) { break; }
+		if (reader.status.end_of_input) { break; }
+		if (lone_lisp_is_symbol(lone, value)) { ++count; }
+	}
+
+	lone_test_assert_true(suite, test, !reader.status.error);
+	lone_test_assert_unsigned_long_equal(suite, test, count, 10000);
+
+	linux_close(fds[0]);
+	lone_lisp_reader_finalize(lone, &reader);
+}
+
 long lone(int argc, char **argv, char **envp, struct lone_auxiliary_vector *auxv)
 {
 	void *stack = __builtin_frame_address(0);
@@ -670,6 +940,23 @@ long lone(int argc, char **argv, char **envp, struct lone_auxiliary_vector *auxv
 				test_reader_eof_comment),
 		LONE_TEST_CASE("reader/eof/comment-no-newline",
 				test_reader_eof_comment_no_newline),
+
+		LONE_TEST_CASE("reader/scale/huge-symbol",
+				test_reader_scale_huge_symbol),
+		LONE_TEST_CASE("reader/scale/huge-text",
+				test_reader_scale_huge_text),
+		LONE_TEST_CASE("reader/scale/huge-bytes-literal",
+				test_reader_scale_huge_bytes_literal),
+		LONE_TEST_CASE("reader/scale/many-tokens",
+				test_reader_scale_many_tokens),
+		LONE_TEST_CASE("reader/scale/long-flat-list",
+				test_reader_scale_long_flat_list),
+		LONE_TEST_CASE("reader/scale/comment-storm",
+				test_reader_scale_comment_storm),
+		LONE_TEST_CASE("reader/scale/whitespace-storm",
+				test_reader_scale_whitespace_storm),
+		LONE_TEST_CASE("reader/scale/sustained-reads",
+				test_reader_scale_sustained_reads),
 
 		LONE_TEST_CASE_NULL(),
 	};
