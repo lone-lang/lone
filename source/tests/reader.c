@@ -473,6 +473,112 @@ READER_GROWTH_BOUNDARY_TEST(4095)
 READER_GROWTH_BOUNDARY_TEST(4096)
 READER_GROWTH_BOUNDARY_TEST(4097)
 
+/* ╭────────────────────────────────────────────────────────────────────────╮
+   │                                                                        │
+   │    Adversarial input tests verify the reader rejects malformed         │
+   │    input cleanly: reader.status.error is set after the read and        │
+   │    the reader returns nil without exiting the process.                 │
+   │                                                                        │
+   │    Most tests fit in a fixed buffer via lone_lisp_reader_for_bytes,    │
+   │    keeping the inputs visible at the call site. The                    │
+   │    text-unterminated-large case uses a pipe so the buffer must grow    │
+   │    before the lexer hits the missing closing quote, exercising the     │
+   │    error path under fill_buffer.                                       │
+   │                                                                        │
+   ╰────────────────────────────────────────────────────────────────────────╯ */
+#define READER_ERROR_BYTES_TEST(name, literal)                                                    \
+static LONE_TEST_FUNCTION(test_reader_error_##name)                                               \
+{                                                                                                 \
+	struct reader_test_context *ctx = test->context;                                          \
+	struct lone_lisp_reader reader;                                                           \
+	unsigned char input[] = literal;                                                          \
+	struct lone_bytes bytes = { .pointer = input, .count = sizeof(input) - 1 };               \
+                                                                                                  \
+	lone_lisp_reader_for_bytes(ctx->lone, &reader, bytes);                                    \
+	(void) lone_lisp_read(ctx->lone, &reader);                                                \
+                                                                                                  \
+	lone_test_assert_true(suite, test, reader.status.error);                                  \
+}
+
+READER_ERROR_BYTES_TEST(text_unterminated,          "\"abc")
+READER_ERROR_BYTES_TEST(text_backslash_at_eof,      "\"abc\\")
+READER_ERROR_BYTES_TEST(text_x_no_hex,              "\"\\x\"")
+READER_ERROR_BYTES_TEST(text_x_non_hex,             "\"\\xZZ\"")
+READER_ERROR_BYTES_TEST(text_invalid_escape,        "\"\\z\"")
+READER_ERROR_BYTES_TEST(text_no_separator,          "\"abc\"x")
+READER_ERROR_BYTES_TEST(bytes_literal_unterminated, "b\"abc")
+READER_ERROR_BYTES_TEST(bytes_literal_no_separator, "b\"abc\"x")
+READER_ERROR_BYTES_TEST(number_no_separator,        "123abc")
+READER_ERROR_BYTES_TEST(symbol_quote_terminator,    "abc\"")
+READER_ERROR_BYTES_TEST(symbol_comment_terminator,  "abc;")
+READER_ERROR_BYTES_TEST(list_unterminated,          "(a b")
+READER_ERROR_BYTES_TEST(list_mismatched_square,     "(a]")
+READER_ERROR_BYTES_TEST(list_mismatched_curly,      "(a}")
+READER_ERROR_BYTES_TEST(vector_unterminated,        "[a b")
+READER_ERROR_BYTES_TEST(vector_mismatched_round,    "[a)")
+READER_ERROR_BYTES_TEST(vector_mismatched_curly,    "[a}")
+READER_ERROR_BYTES_TEST(table_unterminated,         "{a 1")
+READER_ERROR_BYTES_TEST(table_mismatched_round,     "{a 1)")
+READER_ERROR_BYTES_TEST(table_mismatched_square,    "{a 1]")
+READER_ERROR_BYTES_TEST(table_odd_count,            "{a 1 b}")
+READER_ERROR_BYTES_TEST(closing_round,              ")")
+READER_ERROR_BYTES_TEST(closing_square,             "]")
+READER_ERROR_BYTES_TEST(closing_curly,              "}")
+
+static LONE_TEST_FUNCTION(test_reader_error_text_unterminated_large)
+{
+	struct reader_test_context *ctx = test->context;
+	struct lone_lisp *lone = ctx->lone;
+	struct lone_lisp_reader reader;
+	size_t i;
+	int fds[2];
+	unsigned char prefix[] = { '"' };
+	unsigned char pipe_data[5000];
+
+	for (i = 0; i < sizeof(pipe_data); ++i) { pipe_data[i] = 'x'; }
+
+	if (!lone_test_assert_long_equal(suite, test,
+			pipe_reader_open(lone, &reader, fds), 0)) { return; }
+
+	seed_buffer(&reader, prefix, sizeof(prefix));
+	pipe_write_then_close(fds[1], pipe_data, sizeof(pipe_data));
+
+	(void) lone_lisp_read(lone, &reader);
+
+	lone_test_assert_true(suite, test, reader.status.error);
+
+	linux_close(fds[0]);
+	lone_lisp_reader_finalize(lone, &reader);
+}
+
+/* ╭────────────────────────────────────────────────────────────────────────╮
+   │                                                                        │
+   │    EOF boundary tests verify graceful handling of input that has no    │
+   │    token but is not malformed. status.error stays false and            │
+   │    status.end_of_input is set so callers can distinguish clean         │
+   │    end-of-input from parse errors.                                     │
+   │                                                                        │
+   ╰────────────────────────────────────────────────────────────────────────╯ */
+#define READER_EOF_BYTES_TEST(name, literal)                                                      \
+static LONE_TEST_FUNCTION(test_reader_eof_##name)                                                 \
+{                                                                                                 \
+	struct reader_test_context *ctx = test->context;                                          \
+	struct lone_lisp_reader reader;                                                           \
+	unsigned char input[] = literal;                                                          \
+	struct lone_bytes bytes = { .pointer = input, .count = sizeof(input) - 1 };               \
+                                                                                                  \
+	lone_lisp_reader_for_bytes(ctx->lone, &reader, bytes);                                    \
+	(void) lone_lisp_read(ctx->lone, &reader);                                                \
+                                                                                                  \
+	lone_test_assert_true(suite, test, !reader.status.error);                                 \
+	lone_test_assert_true(suite, test, reader.status.end_of_input);                           \
+}
+
+READER_EOF_BYTES_TEST(empty,              "")
+READER_EOF_BYTES_TEST(whitespace_only,    "  \t\n  ")
+READER_EOF_BYTES_TEST(comment,            ";line comment\n")
+READER_EOF_BYTES_TEST(comment_no_newline, ";trailing")
+
 long lone(int argc, char **argv, char **envp, struct lone_auxiliary_vector *auxv)
 {
 	void *stack = __builtin_frame_address(0);
@@ -504,6 +610,67 @@ long lone(int argc, char **argv, char **envp, struct lone_auxiliary_vector *auxv
 				test_reader_growth_exact_boundary_4096),
 		LONE_TEST_CASE("reader/growth/exact-boundary/4097",
 				test_reader_growth_exact_boundary_4097),
+
+		LONE_TEST_CASE("reader/error/text/unterminated",
+				test_reader_error_text_unterminated),
+		LONE_TEST_CASE("reader/error/text/backslash-at-eof",
+				test_reader_error_text_backslash_at_eof),
+		LONE_TEST_CASE("reader/error/text/x-no-hex",
+				test_reader_error_text_x_no_hex),
+		LONE_TEST_CASE("reader/error/text/x-non-hex",
+				test_reader_error_text_x_non_hex),
+		LONE_TEST_CASE("reader/error/text/invalid-escape",
+				test_reader_error_text_invalid_escape),
+		LONE_TEST_CASE("reader/error/text/no-separator",
+				test_reader_error_text_no_separator),
+		LONE_TEST_CASE("reader/error/text/unterminated-large",
+				test_reader_error_text_unterminated_large),
+		LONE_TEST_CASE("reader/error/bytes-literal/unterminated",
+				test_reader_error_bytes_literal_unterminated),
+		LONE_TEST_CASE("reader/error/bytes-literal/no-separator",
+				test_reader_error_bytes_literal_no_separator),
+		LONE_TEST_CASE("reader/error/number/no-separator",
+				test_reader_error_number_no_separator),
+		LONE_TEST_CASE("reader/error/symbol/quote-terminator",
+				test_reader_error_symbol_quote_terminator),
+		LONE_TEST_CASE("reader/error/symbol/comment-terminator",
+				test_reader_error_symbol_comment_terminator),
+		LONE_TEST_CASE("reader/error/list/unterminated",
+				test_reader_error_list_unterminated),
+		LONE_TEST_CASE("reader/error/list/mismatched/square",
+				test_reader_error_list_mismatched_square),
+		LONE_TEST_CASE("reader/error/list/mismatched/curly",
+				test_reader_error_list_mismatched_curly),
+		LONE_TEST_CASE("reader/error/vector/unterminated",
+				test_reader_error_vector_unterminated),
+		LONE_TEST_CASE("reader/error/vector/mismatched/round",
+				test_reader_error_vector_mismatched_round),
+		LONE_TEST_CASE("reader/error/vector/mismatched/curly",
+				test_reader_error_vector_mismatched_curly),
+		LONE_TEST_CASE("reader/error/table/unterminated",
+				test_reader_error_table_unterminated),
+		LONE_TEST_CASE("reader/error/table/mismatched/round",
+				test_reader_error_table_mismatched_round),
+		LONE_TEST_CASE("reader/error/table/mismatched/square",
+				test_reader_error_table_mismatched_square),
+		LONE_TEST_CASE("reader/error/table/odd-count",
+				test_reader_error_table_odd_count),
+		LONE_TEST_CASE("reader/error/closing-at-top-level/round",
+				test_reader_error_closing_round),
+		LONE_TEST_CASE("reader/error/closing-at-top-level/square",
+				test_reader_error_closing_square),
+		LONE_TEST_CASE("reader/error/closing-at-top-level/curly",
+				test_reader_error_closing_curly),
+
+		LONE_TEST_CASE("reader/eof/empty",
+				test_reader_eof_empty),
+		LONE_TEST_CASE("reader/eof/whitespace-only",
+				test_reader_eof_whitespace_only),
+		LONE_TEST_CASE("reader/eof/comment",
+				test_reader_eof_comment),
+		LONE_TEST_CASE("reader/eof/comment-no-newline",
+				test_reader_eof_comment_no_newline),
+
 		LONE_TEST_CASE_NULL(),
 	};
 
