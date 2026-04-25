@@ -608,7 +608,8 @@ static struct lone_lisp_value lone_lisp_lex(struct lone_lisp *lone, struct lone_
 			}
 
 			if (reader->status.error) {
-				goto error;
+				/* lexer error: propagate via status.error */
+				return lone_lisp_nil();
 			} else {
 				break;
 			}
@@ -618,9 +619,6 @@ static struct lone_lisp_value lone_lisp_lex(struct lone_lisp *lone, struct lone_
 	reader->status.end_of_input = !found;
 
 	return token;
-
-error:
-	linux_exit(-1);
 }
 
 static bool lone_lisp_reader_is_expected_character_symbol(struct lone_lisp *lone,
@@ -654,6 +652,7 @@ static struct lone_lisp_value lone_lisp_parse_vector(struct lone_lisp *lone, str
 	while (1) {
 		value = lone_lisp_lex(lone, reader);
 
+		if (reader->status.error) { goto error; }
 		if (reader->status.end_of_input) {
 			/* end of input in the middle of vector: [, [ x */
 			goto error;
@@ -665,6 +664,7 @@ static struct lone_lisp_value lone_lisp_parse_vector(struct lone_lisp *lone, str
 		}
 
 		value = lone_lisp_parse(lone, reader, value);
+		if (reader->status.error) { goto error; }
 
 		lone_lisp_vector_set_value_at(lone, vector, i++, value);
 	}
@@ -685,6 +685,7 @@ static struct lone_lisp_value lone_lisp_parse_table(struct lone_lisp *lone, stru
 	while (1) {
 		key = lone_lisp_lex(lone, reader);
 
+		if (reader->status.error) { goto error; }
 		if (reader->status.end_of_input) {
 			/* end of input in the middle of table: {, { x y */
 			goto error;
@@ -696,9 +697,11 @@ static struct lone_lisp_value lone_lisp_parse_table(struct lone_lisp *lone, stru
 		}
 
 		key = lone_lisp_parse(lone, reader, key);
+		if (reader->status.error) { goto error; }
 
 		value = lone_lisp_lex(lone, reader);
 
+		if (reader->status.error) { goto error; }
 		if (reader->status.end_of_input) {
 			/* end of input in the middle of table: { x, { x y z */
 			goto error;
@@ -710,6 +713,7 @@ static struct lone_lisp_value lone_lisp_parse_table(struct lone_lisp *lone, stru
 		}
 
 		value = lone_lisp_parse(lone, reader, value);
+		if (reader->status.error) { goto error; }
 
 		lone_lisp_table_set(lone, table, key, value);
 	}
@@ -733,6 +737,7 @@ static struct lone_lisp_value lone_lisp_parse_list(struct lone_lisp *lone,
 	while (1) {
 		next = lone_lisp_lex(lone, reader);
 
+		if (reader->status.error) { goto error; }
 		if (reader->status.end_of_input) {
 			/* end of input in the middle of list: (, (x */
 			goto error;
@@ -758,15 +763,18 @@ static struct lone_lisp_value lone_lisp_parse_list(struct lone_lisp *lone,
 
 				next = lone_lisp_lex(lone, reader);
 
+				if (reader->status.error) { goto error; }
 				if (reader->status.end_of_input) {
 					/* end of input in the middle of pair: (1 . */
 					goto error;
 				}
 
 				lone_lisp_list_set_rest(lone, head, lone_lisp_parse(lone, reader, next));
+				if (reader->status.error) { goto error; }
 
 				next = lone_lisp_lex(lone, reader);
 
+				if (reader->status.error) { goto error; }
 				if (!lone_lisp_reader_is_expected_character_symbol(lone, next, ')')) {
 					/* extra tokens in pair syntax: (1 2 . 3 4) */
 					goto error;
@@ -777,6 +785,7 @@ static struct lone_lisp_value lone_lisp_parse_list(struct lone_lisp *lone,
 		}
 
 		lone_lisp_list_append(lone, &first, &head, lone_lisp_parse(lone, reader, next));
+		if (reader->status.error) { goto error; }
 		at_least_one = true;
 	}
 
@@ -801,7 +810,9 @@ static struct lone_lisp_value lone_lisp_parse_special_character(struct lone_lisp
 		c_string = "quasiquote";
 		break;
 	default:
-		/* invalid special character */ linux_exit(-1);
+		/* invalid special character */
+		reader->status.error = true;
+		return lone_lisp_nil();
 	}
 
 	symbol = lone_lisp_intern_c_string(lone, c_string);
@@ -867,7 +878,8 @@ static struct lone_lisp_value lone_lisp_parse(struct lone_lisp *lone,
 	}
 
 error:
-	/* parse failed */ linux_exit(-1);
+	reader->status.error = true;
+	return lone_lisp_nil();
 }
 
 struct lone_lisp_value lone_lisp_read(struct lone_lisp *lone, struct lone_lisp_reader *reader)
