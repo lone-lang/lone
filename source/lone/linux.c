@@ -15,6 +15,11 @@ long linux_openat(int dirfd, unsigned char *path, int flags)
 	return linux_system_call_4(__NR_openat, dirfd, (long) path, flags, 0);
 }
 
+long linux_pipe2(int fds[2], int flags)
+{
+	return linux_system_call_2(__NR_pipe2, (long) fds, flags);
+}
+
 long linux_close(int fd)
 {
 	return linux_system_call_1(__NR_close, fd);

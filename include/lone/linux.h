@@ -31,6 +31,10 @@ linux_openat(int dirfd, unsigned char *path, int flags);
 
 long
 __attribute__((tainted_args))
+linux_pipe2(int fds[2], int flags);
+
+long
+__attribute__((tainted_args))
 linux_close(int fd);
 
 long
