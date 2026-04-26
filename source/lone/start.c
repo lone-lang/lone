@@ -6,7 +6,6 @@
 #include <lone/compiler/stack_protector.h>
 
 long
-__attribute__((no_stack_protector))
 lone_start(int argc, char **argv, char **envp, struct lone_auxiliary_vector *auxv)
 {
 #ifdef LONE_COMPILER_STACK_PROTECTOR

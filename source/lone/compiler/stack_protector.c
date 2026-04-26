@@ -16,6 +16,14 @@ void
 __attribute__((no_stack_protector))
 lone_compiler_stack_protector_initialize(struct lone_auxiliary_vector *auxiliary_vector)
 {
-	lone_random_with_urandom_fallback(auxiliary_vector,
-			LONE_BYTES_VALUE(sizeof(__stack_chk_guard), &__stack_chk_guard));
+	unsigned long guard;
+
+	lone_random_with_urandom_fallback(
+		auxiliary_vector,
+		LONE_BYTES_VALUE(sizeof(guard), &guard)
+	);
+
+	/* this guard can only be assigned
+	   in a no_stack_protector function */
+	__stack_chk_guard = guard;
 }
