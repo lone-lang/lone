@@ -114,7 +114,12 @@ LONE_LISP_PRIMITIVE(table_each)
 
 		i = 0;
 
-	iteration:
+	advance:
+
+		while (   i < (lone_lisp_integer) lone_lisp_heap_value_of(lone, table)->as.table.used
+		       && lone_lisp_is_tombstone(lone_lisp_heap_value_of(lone, table)->as.table.entries[i].key)) { ++i; }
+
+		if (i >= (lone_lisp_integer) lone_lisp_heap_value_of(lone, table)->as.table.used) { break; }
 
 		entry = &lone_lisp_heap_value_of(lone, table)->as.table.entries[i];
 
@@ -136,11 +141,7 @@ LONE_LISP_PRIMITIVE(table_each)
 
 		++i;
 
-		if (i < lone_lisp_heap_value_of(lone, table)->as.table.count) {
-			goto iteration;
-		} else {
-			break;
-		}
+		goto advance;
 	}
 
 	lone_lisp_machine_push_value(lone, machine, lone_lisp_nil());

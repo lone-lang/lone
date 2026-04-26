@@ -7,8 +7,8 @@
 
 /* ╭────────────────────────────────────────────────────────────────────────╮
    │                                                                        │
-   │    The lone structure represents low level system state                │
-   │    such as allocated memory and hash function state.                   │
+   │    The lone system structure represents low level system state         │
+   │    such as allocated memory and random bytes for hash keying.          │
    │    It must be initialized before everything else.                      │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
