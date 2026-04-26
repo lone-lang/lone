@@ -165,6 +165,9 @@ targets.phony += test
 test: tests lone tools
 	scripts/test.bash $(directories.test) $(directories.build)
 
+test/%: tests lone tools
+	scripts/test.bash $(directories.test) $(directories.build) $(*)
+
 targets.phony += directories
 directories:
 	scripts/create-symlinked-directory.bash $(directories.build.root)
