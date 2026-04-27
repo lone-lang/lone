@@ -1675,7 +1675,7 @@ LONE_LISP_PRIMITIVE(lone_print)
 
 	while (!lone_lisp_is_nil(arguments)) {
 		lone_lisp_print(lone, lone_lisp_list_first(lone, arguments), 1);
-		linux_write(1, "\n", 1);
+		linux_write_bytes(1, LONE_BYTES_VALUE_FROM_LITERAL("\n"));
 		arguments = lone_lisp_list_rest(lone, arguments);
 	}
 

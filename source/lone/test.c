@@ -253,12 +253,12 @@ LONE_TEST_ASSERTION_FUNCTION(u64, lone_u64, U64, u64)
 #undef LONE_TEST_ASSERTION_FUNCTION_5
 
 #define LINUX_WRITE_LITERAL(fd, c_string_literal)                                                  \
-	linux_write(fd, c_string_literal, sizeof(c_string_literal) - 1)
+	linux_write_bytes(fd, LONE_BYTES_VALUE_FROM_LITERAL(c_string_literal))
 
 void lone_test_suite_default_test_started_handler(struct lone_test_suite *suite, struct lone_test_case *test)
 {
 	LINUX_WRITE_LITERAL(1, "TEST ");
-	linux_write(1, test->name.pointer, test->name.count);
+	linux_write_bytes(1, test->name);
 	LINUX_WRITE_LITERAL(1, "\n");
 }
 
@@ -284,6 +284,6 @@ void lone_test_suite_default_test_finished_handler(struct lone_test_suite *suite
 	}
 
 	LINUX_WRITE_LITERAL(1, "\tRESULT ");
-	linux_write(1, result.pointer, result.count);
+	linux_write_bytes(1, result);
 	LINUX_WRITE_LITERAL(1, "\n");
 }

@@ -37,7 +37,7 @@ static void lone_lisp_print_integer(int fd, long n)
 		++count;
 	}
 
-	linux_write(fd, digit, count);
+	linux_write_bytes(fd, LONE_BYTES_VALUE(count, digit));
 }
 
 static void lone_lisp_print_escaped_content(struct lone_bytes content, int fd)
@@ -79,15 +79,15 @@ static void lone_lisp_print_escaped_content(struct lone_bytes content, int fd)
 		#undef ESCAPE
 
 		if (i > run_start) {
-			linux_write(fd, content.pointer + run_start, i - run_start);
+			linux_write_bytes(fd, LONE_BYTES_VALUE(i - run_start, content.pointer + run_start));
 		}
 
-		linux_write(fd, escape, escape_length);
+		linux_write_bytes(fd, LONE_BYTES_VALUE(escape_length, escape));
 		run_start = i + 1;
 	}
 
 	if (content.count > run_start) {
-		linux_write(fd, content.pointer + run_start, content.count - run_start);
+		linux_write_bytes(fd, LONE_BYTES_VALUE(content.count - run_start, content.pointer + run_start));
 	}
 }
 
@@ -97,9 +97,9 @@ static void lone_lisp_print_bytes(struct lone_lisp *lone, struct lone_lisp_value
 
 	content = lone_lisp_bytes_of(lone, &bytes);
 
-	linux_write(fd, "b\"", 2);
+	linux_write_bytes(fd, LONE_BYTES_VALUE_FROM_LITERAL("b\""));
 	lone_lisp_print_escaped_content(content, fd);
-	linux_write(fd, "\"", 1);
+	linux_write_bytes(fd, LONE_BYTES_VALUE_FROM_LITERAL("\""));
 }
 
 static void lone_lisp_print_list(struct lone_lisp *lone, struct lone_lisp_value list, int fd)
@@ -114,10 +114,10 @@ static void lone_lisp_print_list(struct lone_lisp *lone, struct lone_lisp_value 
 	if (lone_lisp_is_nil(rest)) {
 		/* proper list termination */
 	} else if (lone_lisp_is_list(lone, rest)) {
-		linux_write(fd, " ", 1);
+		linux_write_bytes(fd, LONE_BYTES_VALUE_FROM_LITERAL(" "));
 		lone_lisp_print_list(lone, rest, fd);
 	} else {
-		linux_write(fd, " . ", 3);
+		linux_write_bytes(fd, LONE_BYTES_VALUE_FROM_LITERAL(" . "));
 		lone_lisp_print(lone, rest, fd);
 	}
 }
@@ -129,16 +129,16 @@ static void lone_lisp_print_vector(struct lone_lisp *lone, struct lone_lisp_valu
 
 	count = lone_lisp_vector_count(lone, vector);
 
-	if (count == 0) { linux_write(fd, "[]", 2); return; }
+	if (count == 0) { linux_write_bytes(fd, LONE_BYTES_VALUE_FROM_LITERAL("[]")); return; }
 
-	linux_write(fd, "[ ", 2);
+	linux_write_bytes(fd, LONE_BYTES_VALUE_FROM_LITERAL("[ "));
 
 	LONE_LISP_VECTOR_FOR_EACH(lone, element, vector, i) {
 		lone_lisp_print(lone, element, fd);
-		linux_write(fd, " ", 1);
+		linux_write_bytes(fd, LONE_BYTES_VALUE_FROM_LITERAL(" "));
 	}
 
-	linux_write(fd, "]", 1);
+	linux_write_bytes(fd, LONE_BYTES_VALUE_FROM_LITERAL("]"));
 }
 
 static void lone_lisp_print_table(struct lone_lisp *lone, struct lone_lisp_value table, int fd)
@@ -146,21 +146,21 @@ static void lone_lisp_print_table(struct lone_lisp *lone, struct lone_lisp_value
 	struct lone_lisp_table *actual;
 	size_t i;
 
-	if (lone_lisp_table_count(lone, table) == 0) { linux_write(fd, "{}", 2); return; }
+	if (lone_lisp_table_count(lone, table) == 0) { linux_write_bytes(fd, LONE_BYTES_VALUE_FROM_LITERAL("{}")); return; }
 
 	actual = &lone_lisp_heap_value_of(lone, table)->as.table;
 
-	linux_write(fd, "{ ", 2);
+	linux_write_bytes(fd, LONE_BYTES_VALUE_FROM_LITERAL("{ "));
 
 	for (i = 0; i < actual->used; ++i) {
 		if (lone_lisp_is_tombstone(actual->entries[i].key)) { continue; }
 		lone_lisp_print(lone, actual->entries[i].key, fd);
-		linux_write(fd, " ", 1);
+		linux_write_bytes(fd, LONE_BYTES_VALUE_FROM_LITERAL(" "));
 		lone_lisp_print(lone, actual->entries[i].value, fd);
-		linux_write(fd, " ", 1);
+		linux_write_bytes(fd, LONE_BYTES_VALUE_FROM_LITERAL(" "));
 	}
 
-	linux_write(fd, "}", 1);
+	linux_write_bytes(fd, LONE_BYTES_VALUE_FROM_LITERAL("}"));
 }
 
 static void lone_lisp_print_function(struct lone_lisp *lone, struct lone_lisp_value function, int fd)
@@ -170,16 +170,16 @@ static void lone_lisp_print_function(struct lone_lisp *lone, struct lone_lisp_va
 	arguments = lone_lisp_heap_value_of(lone, function)->as.function.arguments;
 	code = lone_lisp_heap_value_of(lone, function)->as.function.code;
 
-	linux_write(fd, "(𝛌 ", 6);
+	linux_write_bytes(fd, LONE_BYTES_VALUE_FROM_LITERAL("(𝛌 "));
 	lone_lisp_print(lone, arguments, fd);
 
 	while (!lone_lisp_is_nil(code)) {
-		linux_write(fd, "\n  ", 3);
+		linux_write_bytes(fd, LONE_BYTES_VALUE_FROM_LITERAL("\n  "));
 		lone_lisp_print(lone, lone_lisp_list_first(lone, code), fd);
 		code = lone_lisp_list_rest(lone, code);
 	}
 
-	linux_write(fd, ")", 1);
+	linux_write_bytes(fd, LONE_BYTES_VALUE_FROM_LITERAL(")"));
 }
 
 static void lone_lisp_print_text(struct lone_lisp *lone, struct lone_lisp_value value, int fd)
@@ -188,31 +188,31 @@ static void lone_lisp_print_text(struct lone_lisp *lone, struct lone_lisp_value 
 
 	text = lone_lisp_bytes_of(lone, &value);
 
-	linux_write(fd, "\"", 1);
+	linux_write_bytes(fd, LONE_BYTES_VALUE_FROM_LITERAL("\""));
 	lone_lisp_print_escaped_content(text, fd);
-	linux_write(fd, "\"", 1);
+	linux_write_bytes(fd, LONE_BYTES_VALUE_FROM_LITERAL("\""));
 }
 
 static void lone_lisp_print_hash_notation(struct lone_lisp *lone, char *descriptor, struct lone_lisp_value value, int fd)
 {
-	linux_write(fd, "#<", 2);
-	linux_write(fd, descriptor, lone_c_string_length(descriptor));
-	linux_write(fd, " ", 1);
+	linux_write_bytes(fd, LONE_BYTES_VALUE_FROM_LITERAL("#<"));
+	linux_write_bytes(fd, LONE_BYTES_VALUE(lone_c_string_length(descriptor), descriptor));
+	linux_write_bytes(fd, LONE_BYTES_VALUE_FROM_LITERAL(" "));
 	lone_lisp_print(lone, value, fd);
-	linux_write(fd, ">", 1);
+	linux_write_bytes(fd, LONE_BYTES_VALUE_FROM_LITERAL(">"));
 }
 
 void lone_lisp_print(struct lone_lisp *lone, struct lone_lisp_value value, int fd)
 {
 	switch (lone_lisp_type_of(value)) {
 	case LONE_LISP_TAG_NIL:
-		linux_write(fd, "()", 2);
+		linux_write_bytes(fd, LONE_BYTES_VALUE_FROM_LITERAL("()"));
 		return;
 	case LONE_LISP_TAG_FALSE:
-		linux_write(fd, "false", 5);
+		linux_write_bytes(fd, LONE_BYTES_VALUE_FROM_LITERAL("false"));
 		return;
 	case LONE_LISP_TAG_TRUE:
-		linux_write(fd, "true", 4);
+		linux_write_bytes(fd, LONE_BYTES_VALUE_FROM_LITERAL("true"));
 		return;
 	case LONE_LISP_TAG_INTEGER:
 		lone_lisp_print_integer(fd, lone_lisp_integer_of(value));
@@ -241,9 +241,9 @@ void lone_lisp_print(struct lone_lisp *lone, struct lone_lisp_value value, int f
 		);
 		break;
 	case LONE_LISP_TAG_LIST:
-		linux_write(fd, "(", 1);
+		linux_write_bytes(fd, LONE_BYTES_VALUE_FROM_LITERAL("("));
 		lone_lisp_print_list(lone, value, fd);
-		linux_write(fd, ")", 1);
+		linux_write_bytes(fd, LONE_BYTES_VALUE_FROM_LITERAL(")"));
 		break;
 	case LONE_LISP_TAG_VECTOR:
 		lone_lisp_print_vector(lone, value, fd);
@@ -256,7 +256,7 @@ void lone_lisp_print(struct lone_lisp *lone, struct lone_lisp_value value, int f
 		break;
 	case LONE_LISP_TAG_SYMBOL: {
 		struct lone_bytes name = lone_lisp_bytes_of(lone, &value);
-		linux_write(fd, name.pointer, name.count);
+		linux_write_bytes(fd, name);
 		break;
 	}
 	case LONE_LISP_TAG_TEXT:

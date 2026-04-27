@@ -45,6 +45,15 @@ ssize_t
 __attribute__((fd_arg_read(1), tainted_args))
 linux_read(int fd, const void *buffer, size_t count);
 
+/* Fills a lone bytes structure by reading from a file descriptor.
+ * Loops on EINTR and EAGAIN. Returns the total bytes read,
+ * or the negative kernel errno on error. If the end of input
+ * is reached, total bytes read may be less than buffer.count.
+ */
+ssize_t
+__attribute__((fd_arg_read(1), tainted_args))
+linux_read_bytes(int fd, struct lone_bytes buffer);
+
 /* Fills a lone bytes structure by reading /dev/urandom.
  * Returns 0 on success or the error code from the failing system call. */
 long linux_dev_urandom(struct lone_bytes buffer);
@@ -52,6 +61,16 @@ long linux_dev_urandom(struct lone_bytes buffer);
 ssize_t
 __attribute__((fd_arg_write(1), tainted_args))
 linux_write(int fd, const void *buffer, size_t count);
+
+/* Drains a lone bytes structure to a file descriptor.
+ * Loops on EINTR and EAGAIN. Returns the total bytes
+ * written, or the negative kernel errno on error.
+ * Total bytes written may be less than buffer.count
+ * if a zero byte write occurs.
+ */
+ssize_t
+__attribute__((fd_arg_write(1), tainted_args))
+linux_write_bytes(int fd, struct lone_bytes buffer);
 
 off_t
 __attribute__((tainted_args))

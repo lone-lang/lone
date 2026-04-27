@@ -35,9 +35,55 @@ ssize_t linux_read(int fd, const void *buffer, size_t count)
 	return linux_system_call_3(__NR_read, fd, (long) buffer, (long) count);
 }
 
+ssize_t linux_read_bytes(int fd, struct lone_bytes buffer)
+{
+	size_t total;
+	ssize_t result;
+
+	total = 0;
+
+	while (total < buffer.count) {
+		result = linux_read(fd, buffer.pointer + total, buffer.count - total);
+
+		if (result < 0) {
+			if (result == -EINTR || result == -EAGAIN) { continue; }
+			return result;
+		}
+
+		if (result == 0) { break; /* end of input */ }
+
+		total += (size_t) result;
+	}
+
+	return (ssize_t) total;
+}
+
 ssize_t linux_write(int fd, const void *buffer, size_t count)
 {
 	return linux_system_call_3(__NR_write, fd, (long) buffer, (long) count);
+}
+
+ssize_t linux_write_bytes(int fd, struct lone_bytes buffer)
+{
+	size_t total;
+	ssize_t result;
+
+	total = 0;
+
+	while (total < buffer.count) {
+		result = linux_write(fd, buffer.pointer + total, buffer.count - total);
+
+		if (result < 0) {
+			if (result == -EINTR || result == -EAGAIN) { continue; }
+			return result;
+		}
+
+		if (result == 0) { break; }
+
+		total += (size_t) result;
+	}
+
+	return (ssize_t) total;
 }
 
 off_t linux_lseek(int fd, off_t offset, int origin)
@@ -70,19 +116,15 @@ intptr_t linux_mremap(void *address, size_t old_length, size_t new_length, unsig
 long linux_dev_urandom(struct lone_bytes buffer)
 {
 	int fd;
-	ssize_t n;
-	size_t total;
+	ssize_t result;
 
 	fd = linux_openat(AT_FDCWD, (unsigned char *) "/dev/urandom", O_RDONLY | O_CLOEXEC);
 	if (fd < 0) { return fd; }
 
-	total = 0;
-	while (total < buffer.count) {
-		n = linux_read(fd, buffer.pointer + total, buffer.count - total);
-		if (n <= 0) { linux_close(fd); return n == 0? -EIO : n; }
-		total += (size_t) n;
-	}
-
+	result = linux_read_bytes(fd, buffer);
 	linux_close(fd);
+
+	if (result < 0) { return result; }
+	if ((size_t) result < buffer.count) { return -EIO; }
 	return 0;
 }

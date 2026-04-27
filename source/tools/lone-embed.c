@@ -139,58 +139,22 @@ static int open_path(char *path, int flags)
 
 static size_t read_bytes(int fd, struct lone_bytes buffer)
 {
-	size_t total = 0;
-	ssize_t read_or_error;
+	ssize_t result;
 
-	while (total < buffer.count) {
-		read_or_error = linux_read(fd, buffer.pointer + total, buffer.count - total);
+	result = linux_read_bytes(fd, buffer);
+	if (result < 0) { /* error reading input file */ linux_exit(3); }
 
-		if (read_or_error > 0) {
-			total += read_or_error;
-		} else if (read_or_error == 0) {
-			break;
-		} else {
-			switch (read_or_error) {
-			case -EINTR:
-			case -EAGAIN:
-				continue;
-			default:
-				/* error reading input file */ linux_exit(3);
-			}
-		}
-	}
-
-	return total;
+	return (size_t) result;
 }
 
 static size_t write_bytes(int fd, struct lone_bytes buffer)
 {
-	size_t total = 0;
-	ssize_t written_or_error;
+	ssize_t result;
 
-	while (total < buffer.count) {
-		written_or_error = linux_write(fd, buffer.pointer + total, buffer.count - total);
+	result = linux_write_bytes(fd, buffer);
+	if (result < 0 || (size_t) result != buffer.count) { /* error writing output file */ linux_exit(4); }
 
-		if (written_or_error > 0) {
-			total += written_or_error;
-		} else if (written_or_error == 0) {
-			/* regular files never write zero bytes
-			 * accepting it would return a short count
-			 * that callers already ignored, silently
-			 * corrupting the output ELF */
-			linux_exit(4);
-		} else {
-			switch (written_or_error) {
-			case -EINTR:
-			case -EAGAIN:
-				continue;
-			default:
-				/* error writing output file */ linux_exit(4);
-			}
-		}
-	}
-
-	return total;
+	return buffer.count;
 }
 
 static void *map(size_t size)
