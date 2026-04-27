@@ -3,7 +3,7 @@
 
 exe="$(type -P lone)"
 patched="${exe}".patched
-segment="$(dirname ${0})"/segment
+segment="$(dirname ${0})"/../segment
 
 cp -f "${exe}" "${patched}"
 code="${?}"

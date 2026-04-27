@@ -1,0 +1,10 @@
+#!/usr/bin/bash
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+exe="$(type -P lone)"
+dir="$(dirname ${0})"/..
+
+cp -f "${exe}" "${exe}".at-phdr-invariant || exit 1
+lone-embed "${exe}".at-phdr-invariant "${dir}/segment" || exit 2
+
+at-phdr-invariant "${exe}".at-phdr-invariant

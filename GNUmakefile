@@ -83,7 +83,8 @@ targets.all := $(targets.lone) $(targets.tools) $(targets.tests) $(targets.objec
 
 directories.create += $(dir $(targets.all))
 
-PATH.additions := $(directories.build) $(directories.build.tools) $(directories.build.tests)
+directories.build.tests.subdirectories := $(patsubst $(directories.source.tests)/%/,$(directories.build.tests)/%,$(dir $(files.sources.tests)))
+PATH.additions := $(directories.build) $(directories.build.tools) $(directories.build.tests) $(directories.build.tests.subdirectories)
 export PATH := $(call PATH.join,$(PATH.additions) $(PATH))
 
 flags.whole_program.gcc := -fwhole-program
