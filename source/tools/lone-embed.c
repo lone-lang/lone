@@ -32,9 +32,11 @@
 #define REQUIRED_PT_NULLS 2
 #define MAX_NEW_SEGMENTS (REQUIRED_PT_NULLS + 2)
 
-#define LONE_TOOLS_EMBED_EXIT_INVALID_ELF           8
-#define LONE_TOOLS_EMBED_EXIT_MISSING_NULL_ENTRY    9
-#define LONE_TOOLS_EMBED_EXIT_MULTIPLE_PHDR_ENTRIES 10
+#define LONE_TOOLS_EMBED_EXIT_INVALID_ELF             8
+#define LONE_TOOLS_EMBED_EXIT_MISSING_NULL_ENTRY      9
+#define LONE_TOOLS_EMBED_EXIT_MULTIPLE_PHDR_ENTRIES  10
+#define LONE_TOOLS_EMBED_EXIT_LOAD_ADDRESS_UNALIGNED 11
+#define LONE_TOOLS_EMBED_EXIT_INCORRECT_LOAD_BIAS    12
 #define LONE_TOOLS_EMBED_EXIT_OVERFLOW              250
 
 struct elf {
@@ -403,7 +405,10 @@ static void adjust_phdr_entry(struct elf *elf)
 	size_t entry_count, i;
 	struct lone_elf_header *header;
 	struct lone_elf_segment *segment, *phdr, *load, *null_1, *null_2;
-	lone_elf_umax alignment, size, size_aligned, file_offset, virtual, physical;
+	lone_elf_umax file_offset, required_file_offset;
+	lone_elf_umax alignment, size, size_aligned;
+	lone_elf_umax loaded_vaddr, loaded_offset;
+	lone_elf_umax virtual, physical;
 	lone_u32 type;
 	bool created_phdr;
 
@@ -443,10 +448,7 @@ static void adjust_phdr_entry(struct elf *elf)
 		 * as one and use the second NULL for the LOAD entry
 		 * guarantees every patched ELF contains a PHDR entry
 		 * pointing at the relocated program header table
-		 * the kernel's PHDR lookup prefers PHDR.p_vaddr
-		 * over the load_address + e_phoff fallback
-		 * so maintaining the entry keeps the two
-		 * addresses consistent regardless of layout */
+		 * linux < 5.18 ignores it but newer kernels do not  */
 		phdr = null_1;
 		load = null_2;
 		created_phdr = true;
@@ -454,12 +456,30 @@ static void adjust_phdr_entry(struct elf *elf)
 
 	if (!phdr || !load) { not_enough_nulls(); }
 
+	if (elf->load_address % elf->page_size != 0) {
+		linux_exit(LONE_TOOLS_EMBED_EXIT_LOAD_ADDRESS_UNALIGNED);
+	}
+
 	alignment = elf->page_size;
 	size = pht_size(elf);
 	size_aligned = align_to_page(elf, size);
-	file_offset = elf->segments.file_offset;
-	virtual = align_to_page(elf, elf->limits.end.virtual);
-	physical = align_to_page(elf, elf->limits.end.physical);
+
+	required_file_offset = align_to_page(elf, elf->limits.end.virtual - elf->load_address);
+	file_offset = max(elf->segments.file_offset, required_file_offset);
+
+	/* Required by linux < 5.18:
+	 *
+	 * 	AT_PHDR = (first_LOAD.p_vaddr - first_LOAD.p_offset) + e_phoff
+	 *
+	 * Which gives:
+	 *
+	 * 	new_LOAD.p_vaddr  = load_address + new_LOAD.p_offset
+	 * 	new_LOAD.p_offset = e_phoff
+	 *
+	 */
+	virtual = elf->load_address + file_offset;
+
+	physical = virtual;
 
 	if (created_phdr) {
 		segment_write_u32(
@@ -496,6 +516,13 @@ static void adjust_phdr_entry(struct elf *elf)
 	segment_write_umax(header, load, lone_elf_segment_write_size_in_file, size_aligned);
 	segment_write_umax(header, load, lone_elf_segment_write_size_in_memory, size_aligned);
 	segment_write_umax(header, load, lone_elf_segment_write_alignment, alignment);
+
+	/* verify the linux < 5.18 invariant holds */
+	loaded_vaddr  = segment_read_umax(header, load, lone_elf_segment_read_virtual_address);
+	loaded_offset = segment_read_umax(header, load, lone_elf_segment_read_file_offset);
+	if (loaded_vaddr != elf->load_address + loaded_offset) {
+		linux_exit(LONE_TOOLS_EMBED_EXIT_INCORRECT_LOAD_BIAS);
+	}
 }
 
 static void move_and_expand_pht_if_needed(struct elf *elf)
