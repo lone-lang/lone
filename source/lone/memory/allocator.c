@@ -157,7 +157,7 @@ void *lone_memory_reallocate(struct lone_system *system,
 	}
 
 	block = lone_memory_allocate(system, new_count, new_size, alignment, flags);
-	copy_size = old_total < new_total ? old_total : new_total;
+	copy_size = old_total < new_total? old_total : new_total;
 	lone_memory_move(pointer, block, copy_size);
 	lone_memory_deallocate(system, pointer, old_count, old_size, alignment);
 	return block;

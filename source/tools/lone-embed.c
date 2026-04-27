@@ -499,7 +499,7 @@ static void adjust_phdr_entry(struct elf *elf)
 			header,
 			phdr,
 			lone_elf_segment_write_alignment,
-			elf->class == LONE_ELF_IDENT_CLASS_64BIT ? 8 : 4
+			elf->class == LONE_ELF_IDENT_CLASS_64BIT? 8 : 4
 		);
 	}
 

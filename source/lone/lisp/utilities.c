@@ -56,7 +56,7 @@ struct lone_bytes lone_lisp_join(struct lone_lisp *lone,
 
 	total = 0;
 	position = 0;
-	separator_count = lone_lisp_is_nil(separator) ? 0 : lone_lisp_bytes_of(lone, &separator).count;
+	separator_count = lone_lisp_is_nil(separator)? 0 : lone_lisp_bytes_of(lone, &separator).count;
 
 	for (head = arguments; !lone_lisp_is_nil(head); head = lone_lisp_list_rest(lone, head)) {
 		argument = lone_lisp_list_first(lone, head);

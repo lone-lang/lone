@@ -79,7 +79,7 @@ long linux_dev_urandom(struct lone_bytes buffer)
 	total = 0;
 	while (total < buffer.count) {
 		n = linux_read(fd, buffer.pointer + total, buffer.count - total);
-		if (n <= 0) { linux_close(fd); return n == 0 ? -EIO : n; }
+		if (n <= 0) { linux_close(fd); return n == 0? -EIO : n; }
 		total += (size_t) n;
 	}
 

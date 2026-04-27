@@ -5,7 +5,7 @@
 
 static lone_u64 lone_hash_siphash_rotate_left(lone_u64 x, int b)
 {
-	return (x << b) | (b ? (x >> (64 - b)) : 0);
+	return (x << b) | (b? (x >> (64 - b)) : 0);
 }
 
 #define SIPROUND do {                                                                              \
