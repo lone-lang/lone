@@ -67,7 +67,7 @@ void lone_hash_siphash_update(struct lone_hash_siphash_state *state, struct lone
 	}
 
 	while (count >= 8) {
-		lone_hash_siphash_compress(state, lone_u64le_read((void *) p));
+		lone_hash_siphash_compress(state, lone_u64le_read(p));
 		p += 8;
 		count -= 8;
 	}
