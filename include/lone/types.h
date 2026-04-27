@@ -210,14 +210,14 @@ struct lone_bytes {
    │    headers which also require aligned pointers.                        │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
-lone_u8  lone_u8_read (void *address);
-lone_s8  lone_s8_read (void *address);
-lone_u16 lone_u16_read(void *address);
-lone_s16 lone_s16_read(void *address);
-lone_u32 lone_u32_read(void *address);
-lone_s32 lone_s32_read(void *address);
-lone_u64 lone_u64_read(void *address);
-lone_s64 lone_s64_read(void *address);
+lone_u8  lone_u8_read (const void *address);
+lone_s8  lone_s8_read (const void *address);
+lone_u16 lone_u16_read(const void *address);
+lone_s16 lone_s16_read(const void *address);
+lone_u32 lone_u32_read(const void *address);
+lone_s32 lone_s32_read(const void *address);
+lone_u64 lone_u64_read(const void *address);
+lone_s64 lone_s64_read(const void *address);
 
 void lone_u8_write (void *address, lone_u8  u8);
 void lone_s8_write (void *address, lone_s8  s8);
@@ -228,19 +228,19 @@ void lone_s32_write(void *address, lone_s32 s32);
 void lone_u64_write(void *address, lone_u64 u64);
 void lone_s64_write(void *address, lone_s64 s64);
 
-lone_u16 lone_u16le_read(void *address);
-lone_s16 lone_s16le_read(void *address);
-lone_u32 lone_u32le_read(void *address);
-lone_s32 lone_s32le_read(void *address);
-lone_u64 lone_u64le_read(void *address);
-lone_s64 lone_s64le_read(void *address);
+lone_u16 lone_u16le_read(const void *address);
+lone_s16 lone_s16le_read(const void *address);
+lone_u32 lone_u32le_read(const void *address);
+lone_s32 lone_s32le_read(const void *address);
+lone_u64 lone_u64le_read(const void *address);
+lone_s64 lone_s64le_read(const void *address);
 
-lone_u16 lone_u16be_read(void *address);
-lone_s16 lone_s16be_read(void *address);
-lone_u32 lone_u32be_read(void *address);
-lone_s32 lone_s32be_read(void *address);
-lone_u64 lone_u64be_read(void *address);
-lone_s64 lone_s64be_read(void *address);
+lone_u16 lone_u16be_read(const void *address);
+lone_s16 lone_s16be_read(const void *address);
+lone_u32 lone_u32be_read(const void *address);
+lone_s32 lone_s32be_read(const void *address);
+lone_u64 lone_u64be_read(const void *address);
+lone_s64 lone_s64be_read(const void *address);
 
 void lone_u16le_write(void *address, lone_u16 u16);
 void lone_s16le_write(void *address, lone_s16 s16);

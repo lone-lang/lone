@@ -40,15 +40,15 @@ bool lone_bytes_contains_address(struct lone_bytes bytes, void *pointer)
 	return pointer >= start && pointer < end;
 }
 
-lone_u8 lone_u8_read(void *address)
+lone_u8 lone_u8_read(const void *address)
 {
-	lone_u8 *always_aligned = address;
+	const lone_u8 *always_aligned = address;
 	return *always_aligned;
 }
 
-lone_s8 lone_s8_read(void *address)
+lone_s8 lone_s8_read(const void *address)
 {
-	lone_s8 *always_aligned = address;
+	const lone_s8 *always_aligned = address;
 	return *always_aligned;
 }
 
@@ -77,7 +77,7 @@ void lone_s8_write(void *address, lone_s8 value)
  */
 
 #define LONE_READER(type) \
-lone_##type lone_##type##_read(void *address) \
+lone_##type lone_##type##_read(const void *address) \
 { \
 	struct lone_unaligned { lone_##type value; } __attribute__((packed)); \
 	return ((const struct lone_unaligned *) address)->value; \
@@ -154,9 +154,9 @@ LONE_BYTES_WRITER(s64)
 #undef LONE_BYTES_READER
 #undef LONE_BYTES_WRITER
 
-lone_u16 lone_u16le_read(void *address)
+lone_u16 lone_u16le_read(const void *address)
 {
-	unsigned char *bytes = address;
+	const unsigned char *bytes = address;
 	lone_u16 value = 0;
 
 	value |= ((lone_u16) bytes[0]) << 0;
@@ -165,9 +165,9 @@ lone_u16 lone_u16le_read(void *address)
 	return value;
 }
 
-lone_u16 lone_u16be_read(void *address)
+lone_u16 lone_u16be_read(const void *address)
 {
-	unsigned char *bytes = address;
+	const unsigned char *bytes = address;
 	lone_u16 value = 0;
 
 	value |= ((lone_u16) bytes[0]) << 8;
@@ -176,9 +176,9 @@ lone_u16 lone_u16be_read(void *address)
 	return value;
 }
 
-lone_u32 lone_u32le_read(void *address)
+lone_u32 lone_u32le_read(const void *address)
 {
-	unsigned char *bytes = address;
+	const unsigned char *bytes = address;
 	lone_u32 value = 0;
 
 	value |= ((lone_u32) bytes[0]) <<  0;
@@ -189,9 +189,9 @@ lone_u32 lone_u32le_read(void *address)
 	return value;
 }
 
-lone_u32 lone_u32be_read(void *address)
+lone_u32 lone_u32be_read(const void *address)
 {
-	unsigned char *bytes = address;
+	const unsigned char *bytes = address;
 	lone_u32 value = 0;
 
 	value |= ((lone_u32) bytes[0]) << 24;
@@ -202,9 +202,9 @@ lone_u32 lone_u32be_read(void *address)
 	return value;
 }
 
-lone_u64 lone_u64le_read(void *address)
+lone_u64 lone_u64le_read(const void *address)
 {
-	unsigned char *bytes = address;
+	const unsigned char *bytes = address;
 	lone_u64 value = 0;
 
 	value |= ((lone_u64) bytes[0]) <<  0;
@@ -219,9 +219,9 @@ lone_u64 lone_u64le_read(void *address)
 	return value;
 }
 
-lone_u64 lone_u64be_read(void *address)
+lone_u64 lone_u64be_read(const void *address)
 {
-	unsigned char *bytes = address;
+	const unsigned char *bytes = address;
 	lone_u64 value = 0;
 
 	value |= ((lone_u64) bytes[0]) << 56;
@@ -301,7 +301,7 @@ void lone_u64be_write(void *address, lone_u64 value)
 }
 
 #define LONE_ENDIAN_SIGNED_READER(bits, endian)                                                    \
-lone_s##bits lone_s##bits##endian##_read(void *address)                                            \
+lone_s##bits lone_s##bits##endian##_read(const void *address)                                      \
 {                                                                                                  \
 	return (lone_s##bits) lone_u##bits##endian##_read(address);                                \
 }
