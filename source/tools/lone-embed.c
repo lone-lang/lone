@@ -59,7 +59,7 @@ struct elf {
 	struct {
 		struct lone_bytes memory;
 		struct lone_elf_segments table;
-		lone_elf_umax offset;
+		lone_elf_umax file_offset;
 		lone_u16 nulls_count;
 		bool has_phdr;
 	} segments;
@@ -71,7 +71,7 @@ struct elf {
 
 	struct {
 		int file_descriptor;
-		size_t offset;
+		size_t file_offset;
 		size_t size;
 	} data;
 };
@@ -255,14 +255,14 @@ static void validate_elf_header(struct elf *elf)
 
 static void load_program_header_table(struct elf *elf)
 {
-	struct lone_elf_optional_umax offset;
+	struct lone_elf_optional_umax file_offset;
 	struct lone_optional_u16 entry_size, entry_count;
 	struct lone_bytes target;
 	lone_elf_umax size;
 	void *address;
 
-	offset = lone_elf_header_read_segments_offset(hdr(elf));
-	if (!offset.present) { invalid_elf(); }
+	file_offset = lone_elf_header_read_segments_offset(hdr(elf));
+	if (!file_offset.present) { invalid_elf(); }
 
 	entry_size = lone_elf_header_read_segment_size(hdr(elf));
 	if (!entry_size.present) { invalid_elf(); }
@@ -271,7 +271,7 @@ static void load_program_header_table(struct elf *elf)
 	if (!entry_count.present) { invalid_elf(); }
 
 	elf->segments.nulls_count = 0;
-	elf->segments.offset = offset.value;
+	elf->segments.file_offset = file_offset.value;
 	elf->segments.table.segment.size = entry_size.value;
 	elf->segments.table.segment.count = entry_count.value;
 
@@ -282,7 +282,7 @@ static void load_program_header_table(struct elf *elf)
 	elf->segments.memory.pointer = address;
 	elf->segments.memory.count = size;
 
-	seek_to(elf->file.descriptor, offset.value);
+	seek_to(elf->file.descriptor, file_offset.value);
 	target = (struct lone_bytes) { pht_size(elf), elf->segments.memory.pointer };
 	if (read_bytes(elf->file.descriptor, target) != target.count) { invalid_elf(); }
 }
@@ -395,7 +395,7 @@ static void analyze(struct elf *elf)
 		}
 	}
 
-	elf->data.offset = align_to_page(elf, elf->file.size);
+	elf->data.file_offset = align_to_page(elf, elf->file.size);
 }
 
 static void adjust_phdr_entry(struct elf *elf)
@@ -403,7 +403,7 @@ static void adjust_phdr_entry(struct elf *elf)
 	size_t entry_count, i;
 	struct lone_elf_header *header;
 	struct lone_elf_segment *segment, *phdr, *load, *null_1, *null_2;
-	lone_elf_umax alignment, size, size_aligned, offset, virtual, physical;
+	lone_elf_umax alignment, size, size_aligned, file_offset, virtual, physical;
 	lone_u32 type;
 	bool created_phdr;
 
@@ -457,7 +457,7 @@ static void adjust_phdr_entry(struct elf *elf)
 	alignment = elf->page_size;
 	size = pht_size(elf);
 	size_aligned = align_to_page(elf, size);
-	offset = elf->segments.offset;
+	file_offset = elf->segments.file_offset;
 	virtual = align_to_page(elf, elf->limits.end.virtual);
 	physical = align_to_page(elf, elf->limits.end.physical);
 
@@ -482,7 +482,7 @@ static void adjust_phdr_entry(struct elf *elf)
 		);
 	}
 
-	segment_write_umax(header, phdr, lone_elf_segment_write_file_offset, offset);
+	segment_write_umax(header, phdr, lone_elf_segment_write_file_offset, file_offset);
 	segment_write_umax(header, phdr, lone_elf_segment_write_virtual_address, virtual);
 	segment_write_umax(header, phdr, lone_elf_segment_write_physical_address, physical);
 	segment_write_umax(header, phdr, lone_elf_segment_write_size_in_file, size);
@@ -490,7 +490,7 @@ static void adjust_phdr_entry(struct elf *elf)
 
 	segment_write_u32(header,  load, lone_elf_segment_write_type, LONE_ELF_SEGMENT_TYPE_LOAD);
 	segment_write_u32(header,  load, lone_elf_segment_write_flags, LONE_ELF_SEGMENT_FLAGS_R);
-	segment_write_umax(header, load, lone_elf_segment_write_file_offset, offset);
+	segment_write_umax(header, load, lone_elf_segment_write_file_offset, file_offset);
 	segment_write_umax(header, load, lone_elf_segment_write_virtual_address, virtual);
 	segment_write_umax(header, load, lone_elf_segment_write_physical_address, physical);
 	segment_write_umax(header, load, lone_elf_segment_write_size_in_file, size_aligned);
@@ -511,9 +511,9 @@ static void move_and_expand_pht_if_needed(struct elf *elf)
 
 	new_nulls = pht_end(elf);
 
-	elf->segments.offset = elf->data.offset;
+	elf->segments.file_offset = elf->data.file_offset;
 	elf->segments.table.segment.count += extra;
-	elf->file.size = elf->segments.offset + pht_size(elf);
+	elf->file.size = elf->segments.file_offset + pht_size(elf);
 
 	lone_memory_zero(new_nulls, pht_size_for(elf, extra));
 	adjust_phdr_entry(elf);
@@ -530,7 +530,7 @@ set_segment(struct elf *elf, struct lone_elf_header *header,
 	set_true_size = type == LONE_ELF_SEGMENT_TYPE_LONE;
 
 	segment_write_u32(header, segment, lone_elf_segment_write_type, type);
-	segment_write_umax(header, segment, lone_elf_segment_write_file_offset, elf->data.offset);
+	segment_write_umax(header, segment, lone_elf_segment_write_file_offset, elf->data.file_offset);
 
 	address = align_to_page(elf, elf->limits.end.virtual);
 	segment_write_umax(header, segment, lone_elf_segment_write_virtual_address, address);
@@ -608,7 +608,7 @@ static void query_file_sizes(struct elf *elf)
 static void patch_program_header_table(struct elf *elf)
 {
 	struct lone_bytes pht = { pht_size(elf), elf->segments.memory.pointer };
-	seek_to(elf->file.descriptor, elf->segments.offset);
+	seek_to(elf->file.descriptor, elf->segments.file_offset);
 	write_bytes(elf->file.descriptor, pht);
 }
 
@@ -618,7 +618,7 @@ static void append_data(struct elf *elf)
 	static struct lone_bytes input_buffer = { sizeof(io_buffer), io_buffer }, output_buffer = { 0, io_buffer };
 
 	seek_to_start(elf->data.file_descriptor);
-	seek_to(elf->file.descriptor, elf->data.offset);
+	seek_to(elf->file.descriptor, elf->data.file_offset);
 
 	while ((output_buffer.count = read_bytes(elf->data.file_descriptor, input_buffer)) > 0) {
 		write_bytes(elf->file.descriptor, output_buffer);
@@ -634,15 +634,15 @@ static void patch_elf_header(struct elf *elf)
 static void patch_ehdr_if_needed(struct elf *elf)
 {
 	struct lone_elf_header *header;
-	struct lone_elf_optional_umax offset;
+	struct lone_elf_optional_umax file_offset;
 
 	header = hdr(elf);
 
-	offset = lone_elf_header_read_segments_offset(header);
-	if (!offset.present) { invalid_elf(); }
+	file_offset = lone_elf_header_read_segments_offset(header);
+	if (!file_offset.present) { invalid_elf(); }
 
-	if (offset.value != elf->segments.offset) {
-		if (!lone_elf_header_write_segments_offset(header, elf->segments.offset)) { invalid_elf(); }
+	if (file_offset.value != elf->segments.file_offset) {
+		if (!lone_elf_header_write_segments_offset(header, elf->segments.file_offset)) { invalid_elf(); }
 		if (!lone_elf_header_write_segment_count(header, elf->segments.table.segment.count)) { invalid_elf(); }
 		patch_elf_header(elf);
 	}
