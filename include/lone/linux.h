@@ -83,6 +83,10 @@ off_t
 __attribute__((tainted_args))
 linux_lseek(int fd, off_t offset, int origin);
 
+long
+__attribute__((fd_arg_write(1), tainted_args))
+linux_ftruncate(int fd, off_t length);
+
 intptr_t
 __attribute__((tainted_args))
 linux_mmap(void *address, size_t length, int protections, int flags, int file_descriptor, off_t offset);
