@@ -1,0 +1,10 @@
+(import (lone print intercept signal lambda quote)
+        (list construct))
+
+; handler provides a (head tail) list as replacement arguments;
+; construct retries and returns the cons.
+
+(print
+  (intercept
+    (('arity-error (lambda (e k) (k '(1 (2 3))))))
+    (construct)))

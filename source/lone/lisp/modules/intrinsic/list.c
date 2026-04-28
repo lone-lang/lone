@@ -43,10 +43,36 @@ LONE_LISP_PRIMITIVE(list_construct)
 {
 	struct lone_lisp_value arguments, first, rest;
 
-	arguments = lone_lisp_machine_pop_value(lone, machine);
+	switch (step) {
+	case 0:
+
+		arguments = lone_lisp_machine_pop_value(lone, machine);
+
+		goto destructure;
+
+	case 1: /* resumed with a replacement arguments list from arity-error */
+
+		arguments = machine->value;
+
+		goto destructure;
+
+	default:
+		break;
+	}
+
+	linux_exit(-1);
+
+destructure:
 
 	if (lone_lisp_list_destructure(lone, arguments, 2, &first, &rest)) {
-		/* wrong number of arguments */ linux_exit(-1);
+		return
+			lone_lisp_signal_emit(
+				lone,
+				machine,
+				1,
+				lone_lisp_intern_c_string(lone, "arity-error"),
+				arguments
+			);
 	}
 
 	lone_lisp_machine_push_value(lone, machine, lone_lisp_list_create(lone, first, rest));
@@ -63,21 +89,40 @@ LONE_LISP_PRIMITIVE(list_first)
 
 		arguments = lone_lisp_machine_pop_value(lone, machine);
 
-		if (lone_lisp_list_destructure(lone, arguments, 1, &argument)) {
-			/* wrong number of arguments */ linux_exit(-1);
-		}
+		goto destructure;
 
-		break;
-
-	case 1: /* resumed with a replacement argument */
+	case 1: /* resumed with a replacement argument from type-error */
 
 		argument = machine->value;
 
-		break;
+		goto check_type;
+
+	case 2: /* resumed with a replacement arguments list from arity-error */
+
+		arguments = machine->value;
+
+		goto destructure;
 
 	default:
-		linux_exit(-1);
+		break;
 	}
+
+	linux_exit(-1);
+
+destructure:
+
+	if (lone_lisp_list_destructure(lone, arguments, 1, &argument)) {
+		return
+			lone_lisp_signal_emit(
+				lone,
+				machine,
+				2,
+				lone_lisp_intern_c_string(lone, "arity-error"),
+				arguments
+			);
+	}
+
+check_type:
 
 	if (!lone_lisp_is_nil(argument) && !lone_lisp_is_list(lone, argument)) {
 		return
@@ -104,21 +149,40 @@ LONE_LISP_PRIMITIVE(list_rest)
 
 		arguments = lone_lisp_machine_pop_value(lone, machine);
 
-		if (lone_lisp_list_destructure(lone, arguments, 1, &argument)) {
-			/* wrong number of arguments */ linux_exit(-1);
-		}
+		goto destructure;
 
-		break;
-
-	case 1: /* resumed with a replacement argument */
+	case 1: /* resumed with a replacement argument from type-error */
 
 		argument = machine->value;
 
-		break;
+		goto check_type;
+
+	case 2: /* resumed with a replacement arguments list from arity-error */
+
+		arguments = machine->value;
+
+		goto destructure;
 
 	default:
-		linux_exit(-1);
+		break;
 	}
+
+	linux_exit(-1);
+
+destructure:
+
+	if (lone_lisp_list_destructure(lone, arguments, 1, &argument)) {
+		return
+			lone_lisp_signal_emit(
+				lone,
+				machine,
+				2,
+				lone_lisp_intern_c_string(lone, "arity-error"),
+				arguments
+			);
+	}
+
+check_type:
 
 	if (!lone_lisp_is_nil(argument) && !lone_lisp_is_list(lone, argument)) {
 		return
@@ -145,21 +209,40 @@ LONE_LISP_PRIMITIVE(list_flatten)
 
 		arguments = lone_lisp_machine_pop_value(lone, machine);
 
-		if (lone_lisp_list_destructure(lone, arguments, 1, &argument)) {
-			/* wrong number of arguments */ linux_exit(-1);
-		}
+		goto destructure;
 
-		break;
-
-	case 1: /* resumed with a replacement argument */
+	case 1: /* resumed with a replacement argument from type-error */
 
 		argument = machine->value;
 
-		break;
+		goto check_type;
+
+	case 2: /* resumed with a replacement arguments list from arity-error */
+
+		arguments = machine->value;
+
+		goto destructure;
 
 	default:
-		linux_exit(-1);
+		break;
 	}
+
+	linux_exit(-1);
+
+destructure:
+
+	if (lone_lisp_list_destructure(lone, arguments, 1, &argument)) {
+		return
+			lone_lisp_signal_emit(
+				lone,
+				machine,
+				2,
+				lone_lisp_intern_c_string(lone, "arity-error"),
+				arguments
+			);
+	}
+
+check_type:
 
 	if (!lone_lisp_is_nil(argument) && !lone_lisp_is_list(lone, argument)) {
 		return
@@ -187,35 +270,7 @@ LONE_LISP_PRIMITIVE(list_map)
 
 		arguments = lone_lisp_machine_pop_value(lone, machine);
 
-		if (lone_lisp_list_destructure(lone, arguments, 2, &function, &list)) {
-			/* wrong number of arguments */ linux_exit(-1);
-		}
-
-		if (!lone_lisp_is_applicable(lone, function)) { /* not given an applicable value */ linux_exit(-1); }
-
-		if (lone_lisp_is_nil(list)) {
-			/* mapping function to empty list */
-			lone_lisp_machine_push_value(lone, machine, lone_lisp_nil());
-			return 0;
-		}
-
-		if (!lone_lisp_is_list(lone, list)) { /* can only map functions to lists */ linux_exit(-1); }
-
-		count = 0;
-
-	application: /* apply value to function */
-
-		entry = lone_lisp_list_first(lone, list);
-
-		machine->applicable = function;
-		machine->list = lone_lisp_list_build(lone, 1, &entry);
-		machine->step = LONE_LISP_MACHINE_STEP_APPLY;
-
-		lone_lisp_machine_push_value(lone, machine, function);
-		lone_lisp_machine_push_value(lone, machine, list);
-		lone_lisp_machine_push_integer(lone, machine, count);
-
-		return 1;
+		goto destructure;
 
 	case 1: /* collect resulting value into results list */
 
@@ -242,11 +297,56 @@ LONE_LISP_PRIMITIVE(list_map)
 			return 0;
 		}
 
+	case 2: /* resumed with a replacement arguments list from arity-error */
+
+		arguments = machine->value;
+
+		goto destructure;
+
 	default:
 		break;
 	}
 
 	linux_exit(-1);
+
+destructure:
+
+	if (lone_lisp_list_destructure(lone, arguments, 2, &function, &list)) {
+		return
+			lone_lisp_signal_emit(
+				lone,
+				machine,
+				2,
+				lone_lisp_intern_c_string(lone, "arity-error"),
+				arguments
+			);
+	}
+
+	if (!lone_lisp_is_applicable(lone, function)) { /* not given an applicable value */ linux_exit(-1); }
+
+	if (lone_lisp_is_nil(list)) {
+		/* mapping function to empty list */
+		lone_lisp_machine_push_value(lone, machine, lone_lisp_nil());
+		return 0;
+	}
+
+	if (!lone_lisp_is_list(lone, list)) { /* can only map functions to lists */ linux_exit(-1); }
+
+	count = 0;
+
+application: /* apply value to function */
+
+	entry = lone_lisp_list_first(lone, list);
+
+	machine->applicable = function;
+	machine->list = lone_lisp_list_build(lone, 1, &entry);
+	machine->step = LONE_LISP_MACHINE_STEP_APPLY;
+
+	lone_lisp_machine_push_value(lone, machine, function);
+	lone_lisp_machine_push_value(lone, machine, list);
+	lone_lisp_machine_push_integer(lone, machine, count);
+
+	return 1;
 }
 
 LONE_LISP_PRIMITIVE(list_reduce)
@@ -258,34 +358,7 @@ LONE_LISP_PRIMITIVE(list_reduce)
 
 		arguments = lone_lisp_machine_pop_value(lone, machine);
 
-		if (lone_lisp_list_destructure(lone, arguments, 3, &function, &accumulator, &list)) {
-			/* wrong number of arguments */ linux_exit(-1);
-		}
-
-		if (!lone_lisp_is_applicable(lone, function)) { /* not given an applicable value */ linux_exit(-1); }
-
-		if (lone_lisp_is_nil(list)) {
-			/* mapping function to empty list */
-			lone_lisp_machine_push_value(lone, machine, accumulator);
-			return 0;
-		}
-
-		if (!lone_lisp_is_list(lone, list)) { /* can only reduce lists */ linux_exit(-1); }
-
-	application: /* apply accumulator and value to function */
-
-		entry = lone_lisp_list_first(lone, list);
-
-		machine->applicable = function;
-		machine->list = lone_lisp_list_build(lone, 2, &accumulator, &entry);
-		machine->step = LONE_LISP_MACHINE_STEP_APPLY;
-
-		lone_lisp_machine_push_value(lone, machine, function);
-		lone_lisp_machine_push_value(lone, machine, list);
-		/* no need to push the accumulator because the result of the
-		 * function application will be its new value */
-
-		return 1;
+		goto destructure;
 
 	case 1: /* collect result of function application */
 
@@ -301,9 +374,54 @@ LONE_LISP_PRIMITIVE(list_reduce)
 			lone_lisp_machine_push_value(lone, machine, accumulator);
 			return 0;
 		}
+
+	case 2: /* resumed with a replacement arguments list from arity-error */
+
+		arguments = machine->value;
+
+		goto destructure;
+
 	default:
 		break;
 	}
 
 	linux_exit(-1);
+
+destructure:
+
+	if (lone_lisp_list_destructure(lone, arguments, 3, &function, &accumulator, &list)) {
+		return
+			lone_lisp_signal_emit(
+				lone,
+				machine,
+				2,
+				lone_lisp_intern_c_string(lone, "arity-error"),
+				arguments
+			);
+	}
+
+	if (!lone_lisp_is_applicable(lone, function)) { /* not given an applicable value */ linux_exit(-1); }
+
+	if (lone_lisp_is_nil(list)) {
+		/* mapping function to empty list */
+		lone_lisp_machine_push_value(lone, machine, accumulator);
+		return 0;
+	}
+
+	if (!lone_lisp_is_list(lone, list)) { /* can only reduce lists */ linux_exit(-1); }
+
+application: /* apply accumulator and value to function */
+
+	entry = lone_lisp_list_first(lone, list);
+
+	machine->applicable = function;
+	machine->list = lone_lisp_list_build(lone, 2, &accumulator, &entry);
+	machine->step = LONE_LISP_MACHINE_STEP_APPLY;
+
+	lone_lisp_machine_push_value(lone, machine, function);
+	lone_lisp_machine_push_value(lone, machine, list);
+	/* no need to push the accumulator because the result of the
+	 * function application will be its new value */
+
+	return 1;
 }

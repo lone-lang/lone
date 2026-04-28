@@ -1,0 +1,7 @@
+(import (lone print intercept lambda quote)
+        (list construct))
+
+(print
+  (intercept
+    (('arity-error (lambda (e) e)))
+    (construct)))
