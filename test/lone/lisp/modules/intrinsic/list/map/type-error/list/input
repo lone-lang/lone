@@ -1,0 +1,10 @@
+(import (lone print intercept lambda quote set)
+        (list map)
+        (math +))
+
+(set ++ (lambda (x) (+ 1 x)))
+
+(print
+  (intercept
+    (('type-error (lambda (v) v)))
+    (map ++ 42)))
