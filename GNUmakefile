@@ -144,7 +144,7 @@ $(targets.NR.c): $(targets.NR.list) scripts/NR.generate | directories
 	scripts/NR.generate < $< > $@
 
 $(targets.NR.list): scripts/NR.filter | directories
-	$(CC) -E -dM -include linux/unistd.h - < /dev/null | scripts/NR.filter > $@
+	$(CC) $(flags.system_include_directories) -E -dM -include linux/unistd.h - < /dev/null | scripts/NR.filter > $@
 
 targets.phony += lone
 lone: $(targets.lone)
