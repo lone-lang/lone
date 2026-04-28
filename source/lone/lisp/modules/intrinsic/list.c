@@ -427,6 +427,14 @@ LONE_LISP_PRIMITIVE(list_reduce)
 
 		goto check_function;
 
+	case 4: /* resumed with a replacement list from type-error */
+
+		accumulator = lone_lisp_machine_pop_value(lone, machine);
+		function    = lone_lisp_machine_pop_value(lone, machine);
+		list        = machine->value;
+
+		goto check_list;
+
 	default:
 		break;
 	}
@@ -461,13 +469,26 @@ check_function:
 			);
 	}
 
+check_list:
+
 	if (lone_lisp_is_nil(list)) {
 		/* mapping function to empty list */
 		lone_lisp_machine_push_value(lone, machine, accumulator);
 		return 0;
 	}
 
-	if (!lone_lisp_is_list(lone, list)) { /* can only reduce lists */ linux_exit(-1); }
+	if (!lone_lisp_is_list(lone, list)) {
+		lone_lisp_machine_push_value(lone, machine, function);
+		lone_lisp_machine_push_value(lone, machine, accumulator);
+		return
+			lone_lisp_signal_emit(
+				lone,
+				machine,
+				4,
+				lone_lisp_intern_c_string(lone, "type-error"),
+				list
+			);
+	}
 
 application: /* apply accumulator and value to function */
 

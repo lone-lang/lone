@@ -1,0 +1,11 @@
+(import (lone print intercept signal lambda quote)
+        (list reduce)
+        (math +))
+
+; handler provides a list as replacement;
+; reduce retries and folds + over it with the original accumulator.
+
+(print
+  (intercept
+    (('type-error (lambda (v k) (k '(1 2 3)))))
+    (reduce + 10 42)))
