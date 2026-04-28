@@ -1,0 +1,7 @@
+(import (lone print intercept lambda quote)
+        (list reduce))
+
+(print
+  (intercept
+    (('type-error (lambda (v) v)))
+    (reduce 42 0 '(1 2 3))))
