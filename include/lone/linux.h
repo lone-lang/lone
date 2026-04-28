@@ -45,6 +45,13 @@ ssize_t
 __attribute__((fd_arg_read(1), tainted_args))
 linux_read(int fd, const void *buffer, size_t count);
 
+/* Performs exactly one read system call.
+ * Loops on EINTR and EAGAIN. Returns the kernel's value:
+ * bytes read (0 == end of input) or the negative errno on failure. */
+ssize_t
+__attribute__((fd_arg_read(1), tainted_args))
+linux_read_once(int fd, struct lone_bytes buffer);
+
 /* Fills a lone bytes structure by reading from a file descriptor.
  * Loops on EINTR and EAGAIN. Returns the total bytes read,
  * or the negative kernel errno on error. If the end of input

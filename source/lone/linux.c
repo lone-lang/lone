@@ -35,6 +35,17 @@ ssize_t linux_read(int fd, const void *buffer, size_t count)
 	return linux_system_call_3(__NR_read, fd, (long) buffer, (long) count);
 }
 
+ssize_t linux_read_once(int fd, struct lone_bytes buffer)
+{
+	ssize_t result;
+
+	do {
+		result = linux_read(fd, buffer.pointer, buffer.count);
+	} while (result == -EINTR || result == -EAGAIN);
+
+	return result;
+}
+
 ssize_t linux_read_bytes(int fd, struct lone_bytes buffer)
 {
 	size_t total;
