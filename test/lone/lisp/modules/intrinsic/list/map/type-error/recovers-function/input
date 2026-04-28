@@ -1,0 +1,13 @@
+(import (lone print intercept signal lambda quote set)
+        (list map)
+        (math +))
+
+; handler provides a function as replacement;
+; map retries and applies it to the list.
+
+(set ++ (lambda (x) (+ 1 x)))
+
+(print
+  (intercept
+    (('type-error (lambda (v k) (k ++))))
+    (map 42 '(1 2 3))))

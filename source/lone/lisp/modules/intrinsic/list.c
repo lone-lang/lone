@@ -303,6 +303,13 @@ LONE_LISP_PRIMITIVE(list_map)
 
 		goto destructure;
 
+	case 3: /* resumed with a replacement function from type-error */
+
+		list     = lone_lisp_machine_pop_value(lone, machine);
+		function = machine->value;
+
+		goto check_function;
+
 	default:
 		break;
 	}
@@ -322,7 +329,19 @@ destructure:
 			);
 	}
 
-	if (!lone_lisp_is_applicable(lone, function)) { /* not given an applicable value */ linux_exit(-1); }
+check_function:
+
+	if (!lone_lisp_is_applicable(lone, function)) {
+		lone_lisp_machine_push_value(lone, machine, list);
+		return
+			lone_lisp_signal_emit(
+				lone,
+				machine,
+				3,
+				lone_lisp_intern_c_string(lone, "type-error"),
+				function
+			);
+	}
 
 	if (lone_lisp_is_nil(list)) {
 		/* mapping function to empty list */

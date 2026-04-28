@@ -1,0 +1,7 @@
+(import (lone print intercept lambda quote)
+        (list map))
+
+(print
+  (intercept
+    (('type-error (lambda (v) v)))
+    (map 42 '(1 2 3))))
