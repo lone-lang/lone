@@ -74,7 +74,7 @@ static size_t lone_lisp_reader_fill_buffer(struct lone_lisp *lone, struct lone_l
 			available = allocated - position;
 		}
 
-		read_result = linux_read(reader->file_descriptor, buffer + position, available);
+		read_result = linux_read_once(reader->file_descriptor, LONE_BYTES_VALUE(available, buffer + position));
 
 		if (read_result < 0) {
 			linux_exit(-1);
