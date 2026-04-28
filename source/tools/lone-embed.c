@@ -466,6 +466,7 @@ static void adjust_phdr_entry(struct elf *elf)
 
 	required_file_offset = align_to_page(elf, elf->limits.end.virtual - elf->load_address);
 	file_offset = max(elf->segments.file_offset, required_file_offset);
+	elf->segments.file_offset = file_offset;
 
 	/* Required by linux < 5.18:
 	 *
