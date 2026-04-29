@@ -19,61 +19,6 @@ static void lone_lisp_hash_update_bytes(struct lone_hash_siphash_state *state,
 	lone_hash_siphash_update(state, bytes);
 }
 
-static void lone_lisp_hash_value_recursively(struct lone_lisp *lone,
-		struct lone_lisp_value value, struct lone_hash_siphash_state *state)
-{
-	struct lone_lisp_heap_value *heap_value;
-	enum lone_lisp_tag tag;
-	lone_lisp_integer integer;
-	unsigned long symbol_hash;
-
-	tag = lone_lisp_type_of(value);
-
-	lone_lisp_hash_update_bytes(state, &tag, sizeof(tag));
-
-	switch (tag) {
-	case LONE_LISP_TAG_NIL:
-	case LONE_LISP_TAG_TRUE:
-	case LONE_LISP_TAG_FALSE:
-		return;
-	case LONE_LISP_TAG_INTEGER:
-		integer = lone_lisp_integer_of(value);
-		lone_lisp_hash_update_bytes(state, &integer, sizeof(integer));
-		return;
-	case LONE_LISP_TAG_LIST:
-		heap_value = lone_lisp_heap_value_of(lone, value);
-		lone_lisp_hash_value_recursively(lone, heap_value->as.list.first, state);
-		lone_lisp_hash_value_recursively(lone, heap_value->as.list.rest, state);
-		return;
-	case LONE_LISP_TAG_SYMBOL:
-		if (lone_lisp_is_inline_symbol(value)) {
-			struct lone_bytes name = lone_lisp_bytes_of(lone, &value);
-			symbol_hash = lone_lisp_hash_as_symbol(lone, name);
-		} else {
-			symbol_hash = lone_lisp_heap_value_of(lone, value)->as.symbol.hash;
-		}
-		lone_lisp_hash_update_bytes(state, &symbol_hash, sizeof(symbol_hash));
-		return;
-	case LONE_LISP_TAG_TEXT:
-		lone_hash_siphash_update(state, lone_lisp_bytes_of(lone, &value));
-		return;
-	case LONE_LISP_TAG_BYTES:
-		if (!lone_lisp_is_frozen(lone, value)) {
-			/* mutable bytes cannot be hashed safely */ linux_exit(-1);
-		}
-		lone_hash_siphash_update(state, lone_lisp_bytes_of(lone, &value));
-		return;
-	case LONE_LISP_TAG_MODULE:
-	case LONE_LISP_TAG_FUNCTION:
-	case LONE_LISP_TAG_PRIMITIVE:
-	case LONE_LISP_TAG_CONTINUATION:
-	case LONE_LISP_TAG_GENERATOR:
-	case LONE_LISP_TAG_VECTOR:
-	case LONE_LISP_TAG_TABLE:
-		linux_exit(-1);
-	}
-}
-
 static void lone_lisp_hash_initialize_from_system(struct lone_lisp *lone,
 		struct lone_hash_siphash_state *state)
 {
@@ -143,7 +88,10 @@ static unsigned long lone_lisp_hash_compute(struct lone_lisp *lone,
 		struct lone_lisp_value value)
 {
 	struct lone_hash_siphash_state state;
+	struct lone_lisp_heap_value *heap_value;
 	struct lone_bytes bytes;
+	unsigned long first_hash, rest_hash;
+	enum lone_lisp_tag tag;
 
 	switch (lone_lisp_type_of(value)) {
 	case LONE_LISP_TAG_SYMBOL:
@@ -163,8 +111,17 @@ static unsigned long lone_lisp_hash_compute(struct lone_lisp *lone,
 		}
 		return lone_lisp_hash_as_bytes(lone, bytes);
 	case LONE_LISP_TAG_LIST:
+		tag        = LONE_LISP_TAG_LIST;
+		heap_value = lone_lisp_heap_value_of(lone, value);
+		first_hash = lone_lisp_hash_of(lone, heap_value->as.list.first);
+		rest_hash  = lone_lisp_hash_of(lone, heap_value->as.list.rest);
+
 		lone_lisp_hash_initialize_from_system(lone, &state);
-		lone_lisp_hash_value_recursively(lone, value, &state);
+
+		lone_lisp_hash_update_bytes(&state, &tag,        sizeof(tag));
+		lone_lisp_hash_update_bytes(&state, &first_hash, sizeof(first_hash));
+		lone_lisp_hash_update_bytes(&state, &rest_hash,  sizeof(rest_hash));
+
 		return lone_hash_siphash_finish(&state);
 	default:
 		/* unhashable type */ linux_exit(-1);
