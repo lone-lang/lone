@@ -253,6 +253,7 @@ struct lone_lisp_generator {
 struct lone_lisp_list {
 	struct lone_lisp_value first;
 	struct lone_lisp_value rest;
+	unsigned long hash;
 };
 
 struct lone_lisp_vector {
