@@ -272,6 +272,11 @@ struct lone_lisp_text {
 	unsigned long hash;
 };
 
+static_assert(offsetof(struct lone_lisp_text, hash) == offsetof(struct lone_lisp_symbol, hash),
+		"text hash offset must match symbol's");
+static_assert(offsetof(struct lone_lisp_list, hash) == offsetof(struct lone_lisp_symbol, hash),
+		"list hash offset must match symbol's");
+
 /* ╭────────────────────────────────────────────────────────────────────────╮
    │                                                                        │
    │    Lone tables are openly addressed, linearly probed hash tables.      │
