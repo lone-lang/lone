@@ -17,9 +17,8 @@ static struct lone_lisp_value lone_lisp_symbol_transfer(struct lone_lisp *lone,
 	actual->as.symbol.name.count = length;
 	actual->as.symbol.name.pointer = text;
 	actual->should_deallocate_bytes = should_deallocate;
-	hash = lone_lisp_hash_as_symbol(lone, actual->as.symbol.name);
-	actual->as.symbol.hash = hash;
 	value = lone_lisp_value_from_heap_value(lone, actual, LONE_LISP_TAG_SYMBOL);
+	hash = lone_lisp_value_compute_and_store_hash(lone, value);
 
 	/* Store 8 hash bits in the metadata field at bits 8-15.
 	 * These bits enable fast rejection during table lookups
