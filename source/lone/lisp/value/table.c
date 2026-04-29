@@ -120,7 +120,7 @@ static unsigned long lone_lisp_table_hash_to_index(size_t hash, size_t capacity)
 static unsigned long lone_lisp_table_compute_hash_for(struct lone_lisp *lone,
 		struct lone_lisp_value key, size_t capacity)
 {
-	return lone_lisp_table_hash_to_index(lone_lisp_hash(lone, key), capacity);
+	return lone_lisp_table_hash_to_index(lone_lisp_hash_of(lone, key), capacity);
 }
 
 static bool lone_lisp_table_key_matches(struct lone_lisp *lone,

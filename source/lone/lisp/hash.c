@@ -96,25 +96,29 @@ static unsigned long *hash_of(struct lone_lisp_heap_value *heap_value)
 	}
 }
 
-size_t lone_lisp_hash(struct lone_lisp *lone, struct lone_lisp_value value)
+unsigned long lone_lisp_hash_of(struct lone_lisp *lone, struct lone_lisp_value value)
 {
-	struct lone_hash_siphash_state state;
+	struct lone_lisp_heap_value *heap_value;
+	struct lone_bytes content;
 
-	if (lone_lisp_is_symbol(lone, value)) {
-		if (lone_lisp_is_inline_symbol(value)) {
-			struct lone_bytes name = lone_lisp_bytes_of(lone, &value);
-			return lone_lisp_hash_as_symbol(lone, name);
+	if (value.tagged & 1) {
+		if (lone_lisp_is_inline_bytes(value)) {
+			/* bytes always hash by content
+			   and cannot cache their hashes */
+			content = lone_lisp_bytes_of(lone, &value);
+			return lone_lisp_hash_as_bytes(lone, content);
 		}
-		return lone_lisp_heap_value_of(lone, value)->as.symbol.hash;
+		return (unsigned long) value.tagged;
 	}
 
-	lone_lisp_hash_initialize_from_system(lone, &state);
-	lone_lisp_hash_value_recursively(lone, value, &state);
-
-	return lone_hash_siphash_finish(&state);
+	heap_value = lone_lisp_heap_value_of(lone, value);
+	if (heap_value->hash_cached) {
+		return *hash_of(heap_value);
+	}
+	return lone_lisp_value_compute_and_store_hash(lone, value);
 }
 
-static size_t lone_lisp_hash_as_tagged_type(struct lone_lisp *lone,
+static unsigned long lone_lisp_hash_as_tagged_type(struct lone_lisp *lone,
 		struct lone_bytes data, enum lone_lisp_tag tag)
 {
 	struct lone_hash_siphash_state state;
@@ -127,17 +131,17 @@ static size_t lone_lisp_hash_as_tagged_type(struct lone_lisp *lone,
 	return lone_hash_siphash_finish(&state);
 }
 
-size_t lone_lisp_hash_as_symbol(struct lone_lisp *lone, struct lone_bytes name)
+unsigned long lone_lisp_hash_as_symbol(struct lone_lisp *lone, struct lone_bytes name)
 {
 	return lone_lisp_hash_as_tagged_type(lone, name, LONE_LISP_TAG_SYMBOL);
 }
 
-size_t lone_lisp_hash_as_text(struct lone_lisp *lone, struct lone_bytes text)
+unsigned long lone_lisp_hash_as_text(struct lone_lisp *lone, struct lone_bytes text)
 {
 	return lone_lisp_hash_as_tagged_type(lone, text, LONE_LISP_TAG_TEXT);
 }
 
-size_t lone_lisp_hash_as_bytes(struct lone_lisp *lone, struct lone_bytes bytes)
+unsigned long lone_lisp_hash_as_bytes(struct lone_lisp *lone, struct lone_bytes bytes)
 {
 	return lone_lisp_hash_as_tagged_type(lone, bytes, LONE_LISP_TAG_BYTES);
 }

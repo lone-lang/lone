@@ -5,11 +5,11 @@
 
 #include <lone/lisp/types.h>
 
-size_t lone_lisp_hash(struct lone_lisp *lone, struct lone_lisp_value value);
+unsigned long lone_lisp_hash_of(struct lone_lisp *lone, struct lone_lisp_value value);
 
-size_t lone_lisp_hash_as_symbol(struct lone_lisp *lone, struct lone_bytes name);
-size_t lone_lisp_hash_as_text(struct lone_lisp *lone, struct lone_bytes bytes);
-size_t lone_lisp_hash_as_bytes(struct lone_lisp *lone, struct lone_bytes bytes);
+unsigned long lone_lisp_hash_as_symbol(struct lone_lisp *lone, struct lone_bytes name);
+unsigned long lone_lisp_hash_as_text(struct lone_lisp *lone, struct lone_bytes bytes);
+unsigned long lone_lisp_hash_as_bytes(struct lone_lisp *lone, struct lone_bytes bytes);
 
 unsigned long lone_lisp_value_compute_and_store_hash(struct lone_lisp *lone,
 		struct lone_lisp_value value);
