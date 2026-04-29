@@ -137,7 +137,9 @@ retry:
 
 	value = &lone->heap.values[i];
 
-	value->hash_cached = false;
+	value->should_deallocate_bytes = false;
+	value->frozen                  = false;
+	value->hash_cached             = false;
 
 	return value;
 }
