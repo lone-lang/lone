@@ -268,6 +268,7 @@ struct lone_lisp_symbol {
 
 struct lone_lisp_text {
 	struct lone_bytes bytes;
+	unsigned long hash;
 };
 
 /* ╭────────────────────────────────────────────────────────────────────────╮
