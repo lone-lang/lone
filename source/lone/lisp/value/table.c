@@ -124,7 +124,8 @@ static unsigned long lone_lisp_table_compute_hash_for(struct lone_lisp *lone,
 }
 
 static bool lone_lisp_table_key_matches(struct lone_lisp *lone,
-		struct lone_lisp_value stored, struct lone_lisp_value key)
+		struct lone_lisp_value stored, struct lone_lisp_value key,
+		unsigned long key_hash)
 {
 	/* Word comparison suffices for identity-comparable types:
 	 *
@@ -139,6 +140,11 @@ static bool lone_lisp_table_key_matches(struct lone_lisp *lone,
 	 * 	texts
 	 * 	bytes
 	 *
+	 * Compare cached hashes before the structural check
+	 * to skip the heap walk on the common case where
+	 * two probed entries differ. Equal values always
+	 * produce the same hash, so hash mismatches are
+	 * definitive negatives.
 	 */
 	if (stored.tagged == key.tagged) { return true; }
 
@@ -146,6 +152,7 @@ static bool lone_lisp_table_key_matches(struct lone_lisp *lone,
 	case LONE_LISP_TAG_LIST:
 	case LONE_LISP_TAG_TEXT:
 	case LONE_LISP_TAG_BYTES:
+		if (lone_lisp_hash_of(lone, stored) != key_hash) { return false; }
 		return lone_lisp_is_equal(lone, stored, key);
 	default:
 		return false;
@@ -155,9 +162,15 @@ static bool lone_lisp_table_key_matches(struct lone_lisp *lone,
 static size_t lone_lisp_table_entry_find_index_for(struct lone_lisp *lone, struct lone_lisp_value key,
 		size_t *indexes, struct lone_lisp_table_entry *entries, size_t capacity)
 {
-	size_t i = lone_lisp_table_compute_hash_for(lone, key, capacity);
+	unsigned long key_hash;
+	size_t i;
 
-	while (lone_lisp_table_is_used(indexes, i) && !lone_lisp_table_key_matches(lone, entries[indexes[i]].key, key)) {
+	key_hash = lone_lisp_hash_of(lone, key);
+	i        = lone_lisp_table_hash_to_index(key_hash, capacity);
+
+	while (    lone_lisp_table_is_used(indexes, i)
+	       && !lone_lisp_table_key_matches(lone, entries[indexes[i]].key, key, key_hash)) {
+
 		i = lone_lisp_table_wrap_around(i + 1, capacity);
 	}
 
