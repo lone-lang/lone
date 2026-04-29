@@ -4,15 +4,21 @@
 #include <lone/lisp/heap.h>
 #include <lone/lisp/utilities.h>
 
+#include <lone/memory/allocator.h>
 #include <lone/memory/functions.h>
 
 struct lone_lisp_value lone_lisp_text_transfer(struct lone_lisp *lone,
 		unsigned char *text, size_t length, bool should_deallocate)
 {
 	struct lone_lisp_heap_value *actual;
+	struct lone_lisp_value value;
 
-	if (length <= LONE_LISP_INLINE_MAX_LENGTH && !should_deallocate) {
-		return lone_lisp_inline_text_create(text, length);
+	if (length <= LONE_LISP_INLINE_MAX_LENGTH) {
+		value = lone_lisp_inline_text_create(text, length);
+		if (should_deallocate) {
+			lone_memory_deallocate(lone->system, text, length + 1, 1, 1);
+		}
+		return value;
 	}
 
 	actual = lone_lisp_heap_allocate_value(lone);
