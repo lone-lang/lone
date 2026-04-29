@@ -85,6 +85,17 @@ static void lone_lisp_hash_initialize_from_system(struct lone_lisp *lone,
 	lone_hash_siphash_initialize(state, k0, k1);
 }
 
+static unsigned long *hash_of(struct lone_lisp_heap_value *heap_value)
+{
+	switch (heap_value->type) {
+	case LONE_LISP_TAG_SYMBOL: return &heap_value->as.symbol.hash;
+	case LONE_LISP_TAG_TEXT:   return &heap_value->as.text.hash;
+	case LONE_LISP_TAG_BYTES:  return &heap_value->as.bytes.hash;
+	case LONE_LISP_TAG_LIST:   return &heap_value->as.list.hash;
+	default:                   /* unhashable type */ linux_exit(-1);
+	}
+}
+
 size_t lone_lisp_hash(struct lone_lisp *lone, struct lone_lisp_value value)
 {
 	struct lone_hash_siphash_state state;
@@ -129,4 +140,47 @@ size_t lone_lisp_hash_as_text(struct lone_lisp *lone, struct lone_bytes text)
 size_t lone_lisp_hash_as_bytes(struct lone_lisp *lone, struct lone_bytes bytes)
 {
 	return lone_lisp_hash_as_tagged_type(lone, bytes, LONE_LISP_TAG_BYTES);
+}
+
+static unsigned long lone_lisp_hash_compute(struct lone_lisp *lone,
+		struct lone_lisp_value value)
+{
+	struct lone_hash_siphash_state state;
+	struct lone_bytes bytes;
+
+	switch (lone_lisp_type_of(value)) {
+	case LONE_LISP_TAG_SYMBOL:
+		bytes = lone_lisp_bytes_of(lone, &value);
+		return lone_lisp_hash_as_symbol(lone, bytes);
+	case LONE_LISP_TAG_TEXT:
+		bytes = lone_lisp_bytes_of(lone, &value);
+		return lone_lisp_hash_as_text(lone, bytes);
+	case LONE_LISP_TAG_BYTES:
+		if (!lone_lisp_is_frozen(lone, value)) {
+			/* mutable bytes cannot be hashed safely */ linux_exit(-1);
+		}
+		bytes = lone_lisp_bytes_of(lone, &value);
+		return lone_lisp_hash_as_bytes(lone, bytes);
+	case LONE_LISP_TAG_LIST:
+		lone_lisp_hash_initialize_from_system(lone, &state);
+		lone_lisp_hash_value_recursively(lone, value, &state);
+		return lone_hash_siphash_finish(&state);
+	default:
+		/* unhashable type */ linux_exit(-1);
+	}
+}
+
+unsigned long lone_lisp_value_compute_and_store_hash(struct lone_lisp *lone,
+		struct lone_lisp_value value)
+{
+	struct lone_lisp_heap_value *heap_value;
+	unsigned long hash;
+
+	heap_value = lone_lisp_heap_value_of(lone, value);
+	hash       = lone_lisp_hash_compute(lone, value);
+
+	*hash_of(heap_value) = hash;
+	heap_value->hash_cached          = true;
+
+	return hash;
 }
