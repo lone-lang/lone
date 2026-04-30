@@ -253,7 +253,7 @@ struct lone_lisp_generator {
 struct lone_lisp_list {
 	struct lone_lisp_value first;
 	struct lone_lisp_value rest;
-	unsigned long hash;
+	lone_hash hash;
 };
 
 struct lone_lisp_vector {
@@ -264,17 +264,17 @@ struct lone_lisp_vector {
 
 struct lone_lisp_symbol {
 	struct lone_bytes name;
-	unsigned long hash;
+	lone_hash hash;
 };
 
 struct lone_lisp_text {
 	struct lone_bytes bytes;
-	unsigned long hash;
+	lone_hash hash;
 };
 
 struct lone_lisp_bytes {
 	struct lone_bytes data;
-	unsigned long hash;
+	lone_hash hash;
 };
 
 static_assert(offsetof(struct lone_lisp_text, hash) == offsetof(struct lone_lisp_symbol, hash),

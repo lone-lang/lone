@@ -110,7 +110,7 @@ static unsigned long lone_lisp_table_wrap_around(size_t index, size_t capacity)
 	#error "Unsupported architecture"
 #endif
 
-static unsigned long lone_lisp_table_hash_to_index(size_t hash, size_t capacity)
+static unsigned long lone_lisp_table_hash_to_index(lone_hash hash, size_t capacity)
 {
 	return (hash * LONE_LISP_TABLE_FIBONACCI_CONSTANT) >> (__BITS_PER_LONG - __builtin_ctzl(capacity));
 }
@@ -125,7 +125,7 @@ static unsigned long lone_lisp_table_compute_hash_for(struct lone_lisp *lone,
 
 static bool lone_lisp_table_key_matches(struct lone_lisp *lone,
 		struct lone_lisp_value stored, struct lone_lisp_value key,
-		unsigned long key_hash)
+		lone_hash key_hash)
 {
 	/* Word comparison suffices for identity-comparable types:
 	 *
@@ -162,7 +162,7 @@ static bool lone_lisp_table_key_matches(struct lone_lisp *lone,
 static size_t lone_lisp_table_entry_find_index_for(struct lone_lisp *lone, struct lone_lisp_value key,
 		size_t *indexes, struct lone_lisp_table_entry *entries, size_t capacity)
 {
-	unsigned long key_hash;
+	lone_hash key_hash;
 	size_t i;
 
 	key_hash = lone_lisp_hash_of(lone, key);
@@ -203,7 +203,7 @@ static bool lone_lisp_table_bytes_is_equal(struct lone_lisp *lone,
 }
 
 static size_t lone_lisp_table_entry_find_index_by(struct lone_lisp *lone,
-		unsigned long hash, struct lone_bytes bytes, enum lone_lisp_tag type,
+		lone_hash hash, struct lone_bytes bytes, enum lone_lisp_tag type,
 		size_t *indexes, struct lone_lisp_table_entry *entries, size_t capacity)
 {
 	unsigned char hash_bits = (unsigned char) hash;
@@ -335,7 +335,7 @@ struct lone_lisp_value lone_lisp_table_get(struct lone_lisp *lone,
 }
 
 static struct lone_lisp_value lone_lisp_table_get_by(struct lone_lisp *lone, struct lone_lisp_value table,
-		unsigned long hash, struct lone_bytes bytes, enum lone_lisp_tag type)
+		lone_hash hash, struct lone_bytes bytes, enum lone_lisp_tag type)
 {
 	struct lone_lisp_table *actual;
 	struct lone_lisp_table_entry *entries;

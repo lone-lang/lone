@@ -30,7 +30,7 @@ static void lone_lisp_hash_initialize_from_system(struct lone_lisp *lone,
 	lone_hash_siphash_initialize(state, k0, k1);
 }
 
-static unsigned long *hash_of(struct lone_lisp_heap_value *heap_value)
+static lone_hash *hash_of(struct lone_lisp_heap_value *heap_value)
 {
 	switch (heap_value->type) {
 	case LONE_LISP_TAG_SYMBOL: return &heap_value->as.symbol.hash;
@@ -41,12 +41,12 @@ static unsigned long *hash_of(struct lone_lisp_heap_value *heap_value)
 	}
 }
 
-unsigned long lone_lisp_hash_of(struct lone_lisp *lone, struct lone_lisp_value value)
+lone_hash lone_lisp_hash_of(struct lone_lisp *lone, struct lone_lisp_value value)
 {
 	struct lone_lisp_heap_value *heap_value;
 
 	if (value.tagged & 1) {
-		return (unsigned long) value.tagged;
+		return (lone_hash) value.tagged;
 	}
 
 	heap_value = lone_lisp_heap_value_of(lone, value);
@@ -56,7 +56,7 @@ unsigned long lone_lisp_hash_of(struct lone_lisp *lone, struct lone_lisp_value v
 	return lone_lisp_value_compute_and_store_hash(lone, value);
 }
 
-static unsigned long lone_lisp_hash_as_tagged_type(struct lone_lisp *lone,
+static lone_hash lone_lisp_hash_as_tagged_type(struct lone_lisp *lone,
 		struct lone_bytes data, enum lone_lisp_tag tag)
 {
 	struct lone_hash_siphash_state state;
@@ -69,28 +69,28 @@ static unsigned long lone_lisp_hash_as_tagged_type(struct lone_lisp *lone,
 	return lone_hash_siphash_finish(&state);
 }
 
-unsigned long lone_lisp_hash_as_symbol(struct lone_lisp *lone, struct lone_bytes name)
+lone_hash lone_lisp_hash_as_symbol(struct lone_lisp *lone, struct lone_bytes name)
 {
 	return lone_lisp_hash_as_tagged_type(lone, name, LONE_LISP_TAG_SYMBOL);
 }
 
-unsigned long lone_lisp_hash_as_text(struct lone_lisp *lone, struct lone_bytes text)
+lone_hash lone_lisp_hash_as_text(struct lone_lisp *lone, struct lone_bytes text)
 {
 	return lone_lisp_hash_as_tagged_type(lone, text, LONE_LISP_TAG_TEXT);
 }
 
-unsigned long lone_lisp_hash_as_bytes(struct lone_lisp *lone, struct lone_bytes bytes)
+lone_hash lone_lisp_hash_as_bytes(struct lone_lisp *lone, struct lone_bytes bytes)
 {
 	return lone_lisp_hash_as_tagged_type(lone, bytes, LONE_LISP_TAG_BYTES);
 }
 
-static unsigned long lone_lisp_hash_compute(struct lone_lisp *lone,
+static lone_hash lone_lisp_hash_compute(struct lone_lisp *lone,
 		struct lone_lisp_value value)
 {
 	struct lone_hash_siphash_state state;
 	struct lone_lisp_heap_value *heap_value;
 	struct lone_bytes bytes;
-	unsigned long first_hash, rest_hash;
+	lone_hash first_hash, rest_hash;
 	enum lone_lisp_tag tag;
 
 	switch (lone_lisp_type_of(value)) {
@@ -128,11 +128,11 @@ static unsigned long lone_lisp_hash_compute(struct lone_lisp *lone,
 	}
 }
 
-unsigned long lone_lisp_value_compute_and_store_hash(struct lone_lisp *lone,
+lone_hash lone_lisp_value_compute_and_store_hash(struct lone_lisp *lone,
 		struct lone_lisp_value value)
 {
 	struct lone_lisp_heap_value *heap_value;
-	unsigned long hash;
+	lone_hash hash;
 
 	heap_value = lone_lisp_heap_value_of(lone, value);
 	hash       = lone_lisp_hash_compute(lone, value);

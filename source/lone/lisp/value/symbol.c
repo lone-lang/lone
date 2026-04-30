@@ -12,7 +12,7 @@ static struct lone_lisp_value lone_lisp_symbol_transfer(struct lone_lisp *lone,
 {
 	struct lone_lisp_heap_value *actual = lone_lisp_heap_allocate_value(lone);
 	struct lone_lisp_value value;
-	unsigned long hash;
+	lone_hash hash;
 
 	actual->as.symbol.name.count = length;
 	actual->as.symbol.name.pointer = text;
