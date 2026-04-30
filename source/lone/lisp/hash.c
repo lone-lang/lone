@@ -99,15 +99,8 @@ static unsigned long *hash_of(struct lone_lisp_heap_value *heap_value)
 unsigned long lone_lisp_hash_of(struct lone_lisp *lone, struct lone_lisp_value value)
 {
 	struct lone_lisp_heap_value *heap_value;
-	struct lone_bytes content;
 
 	if (value.tagged & 1) {
-		if (lone_lisp_is_inline_bytes(value)) {
-			/* bytes always hash by content
-			   and cannot cache their hashes */
-			content = lone_lisp_bytes_of(lone, &value);
-			return lone_lisp_hash_as_bytes(lone, content);
-		}
 		return (unsigned long) value.tagged;
 	}
 
@@ -164,6 +157,10 @@ static unsigned long lone_lisp_hash_compute(struct lone_lisp *lone,
 			/* mutable bytes cannot be hashed safely */ linux_exit(-1);
 		}
 		bytes = lone_lisp_bytes_of(lone, &value);
+		if (bytes.count <= LONE_LISP_INLINE_MAX_LENGTH) {
+			/* synthesize inline bytes value, hash by identity */
+			return lone_lisp_inline_bytes_create(bytes.pointer, bytes.count).tagged;
+		}
 		return lone_lisp_hash_as_bytes(lone, bytes);
 	case LONE_LISP_TAG_LIST:
 		lone_lisp_hash_initialize_from_system(lone, &state);
