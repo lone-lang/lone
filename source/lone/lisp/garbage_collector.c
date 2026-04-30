@@ -232,8 +232,8 @@ static void lone_lisp_kill_all_unmarked_values(struct lone_lisp *lone)
 			case LONE_LISP_TAG_BYTES:
 				if (value->should_deallocate_bytes) {
 					lone_memory_deallocate(
-						lone->system, value->as.bytes.pointer,
-						value->as.bytes.count + 1,
+						lone->system, value->as.bytes.data.pointer,
+						value->as.bytes.data.count + 1,
 						1, 1
 					);
 				}

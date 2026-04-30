@@ -272,8 +272,15 @@ struct lone_lisp_text {
 	unsigned long hash;
 };
 
+struct lone_lisp_bytes {
+	struct lone_bytes data;
+	unsigned long hash;
+};
+
 static_assert(offsetof(struct lone_lisp_text, hash) == offsetof(struct lone_lisp_symbol, hash),
 		"text hash offset must match symbol's");
+static_assert(offsetof(struct lone_lisp_bytes, hash) == offsetof(struct lone_lisp_symbol, hash),
+		"bytes hash offset must match symbol's");
 static_assert(offsetof(struct lone_lisp_list, hash) == offsetof(struct lone_lisp_symbol, hash),
 		"list hash offset must match symbol's");
 
@@ -334,7 +341,7 @@ struct lone_lisp_heap_value {
 		struct lone_lisp_table table;
 		struct lone_lisp_symbol symbol;
 		struct lone_lisp_text text;
-		struct lone_bytes bytes;
+		struct lone_lisp_bytes bytes;
 
 		struct {
 			long forwarding_index;

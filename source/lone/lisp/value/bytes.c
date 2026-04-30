@@ -17,7 +17,7 @@ struct lone_lisp_value lone_lisp_bytes_transfer(struct lone_lisp *lone,
 	}
 
 	actual = lone_lisp_heap_allocate_value(lone);
-	return lone_lisp_buffer_transfer(lone, actual, &actual->as.bytes,
+	return lone_lisp_buffer_transfer(lone, actual, &actual->as.bytes.data,
 			pointer, count, should_deallocate, LONE_LISP_TAG_BYTES);
 }
 
@@ -36,7 +36,7 @@ struct lone_lisp_value lone_lisp_bytes_copy(struct lone_lisp *lone, unsigned cha
 	}
 
 	actual = lone_lisp_heap_allocate_value(lone);
-	return lone_lisp_buffer_copy(lone, actual, &actual->as.bytes,
+	return lone_lisp_buffer_copy(lone, actual, &actual->as.bytes.data,
 			pointer, count, LONE_LISP_TAG_BYTES);
 }
 
