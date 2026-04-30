@@ -176,7 +176,7 @@ LONE_LISP_PRIMITIVE(bytes_read_##sign##bits##endian) \
 \
 	lone_lisp_bytes_check_read_arguments(lone, bytes, offset); \
 \
-	integer = lone_bytes_read_##sign##bits##endian(lone_lisp_heap_value_of(lone, bytes)->as.bytes, \
+	integer = lone_bytes_read_##sign##bits##endian(lone_lisp_heap_value_of(lone, bytes)->as.bytes.data, \
 			lone_lisp_integer_of(offset)); \
 \
 	if (integer.present) { \
@@ -218,7 +218,7 @@ LONE_LISP_PRIMITIVE(bytes_write_##sign##bits##endian) \
 	} \
 \
 	success = lone_bytes_write_##sign##bits##endian( \
-		lone_lisp_heap_value_of(lone, bytes)->as.bytes, \
+		lone_lisp_heap_value_of(lone, bytes)->as.bytes.data, \
 		lone_lisp_integer_of(offset), \
 		integer \
 	); \

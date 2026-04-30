@@ -3,7 +3,7 @@
 #include <lone/hash/fnv_1a.h>
 #include <lone/types.h>
 
-void lone_hash_fnv_1a_initialize(struct lone_hash_fnv_1a_state *state, unsigned long offset_basis)
+void lone_hash_fnv_1a_initialize(struct lone_hash_fnv_1a_state *state, lone_hash offset_basis)
 {
 	state->hash = offset_basis;
 }
@@ -19,12 +19,12 @@ void lone_hash_fnv_1a_update(struct lone_hash_fnv_1a_state *state, struct lone_b
 	}
 }
 
-unsigned long lone_hash_fnv_1a_finish(struct lone_hash_fnv_1a_state *state)
+lone_hash lone_hash_fnv_1a_finish(struct lone_hash_fnv_1a_state *state)
 {
 	return state->hash;
 }
 
-unsigned long __attribute__((pure)) lone_hash_fnv_1a(struct lone_bytes data, unsigned long offset_basis)
+lone_hash __attribute__((pure)) lone_hash_fnv_1a(struct lone_bytes data, lone_hash offset_basis)
 {
 	struct lone_hash_fnv_1a_state state;
 

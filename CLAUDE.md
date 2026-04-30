@@ -497,6 +497,7 @@ In-tree documentation lives under `documentation/`:
   - `machine.md` — explicit-control evaluator, steps, stack frames
   - `table-shapes.md` — hash table implementation and shapes
   - `compiler/` — compiler support features (stack protector, etc.)
+  - `hash/` — value hash caching architecture
   - `heap/` — heap design (static initialization)
   - `intercept+signal/` — dispatch, primitives, reentrancy
   - `linux/` — memory map documentation

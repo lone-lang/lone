@@ -118,3 +118,30 @@ struct lone_bytes lone_lisp_concatenate(struct lone_lisp *lone,
 {
 	return lone_lisp_join(lone, lone_lisp_nil(), arguments, is_valid);
 }
+
+struct lone_lisp_value lone_lisp_buffer_transfer(struct lone_lisp *lone,
+		struct lone_lisp_heap_value *actual,
+		struct lone_bytes *destination,
+		unsigned char *pointer, size_t count,
+		bool should_deallocate, enum lone_lisp_tag tag)
+{
+	destination->count   = count;
+	destination->pointer = pointer;
+	actual->should_deallocate_bytes = should_deallocate;
+	return lone_lisp_value_from_heap_value(lone, actual, tag);
+}
+
+struct lone_lisp_value lone_lisp_buffer_copy(struct lone_lisp *lone,
+		struct lone_lisp_heap_value *actual,
+		struct lone_bytes *destination,
+		unsigned char *pointer, size_t count,
+		enum lone_lisp_tag tag)
+{
+	unsigned char *copy;
+
+	copy = lone_memory_allocate(lone->system, count + 1, 1, 1, LONE_MEMORY_ALLOCATION_FLAGS_NONE);
+	lone_memory_move(pointer, copy, count);
+	copy[count] = '\0';
+
+	return lone_lisp_buffer_transfer(lone, actual, destination, copy, count, true, tag);
+}

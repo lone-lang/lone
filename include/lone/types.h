@@ -27,6 +27,8 @@ typedef __s32 lone_s32;
 typedef __u64 lone_u64;
 typedef __s64 lone_s64;
 
+typedef lone_u64 lone_hash;
+
 typedef void (*lone_function_pointer)(void);
 
 struct lone_optional_u8  { bool present; lone_u8  value; };

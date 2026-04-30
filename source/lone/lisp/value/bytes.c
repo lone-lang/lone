@@ -2,9 +2,9 @@
 
 #include <lone/lisp/types.h>
 #include <lone/lisp/heap.h>
+#include <lone/lisp/utilities.h>
 
 #include <lone/memory/allocator.h>
-#include <lone/memory/functions.h>
 
 struct lone_lisp_value lone_lisp_bytes_transfer(struct lone_lisp *lone,
 		unsigned char *pointer, size_t count,
@@ -17,10 +17,8 @@ struct lone_lisp_value lone_lisp_bytes_transfer(struct lone_lisp *lone,
 	}
 
 	actual = lone_lisp_heap_allocate_value(lone);
-	actual->as.bytes.count = count;
-	actual->as.bytes.pointer = pointer;
-	actual->should_deallocate_bytes = should_deallocate;
-	return lone_lisp_value_from_heap_value(lone, actual, LONE_LISP_TAG_BYTES);
+	return lone_lisp_buffer_transfer(lone, actual, &actual->as.bytes.data,
+			pointer, count, should_deallocate, LONE_LISP_TAG_BYTES);
 }
 
 struct lone_lisp_value lone_lisp_bytes_transfer_bytes(struct lone_lisp *lone,
@@ -31,16 +29,15 @@ struct lone_lisp_value lone_lisp_bytes_transfer_bytes(struct lone_lisp *lone,
 
 struct lone_lisp_value lone_lisp_bytes_copy(struct lone_lisp *lone, unsigned char *pointer, size_t count)
 {
-	unsigned char *copy;
+	struct lone_lisp_heap_value *actual;
 
 	if (count <= LONE_LISP_INLINE_MAX_LENGTH) {
 		return lone_lisp_inline_bytes_create(pointer, count);
 	}
 
-	copy = lone_memory_allocate(lone->system, count + 1, 1, 1, LONE_MEMORY_ALLOCATION_FLAGS_NONE);
-	lone_memory_move(pointer, copy, count);
-	copy[count] = '\0';
-	return lone_lisp_bytes_transfer(lone, copy, count, true);
+	actual = lone_lisp_heap_allocate_value(lone);
+	return lone_lisp_buffer_copy(lone, actual, &actual->as.bytes.data,
+			pointer, count, LONE_LISP_TAG_BYTES);
 }
 
 struct lone_lisp_value lone_lisp_bytes_create(struct lone_lisp *lone, size_t count)

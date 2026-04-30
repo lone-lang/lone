@@ -105,6 +105,7 @@ struct lone_lisp_heap_value *lone_lisp_heap_allocate_value(struct lone_lisp *lon
 {
 	size_t bitmap_bytes, byte_offset, i;
 	struct lone_optional_size result;
+	struct lone_lisp_heap_value *value;
 	unsigned char *start;
 
 	bitmap_bytes = lone_lisp_heap_bitmap_size(lone->heap.capacity);
@@ -134,7 +135,13 @@ retry:
 	lone_bits_mark(lone->heap.bits.live, i);
 	lone->heap.first_dead = i + 1;
 
-	return &lone->heap.values[i];
+	value = &lone->heap.values[i];
+
+	value->should_deallocate_bytes = false;
+	value->frozen                  = false;
+	value->hash_cached             = false;
+
+	return value;
 }
 
 static intptr_t lone_lisp_heap_initialize_values(struct lone_lisp_heap_value **values, size_t size)

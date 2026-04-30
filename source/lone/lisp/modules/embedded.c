@@ -58,7 +58,7 @@ void lone_lisp_modules_embedded_load(struct lone_lisp *lone, lone_elf_native_seg
 
 	symbol = lone_lisp_intern_c_string(lone, "data");
 	data = lone_lisp_table_get(lone, descriptor, symbol);
-	bytes = lone_lisp_heap_value_of(lone, data)->as.bytes;
+	bytes = lone_lisp_heap_value_of(lone, data)->as.bytes.data;
 
 	symbol = lone_lisp_intern_c_string(lone, "modules");
 	lone->modules.embedded = lone_lisp_table_get(lone, descriptor, symbol);

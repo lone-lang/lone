@@ -101,7 +101,7 @@ static bool lone_lisp_module_try_to_load_embedded(struct lone_lisp *lone,
 	if (lone_lisp_is_nil(embedded_module)) { /* embedded module not found */ return false; }
 	if (!lone_lisp_has_bytes(lone, embedded_module)) { /* invalid embedded module */ linux_exit(-1); }
 
-	lone_lisp_module_load_from_bytes(lone, module, lone_lisp_heap_value_of(lone, embedded_module)->as.bytes);
+	lone_lisp_module_load_from_bytes(lone, module, lone_lisp_bytes_of(lone, &embedded_module));
 	lone_lisp_table_delete(lone, lone->modules.embedded, name);
 	return true;
 }

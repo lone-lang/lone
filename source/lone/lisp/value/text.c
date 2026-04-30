@@ -1,21 +1,29 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later */
 
 #include <lone/lisp/types.h>
+#include <lone/lisp/heap.h>
+#include <lone/lisp/utilities.h>
 
+#include <lone/memory/allocator.h>
 #include <lone/memory/functions.h>
 
 struct lone_lisp_value lone_lisp_text_transfer(struct lone_lisp *lone,
 		unsigned char *text, size_t length, bool should_deallocate)
 {
+	struct lone_lisp_heap_value *actual;
 	struct lone_lisp_value value;
 
-	if (length <= LONE_LISP_INLINE_MAX_LENGTH && !should_deallocate) {
-		return lone_lisp_inline_text_create(text, length);
+	if (length <= LONE_LISP_INLINE_MAX_LENGTH) {
+		value = lone_lisp_inline_text_create(text, length);
+		if (should_deallocate) {
+			lone_memory_deallocate(lone->system, text, length + 1, 1, 1);
+		}
+		return value;
 	}
 
-	value = lone_lisp_retag(lone_lisp_bytes_transfer(lone, text, length, should_deallocate), LONE_LISP_TAG_TEXT);
-	lone_lisp_heap_value_of(lone, value)->type = LONE_LISP_TAG_TEXT;
-	return value;
+	actual = lone_lisp_heap_allocate_value(lone);
+	return lone_lisp_buffer_transfer(lone, actual, &actual->as.text.bytes,
+			text, length, should_deallocate, LONE_LISP_TAG_TEXT);
 }
 
 struct lone_lisp_value lone_lisp_text_transfer_bytes(struct lone_lisp *lone,
@@ -26,15 +34,15 @@ struct lone_lisp_value lone_lisp_text_transfer_bytes(struct lone_lisp *lone,
 
 struct lone_lisp_value lone_lisp_text_copy(struct lone_lisp *lone, unsigned char *text, size_t length)
 {
-	struct lone_lisp_value value;
+	struct lone_lisp_heap_value *actual;
 
 	if (length <= LONE_LISP_INLINE_MAX_LENGTH) {
 		return lone_lisp_inline_text_create(text, length);
 	}
 
-	value = lone_lisp_retag(lone_lisp_bytes_copy(lone, text, length), LONE_LISP_TAG_TEXT);
-	lone_lisp_heap_value_of(lone, value)->type = LONE_LISP_TAG_TEXT;
-	return value;
+	actual = lone_lisp_heap_allocate_value(lone);
+	return lone_lisp_buffer_copy(lone, actual, &actual->as.text.bytes,
+			text, length, LONE_LISP_TAG_TEXT);
 }
 
 struct lone_lisp_value lone_lisp_text_from_c_string(struct lone_lisp *lone, char *c_string)

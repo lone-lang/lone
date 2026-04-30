@@ -253,6 +253,7 @@ struct lone_lisp_generator {
 struct lone_lisp_list {
 	struct lone_lisp_value first;
 	struct lone_lisp_value rest;
+	lone_hash hash;
 };
 
 struct lone_lisp_vector {
@@ -263,8 +264,25 @@ struct lone_lisp_vector {
 
 struct lone_lisp_symbol {
 	struct lone_bytes name;
-	unsigned long hash;
+	lone_hash hash;
 };
+
+struct lone_lisp_text {
+	struct lone_bytes bytes;
+	lone_hash hash;
+};
+
+struct lone_lisp_bytes {
+	struct lone_bytes data;
+	lone_hash hash;
+};
+
+static_assert(offsetof(struct lone_lisp_text, hash) == offsetof(struct lone_lisp_symbol, hash),
+		"text hash offset must match symbol's");
+static_assert(offsetof(struct lone_lisp_bytes, hash) == offsetof(struct lone_lisp_symbol, hash),
+		"bytes hash offset must match symbol's");
+static_assert(offsetof(struct lone_lisp_list, hash) == offsetof(struct lone_lisp_symbol, hash),
+		"list hash offset must match symbol's");
 
 /* ╭────────────────────────────────────────────────────────────────────────╮
    │                                                                        │
@@ -307,6 +325,7 @@ struct lone_lisp_heap_value {
 	struct {
 		bool should_deallocate_bytes: 1;
 		bool frozen: 1;
+		bool hash_cached: 1;
 	};
 
 	enum lone_lisp_tag type; /* tag byte, set at allocation for GC sweep */
@@ -321,13 +340,17 @@ struct lone_lisp_heap_value {
 		struct lone_lisp_vector vector;
 		struct lone_lisp_table table;
 		struct lone_lisp_symbol symbol;
-		struct lone_bytes bytes; /* used by texts and bytes values */
+		struct lone_lisp_text text;
+		struct lone_lisp_bytes bytes;
 
 		struct {
 			long forwarding_index;
 		} metadata;
 	} as;
 } __attribute__((aligned(64)));
+
+static_assert(sizeof(struct lone_lisp_heap_value) == 64,
+		"heap value must occupy exactly one cache line");
 
 typedef bool (*lone_lisp_predicate_function)(struct lone_lisp *lone, struct lone_lisp_value value);
 typedef bool (*lone_lisp_comparator_function)(struct lone_lisp *lone, struct lone_lisp_value x, struct lone_lisp_value y);

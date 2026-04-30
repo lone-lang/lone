@@ -23,6 +23,10 @@
 #define CHAR_BIT __CHAR_BIT__
 #endif
 
+#ifndef offsetof
+#define offsetof __builtin_offsetof
+#endif
+
 /* ╭────────────────────────────────────────────────────────────────────────╮
    │                                                                        │
    │                                      bits = 32    |    bits = 64       │

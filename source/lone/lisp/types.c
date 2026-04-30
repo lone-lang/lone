@@ -291,8 +291,9 @@ struct lone_bytes lone_lisp_bytes_of(struct lone_lisp *lone, struct lone_lisp_va
 	case LONE_LISP_TAG_SYMBOL:
 		return heap_value->as.symbol.name;
 	case LONE_LISP_TAG_TEXT:
+		return heap_value->as.text.bytes;
 	case LONE_LISP_TAG_BYTES:
-		return heap_value->as.bytes;
+		return heap_value->as.bytes.data;
 	default:
 		linux_exit(-1);
 	}
