@@ -18,4 +18,16 @@ struct lone_bytes lone_lisp_join(struct lone_lisp *lone,
 struct lone_bytes lone_lisp_concatenate(struct lone_lisp *lone,
 		struct lone_lisp_value arguments, lone_lisp_predicate_function is_valid);
 
+struct lone_lisp_value lone_lisp_buffer_transfer(struct lone_lisp *lone,
+		struct lone_lisp_heap_value *actual,
+		struct lone_bytes *destination,
+		unsigned char *pointer, size_t count,
+		bool should_deallocate, enum lone_lisp_tag tag);
+
+struct lone_lisp_value lone_lisp_buffer_copy(struct lone_lisp *lone,
+		struct lone_lisp_heap_value *actual,
+		struct lone_bytes *destination,
+		unsigned char *pointer, size_t count,
+		enum lone_lisp_tag tag);
+
 #endif /* LONE_LISP_UTILITIES_HEADER */
