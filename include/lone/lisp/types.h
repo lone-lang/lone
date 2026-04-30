@@ -313,6 +313,7 @@ struct lone_lisp_heap_value {
 	struct {
 		bool should_deallocate_bytes: 1;
 		bool frozen: 1;
+		bool hash_cached: 1;
 	};
 
 	enum lone_lisp_tag type; /* tag byte, set at allocation for GC sweep */
