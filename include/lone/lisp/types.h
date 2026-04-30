@@ -336,6 +336,9 @@ struct lone_lisp_heap_value {
 	} as;
 } __attribute__((aligned(64)));
 
+static_assert(sizeof(struct lone_lisp_heap_value) == 64,
+		"heap value must occupy exactly one cache line");
+
 typedef bool (*lone_lisp_predicate_function)(struct lone_lisp *lone, struct lone_lisp_value value);
 typedef bool (*lone_lisp_comparator_function)(struct lone_lisp *lone, struct lone_lisp_value x, struct lone_lisp_value y);
 
