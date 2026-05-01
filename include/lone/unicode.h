@@ -15,4 +15,9 @@
 #define LONE_UNICODE_SURROGATE_MIN           0xD800
 #define LONE_UNICODE_SURROGATE_MAX           0xDFFF
 
+struct lone_unicode_utf8_decode_result {
+	lone_u32 code_point;
+	lone_u8  bytes_read;
+};
+
 #endif /* LONE_UNICODE_HEADER */
