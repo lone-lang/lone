@@ -357,8 +357,11 @@ static size_t lone_lisp_reader_measure_quoted_content(
 static struct lone_bytes lone_lisp_reader_consume_text_content(
 		struct lone_lisp *lone, struct lone_lisp_reader *reader)
 {
-	unsigned char *current, *output, character;
-	size_t input_length, output_length, buffer_size;
+	struct lone_unicode_utf8_encode_result encoded;
+	unsigned char *current, *output, character, hex_value;
+	size_t input_length, output_length, buffer_size, digits;
+	lone_u32 code_point;
+	lone_u8 i;
 	struct lone_bytes result = LONE_BYTES_INIT_NULL();
 
 	input_length = lone_lisp_reader_measure_quoted_content(lone, reader);
@@ -376,11 +379,42 @@ static struct lone_bytes lone_lisp_reader_consume_text_content(
 			lone_lisp_reader_consume(reader);
 			current = lone_lisp_reader_peek(lone, reader);
 
-			if (!lone_lisp_reader_consume_common_escape(reader, *current, &character)) {
+			if (lone_lisp_reader_consume_common_escape(reader, *current, &character)) {
+				output[output_length++] = character;
+			} else if (*current == 'u') {
+				lone_lisp_reader_consume(reader);
+				current = lone_lisp_reader_peek(lone, reader);
+				if (!current || *current != '{') { goto deallocate_and_error; }
+
+				lone_lisp_reader_consume(reader);
+				code_point = 0;
+				digits = 0;
+
+				while ((current = lone_lisp_reader_peek(lone, reader)) &&
+				       *current != '}' && digits < 6) {
+
+					if (!lone_lisp_reader_hex_digit_value(*current, &hex_value)) {
+						goto deallocate_and_error;
+					}
+
+					code_point = (code_point << 4) | hex_value;
+					++digits;
+					lone_lisp_reader_consume(reader);
+				}
+
+				if (!current || *current != '}') { goto deallocate_and_error; }
+				if (digits == 0) { goto deallocate_and_error; }
+
+				encoded = lone_unicode_utf8_encode(code_point);
+				if (encoded.bytes_written == 0) { goto deallocate_and_error; }
+
+				for (i = 0; i < encoded.bytes_written; ++i) {
+					output[output_length++] = encoded.bytes[i];
+				}
+			} else {
 				goto deallocate_and_error;
 			}
 
-			output[output_length++] = character;
 			lone_lisp_reader_consume(reader);
 			continue;
 		}
