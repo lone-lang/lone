@@ -74,3 +74,32 @@ struct lone_unicode_utf8_decode_result lone_unicode_utf8_decode(struct lone_byte
 	result.bytes_read = expected;
 	return result;
 }
+
+struct lone_unicode_utf8_encode_result lone_unicode_utf8_encode(lone_u32 code_point)
+{
+	struct lone_unicode_utf8_encode_result result = { { 0 }, 0 };
+
+	if (!lone_unicode_is_valid_code_point(code_point)) { return result; }
+
+	if (code_point < 0x80) {
+		result.bytes[0] = (unsigned char) code_point;
+		result.bytes_written = 1;
+	} else if (code_point < 0x800) {
+		result.bytes[0] = (unsigned char) (0xC0 | (code_point >> 6));
+		result.bytes[1] = (unsigned char) (0x80 | (code_point & 0x3F));
+		result.bytes_written = 2;
+	} else if (code_point < 0x10000) {
+		result.bytes[0] = (unsigned char) (0xE0 | (code_point >> 12));
+		result.bytes[1] = (unsigned char) (0x80 | ((code_point >> 6) & 0x3F));
+		result.bytes[2] = (unsigned char) (0x80 | (code_point & 0x3F));
+		result.bytes_written = 3;
+	} else {
+		result.bytes[0] = (unsigned char) (0xF0 | (code_point >> 18));
+		result.bytes[1] = (unsigned char) (0x80 | ((code_point >> 12) & 0x3F));
+		result.bytes[2] = (unsigned char) (0x80 | ((code_point >> 6) & 0x3F));
+		result.bytes[3] = (unsigned char) (0x80 | (code_point & 0x3F));
+		result.bytes_written = 4;
+	}
+
+	return result;
+}
