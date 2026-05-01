@@ -40,6 +40,9 @@ void lone_lisp_modules_intrinsic_text_initialize(struct lone_lisp *lone)
 
 	lone_lisp_module_export_primitive(lone, module, "code-point-at",
 			"text_code_point_at", lone_lisp_primitive_text_code_point_at, module, flags);
+
+	lone_lisp_module_export_primitive(lone, module, "from-code-point",
+			"text_from_code_point", lone_lisp_primitive_text_from_code_point, module, flags);
 }
 
 LONE_LISP_PRIMITIVE(text_to_symbol)
@@ -248,6 +251,47 @@ LONE_LISP_PRIMITIVE(text_code_point_at)
 		index_value = machine->value;
 		text = lone_lisp_machine_pop_value(lone, machine);
 		goto validate_index;
+	}
+
+	linux_exit(-1);
+}
+
+LONE_LISP_PRIMITIVE(text_from_code_point)
+{
+	struct lone_lisp_value arguments, integer;
+	struct lone_unicode_utf8_encode_result encoded;
+	lone_lisp_integer code_point;
+
+	switch (step) {
+	case 0:
+		arguments = lone_lisp_machine_pop_value(lone, machine);
+
+		if (lone_lisp_list_destructure(lone, arguments, 1, &integer)) {
+			/* wrong number of arguments */ linux_exit(-1);
+		}
+
+	validate:
+		if (!lone_lisp_is_integer(lone, integer)) {
+			return lone_lisp_signal_emit(lone, machine, 1,
+					lone_lisp_intern_c_string(lone, "type-error"), integer);
+		}
+
+		code_point = lone_lisp_integer_of(integer);
+
+		if (code_point < 0 || !lone_unicode_is_valid_code_point((lone_u32) code_point)) {
+			return lone_lisp_signal_emit(lone, machine, 1,
+					lone_lisp_intern_c_string(lone, "invalid-unicode"), integer);
+		}
+
+		encoded = lone_unicode_utf8_encode((lone_u32) code_point);
+
+		lone_lisp_machine_push_value(lone, machine,
+				lone_lisp_text_copy(lone, encoded.bytes, encoded.bytes_written));
+		return 0;
+
+	case 1:
+		integer = machine->value;
+		goto validate;
 	}
 
 	linux_exit(-1);
