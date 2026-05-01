@@ -305,16 +305,20 @@ error:
 
 /* ╭────────────────────────────────────────────────────────────────────────╮
    │                                                                        │
-   │    Analyzes a string and adds it to the tokens list if valid.          │
+   │    Escaped content processing for text and byte literals.              │
    │                                                                        │
-   │    Supported escape sequences:                                         │
+   │    Common escape sequences (both text and bytes):                      │
    │        ◦ \\                                                            │
    │        ◦ \"                                                            │
    │        ◦ \n                                                            │
    │        ◦ \t                                                            │
    │        ◦ \0                                                            │
    │                                                                        │
-   │    ("(\\[\\\"nt0]|[^"\\])*")[)}\]; \t\n]                               │
+   │    Text-only escape:                                                   │
+   │        ◦ \u{NNNNNN}  Unicode codepoint, 1-6 hex digits                 │
+   │                                                                        │
+   │    Bytes-only escape:                                                  │
+   │        ◦ \xNN        Arbitrary byte value                              │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
 
