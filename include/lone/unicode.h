@@ -11,4 +11,6 @@
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
 
+#define LONE_UNICODE_CODE_POINT_MAX          0x10FFFF
+
 #endif /* LONE_UNICODE_HEADER */
