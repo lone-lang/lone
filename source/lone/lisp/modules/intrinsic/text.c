@@ -37,6 +37,9 @@ void lone_lisp_modules_intrinsic_text_initialize(struct lone_lisp *lone)
 
 	lone_lisp_module_export_primitive(lone, module, "code-unit-count",
 			"text_code_unit_count", lone_lisp_primitive_text_code_unit_count, module, flags);
+
+	lone_lisp_module_export_primitive(lone, module, "code-point-at",
+			"text_code_point_at", lone_lisp_primitive_text_code_point_at, module, flags);
 }
 
 LONE_LISP_PRIMITIVE(text_to_symbol)
@@ -172,6 +175,79 @@ LONE_LISP_PRIMITIVE(text_code_unit_count)
 	case 1:
 		text = machine->value;
 		goto validate;
+	}
+
+	linux_exit(-1);
+}
+
+LONE_LISP_PRIMITIVE(text_code_point_at)
+{
+	struct lone_lisp_value arguments, text, index_value;
+	struct lone_unicode_utf8_decode_result decoded;
+	struct lone_bytes bytes;
+	lone_lisp_integer index;
+	size_t code_point_count, i;
+
+	switch (step) {
+	case 0:
+		arguments = lone_lisp_machine_pop_value(lone, machine);
+
+		if (lone_lisp_list_destructure(lone, arguments, 2, &text, &index_value)) {
+			/* wrong number of arguments */ linux_exit(-1);
+		}
+
+	validate_text:
+		if (!lone_lisp_is_text(lone, text)) {
+			lone_lisp_machine_push_value(lone, machine, index_value);
+			return lone_lisp_signal_emit(lone, machine, 1,
+					lone_lisp_intern_c_string(lone, "type-error"), text);
+		}
+
+	validate_index:
+		if (!lone_lisp_is_integer(lone, index_value)) {
+			lone_lisp_machine_push_value(lone, machine, text);
+			return lone_lisp_signal_emit(lone, machine, 2,
+					lone_lisp_intern_c_string(lone, "type-error"), index_value);
+		}
+
+		index = lone_lisp_integer_of(index_value);
+
+		if (index < 0) {
+			lone_lisp_machine_push_value(lone, machine, text);
+			return lone_lisp_signal_emit(lone, machine, 2,
+					lone_lisp_intern_c_string(lone, "index-error"), index_value);
+		}
+
+		code_point_count = lone_lisp_text_code_point_count_of(lone, text);
+		if ((size_t) index >= code_point_count) {
+			lone_lisp_machine_push_value(lone, machine, text);
+			return lone_lisp_signal_emit(lone, machine, 2,
+					lone_lisp_intern_c_string(lone, "index-error"), index_value);
+		}
+
+		bytes = lone_lisp_bytes_of(lone, &text);
+
+		for (i = 0; i < (size_t) index; ++i) {
+			decoded = lone_unicode_utf8_decode(bytes);
+			bytes.pointer += decoded.bytes_read;
+			bytes.count   -= decoded.bytes_read;
+		}
+
+		decoded = lone_unicode_utf8_decode(bytes);
+
+		lone_lisp_machine_push_value(lone, machine,
+				lone_lisp_integer_create(decoded.code_point));
+		return 0;
+
+	case 1:
+		text = machine->value;
+		index_value = lone_lisp_machine_pop_value(lone, machine);
+		goto validate_text;
+
+	case 2:
+		index_value = machine->value;
+		text = lone_lisp_machine_pop_value(lone, machine);
+		goto validate_index;
 	}
 
 	linux_exit(-1);

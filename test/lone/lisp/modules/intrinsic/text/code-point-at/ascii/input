@@ -1,0 +1,4 @@
+(import (lone print) (text code-point-at))
+
+(print (code-point-at "hello" 0))
+(print (code-point-at "hello" 4))
