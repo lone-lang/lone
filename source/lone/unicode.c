@@ -103,3 +103,25 @@ struct lone_unicode_utf8_encode_result lone_unicode_utf8_encode(lone_u32 code_po
 
 	return result;
 }
+
+struct lone_unicode_utf8_validation_result lone_unicode_utf8_validate(struct lone_bytes bytes)
+{
+	struct lone_unicode_utf8_validation_result result = { 0, false };
+	struct lone_unicode_utf8_decode_result decoded;
+	struct lone_bytes remaining;
+
+	remaining = bytes;
+
+	while (remaining.count > 0) {
+		decoded = lone_unicode_utf8_decode(remaining);
+
+		if (decoded.bytes_read == 0) { return result; }
+
+		remaining.pointer += decoded.bytes_read;
+		remaining.count   -= decoded.bytes_read;
+		++result.code_point_count;
+	}
+
+	result.valid = true;
+	return result;
+}

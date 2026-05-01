@@ -33,5 +33,6 @@ struct lone_unicode_utf8_validation_result {
 bool lone_unicode_is_valid_code_point(lone_u32 code_point);
 struct lone_unicode_utf8_decode_result lone_unicode_utf8_decode(struct lone_bytes bytes);
 struct lone_unicode_utf8_encode_result lone_unicode_utf8_encode(lone_u32 code_point);
+struct lone_unicode_utf8_validation_result lone_unicode_utf8_validate(struct lone_bytes bytes);
 
 #endif /* LONE_UNICODE_HEADER */
