@@ -25,4 +25,9 @@ struct lone_unicode_utf8_encode_result {
 	lone_u8       bytes_written;
 };
 
+struct lone_unicode_utf8_validation_result {
+	size_t code_point_count;
+	bool valid;
+};
+
 #endif /* LONE_UNICODE_HEADER */
