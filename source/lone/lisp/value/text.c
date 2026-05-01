@@ -40,6 +40,8 @@ struct lone_lisp_value lone_lisp_text_transfer(struct lone_lisp *lone,
 
 	actual = lone_lisp_heap_allocate_value(lone);
 
+	lone_lisp_text_validate_utf8(LONE_BYTES_VALUE(length, text), actual);
+
 	return lone_lisp_buffer_transfer(lone, actual, &actual->as.text.bytes,
 			text, length, should_deallocate, LONE_LISP_TAG_TEXT);
 }
