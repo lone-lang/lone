@@ -1,0 +1,3 @@
+(import (lone print) (text code-point-count))
+
+(print (code-point-count "ab\u{E9}c\u{1F600}d"))

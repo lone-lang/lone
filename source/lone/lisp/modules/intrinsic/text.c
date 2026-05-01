@@ -31,6 +31,9 @@ void lone_lisp_modules_intrinsic_text_initialize(struct lone_lisp *lone)
 
 	lone_lisp_module_export_primitive(lone, module, "concatenate",
 			"text_concatenate", lone_lisp_primitive_text_concatenate, module, flags);
+
+	lone_lisp_module_export_primitive(lone, module, "code-point-count",
+			"text_code_point_count", lone_lisp_primitive_text_code_point_count, module, flags);
 }
 
 LONE_LISP_PRIMITIVE(text_to_symbol)
@@ -106,4 +109,35 @@ static size_t lone_lisp_text_code_point_count_of(struct lone_lisp *lone, struct 
 	heap_value->code_point_count_cached = true;
 
 	return validation.code_point_count;
+}
+
+LONE_LISP_PRIMITIVE(text_code_point_count)
+{
+	struct lone_lisp_value arguments, text, count;
+
+	switch (step) {
+	case 0:
+		arguments = lone_lisp_machine_pop_value(lone, machine);
+
+		if (lone_lisp_list_destructure(lone, arguments, 1, &text)) {
+			/* wrong number of arguments */ linux_exit(-1);
+		}
+
+	validate:
+		if (!lone_lisp_is_text(lone, text)) {
+			return lone_lisp_signal_emit(lone, machine, 1,
+					lone_lisp_intern_c_string(lone, "type-error"), text);
+		}
+
+		count = lone_lisp_integer_create(lone_lisp_text_code_point_count_of(lone, text));
+
+		lone_lisp_machine_push_value(lone, machine, count);
+		return 0;
+
+	case 1:
+		text = machine->value;
+		goto validate;
+	}
+
+	linux_exit(-1);
 }

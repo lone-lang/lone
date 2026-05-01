@@ -17,5 +17,6 @@ void lone_lisp_modules_intrinsic_text_initialize(struct lone_lisp *lone);
 LONE_LISP_PRIMITIVE(text_to_symbol);
 LONE_LISP_PRIMITIVE(text_join);
 LONE_LISP_PRIMITIVE(text_concatenate);
+LONE_LISP_PRIMITIVE(text_code_point_count);
 
 #endif /* LONE_LISP_MODULES_INTRINSIC_TEXT_HEADER */
