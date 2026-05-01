@@ -12,5 +12,7 @@
    ╰────────────────────────────────────────────────────────────────────────╯ */
 
 #define LONE_UNICODE_CODE_POINT_MAX          0x10FFFF
+#define LONE_UNICODE_SURROGATE_MIN           0xD800
+#define LONE_UNICODE_SURROGATE_MAX           0xDFFF
 
 #endif /* LONE_UNICODE_HEADER */
