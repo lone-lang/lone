@@ -354,16 +354,7 @@ static size_t lone_lisp_reader_measure_quoted_content(
 	return current? length : 0;
 }
 
-/* Consume escaped content terminated by a double quote.
- * Caller must have already consumed the opening ".
- * On success, the trailing " is consumed and the result
- * is returned in a bytes structure. The result is dynamically
- * allocated and the caller takes ownership of it.
- * On failure, returns null bytes and sets reader->status.error.
- * NUL terminator is added for C string compatibility.
- * The NUL terminator is also required for the transfer functions.
- */
-static struct lone_bytes lone_lisp_reader_consume_escaped_content(
+static struct lone_bytes lone_lisp_reader_consume_text_content(
 		struct lone_lisp *lone, struct lone_lisp_reader *reader)
 {
 	unsigned char *current, *output, character;
@@ -380,44 +371,25 @@ static struct lone_bytes lone_lisp_reader_consume_escaped_content(
 	output = lone_memory_allocate(lone->system, buffer_size, 1, 1, LONE_MEMORY_ALLOCATION_FLAGS_NONE);
 	output_length = 0;
 
-	/* consume input and process escape sequences */
 	while ((current = lone_lisp_reader_peek(lone, reader)) && *current != '"') {
 		if (*current == '\\') {
 			lone_lisp_reader_consume(reader);
 			current = lone_lisp_reader_peek(lone, reader);
 
-			if (lone_lisp_reader_consume_common_escape(reader, *current, &character)) {
-				/* handled */
-			} else if (*current == 'x') {
-				unsigned char hi, lo;
-				/* consume 'x', peek high nibble */
-				lone_lisp_reader_consume(reader);
-				current = lone_lisp_reader_peek(lone, reader);
-				if (!current || !lone_lisp_reader_hex_digit_value(*current, &hi)) {
-					goto deallocate_and_error;
-				}
-				/* consume high nibble, peek low nibble */
-				lone_lisp_reader_consume(reader);
-				current = lone_lisp_reader_peek(lone, reader);
-				if (!current || !lone_lisp_reader_hex_digit_value(*current, &lo)) {
-					goto deallocate_and_error;
-				}
-				character = (hi << 4) | lo;
-			} else {
+			if (!lone_lisp_reader_consume_common_escape(reader, *current, &character)) {
 				goto deallocate_and_error;
 			}
-		} else {
-			character = *current;
+
+			output[output_length++] = character;
+			lone_lisp_reader_consume(reader);
+			continue;
 		}
 
-		output[output_length++] = character;
+		output[output_length++] = *current;
 		lone_lisp_reader_consume(reader);
 	}
 
-	/* null terminate for C string compatibility */
 	output[output_length] = '\0';
-
-	/* consume trailing " */
 	lone_lisp_reader_consume(reader);
 
 	result.pointer = output;
@@ -509,7 +481,7 @@ static struct lone_lisp_value lone_lisp_reader_consume_text(struct lone_lisp *lo
 	/* skip leading " */
 	lone_lisp_reader_consume(reader);
 
-	content = lone_lisp_reader_consume_escaped_content(lone, reader);
+	content = lone_lisp_reader_consume_text_content(lone, reader);
 	if (!content.pointer) { goto error; }
 
 	/* text must be followed by a delimiter, space, comment or the end of input */
