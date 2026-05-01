@@ -20,4 +20,9 @@ struct lone_unicode_utf8_decode_result {
 	lone_u8  bytes_read;
 };
 
+struct lone_unicode_utf8_encode_result {
+	unsigned char bytes[4];
+	lone_u8       bytes_written;
+};
+
 #endif /* LONE_UNICODE_HEADER */
