@@ -1,11 +1,15 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later */
 
 #include <lone/lisp/modules/intrinsic/text.h>
+#include <lone/lisp/modules/intrinsic/lone.h>
 
 #include <lone/lisp/machine.h>
 #include <lone/lisp/machine/stack.h>
 #include <lone/lisp/module.h>
 #include <lone/lisp/utilities.h>
+#include <lone/lisp/heap.h>
+
+#include <lone/unicode.h>
 
 #include <lone/linux.h>
 
@@ -77,4 +81,29 @@ LONE_LISP_PRIMITIVE(text_concatenate)
 
 	lone_lisp_machine_push_value(lone, machine, text);
 	return 0;
+}
+
+static size_t lone_lisp_text_code_point_count_of(struct lone_lisp *lone, struct lone_lisp_value text)
+{
+	struct lone_lisp_heap_value *heap_value;
+	struct lone_unicode_utf8_validation_result validation;
+	struct lone_bytes bytes;
+
+	if (lone_lisp_is_inline_text(text)) {
+		bytes = lone_lisp_inline_value_bytes(&text);
+		validation = lone_unicode_utf8_validate(bytes);
+		return validation.code_point_count;
+	}
+
+	heap_value = lone_lisp_heap_value_of(lone, text);
+
+	if (heap_value->code_point_count_cached) {
+		return heap_value->as.text.code_point_count;
+	}
+
+	validation = lone_unicode_utf8_validate(heap_value->as.text.bytes);
+	heap_value->as.text.code_point_count = validation.code_point_count;
+	heap_value->code_point_count_cached = true;
+
+	return validation.code_point_count;
 }
