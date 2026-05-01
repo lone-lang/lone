@@ -2,6 +2,8 @@
 
 #include <lone/lisp/reader.h>
 
+#include <lone/unicode.h>
+
 #include <lone/memory/allocator.h>
 
 #include <lone/linux.h>
