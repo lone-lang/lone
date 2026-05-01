@@ -30,4 +30,6 @@ struct lone_unicode_utf8_validation_result {
 	bool valid;
 };
 
+bool lone_unicode_is_valid_code_point(lone_u32 code_point);
+
 #endif /* LONE_UNICODE_HEADER */
