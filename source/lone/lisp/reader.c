@@ -334,6 +334,26 @@ static bool lone_lisp_reader_consume_common_escape(
 	(void) reader;
 }
 
+static size_t lone_lisp_reader_measure_quoted_content(
+		struct lone_lisp *lone, struct lone_lisp_reader *reader)
+{
+	unsigned char *current;
+	size_t length;
+
+	length = 0;
+	while ((current = lone_lisp_reader_peek_k(lone, reader, length)) &&
+	       *current != '"') {
+
+		++length;
+		if (*current == '\\') {
+			if (!lone_lisp_reader_peek_k(lone, reader, length)) { return 0; }
+			++length;
+		}
+	}
+
+	return current? length : 0;
+}
+
 /* Consume escaped content terminated by a double quote.
  * Caller must have already consumed the opening ".
  * On success, the trailing " is consumed and the result
@@ -347,41 +367,16 @@ static struct lone_bytes lone_lisp_reader_consume_escaped_content(
 		struct lone_lisp *lone, struct lone_lisp_reader *reader)
 {
 	unsigned char *current, *output, character;
-	size_t input_length, output_length, escapes, buffer_size;
-	struct lone_bytes result = { .pointer = 0, .count = 0 };
+	size_t input_length, output_length, buffer_size;
+	struct lone_bytes result = LONE_BYTES_INIT_NULL();
 
-	/* determine input size before allocating buffer */
-	input_length = 0;
-	escapes = 0;
-	while ((current = lone_lisp_reader_peek_k(lone, reader, input_length)) &&
-	       *current != '"') {
-
-		++input_length;
-		if (*current == '\\') {
-			unsigned char *next;
-			if (!(next = lone_lisp_reader_peek_k(lone, reader, input_length))) {
-				/* backslash before end of input */ goto error;
-			}
-			++input_length;
-			++escapes;
-
-			if (*next == 'x') {
-				/* \xNN consumes two additional hex digits */
-				if (!lone_lisp_reader_peek_k(lone, reader, input_length) ||
-				    !lone_lisp_reader_peek_k(lone, reader, input_length + 1)) {
-					goto error;
-				}
-				input_length += 2;
-				escapes += 2;
-			}
-		}
+	input_length = lone_lisp_reader_measure_quoted_content(lone, reader);
+	if (input_length == 0 && (!lone_lisp_reader_peek(lone, reader)
+			|| *lone_lisp_reader_peek(lone, reader) != '"')) {
+		goto error;
 	}
 
-	if (!current) { /* unterminated string: no trailing " */ goto error; }
-
-	/* escape sequences squeeze two characters into one
-	 * also don't forget the hidden null terminator */
-	buffer_size = input_length - escapes + 1;
+	buffer_size = input_length + 1;
 	output = lone_memory_allocate(lone->system, buffer_size, 1, 1, LONE_MEMORY_ALLOCATION_FLAGS_NONE);
 	output_length = 0;
 
