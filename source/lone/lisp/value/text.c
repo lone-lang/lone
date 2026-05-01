@@ -62,6 +62,8 @@ struct lone_lisp_value lone_lisp_text_copy(struct lone_lisp *lone, unsigned char
 
 	actual = lone_lisp_heap_allocate_value(lone);
 
+	lone_lisp_text_validate_utf8(LONE_BYTES_VALUE(length, text), actual);
+
 	return lone_lisp_buffer_copy(lone, actual, &actual->as.text.bytes,
 			text, length, LONE_LISP_TAG_TEXT);
 }
