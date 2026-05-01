@@ -1,0 +1,4 @@
+(import (lone print))
+
+(print "\u{1F600}")
+(print "\u{10000}")
