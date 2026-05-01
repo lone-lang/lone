@@ -270,6 +270,7 @@ struct lone_lisp_symbol {
 struct lone_lisp_text {
 	struct lone_bytes bytes;
 	lone_hash hash;
+	size_t code_point_count;
 };
 
 struct lone_lisp_bytes {
