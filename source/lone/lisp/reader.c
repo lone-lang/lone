@@ -431,6 +431,73 @@ error:
 	return result;
 }
 
+static struct lone_bytes lone_lisp_reader_consume_bytes_content(
+		struct lone_lisp *lone, struct lone_lisp_reader *reader)
+{
+	unsigned char *current, *output, character;
+	size_t input_length, output_length, buffer_size;
+	struct lone_bytes result = LONE_BYTES_INIT_NULL();
+
+	input_length = lone_lisp_reader_measure_quoted_content(lone, reader);
+	if (input_length == 0 && (!lone_lisp_reader_peek(lone, reader)
+			|| *lone_lisp_reader_peek(lone, reader) != '"')) {
+		goto error;
+	}
+
+	buffer_size = input_length + 1;
+	output = lone_memory_allocate(lone->system, buffer_size, 1, 1, LONE_MEMORY_ALLOCATION_FLAGS_NONE);
+	output_length = 0;
+
+	while ((current = lone_lisp_reader_peek(lone, reader)) && *current != '"') {
+		if (*current == '\\') {
+			lone_lisp_reader_consume(reader);
+			current = lone_lisp_reader_peek(lone, reader);
+
+			if (lone_lisp_reader_consume_common_escape(reader, *current, &character)) {
+				output[output_length++] = character;
+			} else if (*current == 'x') {
+				unsigned char hi, lo;
+
+				lone_lisp_reader_consume(reader);
+				current = lone_lisp_reader_peek(lone, reader);
+				if (!current || !lone_lisp_reader_hex_digit_value(*current, &hi)) {
+					goto deallocate_and_error;
+				}
+
+				lone_lisp_reader_consume(reader);
+				current = lone_lisp_reader_peek(lone, reader);
+				if (!current || !lone_lisp_reader_hex_digit_value(*current, &lo)) {
+					goto deallocate_and_error;
+				}
+
+				character = (hi << 4) | lo;
+				output[output_length++] = character;
+			} else {
+				goto deallocate_and_error;
+			}
+
+			lone_lisp_reader_consume(reader);
+			continue;
+		}
+
+		output[output_length++] = *current;
+		lone_lisp_reader_consume(reader);
+	}
+
+	output[output_length] = '\0';
+	lone_lisp_reader_consume(reader);
+
+	result.pointer = output;
+	result.count = output_length;
+	return result;
+
+deallocate_and_error:
+	lone_memory_deallocate(lone->system, output, buffer_size, 1, 1);
+error:
+	reader->status.error = true;
+	return result;
+}
+
 static struct lone_lisp_value lone_lisp_reader_consume_text(struct lone_lisp *lone, struct lone_lisp_reader *reader)
 {
 	unsigned char *current;
@@ -470,7 +537,7 @@ static struct lone_lisp_value lone_lisp_reader_consume_byte_literal(struct lone_
 	/* skip leading " */
 	lone_lisp_reader_consume(reader);
 
-	content = lone_lisp_reader_consume_escaped_content(lone, reader);
+	content = lone_lisp_reader_consume_bytes_content(lone, reader);
 	if (!content.pointer) { goto error; }
 
 	/* byte literal must be followed by a delimiter, space, comment or the end of input */
