@@ -1,0 +1,4 @@
+(import (lone print))
+
+(print "caf\u{E9}")
+(print "\u{48}ello \u{1F600}")

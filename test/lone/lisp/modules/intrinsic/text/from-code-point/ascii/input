@@ -1,0 +1,4 @@
+(import (lone print) (text from-code-point))
+
+(print (from-code-point 65))
+(print (from-code-point 122))

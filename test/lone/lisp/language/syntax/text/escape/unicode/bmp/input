@@ -1,0 +1,4 @@
+(import (lone print))
+
+(print "\u{E9}")
+(print "\u{3B1}")

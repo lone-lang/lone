@@ -1,0 +1,3 @@
+(import (lone print intercept lambda quote) (text slice))
+
+(print (intercept (('index-error (lambda (v) v))) (slice "hello" 10 12)))

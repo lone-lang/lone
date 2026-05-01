@@ -1,0 +1,3 @@
+(import (lone print) (text slice))
+
+(print (slice "hello" 2))

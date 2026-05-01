@@ -1,0 +1,3 @@
+(import (lone print))
+
+(print "\u{48}\u{65}\u{6C}\u{6C}\u{6F}")

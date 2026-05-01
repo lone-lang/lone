@@ -2,6 +2,8 @@
 
 #include <lone/lisp/reader.h>
 
+#include <lone/unicode.h>
+
 #include <lone/memory/allocator.h>
 
 #include <lone/linux.h>
@@ -303,114 +305,196 @@ error:
 
 /* ╭────────────────────────────────────────────────────────────────────────╮
    │                                                                        │
-   │    Analyzes a string and adds it to the tokens list if valid.          │
+   │    Escaped content processing for text and byte literals.              │
    │                                                                        │
-   │    Supported escape sequences:                                         │
+   │    Common escape sequences (both text and bytes):                      │
    │        ◦ \\                                                            │
    │        ◦ \"                                                            │
    │        ◦ \n                                                            │
    │        ◦ \t                                                            │
    │        ◦ \0                                                            │
    │                                                                        │
-   │    ("(\\[\\\"nt0]|[^"\\])*")[)}\]; \t\n]                               │
+   │    Text-only escape:                                                   │
+   │        ◦ \u{NNNNNN}  Unicode codepoint, 1-6 hex digits                 │
+   │                                                                        │
+   │    Bytes-only escape:                                                  │
+   │        ◦ \xNN        Arbitrary byte value                              │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
 
-/* Consume escaped content terminated by a double quote.
- * Caller must have already consumed the opening ".
- * On success, the trailing " is consumed and the result
- * is returned in a bytes structure. The result is dynamically
- * allocated and the caller takes ownership of it.
- * On failure, returns null bytes and sets reader->status.error.
- * NUL terminator is added for C string compatibility.
- * The NUL terminator is also required for the transfer functions.
- */
-static struct lone_bytes lone_lisp_reader_consume_escaped_content(
+static bool lone_lisp_reader_consume_common_escape(
+		struct lone_lisp_reader *reader,
+		unsigned char escape, unsigned char *out)
+{
+	switch (escape) {
+	case '\\': *out = '\\'; return true;
+	case '"':  *out = '"';  return true;
+	case 'n':  *out = '\n'; return true;
+	case 't':  *out = '\t'; return true;
+	case '0':  *out = '\0'; return true;
+	default:                return false;
+	}
+
+	(void) reader;
+}
+
+static size_t lone_lisp_reader_measure_quoted_content(
 		struct lone_lisp *lone, struct lone_lisp_reader *reader)
 {
-	unsigned char *current, *output, character;
-	size_t input_length, output_length, escapes, buffer_size;
-	struct lone_bytes result = { .pointer = 0, .count = 0 };
+	unsigned char *current;
+	size_t length;
 
-	/* determine input size before allocating buffer */
-	input_length = 0;
-	escapes = 0;
-	while ((current = lone_lisp_reader_peek_k(lone, reader, input_length)) &&
+	length = 0;
+	while ((current = lone_lisp_reader_peek_k(lone, reader, length)) &&
 	       *current != '"') {
 
-		++input_length;
+		++length;
 		if (*current == '\\') {
-			unsigned char *next;
-			if (!(next = lone_lisp_reader_peek_k(lone, reader, input_length))) {
-				/* backslash before end of input */ goto error;
-			}
-			++input_length;
-			++escapes;
-
-			if (*next == 'x') {
-				/* \xNN consumes two additional hex digits */
-				if (!lone_lisp_reader_peek_k(lone, reader, input_length) ||
-				    !lone_lisp_reader_peek_k(lone, reader, input_length + 1)) {
-					goto error;
-				}
-				input_length += 2;
-				escapes += 2;
-			}
+			if (!lone_lisp_reader_peek_k(lone, reader, length)) { return 0; }
+			++length;
 		}
 	}
 
-	if (!current) { /* unterminated string: no trailing " */ goto error; }
+	return current? length : 0;
+}
 
-	/* escape sequences squeeze two characters into one
-	 * also don't forget the hidden null terminator */
-	buffer_size = input_length - escapes + 1;
+static struct lone_bytes lone_lisp_reader_consume_text_content(
+		struct lone_lisp *lone, struct lone_lisp_reader *reader)
+{
+	struct lone_unicode_utf8_encode_result encoded;
+	unsigned char *current, *output, character, hex_value;
+	size_t input_length, output_length, buffer_size, digits;
+	lone_u32 code_point;
+	lone_u8 i;
+	struct lone_bytes result = LONE_BYTES_INIT_NULL();
+
+	input_length = lone_lisp_reader_measure_quoted_content(lone, reader);
+	if (input_length == 0 && (!lone_lisp_reader_peek(lone, reader)
+			|| *lone_lisp_reader_peek(lone, reader) != '"')) {
+		goto error;
+	}
+
+	buffer_size = input_length + 1;
 	output = lone_memory_allocate(lone->system, buffer_size, 1, 1, LONE_MEMORY_ALLOCATION_FLAGS_NONE);
 	output_length = 0;
 
-	/* consume input and process escape sequences */
 	while ((current = lone_lisp_reader_peek(lone, reader)) && *current != '"') {
 		if (*current == '\\') {
 			lone_lisp_reader_consume(reader);
 			current = lone_lisp_reader_peek(lone, reader);
-			/* current cannot be null */
 
-			switch (*current) {
-			case '\\': character = '\\'; break;
-			case '"':  character = '"';  break;
-			case 'n':  character = '\n'; break;
-			case 't':  character = '\t'; break;
-			case '0':  character = '\0'; break;
-			case 'x': {
+			if (lone_lisp_reader_consume_common_escape(reader, *current, &character)) {
+				output[output_length++] = character;
+			} else if (*current == 'u') {
+				lone_lisp_reader_consume(reader);
+				current = lone_lisp_reader_peek(lone, reader);
+				if (!current || *current != '{') { goto deallocate_and_error; }
+
+				lone_lisp_reader_consume(reader);
+				code_point = 0;
+				digits = 0;
+
+				while ((current = lone_lisp_reader_peek(lone, reader)) &&
+				       *current != '}' && digits < 6) {
+
+					if (!lone_lisp_reader_hex_digit_value(*current, &hex_value)) {
+						goto deallocate_and_error;
+					}
+
+					code_point = (code_point << 4) | hex_value;
+					++digits;
+					lone_lisp_reader_consume(reader);
+				}
+
+				if (!current || *current != '}') { goto deallocate_and_error; }
+				if (digits == 0) { goto deallocate_and_error; }
+
+				encoded = lone_unicode_utf8_encode(code_point);
+				if (encoded.bytes_written == 0) { goto deallocate_and_error; }
+
+				for (i = 0; i < encoded.bytes_written; ++i) {
+					output[output_length++] = encoded.bytes[i];
+				}
+			} else {
+				goto deallocate_and_error;
+			}
+
+			lone_lisp_reader_consume(reader);
+			continue;
+		}
+
+		output[output_length++] = *current;
+		lone_lisp_reader_consume(reader);
+	}
+
+	output[output_length] = '\0';
+	lone_lisp_reader_consume(reader);
+
+	result.pointer = output;
+	result.count = output_length;
+	return result;
+
+deallocate_and_error:
+	lone_memory_deallocate(lone->system, output, buffer_size, 1, 1);
+error:
+	reader->status.error = true;
+	return result;
+}
+
+static struct lone_bytes lone_lisp_reader_consume_bytes_content(
+		struct lone_lisp *lone, struct lone_lisp_reader *reader)
+{
+	unsigned char *current, *output, character;
+	size_t input_length, output_length, buffer_size;
+	struct lone_bytes result = LONE_BYTES_INIT_NULL();
+
+	input_length = lone_lisp_reader_measure_quoted_content(lone, reader);
+	if (input_length == 0 && (!lone_lisp_reader_peek(lone, reader)
+			|| *lone_lisp_reader_peek(lone, reader) != '"')) {
+		goto error;
+	}
+
+	buffer_size = input_length + 1;
+	output = lone_memory_allocate(lone->system, buffer_size, 1, 1, LONE_MEMORY_ALLOCATION_FLAGS_NONE);
+	output_length = 0;
+
+	while ((current = lone_lisp_reader_peek(lone, reader)) && *current != '"') {
+		if (*current == '\\') {
+			lone_lisp_reader_consume(reader);
+			current = lone_lisp_reader_peek(lone, reader);
+
+			if (lone_lisp_reader_consume_common_escape(reader, *current, &character)) {
+				output[output_length++] = character;
+			} else if (*current == 'x') {
 				unsigned char hi, lo;
-				/* consume 'x', peek high nibble */
+
 				lone_lisp_reader_consume(reader);
 				current = lone_lisp_reader_peek(lone, reader);
 				if (!current || !lone_lisp_reader_hex_digit_value(*current, &hi)) {
 					goto deallocate_and_error;
 				}
-				/* consume high nibble, peek low nibble */
+
 				lone_lisp_reader_consume(reader);
 				current = lone_lisp_reader_peek(lone, reader);
 				if (!current || !lone_lisp_reader_hex_digit_value(*current, &lo)) {
 					goto deallocate_and_error;
 				}
+
 				character = (hi << 4) | lo;
-				break;
+				output[output_length++] = character;
+			} else {
+				goto deallocate_and_error;
 			}
-			default:   goto deallocate_and_error; /* unknown escape sequence */
-			}
-		} else {
-			character = *current;
+
+			lone_lisp_reader_consume(reader);
+			continue;
 		}
 
-		output[output_length++] = character;
+		output[output_length++] = *current;
 		lone_lisp_reader_consume(reader);
 	}
 
-	/* null terminate for C string compatibility */
 	output[output_length] = '\0';
-
-	/* consume trailing " */
 	lone_lisp_reader_consume(reader);
 
 	result.pointer = output;
@@ -435,7 +519,7 @@ static struct lone_lisp_value lone_lisp_reader_consume_text(struct lone_lisp *lo
 	/* skip leading " */
 	lone_lisp_reader_consume(reader);
 
-	content = lone_lisp_reader_consume_escaped_content(lone, reader);
+	content = lone_lisp_reader_consume_text_content(lone, reader);
 	if (!content.pointer) { goto error; }
 
 	/* text must be followed by a delimiter, space, comment or the end of input */
@@ -463,7 +547,7 @@ static struct lone_lisp_value lone_lisp_reader_consume_byte_literal(struct lone_
 	/* skip leading " */
 	lone_lisp_reader_consume(reader);
 
-	content = lone_lisp_reader_consume_escaped_content(lone, reader);
+	content = lone_lisp_reader_consume_bytes_content(lone, reader);
 	if (!content.pointer) { goto error; }
 
 	/* byte literal must be followed by a delimiter, space, comment or the end of input */

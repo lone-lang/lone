@@ -1,0 +1,3 @@
+(import (lone print intercept lambda quote) (text from-code-point))
+
+(print (intercept (('type-error (lambda (v) v))) (from-code-point "abc")))

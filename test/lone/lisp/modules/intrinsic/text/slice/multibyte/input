@@ -1,0 +1,3 @@
+(import (lone print) (text slice))
+
+(print (slice "a\u{E9}\u{1F600}b" 1 3))
