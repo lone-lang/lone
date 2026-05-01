@@ -318,6 +318,22 @@ error:
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
 
+static bool lone_lisp_reader_consume_common_escape(
+		struct lone_lisp_reader *reader,
+		unsigned char escape, unsigned char *out)
+{
+	switch (escape) {
+	case '\\': *out = '\\'; return true;
+	case '"':  *out = '"';  return true;
+	case 'n':  *out = '\n'; return true;
+	case 't':  *out = '\t'; return true;
+	case '0':  *out = '\0'; return true;
+	default:                return false;
+	}
+
+	(void) reader;
+}
+
 /* Consume escaped content terminated by a double quote.
  * Caller must have already consumed the opening ".
  * On success, the trailing " is consumed and the result
@@ -374,15 +390,10 @@ static struct lone_bytes lone_lisp_reader_consume_escaped_content(
 		if (*current == '\\') {
 			lone_lisp_reader_consume(reader);
 			current = lone_lisp_reader_peek(lone, reader);
-			/* current cannot be null */
 
-			switch (*current) {
-			case '\\': character = '\\'; break;
-			case '"':  character = '"';  break;
-			case 'n':  character = '\n'; break;
-			case 't':  character = '\t'; break;
-			case '0':  character = '\0'; break;
-			case 'x': {
+			if (lone_lisp_reader_consume_common_escape(reader, *current, &character)) {
+				/* handled */
+			} else if (*current == 'x') {
 				unsigned char hi, lo;
 				/* consume 'x', peek high nibble */
 				lone_lisp_reader_consume(reader);
@@ -397,9 +408,8 @@ static struct lone_bytes lone_lisp_reader_consume_escaped_content(
 					goto deallocate_and_error;
 				}
 				character = (hi << 4) | lo;
-				break;
-			}
-			default:   goto deallocate_and_error; /* unknown escape sequence */
+			} else {
+				goto deallocate_and_error;
 			}
 		} else {
 			character = *current;
