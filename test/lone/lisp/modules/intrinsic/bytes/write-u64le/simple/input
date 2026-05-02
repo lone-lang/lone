@@ -1,0 +1,3 @@
+(import (lone print) (bytes new write-u64le))
+
+(print (write-u64le (new 8) 0 0))
