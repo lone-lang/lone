@@ -57,6 +57,7 @@ void lone_lisp_modules_intrinsic_bytes_initialize(struct lone_lisp *lone)
 	LONE_LISP_EXPORT_BYTES_WRITER_PRIMITIVE(u, 32, /* native endianness */);
 	LONE_LISP_EXPORT_BYTES_WRITER_PRIMITIVE(s, 32, /* native endianness */);
 	LONE_LISP_EXPORT_BYTES_WRITER_PRIMITIVE(u, 64, /* native endianness */);
+	LONE_LISP_EXPORT_BYTES_WRITER_PRIMITIVE(s, 64, /* native endianness */);
 
 	LONE_LISP_EXPORT_BYTES_READER_PRIMITIVE(u, 16, le);
 	LONE_LISP_EXPORT_BYTES_READER_PRIMITIVE(s, 16, le);
@@ -600,6 +601,7 @@ LONE_LISP_BYTES_WRITER_PRIMITIVE(s, 16, /* native endianness */)
 LONE_LISP_BYTES_WRITER_PRIMITIVE(u, 32, /* native endianness */)
 LONE_LISP_BYTES_WRITER_PRIMITIVE(s, 32, /* native endianness */)
 LONE_LISP_BYTES_WRITER_PRIMITIVE(u, 64, /* native endianness */)
+LONE_LISP_BYTES_WRITER_PRIMITIVE(s, 64, /* native endianness */)
 
 LONE_LISP_BYTES_READER_PRIMITIVE(u, 16, le)
 LONE_LISP_BYTES_READER_PRIMITIVE(s, 16, le)
