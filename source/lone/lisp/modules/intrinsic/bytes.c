@@ -163,14 +163,55 @@ LONE_LISP_PRIMITIVE(bytes_is_zero)
 	struct lone_lisp_value arguments, bytes;
 	struct lone_bytes content;
 
-	arguments = lone_lisp_machine_pop_value(lone, machine);
+	switch (step) {
+	case 0:
 
-	if (lone_lisp_list_destructure(lone, arguments, 1, &bytes)) {
-		/* wrong number of arguments */ linux_exit(-1);
+		arguments = lone_lisp_machine_pop_value(lone, machine);
+
+		goto destructure;
+
+	case 1: /* resumed with a replacement bytes from type-error */
+
+		bytes = machine->value;
+
+		goto validate_bytes;
+
+	case 2: /* resumed with a replacement arguments list from arity-error */
+
+		arguments = machine->value;
+
+		goto destructure;
+
+	default:
+		break;
 	}
 
+	linux_exit(-1);
+
+destructure:
+
+	if (lone_lisp_list_destructure(lone, arguments, 1, &bytes)) {
+		return
+			lone_lisp_signal_emit(
+				lone,
+				machine,
+				2,
+				lone_lisp_intern_c_string(lone, "arity-error"),
+				arguments
+			);
+	}
+
+validate_bytes:
+
 	if (!lone_lisp_is_bytes(lone, bytes)) {
-		/* expected a bytes object: (zero? 0), (zero? "text") */ linux_exit(-1);
+		return
+			lone_lisp_signal_emit(
+				lone,
+				machine,
+				1,
+				lone_lisp_intern_c_string(lone, "type-error"),
+				bytes
+			);
 	}
 
 	content = lone_lisp_bytes_of(lone, &bytes);
