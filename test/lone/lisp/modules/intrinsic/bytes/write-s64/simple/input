@@ -1,0 +1,3 @@
+(import (lone print) (bytes new write-s64))
+
+(print (write-s64 (new 8) 0 -1))

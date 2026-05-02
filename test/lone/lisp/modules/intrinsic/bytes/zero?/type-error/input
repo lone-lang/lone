@@ -1,0 +1,4 @@
+(import (lone print intercept lambda quote) (bytes new zero?))
+
+(print (intercept (('type-error (lambda (v) v))) (zero? "text")))
+(print (intercept (('type-error (lambda (v c) (c (new 4))))) (zero? "text")))

@@ -27,30 +27,42 @@ LONE_LISP_PRIMITIVE(bytes_read_u16);
 LONE_LISP_PRIMITIVE(bytes_read_s16);
 LONE_LISP_PRIMITIVE(bytes_read_u32);
 LONE_LISP_PRIMITIVE(bytes_read_s32);
+LONE_LISP_PRIMITIVE(bytes_read_u64);
+LONE_LISP_PRIMITIVE(bytes_read_s64);
 
 LONE_LISP_PRIMITIVE(bytes_write_u16);
 LONE_LISP_PRIMITIVE(bytes_write_s16);
 LONE_LISP_PRIMITIVE(bytes_write_u32);
 LONE_LISP_PRIMITIVE(bytes_write_s32);
+LONE_LISP_PRIMITIVE(bytes_write_u64);
+LONE_LISP_PRIMITIVE(bytes_write_s64);
 
 LONE_LISP_PRIMITIVE(bytes_read_u16le);
 LONE_LISP_PRIMITIVE(bytes_read_s16le);
 LONE_LISP_PRIMITIVE(bytes_read_u32le);
 LONE_LISP_PRIMITIVE(bytes_read_s32le);
+LONE_LISP_PRIMITIVE(bytes_read_u64le);
+LONE_LISP_PRIMITIVE(bytes_read_s64le);
 
 LONE_LISP_PRIMITIVE(bytes_read_u16be);
 LONE_LISP_PRIMITIVE(bytes_read_s16be);
 LONE_LISP_PRIMITIVE(bytes_read_u32be);
 LONE_LISP_PRIMITIVE(bytes_read_s32be);
+LONE_LISP_PRIMITIVE(bytes_read_u64be);
+LONE_LISP_PRIMITIVE(bytes_read_s64be);
 
 LONE_LISP_PRIMITIVE(bytes_write_u16le);
 LONE_LISP_PRIMITIVE(bytes_write_s16le);
 LONE_LISP_PRIMITIVE(bytes_write_u32le);
 LONE_LISP_PRIMITIVE(bytes_write_s32le);
+LONE_LISP_PRIMITIVE(bytes_write_u64le);
+LONE_LISP_PRIMITIVE(bytes_write_s64le);
 
 LONE_LISP_PRIMITIVE(bytes_write_u16be);
 LONE_LISP_PRIMITIVE(bytes_write_s16be);
 LONE_LISP_PRIMITIVE(bytes_write_u32be);
 LONE_LISP_PRIMITIVE(bytes_write_s32be);
+LONE_LISP_PRIMITIVE(bytes_write_u64be);
+LONE_LISP_PRIMITIVE(bytes_write_s64be);
 
 #endif /* LONE_LISP_MODULES_INTRINSIC_BYTES_HEADER */

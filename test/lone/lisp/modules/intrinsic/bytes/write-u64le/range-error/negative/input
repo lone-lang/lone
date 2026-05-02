@@ -1,0 +1,4 @@
+(import (lone print intercept lambda quote) (bytes new write-u64le))
+
+(print (intercept (('range-error (lambda (v) v))) (write-u64le (new 8) 0 -1)))
+(print (intercept (('range-error (lambda (v c) (c 1)))) (write-u64le (new 8) 0 -1)))
