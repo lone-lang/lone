@@ -1,0 +1,4 @@
+(import (lone print intercept lambda quote) (bytes new write-s32))
+
+(print (intercept (('range-error (lambda (v) v))) (write-s32 (new 8) 0 -2147483649)))
+(print (intercept (('range-error (lambda (v c) (c 1)))) (write-s32 (new 8) 0 -2147483649)))
