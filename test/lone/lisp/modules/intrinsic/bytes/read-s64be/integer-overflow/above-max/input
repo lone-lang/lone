@@ -1,0 +1,6 @@
+(import (lone print intercept lambda let quote) (bytes new read-s64be write-u8))
+
+(let (buf (new 16))
+  (write-u8 buf 1 128)
+  (print (intercept (('integer-overflow (lambda (v) v))) (read-s64be buf 0)))
+  (print (intercept (('integer-overflow (lambda (v c) (c 8)))) (read-s64be buf 0))))
