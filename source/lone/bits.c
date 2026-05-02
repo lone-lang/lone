@@ -150,7 +150,7 @@ static struct lone_optional_size lone_bits_scan(const void * restrict bits, lone
 	for (i = 0; i < leading; ++i) {
 		byte = bytes[i];
 		if (byte != ((unsigned char) mask)) {
-			byte = bit? byte : ~byte;
+			byte = bit? byte : ((unsigned char) ~byte);
 			return LONE_OPTIONAL_PRESENT_VALUE(size, bit_index + find_first_one_in_byte(byte));
 		}
 		bit_index += CHAR_BIT;
@@ -176,7 +176,7 @@ static struct lone_optional_size lone_bits_scan(const void * restrict bits, lone
 	for (i = 0; i < trailing; ++i) {
 		byte = bytes[i];
 		if (byte != ((unsigned char) mask)) {
-			byte = bit? byte : ~byte;
+			byte = bit? byte : ((unsigned char) ~byte);
 			return LONE_OPTIONAL_PRESENT_VALUE(size, bit_index + find_first_one_in_byte(byte));
 		}
 		bit_index += CHAR_BIT;

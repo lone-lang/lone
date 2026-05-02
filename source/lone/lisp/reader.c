@@ -480,7 +480,7 @@ static struct lone_bytes lone_lisp_reader_consume_bytes_content(
 					goto deallocate_and_error;
 				}
 
-				character = (hi << 4) | lo;
+				character = ((unsigned char) ((hi << 4) | lo));
 				output[output_length++] = character;
 			} else {
 				goto deallocate_and_error;

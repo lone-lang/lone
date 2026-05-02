@@ -253,7 +253,7 @@ void lone_memory_zero(void *to, size_t count)
 
 void lone_memory_one(void *to, size_t count)
 {
-	lone_memory_set(to, ~((unsigned char ) 0), count);
+	lone_memory_set(to, ((unsigned char) ~((unsigned char) 0)), count);
 }
 
 size_t lone_c_string_length(char *c_string)
