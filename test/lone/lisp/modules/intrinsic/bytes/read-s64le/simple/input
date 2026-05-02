@@ -1,0 +1,3 @@
+(import (lone print) (bytes new read-s64le))
+
+(print (read-s64le (new 8) 0))
