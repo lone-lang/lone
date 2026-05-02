@@ -403,48 +403,201 @@ validate_offset_range:                                                          
 	return 0;                                                                                  \
 }
 
-#define LONE_LISP_BYTES_WRITER_PRIMITIVE(sign, bits, endian) \
-LONE_LISP_PRIMITIVE(bytes_write_##sign##bits##endian) \
-{ \
-	struct lone_lisp_value arguments; \
-	struct lone_lisp_value bytes; \
-	struct lone_lisp_value offset; \
-	struct lone_lisp_value value; \
-\
-	lone_lisp_integer raw; \
-	lone_##sign##bits integer; \
-	bool success; \
-\
-	arguments = lone_lisp_machine_pop_value(lone, machine); \
-\
-	if (lone_lisp_list_destructure(lone, arguments, 3, &bytes, &offset, &value)) { \
-		/* wrong number of arguments */ linux_exit(-1); \
-	} \
-\
-	lone_lisp_bytes_check_write_arguments(lone, bytes, offset, value); \
-\
-	raw = lone_lisp_integer_of(value); \
-	/* Narrowing cast: well-defined for unsigned types (modular reduction). \
-	 * For signed types, GCC and Clang both guarantee truncation semantics \
-	 * which makes the round-trip equality check below a correct range test. */ \
-	integer = (lone_##sign##bits) raw; \
-\
-	if ((lone_lisp_integer) integer != raw) { \
-		/* value out of range for target type */ linux_exit(-1); \
-	} \
-\
-	success = lone_bytes_write_##sign##bits##endian( \
-		lone_lisp_heap_value_of(lone, bytes)->as.bytes.data, \
-		lone_lisp_integer_of(offset), \
-		integer \
-	); \
-\
-	if (success) { \
-		lone_lisp_machine_push_value(lone, machine, lone_lisp_integer_create(integer)); \
-		return 0; \
-	} else { \
-		linux_exit(-1); \
-	} \
+#define LONE_LISP_BYTES_WRITER_PRIMITIVE(sign, bits, endian)                                       \
+LONE_LISP_PRIMITIVE(bytes_write_##sign##bits##endian)                                              \
+{                                                                                                  \
+	struct lone_lisp_value arguments, bytes, offset, value;                                    \
+	lone_lisp_integer raw;                                                                     \
+	lone_##sign##bits integer;                                                                 \
+	bool success;                                                                              \
+                                                                                                   \
+	switch (step) {                                                                            \
+	case 0:                                                                                    \
+                                                                                                   \
+		arguments = lone_lisp_machine_pop_value(lone, machine);                            \
+                                                                                                   \
+		goto destructure;                                                                  \
+                                                                                                   \
+	case 1: /* resumed with a replacement arguments list from arity-error */                   \
+                                                                                                   \
+		arguments = machine->value;                                                        \
+                                                                                                   \
+		goto destructure;                                                                  \
+                                                                                                   \
+	case 2: /* resumed with a replacement bytes from type-error or frozen-error */             \
+                                                                                                   \
+		bytes = machine->value;                                                            \
+		value = lone_lisp_machine_pop_value(lone, machine);                                \
+		offset = lone_lisp_machine_pop_value(lone, machine);                               \
+                                                                                                   \
+		goto validate_bytes;                                                               \
+                                                                                                   \
+	case 3: /* resumed with a replacement offset from type-error */                            \
+                                                                                                   \
+		offset = machine->value;                                                           \
+		value = lone_lisp_machine_pop_value(lone, machine);                                \
+		bytes = lone_lisp_machine_pop_value(lone, machine);                                \
+                                                                                                   \
+		goto validate_offset_type;                                                         \
+                                                                                                   \
+	case 4: /* resumed with a replacement value from type-error */                             \
+                                                                                                   \
+		value = machine->value;                                                            \
+		offset = lone_lisp_machine_pop_value(lone, machine);                               \
+		bytes = lone_lisp_machine_pop_value(lone, machine);                                \
+                                                                                                   \
+		goto validate_value_type;                                                          \
+                                                                                                   \
+	case 5: /* resumed with a replacement offset from index-error */                           \
+                                                                                                   \
+		offset = machine->value;                                                           \
+		value = lone_lisp_machine_pop_value(lone, machine);                                \
+		bytes = lone_lisp_machine_pop_value(lone, machine);                                \
+                                                                                                   \
+		goto validate_offset_range;                                                        \
+                                                                                                   \
+	case 6: /* resumed with a replacement value from range-error */                            \
+                                                                                                   \
+		value = machine->value;                                                            \
+		offset = lone_lisp_machine_pop_value(lone, machine);                               \
+		bytes = lone_lisp_machine_pop_value(lone, machine);                                \
+                                                                                                   \
+		goto validate_value_range;                                                         \
+                                                                                                   \
+	default:                                                                                   \
+		break;                                                                             \
+	}                                                                                          \
+                                                                                                   \
+	linux_exit(-1);                                                                            \
+                                                                                                   \
+destructure:                                                                                       \
+                                                                                                   \
+	if (lone_lisp_list_destructure(lone, arguments, 3, &bytes, &offset, &value)) {             \
+		return                                                                             \
+			lone_lisp_signal_emit(                                                     \
+				lone,                                                              \
+				machine,                                                           \
+				1,                                                                 \
+				lone_lisp_intern_c_string(lone, "arity-error"),                    \
+				arguments                                                          \
+			);                                                                         \
+	}                                                                                          \
+                                                                                                   \
+validate_bytes:                                                                                    \
+                                                                                                   \
+	if (!lone_lisp_is_bytes(lone, bytes)) {                                                    \
+		lone_lisp_machine_push_value(lone, machine, offset);                               \
+		lone_lisp_machine_push_value(lone, machine, value);                                \
+		return                                                                             \
+			lone_lisp_signal_emit(                                                     \
+				lone,                                                              \
+				machine,                                                           \
+				2,                                                                 \
+				lone_lisp_intern_c_string(lone, "type-error"),                     \
+				bytes                                                              \
+			);                                                                         \
+	}                                                                                          \
+                                                                                                   \
+validate_offset_type:                                                                              \
+                                                                                                   \
+	if (!lone_lisp_is_integer(lone, offset)) {                                                 \
+		lone_lisp_machine_push_value(lone, machine, bytes);                                \
+		lone_lisp_machine_push_value(lone, machine, value);                                \
+		return                                                                             \
+			lone_lisp_signal_emit(                                                     \
+				lone,                                                              \
+				machine,                                                           \
+				3,                                                                 \
+				lone_lisp_intern_c_string(lone, "type-error"),                     \
+				offset                                                             \
+			);                                                                         \
+	}                                                                                          \
+                                                                                                   \
+validate_value_type:                                                                               \
+                                                                                                   \
+	if (!lone_lisp_is_integer(lone, value)) {                                                  \
+		lone_lisp_machine_push_value(lone, machine, bytes);                                \
+		lone_lisp_machine_push_value(lone, machine, offset);                               \
+		return                                                                             \
+			lone_lisp_signal_emit(                                                     \
+				lone,                                                              \
+				machine,                                                           \
+				4,                                                                 \
+				lone_lisp_intern_c_string(lone, "type-error"),                     \
+				value                                                              \
+			);                                                                         \
+	}                                                                                          \
+                                                                                                   \
+validate_offset_range:                                                                             \
+                                                                                                   \
+	if (lone_lisp_integer_of(offset) < 0) {                                                    \
+		lone_lisp_machine_push_value(lone, machine, bytes);                                \
+		lone_lisp_machine_push_value(lone, machine, value);                                \
+		return                                                                             \
+			lone_lisp_signal_emit(                                                     \
+				lone,                                                              \
+				machine,                                                           \
+				5,                                                                 \
+				lone_lisp_intern_c_string(lone, "index-error"),                    \
+				offset                                                             \
+			);                                                                         \
+	}                                                                                          \
+                                                                                                   \
+validate_value_range:                                                                              \
+                                                                                                   \
+	raw = lone_lisp_integer_of(value);                                                         \
+	/* Narrowing cast: well-defined for unsigned types (modular reduction).                    \
+	 * For signed types, GCC and Clang both guarantee truncation semantics                     \
+	 * which makes the round-trip equality check below a correct range test. */                \
+	integer = (lone_##sign##bits) raw;                                                         \
+                                                                                                   \
+	if ((lone_lisp_integer) integer != raw) {                                                  \
+		lone_lisp_machine_push_value(lone, machine, bytes);                                \
+		lone_lisp_machine_push_value(lone, machine, offset);                               \
+		return                                                                             \
+			lone_lisp_signal_emit(                                                     \
+				lone,                                                              \
+				machine,                                                           \
+				6,                                                                 \
+				lone_lisp_intern_c_string(lone, "range-error"),                    \
+				value                                                              \
+			);                                                                         \
+	}                                                                                          \
+                                                                                                   \
+	if (lone_lisp_is_frozen(lone, bytes)) {                                                    \
+		lone_lisp_machine_push_value(lone, machine, offset);                               \
+		lone_lisp_machine_push_value(lone, machine, value);                                \
+		return                                                                             \
+			lone_lisp_signal_emit(                                                     \
+				lone,                                                              \
+				machine,                                                           \
+				2,                                                                 \
+				lone_lisp_intern_c_string(lone, "frozen-error"),                   \
+				bytes                                                              \
+			);                                                                         \
+	}                                                                                          \
+                                                                                                   \
+	success = lone_bytes_write_##sign##bits##endian(                                           \
+		lone_lisp_heap_value_of(lone, bytes)->as.bytes.data,                               \
+		lone_lisp_integer_of(offset),                                                      \
+		integer                                                                            \
+	);                                                                                         \
+                                                                                                   \
+	if (!success) {                                                                            \
+		lone_lisp_machine_push_value(lone, machine, bytes);                                \
+		lone_lisp_machine_push_value(lone, machine, value);                                \
+		return                                                                             \
+			lone_lisp_signal_emit(                                                     \
+				lone,                                                              \
+				machine,                                                           \
+				5,                                                                 \
+				lone_lisp_intern_c_string(lone, "index-error"),                    \
+				offset                                                             \
+			);                                                                         \
+	}                                                                                          \
+                                                                                                   \
+	lone_lisp_machine_push_value(lone, machine, lone_lisp_integer_create(integer));            \
+	return 0;                                                                                  \
 }
 
 LONE_LISP_BYTES_READER_PRIMITIVE(u, 8, /* no endianness */)
