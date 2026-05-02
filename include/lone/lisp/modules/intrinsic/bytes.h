@@ -28,6 +28,7 @@ LONE_LISP_PRIMITIVE(bytes_read_s16);
 LONE_LISP_PRIMITIVE(bytes_read_u32);
 LONE_LISP_PRIMITIVE(bytes_read_s32);
 LONE_LISP_PRIMITIVE(bytes_read_u64);
+LONE_LISP_PRIMITIVE(bytes_read_s64);
 
 LONE_LISP_PRIMITIVE(bytes_write_u16);
 LONE_LISP_PRIMITIVE(bytes_write_s16);
