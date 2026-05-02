@@ -1,0 +1,3 @@
+(import (lone print) (bytes new read-u64))
+
+(print (read-u64 (new 8) 0))
