@@ -62,5 +62,6 @@ LONE_LISP_PRIMITIVE(bytes_write_u16be);
 LONE_LISP_PRIMITIVE(bytes_write_s16be);
 LONE_LISP_PRIMITIVE(bytes_write_u32be);
 LONE_LISP_PRIMITIVE(bytes_write_s32be);
+LONE_LISP_PRIMITIVE(bytes_write_u64be);
 
 #endif /* LONE_LISP_MODULES_INTRINSIC_BYTES_HEADER */
