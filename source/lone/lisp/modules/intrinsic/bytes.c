@@ -56,6 +56,7 @@ void lone_lisp_modules_intrinsic_bytes_initialize(struct lone_lisp *lone)
 	LONE_LISP_EXPORT_BYTES_WRITER_PRIMITIVE(s, 16, /* native endianness */);
 	LONE_LISP_EXPORT_BYTES_WRITER_PRIMITIVE(u, 32, /* native endianness */);
 	LONE_LISP_EXPORT_BYTES_WRITER_PRIMITIVE(s, 32, /* native endianness */);
+	LONE_LISP_EXPORT_BYTES_WRITER_PRIMITIVE(u, 64, /* native endianness */);
 
 	LONE_LISP_EXPORT_BYTES_READER_PRIMITIVE(u, 16, le);
 	LONE_LISP_EXPORT_BYTES_READER_PRIMITIVE(s, 16, le);
@@ -246,6 +247,15 @@ validate_bytes:
 
 #define LONE_LISP_BYTES_INTEGER_OVERFLOW_CHECK_64_s \
 	(actual < LONE_LISP_INTEGER_MIN || actual > LONE_LISP_INTEGER_MAX)
+
+/* The writer's truncation round-trip catches values that don't fit the target type
+ * but the cast is the identity at 64 bits, so a negative input survives untruncated
+ * and silently becomes its unsigned bit pattern. The negative guard is required for
+ * u64 specifically. For u8/u16/u32 it is redundant with the round trip but harmless.
+ * The signed writers admit any in-range lone integer.
+ */
+#define LONE_LISP_BYTES_VALUE_NEGATIVE_GUARD_u (raw) < 0 ||
+#define LONE_LISP_BYTES_VALUE_NEGATIVE_GUARD_s
 
 #define LONE_LISP_BYTES_READER_PRIMITIVE(sign, bits, endian)                                       \
 LONE_LISP_PRIMITIVE(bytes_read_##sign##bits##endian)                                               \
@@ -522,7 +532,8 @@ validate_value_range:                                                           
 	 * which makes the round-trip equality check below a correct range test. */                \
 	integer = (lone_##sign##bits) raw;                                                         \
                                                                                                    \
-	if ((lone_lisp_integer) integer != raw) {                                                  \
+	if (LONE_LISP_BYTES_VALUE_NEGATIVE_GUARD_##sign                                            \
+			(lone_lisp_integer) integer != raw) {                                      \
 		lone_lisp_machine_push_value(lone, machine, bytes);                                \
 		lone_lisp_machine_push_value(lone, machine, offset);                               \
 		return                                                                             \
@@ -588,6 +599,7 @@ LONE_LISP_BYTES_WRITER_PRIMITIVE(u, 16, /* native endianness */)
 LONE_LISP_BYTES_WRITER_PRIMITIVE(s, 16, /* native endianness */)
 LONE_LISP_BYTES_WRITER_PRIMITIVE(u, 32, /* native endianness */)
 LONE_LISP_BYTES_WRITER_PRIMITIVE(s, 32, /* native endianness */)
+LONE_LISP_BYTES_WRITER_PRIMITIVE(u, 64, /* native endianness */)
 
 LONE_LISP_BYTES_READER_PRIMITIVE(u, 16, le)
 LONE_LISP_BYTES_READER_PRIMITIVE(s, 16, le)
@@ -614,6 +626,9 @@ LONE_LISP_BYTES_WRITER_PRIMITIVE(s, 32, be)
 
 #undef LONE_LISP_BYTES_INTEGER_OVERFLOW_CHECK_64_s
 #undef LONE_LISP_BYTES_INTEGER_OVERFLOW_CHECK_64_u
+
+#undef LONE_LISP_BYTES_VALUE_NEGATIVE_GUARD_s
+#undef LONE_LISP_BYTES_VALUE_NEGATIVE_GUARD_u
 
 #undef LONE_LISP_BYTES_INTEGER_OVERFLOW_GUARD_64
 #undef LONE_LISP_BYTES_INTEGER_OVERFLOW_GUARD_32

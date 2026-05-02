@@ -34,6 +34,7 @@ LONE_LISP_PRIMITIVE(bytes_write_u16);
 LONE_LISP_PRIMITIVE(bytes_write_s16);
 LONE_LISP_PRIMITIVE(bytes_write_u32);
 LONE_LISP_PRIMITIVE(bytes_write_s32);
+LONE_LISP_PRIMITIVE(bytes_write_u64);
 
 LONE_LISP_PRIMITIVE(bytes_read_u16le);
 LONE_LISP_PRIMITIVE(bytes_read_s16le);
