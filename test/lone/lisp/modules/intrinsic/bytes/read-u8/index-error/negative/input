@@ -1,0 +1,4 @@
+(import (lone print intercept lambda quote) (bytes new read-u8))
+
+(print (intercept (('index-error (lambda (v) v))) (read-u8 (new 4) -1)))
+(print (intercept (('index-error (lambda (v c) (c 0)))) (read-u8 (new 4) -1)))

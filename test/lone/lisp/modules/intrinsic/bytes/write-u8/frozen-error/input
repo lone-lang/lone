@@ -1,0 +1,4 @@
+(import (lone print intercept lambda quote) (bytes new write-u8))
+
+(print (intercept (('frozen-error (lambda (v) v))) (write-u8 b"\0\0\0\0" 0 1)))
+(print (intercept (('frozen-error (lambda (v c) (c (new 4))))) (write-u8 b"\0\0\0\0" 0 1)))
