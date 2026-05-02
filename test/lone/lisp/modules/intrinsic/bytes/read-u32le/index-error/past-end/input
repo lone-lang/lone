@@ -1,0 +1,4 @@
+(import (lone print intercept lambda quote) (bytes new read-u32le))
+
+(print (intercept (('index-error (lambda (v) v))) (read-u32le (new 4) 1)))
+(print (intercept (('index-error (lambda (v c) (c 0)))) (read-u32le (new 4) 1)))
