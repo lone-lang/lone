@@ -1,0 +1,4 @@
+(import (lone print intercept lambda quote) (bytes new))
+
+(print (intercept (('range-error (lambda (v) v))) (new 0)))
+(print (intercept (('range-error (lambda (v c) (c 1)))) (new 0)))

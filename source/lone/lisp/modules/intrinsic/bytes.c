@@ -1,6 +1,7 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later */
 
 #include <lone/lisp/modules/intrinsic/bytes.h>
+#include <lone/lisp/modules/intrinsic/lone.h>
 
 #include <lone/lisp/machine.h>
 #include <lone/lisp/machine/stack.h>
@@ -81,27 +82,79 @@ void lone_lisp_modules_intrinsic_bytes_initialize(struct lone_lisp *lone)
 LONE_LISP_PRIMITIVE(bytes_new)
 {
 	struct lone_lisp_value arguments, count;
-	size_t allocation;
 
-	arguments = lone_lisp_machine_pop_value(lone, machine);
+	switch (step) {
+	case 0:
+
+		arguments = lone_lisp_machine_pop_value(lone, machine);
+
+		goto destructure;
+
+	case 1: /* resumed with a replacement count from range-error */
+
+		count = machine->value;
+
+		goto validate_count_range;
+
+	case 2: /* resumed with a replacement count from type-error */
+
+		count = machine->value;
+
+		goto validate_count_type;
+
+	case 3: /* resumed with a replacement arguments list from arity-error */
+
+		arguments = machine->value;
+
+		goto destructure;
+
+	default:
+		break;
+	}
+
+	linux_exit(-1);
+
+destructure:
 
 	if (lone_lisp_list_destructure(lone, arguments, 1, &count)) {
-		/* wrong number of arguments */ linux_exit(-1);
+		return
+			lone_lisp_signal_emit(
+				lone,
+				machine,
+				3,
+				lone_lisp_intern_c_string(lone, "arity-error"),
+				arguments
+			);
 	}
 
-	switch (lone_lisp_type_of(count)) {
-	case LONE_LISP_TAG_INTEGER:
-		if (lone_lisp_integer_of(count) <= 0) {
-			/* zero or negative allocation, likely a mistake: (new 0), (new -64) */ linux_exit(-1);
-		}
+validate_count_type:
 
-		allocation = lone_lisp_integer_of(count);
-		break;
-	default:
-		/* count not an integer: (new {}) */ linux_exit(-1);
+	if (!lone_lisp_is_integer(lone, count)) {
+		return
+			lone_lisp_signal_emit(
+				lone,
+				machine,
+				2,
+				lone_lisp_intern_c_string(lone, "type-error"),
+				count
+			);
 	}
 
-	lone_lisp_machine_push_value(lone, machine, lone_lisp_bytes_create(lone, allocation));
+validate_count_range:
+
+	if (lone_lisp_integer_of(count) <= 0) {
+		return
+			lone_lisp_signal_emit(
+				lone,
+				machine,
+				1,
+				lone_lisp_intern_c_string(lone, "range-error"),
+				count
+			);
+	}
+
+	lone_lisp_machine_push_value(lone, machine,
+			lone_lisp_bytes_create(lone, lone_lisp_integer_of(count)));
 	return 0;
 }
 
