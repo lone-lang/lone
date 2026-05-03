@@ -78,14 +78,44 @@ static struct lone_lisp_value apply_to_table(struct lone_lisp *lone,
 static struct lone_lisp_value bind_arguments(struct lone_lisp *lone, struct lone_lisp_value environment,
 		struct lone_lisp_value function, struct lone_lisp_value arguments)
 {
-	struct lone_lisp_value new_environment, names, current;
+	struct lone_lisp_value new_environment, names, current, shape;
+	struct lone_lisp_value *values;
+	struct lone_lisp_function *f;
+	size_t i;
 
-	names = lone_lisp_heap_value_of(lone, function)->as.function.arguments;
+	f = &lone_lisp_heap_value_of(lone, function)->as.function;
+	names = f->arguments;
+	shape = f->shape;
+
+	if (!lone_lisp_is_nil(shape)) {
+		new_environment = lone_lisp_table_create_from_shape(
+			lone,
+			shape,
+			f->environment
+		);
+
+		values = lone_lisp_heap_value_of(lone, new_environment)->as.table.shaped.values;
+
+		for (i = 0; i < lone_lisp_heap_value_of(lone, shape)->as.shape.count; ++i) {
+			if (lone_lisp_is_nil(arguments)) {
+				linux_exit(-1);
+			}
+
+			values[i] = lone_lisp_list_first(lone, arguments);
+			arguments = lone_lisp_list_rest(lone, arguments);
+		}
+
+		if (!lone_lisp_is_nil(arguments)) {
+			linux_exit(-1);
+		}
+
+		return new_environment;
+	}
 
 	new_environment = lone_lisp_table_create(
 		lone,
 		4,
-		lone_lisp_heap_value_of(lone, function)->as.function.environment
+		f->environment
 	);
 
 	while (1) {
