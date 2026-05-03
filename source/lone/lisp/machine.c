@@ -84,7 +84,7 @@ static struct lone_lisp_value bind_arguments(struct lone_lisp *lone, struct lone
 
 	new_environment = lone_lisp_table_create(
 		lone,
-		16,
+		4,
 		lone_lisp_heap_value_of(lone, function)->as.function.environment
 	);
 
