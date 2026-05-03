@@ -5,9 +5,9 @@
 #include <lone/types.h>
 #include <lone/linux.h>
 
-unsigned long __stack_chk_guard;
+unsigned long __attribute__((externally_visible)) __stack_chk_guard;
 
-void __stack_chk_fail(void)
+void __attribute__((externally_visible)) __stack_chk_fail(void)
 {
 	linux_exit(-1);
 }
