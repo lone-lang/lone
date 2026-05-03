@@ -226,6 +226,7 @@ bool lone_lisp_machine_cycle(struct lone_lisp *lone, struct lone_lisp_machine *m
 		case LONE_LISP_TAG_GENERATOR:
 		case LONE_LISP_TAG_VECTOR:
 		case LONE_LISP_TAG_TABLE:
+		case LONE_LISP_TAG_SHAPE:
 		case LONE_LISP_TAG_BYTES:
 		case LONE_LISP_TAG_TEXT:
 			machine->value = machine->expression;

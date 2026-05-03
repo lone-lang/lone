@@ -85,6 +85,7 @@ static struct lone_lisp_value lone_lisp_module_name_to_key(struct lone_lisp *lon
 	case LONE_LISP_TAG_BYTES:
 	case LONE_LISP_TAG_VECTOR:
 	case LONE_LISP_TAG_TABLE:
+	case LONE_LISP_TAG_SHAPE:
 	default:
 		/* invalid module name component */ linux_exit(-1);
 	}
@@ -408,6 +409,7 @@ static void lone_lisp_primitive_import_form(struct lone_lisp *lone,
 	case LONE_LISP_TAG_BYTES:
 	case LONE_LISP_TAG_VECTOR:
 	case LONE_LISP_TAG_TABLE:
+	case LONE_LISP_TAG_SHAPE:
 	default:
 		/* not a supported import argument type */ linux_exit(-1);
 	}

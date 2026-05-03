@@ -72,6 +72,7 @@ enum lone_lisp_tag {
 	LONE_LISP_TAG_SYMBOL       = 0x10,
 	LONE_LISP_TAG_TEXT         = 0x12,
 	LONE_LISP_TAG_BYTES        = 0x14,
+	LONE_LISP_TAG_SHAPE        = 0x16,
 
 	/* non-heap value tags: bit 0 = 1 */
 	LONE_LISP_TAG_INTEGER = 0x01,
@@ -306,6 +307,11 @@ static_assert(offsetof(struct lone_lisp_list, hash) == offsetof(struct lone_lisp
    │    but will also serve as a prototype-based object system              │
    │    as in Javascript and Self.                                          │
    │                                                                        │
+   │    Lone shapes describe the fixed set of keys of a table               │
+   │    and the position of each key in a flat values array.                │
+   │    They transform hash probes into direct array indexing.              │
+   │    Tables created the same way share a shape descriptor.               │
+   │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
 
 struct lone_lisp_table_entry {
@@ -320,6 +326,11 @@ struct lone_lisp_table {
 	size_t *indexes;
 	struct lone_lisp_table_entry *entries;
 	struct lone_lisp_value prototype;
+};
+
+struct lone_lisp_shape {
+	size_t count;
+	struct lone_lisp_value *keys;
 };
 
 struct lone_lisp_heap_value {
@@ -341,6 +352,7 @@ struct lone_lisp_heap_value {
 		struct lone_lisp_list list;
 		struct lone_lisp_vector vector;
 		struct lone_lisp_table table;
+		struct lone_lisp_shape shape;
 		struct lone_lisp_symbol symbol;
 		struct lone_lisp_text text;
 		struct lone_lisp_bytes bytes;
@@ -662,6 +674,9 @@ struct lone_lisp_value lone_lisp_table_get_by_bytes(struct lone_lisp *lone,
 size_t lone_lisp_table_count(struct lone_lisp *lone, struct lone_lisp_value table);
 struct lone_lisp_table_entry *lone_lisp_table_next_entry(struct lone_lisp *lone,
 		struct lone_lisp_value table, size_t *i);
+
+struct lone_lisp_value lone_lisp_shape_create(struct lone_lisp *lone,
+		size_t count, struct lone_lisp_value *keys);
 
 #define LONE_LISP_TABLE_FOR_EACH(__lone, __entry, __table, __i)                                    \
 	for ((__i) = 0;                                                                            \

@@ -252,6 +252,16 @@ void lone_lisp_print(struct lone_lisp *lone, struct lone_lisp_value value, int f
 	case LONE_LISP_TAG_TABLE:
 		lone_lisp_print_table(lone, value, fd);
 		break;
+	case LONE_LISP_TAG_SHAPE:
+		lone_lisp_print_hash_notation(
+			lone,
+			"shape",
+			lone_lisp_integer_create(
+				lone_lisp_heap_value_of(lone, value)->as.shape.count
+			),
+			fd
+		);
+		break;
 	case LONE_LISP_TAG_BYTES:
 		lone_lisp_print_bytes(lone, value, fd);
 		break;

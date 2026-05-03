@@ -93,6 +93,11 @@ static void lone_lisp_mark_heap_value(struct lone_lisp *lone, struct lone_lisp_h
 			lone_lisp_mark_value(lone, value->as.table.entries[i].value);
 		}
 		break;
+	case LONE_LISP_TAG_SHAPE:
+		for (size_t i = 0; i < value->as.shape.count; ++i) {
+			lone_lisp_mark_value(lone, value->as.shape.keys[i]);
+		}
+		break;
 	case LONE_LISP_TAG_SYMBOL:
 	case LONE_LISP_TAG_TEXT:
 	case LONE_LISP_TAG_BYTES:
@@ -276,6 +281,13 @@ static void lone_lisp_kill_all_unmarked_values(struct lone_lisp *lone)
 					sizeof(*value->as.table.entries), alignof(*value->as.table.entries)
 				);
 				break;
+			case LONE_LISP_TAG_SHAPE:
+				lone_memory_deallocate(
+					lone->system, value->as.shape.keys,
+					value->as.shape.count,
+					sizeof(*value->as.shape.keys), alignof(*value->as.shape.keys)
+				);
+				break;
 			case LONE_LISP_TAG_CONTINUATION:
 				lone_memory_deallocate(
 					lone->system, value->as.continuation.frames,
@@ -447,6 +459,11 @@ static void lone_lisp_rewrite_heap_value_interior(struct lone_lisp *lone, struct
 			if (lone_lisp_is_tombstone(value->as.table.entries[i].key)) { continue; }
 			value->as.table.entries[i].key = lone_lisp_forward_value(lone, value->as.table.entries[i].key);
 			value->as.table.entries[i].value = lone_lisp_forward_value(lone, value->as.table.entries[i].value);
+		}
+		break;
+	case LONE_LISP_TAG_SHAPE:
+		for (size_t i = 0; i < value->as.shape.count; ++i) {
+			value->as.shape.keys[i] = lone_lisp_forward_value(lone, value->as.shape.keys[i]);
 		}
 		break;
 	case LONE_LISP_TAG_SYMBOL:

@@ -323,6 +323,7 @@ bool lone_lisp_is_equivalent(struct lone_lisp *lone, struct lone_lisp_value x, s
 	case LONE_LISP_TAG_LIST:
 	case LONE_LISP_TAG_VECTOR:
 	case LONE_LISP_TAG_TABLE:
+	case LONE_LISP_TAG_SHAPE:
 	case LONE_LISP_TAG_SYMBOL:
 		return x.tagged == y.tagged;
 	default:
@@ -385,6 +386,7 @@ bool lone_lisp_is_equal(struct lone_lisp *lone, struct lone_lisp_value x, struct
 	case LONE_LISP_TAG_PRIMITIVE:
 	case LONE_LISP_TAG_CONTINUATION:
 	case LONE_LISP_TAG_GENERATOR:
+	case LONE_LISP_TAG_SHAPE:
 	case LONE_LISP_TAG_TEXT:
 	case LONE_LISP_TAG_BYTES:
 		return lone_lisp_is_equivalent(lone, x, y);
