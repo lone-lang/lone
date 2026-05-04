@@ -137,6 +137,28 @@ static struct lone_lisp_value bind_arguments(struct lone_lisp *lone, struct lone
 		f->environment
 	);
 
+	if (!lone_lisp_function_is_variadic(function)) {
+		/* nothing to check here, just zip through them */
+		while (!lone_lisp_is_nil(names)) {
+			if (lone_lisp_is_nil(arguments)) {
+				/* argument number mismatch: ((lambda (x y) y) 10) */ linux_exit(-1);
+			}
+
+			current = lone_lisp_list_first(lone, names);
+			lone_lisp_table_set(lone, new_environment, current,
+				lone_lisp_list_first(lone, arguments));
+
+			names     = lone_lisp_list_rest(lone, names);
+			arguments = lone_lisp_list_rest(lone, arguments);
+		}
+
+		if (!lone_lisp_is_nil(arguments)) {
+			/* argument number mismatch: ((lambda (x) x) 10 20) */ linux_exit(-1);
+		}
+
+		return new_environment;
+	}
+
 	while (1) {
 		if (!lone_lisp_is_nil(names)) {
 			current = lone_lisp_list_first(lone, names);
