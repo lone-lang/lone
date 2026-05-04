@@ -140,6 +140,7 @@ retry:
 	value->should_deallocate_bytes = false;
 	value->frozen                  = false;
 	value->hash_cached             = false;
+	value->code_point_count_cached = false;
 
 	return value;
 }
