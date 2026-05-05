@@ -138,6 +138,8 @@ bool lone_lisp_is_applicable(struct lone_lisp *lone, struct lone_lisp_value valu
 	(void) lone;
 	return (value.tagged & LONE_LISP_TAG_MASK) == LONE_LISP_TAG_FUNCTION
 	    || (value.tagged & LONE_LISP_TAG_MASK) == LONE_LISP_TAG_PRIMITIVE
+	    || (value.tagged & LONE_LISP_TAG_MASK) == LONE_LISP_TAG_CONTINUATION
+	    || (value.tagged & LONE_LISP_TAG_MASK) == LONE_LISP_TAG_GENERATOR
 	    || (value.tagged & LONE_LISP_TAG_MASK) == LONE_LISP_TAG_VECTOR
 	    || (value.tagged & LONE_LISP_TAG_MASK) == LONE_LISP_TAG_TABLE;
 }
