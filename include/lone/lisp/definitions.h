@@ -141,6 +141,12 @@
 	#define LONE_LISP_HEAP_GROWTH_FACTOR 2
 #endif
 
+/* Maximum number of keys a shape can hold.
+ * Beyond this limit, shaped tables deoptimize
+ * to normal hash tables.
+ */
+#define LONE_LISP_SHAPE_KEYS_MAX LONE_LISP_METADATA_ARITY_OVERFLOW
+
 #ifndef LONE_LISP_MACHINE_STACK_INITIAL_SIZE
 	#define LONE_LISP_MACHINE_STACK_INITIAL_SIZE 256
 #endif

@@ -212,6 +212,7 @@ struct lone_lisp_function {
 	struct lone_lisp_value arguments;         /* the bindings */
 	struct lone_lisp_value code;              /* the lambda */
 	struct lone_lisp_value environment;       /* the closure */
+	struct lone_lisp_value shape;             /* environment shape for bind_arguments */
 	struct lone_lisp_function_flags flags;    /* how to evaluate & apply */
 };
 

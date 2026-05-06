@@ -49,6 +49,7 @@ static void lone_lisp_mark_heap_value(struct lone_lisp *lone, struct lone_lisp_h
 		lone_lisp_mark_value(lone, value->as.function.arguments);
 		lone_lisp_mark_value(lone, value->as.function.code);
 		lone_lisp_mark_value(lone, value->as.function.environment);
+		lone_lisp_mark_value(lone, value->as.function.shape);
 		break;
 	case LONE_LISP_TAG_PRIMITIVE:
 		lone_lisp_mark_value(lone, value->as.primitive.name);
@@ -416,6 +417,7 @@ static void lone_lisp_rewrite_heap_value_interior(struct lone_lisp *lone, struct
 		value->as.function.arguments = lone_lisp_forward_value(lone, value->as.function.arguments);
 		value->as.function.code = lone_lisp_forward_value(lone, value->as.function.code);
 		value->as.function.environment = lone_lisp_forward_value(lone, value->as.function.environment);
+		value->as.function.shape = lone_lisp_forward_value(lone, value->as.function.shape);
 		break;
 	case LONE_LISP_TAG_PRIMITIVE:
 		value->as.primitive.name = lone_lisp_forward_value(lone, value->as.primitive.name);
