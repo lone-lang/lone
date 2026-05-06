@@ -525,6 +525,7 @@ struct lone_lisp_value lone_lisp_function_create(struct lone_lisp *lone,
 		struct lone_lisp_value environment, struct lone_lisp_function_flags flags);
 
 unsigned long lone_lisp_function_arity(struct lone_lisp *lone, struct lone_lisp_value function);
+bool lone_lisp_function_is_variadic(struct lone_lisp_value function);
 
 /* ╭────────────────────────────────────────────────────────────────────────╮
    │                                                                        │

@@ -23,6 +23,25 @@ static unsigned long lone_lisp_count_arguments(struct lone_lisp *lone,
 	return count;
 }
 
+static bool lone_lisp_has_variadic_arguments(struct lone_lisp *lone,
+		struct lone_lisp_value arguments)
+{
+	while (!lone_lisp_is_nil(arguments)) {
+		if (lone_lisp_is_list(lone, lone_lisp_list_first(lone, arguments))) {
+			return true;
+		}
+
+		arguments = lone_lisp_list_rest(lone, arguments);
+	}
+
+	return false;
+}
+
+bool lone_lisp_function_is_variadic(struct lone_lisp_value function)
+{
+	return (function.tagged & LONE_LISP_METADATA_VARIADIC) != 0;
+}
+
 unsigned long lone_lisp_function_arity(struct lone_lisp *lone, struct lone_lisp_value function)
 {
 	unsigned long arity;
@@ -62,6 +81,12 @@ struct lone_lisp_value lone_lisp_function_create(struct lone_lisp *lone,
 	 */
 	if (flags.evaluate_arguments) { value.tagged |= LONE_LISP_METADATA_EVALUATE_ARGUMENTS; }
 	if (flags.evaluate_result)    { value.tagged |= LONE_LISP_METADATA_EVALUATE_RESULT; }
+
+	/* encode variadic flag in metadata bit 14
+	   allows checking without heap dereference */
+	if (lone_lisp_has_variadic_arguments(lone, arguments)) {
+		value.tagged |= LONE_LISP_METADATA_VARIADIC;
+	}
 
 	/* Encode function arity in metadata bits 10-13.
 	 * This allows determining the arity of most functions

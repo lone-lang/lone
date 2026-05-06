@@ -61,6 +61,14 @@
 #define LONE_LISP_METADATA_ARITY_MASK     0x0F
 #define LONE_LISP_METADATA_ARITY_OVERFLOW 0x0F
 
+/* Variadic flag in metadata bit 14.
+ * Set when the function is variadic:
+ * arguments list ends with (rest).
+ * Single bit test on the tagged word,
+ * no heap dereference.
+ */
+#define LONE_LISP_METADATA_VARIADIC (1L << 14)
+
 /* ╭────────────────────────────────────────────────────────────────────────╮
    │                                                                        │
    │    Inline small values in lisp values as constants.                    │
