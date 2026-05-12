@@ -75,11 +75,25 @@ static struct lone_lisp_value apply_to_table(struct lone_lisp *lone,
 	return apply_to_collection(lone, table, arguments, lone_lisp_table_get, lone_lisp_table_set);
 }
 
+static void fill_shaped_values(struct lone_lisp *lone,
+		struct lone_lisp_value *values, struct lone_lisp_shape *shape,
+		struct lone_lisp_value arguments)
+{
+	size_t i;
+
+	for (i = 0; i < shape->count; ++i) {
+		if (lone_lisp_is_nil(arguments)) { linux_exit(-1); }
+		values[i] = lone_lisp_list_first(lone, arguments);
+		arguments = lone_lisp_list_rest(lone, arguments);
+	}
+
+	if (!lone_lisp_is_nil(arguments)) { linux_exit(-1); }
+}
+
 static struct lone_lisp_value bind_arguments(struct lone_lisp *lone, struct lone_lisp_value environment,
 		struct lone_lisp_value function, struct lone_lisp_value arguments)
 {
 	struct lone_lisp_value new_environment, names, current, shape;
-	struct lone_lisp_value *values;
 	struct lone_lisp_function *f;
 	size_t i;
 
@@ -94,20 +108,12 @@ static struct lone_lisp_value bind_arguments(struct lone_lisp *lone, struct lone
 			f->environment
 		);
 
-		values = lone_lisp_heap_value_of(lone, new_environment)->as.table.shaped.values;
-
-		for (i = 0; i < lone_lisp_heap_value_of(lone, shape)->as.shape.count; ++i) {
-			if (lone_lisp_is_nil(arguments)) {
-				linux_exit(-1);
-			}
-
-			values[i] = lone_lisp_list_first(lone, arguments);
-			arguments = lone_lisp_list_rest(lone, arguments);
-		}
-
-		if (!lone_lisp_is_nil(arguments)) {
-			linux_exit(-1);
-		}
+		fill_shaped_values(
+			lone,
+			lone_lisp_heap_value_of(lone, new_environment)->as.table.shaped.values,
+			&lone_lisp_heap_value_of(lone, shape)->as.shape,
+			arguments
+		);
 
 		return new_environment;
 	}
