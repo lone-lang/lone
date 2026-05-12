@@ -360,7 +360,7 @@ static void lone_lisp_import_symbol(struct lone_lisp *lone,
 static void lone_lisp_import_specification(struct lone_lisp *lone, struct lone_lisp_import_specification *spec)
 {
 	struct lone_lisp_value table, symbol;
-	struct lone_lisp_table_entry *entry;
+	struct lone_lisp_table_entry entry;
 	size_t i;
 
 	table = lone_lisp_heap_value_of(lone, spec->module)->as.module.exports;
@@ -368,7 +368,7 @@ static void lone_lisp_import_specification(struct lone_lisp *lone, struct lone_l
 	if (lone_lisp_is_nil(spec->symbols)) {
 		/* import all exported symbols: (import (module)) */
 		LONE_LISP_TABLE_FOR_EACH(lone, entry, table, i) {
-			lone_lisp_import_symbol(lone, spec, table, entry->key);
+			lone_lisp_import_symbol(lone, spec, table, entry.key);
 		}
 	} else {
 		/* import specified symbols: (import (module x f)) */

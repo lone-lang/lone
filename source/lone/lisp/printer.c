@@ -144,20 +144,17 @@ static void lone_lisp_print_vector(struct lone_lisp *lone, struct lone_lisp_valu
 
 static void lone_lisp_print_table(struct lone_lisp *lone, struct lone_lisp_value table, int fd)
 {
-	struct lone_lisp_table *actual;
+	struct lone_lisp_table_entry entry;
 	size_t i;
 
 	if (lone_lisp_table_count(lone, table) == 0) { linux_write_bytes(fd, LONE_BYTES_VALUE_FROM_LITERAL("{}")); return; }
 
-	actual = &lone_lisp_heap_value_of(lone, table)->as.table;
-
 	linux_write_bytes(fd, LONE_BYTES_VALUE_FROM_LITERAL("{ "));
 
-	for (i = 0; i < actual->used; ++i) {
-		if (lone_lisp_is_tombstone(actual->entries[i].key)) { continue; }
-		lone_lisp_print(lone, actual->entries[i].key, fd);
+	LONE_LISP_TABLE_FOR_EACH(lone, entry, table, i) {
+		lone_lisp_print(lone, entry.key, fd);
 		linux_write_bytes(fd, LONE_BYTES_VALUE_FROM_LITERAL(" "));
-		lone_lisp_print(lone, actual->entries[i].value, fd);
+		lone_lisp_print(lone, entry.value, fd);
 		linux_write_bytes(fd, LONE_BYTES_VALUE_FROM_LITERAL(" "));
 	}
 
