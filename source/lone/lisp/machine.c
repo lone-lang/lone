@@ -90,8 +90,16 @@ static void fill_shaped_values(struct lone_lisp *lone,
 	if (!lone_lisp_is_nil(arguments)) { linux_exit(-1); }
 }
 
+static bool should_reuse_environment(struct lone_lisp *lone,
+		struct lone_lisp_value environment, struct lone_lisp_value shape, bool tail)
+{
+	return    tail
+	       && lone_lisp_heap_value_of(lone, environment)->shaped
+	       && lone_lisp_heap_value_of(lone, environment)->as.table.shaped.shape.tagged == shape.tagged;
+}
+
 static struct lone_lisp_value bind_arguments(struct lone_lisp *lone, struct lone_lisp_value environment,
-		struct lone_lisp_value function, struct lone_lisp_value arguments)
+		struct lone_lisp_value function, struct lone_lisp_value arguments, bool tail)
 {
 	struct lone_lisp_value new_environment, names, current, shape;
 	struct lone_lisp_function *f;
@@ -102,11 +110,16 @@ static struct lone_lisp_value bind_arguments(struct lone_lisp *lone, struct lone
 	shape = f->shape;
 
 	if (!lone_lisp_is_nil(shape)) {
-		new_environment = lone_lisp_table_create_from_shape(
-			lone,
-			shape,
-			f->environment
-		);
+
+		if (should_reuse_environment(lone, environment, shape, tail)) {
+			new_environment = environment;
+		} else {
+			new_environment = lone_lisp_table_create_from_shape(
+				lone,
+				shape,
+				f->environment
+			);
+		}
 
 		fill_shaped_values(
 			lone,
@@ -406,7 +419,8 @@ bool lone_lisp_machine_cycle(struct lone_lisp *lone, struct lone_lisp_machine *m
 				lone,
 				machine->environment,
 				machine->applicable,
-				machine->list
+				machine->list,
+				lone_lisp_machine_is_tail_application(machine)
 			);
 			lone_lisp_machine_push_function_delimiter(lone, machine, machine->applicable);
 			machine->unevaluated = lone_lisp_heap_value_of(lone, machine->applicable)->as.function.code;

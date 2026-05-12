@@ -337,6 +337,11 @@ bool lone_lisp_machine_top_is_tail_return(struct lone_lisp_machine *machine)
 	return lone_lisp_machine_is_step_at(machine, -1, LONE_LISP_MACHINE_STEP_TAIL_RETURN);
 }
 
+bool lone_lisp_machine_is_tail_application(struct lone_lisp_machine *machine)
+{
+	return lone_lisp_machine_is_step_at(machine, -2, LONE_LISP_MACHINE_STEP_TAIL_RETURN);
+}
+
 bool lone_lisp_machine_unwind_to_function_delimiter(struct lone_lisp *lone, struct lone_lisp_machine *machine)
 {
 	struct lone_lisp_machine_stack_frame *frame;
