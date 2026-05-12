@@ -10,6 +10,30 @@
 
 #include <lone/utilities.h>
 
+static void lone_lisp_table_allocate_hash_storage(struct lone_system *system,
+		size_t capacity, size_t **indexes, struct lone_lisp_table_entry **entries)
+{
+	*indexes = lone_memory_array(
+		system,
+		0,
+		0,
+		capacity,
+		sizeof(**indexes),
+		alignof(**indexes)
+	);
+
+	lone_memory_one(*indexes, lone_memory_array_size_in_bytes(capacity, sizeof(**indexes)));
+
+	*entries = lone_memory_array(
+		system,
+		0,
+		0,
+		capacity,
+		sizeof(**entries),
+		alignof(**entries)
+	);
+}
+
 struct lone_lisp_value lone_lisp_table_create(struct lone_lisp *lone,
 		size_t capacity, struct lone_lisp_value prototype)
 {
@@ -39,24 +63,11 @@ struct lone_lisp_value lone_lisp_table_create(struct lone_lisp *lone,
 	actual->capacity = capacity;
 	actual->used = 0;
 
-	actual->indexes = lone_memory_array(
+	lone_lisp_table_allocate_hash_storage(
 		lone->system,
-		0,
-		0,
-		actual->capacity,
-		sizeof(*actual->indexes),
-		alignof(*actual->indexes)
-	);
-
-	lone_memory_one(actual->indexes, lone_memory_array_size_in_bytes(capacity, sizeof(*actual->indexes)));
-
-	actual->entries = lone_memory_array(
-		lone->system,
-		0,
-		0,
-		actual->capacity,
-		sizeof(*actual->entries),
-		alignof(*actual->entries)
+		capacity,
+		&actual->indexes,
+		&actual->entries
 	);
 
 	return lone_lisp_value_from_heap_value(lone, heap_value, LONE_LISP_TAG_TABLE);
@@ -232,24 +243,11 @@ static void lone_lisp_table_resize(struct lone_lisp *lone, struct lone_lisp_valu
 	old_entries  = actual->entries;
 	old_indexes  = actual->indexes;
 
-	new_indexes = lone_memory_array(
+	lone_lisp_table_allocate_hash_storage(
 		lone->system,
-		0,
-		0,
 		new_capacity,
-		sizeof(*new_indexes),
-		alignof(*new_indexes)
-	);
-
-	lone_memory_one(new_indexes, lone_memory_array_size_in_bytes(new_capacity, sizeof(*new_indexes)));
-
-	new_entries = lone_memory_array(
-		lone->system,
-		0,
-		0,
-		new_capacity,
-		sizeof(*new_entries),
-		alignof(*new_entries)
+		&new_indexes,
+		&new_entries
 	);
 
 	for (i = 0, j = 0; i < old_used; ++i) {
