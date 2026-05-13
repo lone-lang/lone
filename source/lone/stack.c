@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
 #include <lone/stack.h>
 
 bool lone_stack_is_empty(void *top, void *base)
