@@ -577,6 +577,9 @@ void lone_lisp_table_delete(struct lone_lisp *lone,
 
 	l = indexes[i];
 
+	/* Knuth's Algorithm R: backward shift deletion
+	   figure out where entries want to be, move them there
+	   two clauses handle non-wraparound and wraparound cases */
 	j = i;
 	while (1) {
 		j = lone_lisp_table_wrap_around(j + 1, capacity);
