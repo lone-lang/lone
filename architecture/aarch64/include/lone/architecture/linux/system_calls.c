@@ -9,8 +9,22 @@
  * stack-alignment: 16 bytes
  * system-call:     x0 = "svc 0" [x8] x0 x1 x2 x3 x4 x5
  *
- * https://github.com/ARM-software/abi-aa
- * https://github.com/ARM-software/abi-aa/blob/main/aapcs64/aapcs64.rst
+ * The svc instruction traps to the kernel
+ * which saves all registers and restores
+ * them on return. x0 carries argument 1
+ * and the return value. All the other
+ * argument registers are preserved.
+ *
+ * References:
+ *     Linux:
+ *         arch/arm64/kernel/entry.S             el0_svc handler
+ *         arch/arm64/include/asm/syscall.h      syscall_set_return_value
+ *         tools/include/nolibc/arch-aarch64.h   lines 47-55
+ *         man 2 syscall                         architecture calling conventions
+ *     ARM:
+ *         ARM ARM §C5.2.19, SVC instruction     Supervisor Call exception
+ *         https://github.com/ARM-software/abi-aa
+ *         https://github.com/ARM-software/abi-aa/blob/main/aapcs64/aapcs64.rst
  *
  **/
 

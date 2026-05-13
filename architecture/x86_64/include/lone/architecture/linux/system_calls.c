@@ -9,6 +9,23 @@
  * stack-alignment: 16 bytes
  * system-call:     rax = "syscall" [rax] rdi rsi rdx r10 r8 r9
  * clobbers:        rcx r11
+ *
+ * The syscall instruction saves rip to rcx and rflags to r11.
+ * The kernel saves all other registers to pt_regs on entry
+ * and restores them on return. Argument registers are preserved.
+ *
+ * References:
+ *     Intel:
+ *         SDM Volume 2B, SYSCALL instruction     saves rip to rcx, rflags to r11
+ *         https://www.intel.com/content/www/us/en/developer/articles/technical/intel-sdm.html
+ *     AMD:
+ *         APM Volume 3, §4.8.8 SYSCALL/SYSRET    saves rip to rcx, rflags to r11
+ *         https://www.amd.com/en/support/tech-docs/amd64-architecture-programmers-manual-volumes-1-5
+ *     Linux:
+ *         arch/x86/entry/entry_64.S              lines 49-85
+ *         tools/include/nolibc/arch-x86.h        lines 184-190
+ *         man 2 syscall                          architecture calling conventions
+ *
  **/
 
 long linux_system_call_0(long number)
@@ -18,8 +35,8 @@ long linux_system_call_0(long number)
 	__asm__ volatile
 	("syscall"
 
-		: "=r" (rax)
-		:  "r" (rax)
+		: "+r" (rax)
+		:
 		: "rcx", "r11", "cc", "memory");
 
 	return rax;
@@ -34,7 +51,7 @@ long linux_system_call_1(long number, long _1)
 	("syscall"
 
 		: "+r" (rax)
-		: "r" (rdi)
+		:  "r" (rdi)
 		: "rcx", "r11", "cc", "memory");
 
 	return rax;
@@ -50,7 +67,7 @@ long linux_system_call_2(long number, long _1, long _2)
 	("syscall"
 
 		: "+r" (rax)
-		: "r" (rdi), "r" (rsi)
+		:  "r" (rdi), "r" (rsi)
 		: "rcx", "r11", "cc", "memory");
 
 	return rax;
@@ -67,7 +84,7 @@ long linux_system_call_3(long number, long _1, long _2, long _3)
 	("syscall"
 
 		: "+r" (rax)
-		: "r" (rdi), "r" (rsi), "r" (rdx)
+		:  "r" (rdi), "r" (rsi), "r" (rdx)
 		: "rcx", "r11", "cc", "memory");
 
 	return rax;
@@ -81,14 +98,11 @@ long linux_system_call_4(long number, long _1, long _2, long _3, long _4)
 	register long rdx __asm__("rdx") = _3;
 	register long r10 __asm__("r10") = _4;
 
-	/* r10 may be clobbered but can't be in the clobbers list
-	   because the compiler won't use clobbered registers as inputs.
-	   So they're placed in the outputs list instead. */
 	__asm__ volatile
 	("syscall"
 
-		: "+r" (rax), "+r" (r10)
-		: "r" (rdi), "r" (rsi), "r" (rdx)
+		: "+r" (rax)
+		:  "r" (rdi), "r" (rsi), "r" (rdx), "r" (r10)
 		: "rcx", "r11", "cc", "memory");
 
 	return rax;
@@ -103,14 +117,12 @@ long linux_system_call_5(long number, long _1, long _2, long _3, long _4, long _
 	register long r10 __asm__("r10") = _4;
 	register long r8  __asm__("r8")  = _5;
 
-	/* r8 and r10 may be clobbered but can't be in the clobbers list
-	   because the compiler won't use clobbered registers as inputs.
-	   So they're placed in the outputs list instead. */
 	__asm__ volatile
 	("syscall"
 
-		: "+r" (rax), "+r" (r8), "+r" (r10)
-		: "r" (rdi), "r" (rsi), "r" (rdx)
+		: "+r" (rax)
+		:  "r" (rdi), "r" (rsi), "r" (rdx), "r" (r10),
+		   "r" (r8)
 		: "rcx", "r11", "cc", "memory");
 
 	return rax;
@@ -126,15 +138,12 @@ long linux_system_call_6(long number, long _1, long _2, long _3, long _4, long _
 	register long r8  __asm__("r8")  = _5;
 	register long r9  __asm__("r9")  = _6;
 
-	/* r8, r9 and r10 may be clobbered but can't be in the clobbers list
-	   because the compiler won't use clobbered registers as inputs.
-	   So they're placed in the outputs list instead. */
 	__asm__ volatile
 	("syscall"
 
-		: "+r" (rax),
-		  "+r" (r8), "+r" (r9), "+r" (r10)
-		: "r" (rdi), "r" (rsi), "r" (rdx)
+		: "+r" (rax)
+		:  "r" (rdi), "r" (rsi), "r" (rdx), "r" (r10),
+		   "r" (r8),  "r" (r9)
 		: "rcx", "r11", "cc", "memory");
 
 	return rax;
