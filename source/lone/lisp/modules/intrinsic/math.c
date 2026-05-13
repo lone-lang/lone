@@ -57,65 +57,6 @@ void lone_lisp_modules_intrinsic_math_initialize(struct lone_lisp *lone)
 			"is_negative", lone_lisp_primitive_math_is_negative, module, flags);
 }
 
-static struct lone_lisp_optional_value lone_lisp_primitive_integer_operation(struct lone_lisp *lone, struct lone_lisp_value arguments, char operation, struct lone_lisp_value accumulator)
-{
-	struct lone_lisp_value argument;
-	lone_lisp_integer x, y, result;
-
-	if (lone_lisp_is_nil(arguments)) {
-		/* wasn't given any arguments to operate on: (+), (-), (*) */
-		return (struct lone_lisp_optional_value) { .present = true, .value = accumulator };
-	}
-
-	do {
-		argument = lone_lisp_list_first(lone, arguments);
-
-		switch (lone_lisp_type_of(argument)) {
-		case LONE_LISP_TAG_INTEGER:
-			switch (lone_lisp_type_of(accumulator)) {
-			case LONE_LISP_TAG_INTEGER:
-				x = lone_lisp_integer_of(accumulator);
-				y = lone_lisp_integer_of(argument);
-
-				switch (operation) {
-				case '+':
-					if (__builtin_add_overflow(x, y, &result)) { goto overflow; }
-					break;
-				case '-':
-					if (__builtin_sub_overflow(x, y, &result)) { goto overflow; }
-					break;
-				case '*':
-					if (__builtin_mul_overflow(x, y, &result)) { goto overflow; }
-					break;
-				default:
-					/* invalid primitive integer operation */ linux_exit(-1);
-				}
-
-				if (result < LONE_LISP_INTEGER_MIN || result > LONE_LISP_INTEGER_MAX) {
-					goto overflow;
-				}
-
-				accumulator = lone_lisp_integer_create(result);
-				break;
-			default:
-				/* accumulator is not a number */ linux_exit(-1);
-			}
-			break;
-		default:
-			goto not_a_number;
-		}
-
-		arguments = lone_lisp_list_rest(lone, arguments);
-
-	} while (!lone_lisp_is_nil(arguments));
-
-	return (struct lone_lisp_optional_value) { .present = true, .value = accumulator };
-
-overflow:
-not_a_number:
-	return (struct lone_lisp_optional_value) { .present = false, .value = argument };
-}
-
 static struct lone_lisp_value error_tag_for(struct lone_lisp *lone, struct lone_lisp_value value)
 {
 	char *tag = lone_lisp_is_integer(lone, value)? "integer-overflow" : "type-error";
@@ -417,19 +358,23 @@ validate_dividend:
 			break;
 		} else {
 			/* (/ x a b c ...) = x / (a * b * c * ...) */
-			divisor_result = lone_lisp_primitive_integer_operation(lone, arguments, '*', lone_lisp_one());
-			if (!divisor_result.present) {
-				lone_lisp_machine_push_value(lone, machine, dividend);
-				return
-					lone_lisp_signal_emit(
-						lone,
-						machine,
-						1,
-						error_tag_for(lone, divisor_result.value),
-						divisor_result.value
-					);
+			divisor = lone_lisp_one();
+			while (!lone_lisp_is_nil(arguments)) {
+				divisor_result = combine_integers(lone, divisor, lone_lisp_list_first(lone, arguments), '*');
+				if (!divisor_result.present) {
+					lone_lisp_machine_push_value(lone, machine, dividend);
+					return
+						lone_lisp_signal_emit(
+							lone,
+							machine,
+							1,
+							error_tag_for(lone, divisor_result.value),
+							divisor_result.value
+						);
+				}
+				divisor = divisor_result.value;
+				arguments = lone_lisp_list_rest(lone, arguments);
 			}
-			divisor = divisor_result.value;
 			break;
 		}
 	default:
