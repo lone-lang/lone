@@ -70,7 +70,7 @@ destructure:
 				lone,
 				machine,
 				1,
-				lone_lisp_intern_c_string(lone, "arity-error"),
+				lone->symbols.tags.arity_error,
 				arguments
 			);
 	}
@@ -118,7 +118,7 @@ destructure:
 				lone,
 				machine,
 				2,
-				lone_lisp_intern_c_string(lone, "arity-error"),
+				lone->symbols.tags.arity_error,
 				arguments
 			);
 	}
@@ -131,7 +131,7 @@ check_type:
 				lone,
 				machine,
 				1,
-				lone_lisp_intern_c_string(lone, "type-error"),
+				lone->symbols.tags.type_error,
 				argument
 			);
 	}
@@ -227,7 +227,7 @@ destructure:
 				lone,
 				machine,
 				2,
-				lone_lisp_intern_c_string(lone, "arity-error"),
+				lone->symbols.tags.arity_error,
 				arguments
 			);
 	}
@@ -241,7 +241,7 @@ check_function:
 				lone,
 				machine,
 				3,
-				lone_lisp_intern_c_string(lone, "type-error"),
+				lone->symbols.tags.type_error,
 				function
 			);
 	}
@@ -261,7 +261,7 @@ check_list:
 				lone,
 				machine,
 				4,
-				lone_lisp_intern_c_string(lone, "type-error"),
+				lone->symbols.tags.type_error,
 				list
 			);
 	}
@@ -345,7 +345,7 @@ destructure:
 				lone,
 				machine,
 				2,
-				lone_lisp_intern_c_string(lone, "arity-error"),
+				lone->symbols.tags.arity_error,
 				arguments
 			);
 	}
@@ -360,7 +360,7 @@ check_function:
 				lone,
 				machine,
 				3,
-				lone_lisp_intern_c_string(lone, "type-error"),
+				lone->symbols.tags.type_error,
 				function
 			);
 	}
@@ -381,7 +381,7 @@ check_list:
 				lone,
 				machine,
 				4,
-				lone_lisp_intern_c_string(lone, "type-error"),
+				lone->symbols.tags.type_error,
 				list
 			);
 	}

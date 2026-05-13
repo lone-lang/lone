@@ -134,7 +134,7 @@ destructure:
 				lone,
 				machine,
 				3,
-				lone_lisp_intern_c_string(lone, "arity-error"),
+				lone->symbols.tags.arity_error,
 				arguments
 			);
 	}
@@ -147,7 +147,7 @@ validate_count_type:
 				lone,
 				machine,
 				2,
-				lone_lisp_intern_c_string(lone, "type-error"),
+				lone->symbols.tags.type_error,
 				count
 			);
 	}
@@ -160,7 +160,7 @@ validate_count_range:
 				lone,
 				machine,
 				1,
-				lone_lisp_intern_c_string(lone, "range-error"),
+				lone->symbols.tags.range_error,
 				count
 			);
 	}
@@ -208,7 +208,7 @@ destructure:
 				lone,
 				machine,
 				2,
-				lone_lisp_intern_c_string(lone, "arity-error"),
+				lone->symbols.tags.arity_error,
 				arguments
 			);
 	}
@@ -221,7 +221,7 @@ validate_bytes:
 				lone,
 				machine,
 				1,
-				lone_lisp_intern_c_string(lone, "type-error"),
+				lone->symbols.tags.type_error,
 				bytes
 			);
 	}
@@ -246,7 +246,7 @@ validate_bytes:
 				lone,                                                              \
 				machine,                                                           \
 				4,                                                                 \
-				lone_lisp_intern_c_string(lone, "integer-overflow"),               \
+				lone->symbols.tags.integer_overflow,                               \
 				offset                                                             \
 			);                                                                         \
 	}
@@ -321,7 +321,7 @@ destructure:                                                                    
 				lone,                                                              \
 				machine,                                                           \
 				1,                                                                 \
-				lone_lisp_intern_c_string(lone, "arity-error"),                    \
+				lone->symbols.tags.arity_error,                                    \
 				arguments                                                          \
 			);                                                                         \
 	}                                                                                          \
@@ -335,7 +335,7 @@ validate_bytes:                                                                 
 				lone,                                                              \
 				machine,                                                           \
 				2,                                                                 \
-				lone_lisp_intern_c_string(lone, "type-error"),                     \
+				lone->symbols.tags.type_error,                                     \
 				bytes                                                              \
 			);                                                                         \
 	}                                                                                          \
@@ -349,7 +349,7 @@ validate_offset_type:                                                           
 				lone,                                                              \
 				machine,                                                           \
 				3,                                                                 \
-				lone_lisp_intern_c_string(lone, "type-error"),                     \
+				lone->symbols.tags.type_error,                                     \
 				offset                                                             \
 			);                                                                         \
 	}                                                                                          \
@@ -363,7 +363,7 @@ validate_offset_range:                                                          
 				lone,                                                              \
 				machine,                                                           \
 				4,                                                                 \
-				lone_lisp_intern_c_string(lone, "index-error"),                    \
+				lone->symbols.tags.index_error,                                    \
 				offset                                                             \
 			);                                                                         \
 	}                                                                                          \
@@ -380,7 +380,7 @@ validate_offset_range:                                                          
 				lone,                                                              \
 				machine,                                                           \
 				4,                                                                 \
-				lone_lisp_intern_c_string(lone, "index-error"),                    \
+				lone->symbols.tags.index_error,                                    \
 				offset                                                             \
 			);                                                                         \
 	}                                                                                          \
@@ -468,7 +468,7 @@ destructure:                                                                    
 				lone,                                                              \
 				machine,                                                           \
 				1,                                                                 \
-				lone_lisp_intern_c_string(lone, "arity-error"),                    \
+				lone->symbols.tags.arity_error,                                    \
 				arguments                                                          \
 			);                                                                         \
 	}                                                                                          \
@@ -483,7 +483,7 @@ validate_bytes:                                                                 
 				lone,                                                              \
 				machine,                                                           \
 				2,                                                                 \
-				lone_lisp_intern_c_string(lone, "type-error"),                     \
+				lone->symbols.tags.type_error,                                     \
 				bytes                                                              \
 			);                                                                         \
 	}                                                                                          \
@@ -498,7 +498,7 @@ validate_offset_type:                                                           
 				lone,                                                              \
 				machine,                                                           \
 				3,                                                                 \
-				lone_lisp_intern_c_string(lone, "type-error"),                     \
+				lone->symbols.tags.type_error,                                     \
 				offset                                                             \
 			);                                                                         \
 	}                                                                                          \
@@ -513,7 +513,7 @@ validate_value_type:                                                            
 				lone,                                                              \
 				machine,                                                           \
 				4,                                                                 \
-				lone_lisp_intern_c_string(lone, "type-error"),                     \
+				lone->symbols.tags.type_error,                                     \
 				value                                                              \
 			);                                                                         \
 	}                                                                                          \
@@ -528,7 +528,7 @@ validate_offset_range:                                                          
 				lone,                                                              \
 				machine,                                                           \
 				5,                                                                 \
-				lone_lisp_intern_c_string(lone, "index-error"),                    \
+				lone->symbols.tags.index_error,                                    \
 				offset                                                             \
 			);                                                                         \
 	}                                                                                          \
@@ -550,7 +550,7 @@ validate_value_range:                                                           
 				lone,                                                              \
 				machine,                                                           \
 				6,                                                                 \
-				lone_lisp_intern_c_string(lone, "range-error"),                    \
+				lone->symbols.tags.range_error,                                    \
 				value                                                              \
 			);                                                                         \
 	}                                                                                          \
@@ -563,7 +563,7 @@ validate_value_range:                                                           
 				lone,                                                              \
 				machine,                                                           \
 				2,                                                                 \
-				lone_lisp_intern_c_string(lone, "frozen-error"),                   \
+				lone->symbols.tags.frozen_error,                                   \
 				bytes                                                              \
 			);                                                                         \
 	}                                                                                          \
@@ -582,7 +582,7 @@ validate_value_range:                                                           
 				lone,                                                              \
 				machine,                                                           \
 				5,                                                                 \
-				lone_lisp_intern_c_string(lone, "index-error"),                    \
+				lone->symbols.tags.index_error,                                    \
 				offset                                                             \
 			);                                                                         \
 	}                                                                                          \

@@ -59,8 +59,9 @@ void lone_lisp_modules_intrinsic_math_initialize(struct lone_lisp *lone)
 
 static struct lone_lisp_value error_tag_for(struct lone_lisp *lone, struct lone_lisp_value value)
 {
-	char *tag = lone_lisp_is_integer(lone, value)? "integer-overflow" : "type-error";
-	return lone_lisp_intern_c_string(lone, tag);
+	return lone_lisp_is_integer(lone, value)
+		? lone->symbols.tags.integer_overflow
+		: lone->symbols.tags.type_error;
 }
 
 /* Combine one integer into the accumulator.
@@ -212,7 +213,7 @@ validate_first:
 				lone,
 				machine,
 				1,
-				lone_lisp_intern_c_string(lone, "type-error"),
+				lone->symbols.tags.type_error,
 				argument
 			);
 	}
@@ -384,7 +385,7 @@ validate_dividend:
 				lone,
 				machine,
 				2,
-				lone_lisp_intern_c_string(lone, "type-error"),
+				lone->symbols.tags.type_error,
 				dividend
 			);
 	}
@@ -398,7 +399,7 @@ validate_divisor:
 				lone,
 				machine,
 				1,
-				lone_lisp_intern_c_string(lone, "type-error"),
+				lone->symbols.tags.type_error,
 				divisor
 			);
 	}
@@ -410,7 +411,7 @@ validate_divisor:
 				lone,
 				machine,
 				1,
-				lone_lisp_intern_c_string(lone, "division-by-zero"),
+				lone->symbols.tags.division_by_zero,
 				dividend
 			);
 	}
@@ -427,7 +428,7 @@ validate_divisor:
 				lone,
 				machine,
 				1,
-				lone_lisp_intern_c_string(lone, "integer-overflow"),
+				lone->symbols.tags.integer_overflow,
 				divisor
 			);
 	}

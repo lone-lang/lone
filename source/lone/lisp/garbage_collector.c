@@ -135,6 +135,15 @@ static void lone_lisp_mark_known_roots(struct lone_lisp *lone)
 	lone_lisp_mark_value(lone, lone->modules.top_level_environment);
 	lone_lisp_mark_value(lone, lone->modules.path);
 	lone_lisp_mark_value(lone, lone->modules.signal_primitive);
+
+	lone_lisp_mark_value(lone, lone->symbols.tags.type_error);
+	lone_lisp_mark_value(lone, lone->symbols.tags.arity_error);
+	lone_lisp_mark_value(lone, lone->symbols.tags.integer_overflow);
+	lone_lisp_mark_value(lone, lone->symbols.tags.division_by_zero);
+	lone_lisp_mark_value(lone, lone->symbols.tags.index_error);
+	lone_lisp_mark_value(lone, lone->symbols.tags.range_error);
+	lone_lisp_mark_value(lone, lone->symbols.tags.frozen_error);
+	lone_lisp_mark_value(lone, lone->symbols.tags.invalid_unicode);
 }
 
 static bool lone_points_within_range(void *pointer, void *start, void *end)
@@ -511,6 +520,15 @@ static void lone_lisp_rewrite_all_references(struct lone_lisp *lone, struct lone
 	lone->modules.top_level_environment = lone_lisp_forward_value(lone, lone->modules.top_level_environment);
 	lone->modules.path = lone_lisp_forward_value(lone, lone->modules.path);
 	lone->modules.signal_primitive = lone_lisp_forward_value(lone, lone->modules.signal_primitive);
+
+	lone->symbols.tags.type_error       = lone_lisp_forward_value(lone, lone->symbols.tags.type_error);
+	lone->symbols.tags.arity_error      = lone_lisp_forward_value(lone, lone->symbols.tags.arity_error);
+	lone->symbols.tags.integer_overflow = lone_lisp_forward_value(lone, lone->symbols.tags.integer_overflow);
+	lone->symbols.tags.division_by_zero = lone_lisp_forward_value(lone, lone->symbols.tags.division_by_zero);
+	lone->symbols.tags.index_error      = lone_lisp_forward_value(lone, lone->symbols.tags.index_error);
+	lone->symbols.tags.range_error      = lone_lisp_forward_value(lone, lone->symbols.tags.range_error);
+	lone->symbols.tags.frozen_error     = lone_lisp_forward_value(lone, lone->symbols.tags.frozen_error);
+	lone->symbols.tags.invalid_unicode  = lone_lisp_forward_value(lone, lone->symbols.tags.invalid_unicode);
 
 	/* lisp machine registers */
 	machine->value = lone_lisp_forward_value(lone, machine->value);

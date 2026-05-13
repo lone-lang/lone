@@ -909,6 +909,19 @@ struct lone_lisp {
 		struct lone_lisp_value path;
 		struct lone_lisp_value signal_primitive;
 	} modules;
+
+	struct {
+		struct {
+			struct lone_lisp_value type_error;
+			struct lone_lisp_value arity_error;
+			struct lone_lisp_value integer_overflow;
+			struct lone_lisp_value division_by_zero;
+			struct lone_lisp_value index_error;
+			struct lone_lisp_value range_error;
+			struct lone_lisp_value frozen_error;
+			struct lone_lisp_value invalid_unicode;
+		} tags;
+	} symbols;
 };
 
 #endif /* LONE_LISP_TYPES_HEADER */

@@ -1204,7 +1204,7 @@ LONE_LISP_PRIMITIVE(lone_signal)
 					lone,
 					machine,
 					1,
-					lone_lisp_intern_c_string(lone, "arity-error"),
+					lone->symbols.tags.arity_error,
 					arguments
 				);
 		}

@@ -138,7 +138,7 @@ LONE_LISP_PRIMITIVE(text_code_point_count)
 	validate:
 		if (!lone_lisp_is_text(lone, text)) {
 			return lone_lisp_signal_emit(lone, machine, 1,
-					lone_lisp_intern_c_string(lone, "type-error"), text);
+					lone->symbols.tags.type_error, text);
 		}
 
 		count = lone_lisp_integer_create(lone_lisp_text_code_point_count_of(lone, text));
@@ -169,7 +169,7 @@ LONE_LISP_PRIMITIVE(text_code_unit_count)
 	validate:
 		if (!lone_lisp_is_text(lone, text)) {
 			return lone_lisp_signal_emit(lone, machine, 1,
-					lone_lisp_intern_c_string(lone, "type-error"), text);
+					lone->symbols.tags.type_error, text);
 		}
 
 		bytes = lone_lisp_bytes_of(lone, &text);
@@ -206,14 +206,14 @@ LONE_LISP_PRIMITIVE(text_code_point_at)
 		if (!lone_lisp_is_text(lone, text)) {
 			lone_lisp_machine_push_value(lone, machine, index_value);
 			return lone_lisp_signal_emit(lone, machine, 1,
-					lone_lisp_intern_c_string(lone, "type-error"), text);
+					lone->symbols.tags.type_error, text);
 		}
 
 	validate_index:
 		if (!lone_lisp_is_integer(lone, index_value)) {
 			lone_lisp_machine_push_value(lone, machine, text);
 			return lone_lisp_signal_emit(lone, machine, 2,
-					lone_lisp_intern_c_string(lone, "type-error"), index_value);
+					lone->symbols.tags.type_error, index_value);
 		}
 
 		index = lone_lisp_integer_of(index_value);
@@ -221,14 +221,14 @@ LONE_LISP_PRIMITIVE(text_code_point_at)
 		if (index < 0) {
 			lone_lisp_machine_push_value(lone, machine, text);
 			return lone_lisp_signal_emit(lone, machine, 2,
-					lone_lisp_intern_c_string(lone, "index-error"), index_value);
+					lone->symbols.tags.index_error, index_value);
 		}
 
 		code_point_count = lone_lisp_text_code_point_count_of(lone, text);
 		if ((size_t) index >= code_point_count) {
 			lone_lisp_machine_push_value(lone, machine, text);
 			return lone_lisp_signal_emit(lone, machine, 2,
-					lone_lisp_intern_c_string(lone, "index-error"), index_value);
+					lone->symbols.tags.index_error, index_value);
 		}
 
 		bytes = lone_lisp_bytes_of(lone, &text);
@@ -276,14 +276,14 @@ LONE_LISP_PRIMITIVE(text_from_code_point)
 	validate:
 		if (!lone_lisp_is_integer(lone, integer)) {
 			return lone_lisp_signal_emit(lone, machine, 1,
-					lone_lisp_intern_c_string(lone, "type-error"), integer);
+					lone->symbols.tags.type_error, integer);
 		}
 
 		code_point = lone_lisp_integer_of(integer);
 
 		if (code_point < 0 || !lone_unicode_is_valid_code_point((lone_u32) code_point)) {
 			return lone_lisp_signal_emit(lone, machine, 1,
-					lone_lisp_intern_c_string(lone, "invalid-unicode"), integer);
+					lone->symbols.tags.invalid_unicode, integer);
 		}
 
 		encoded = lone_unicode_utf8_encode((lone_u32) code_point);
@@ -340,7 +340,7 @@ LONE_LISP_PRIMITIVE(text_slice)
 			lone_lisp_machine_push_value(lone, machine, start_value);
 			lone_lisp_machine_push_value(lone, machine, has_end ? end_value : lone_lisp_nil());
 			return lone_lisp_signal_emit(lone, machine, 1,
-					lone_lisp_intern_c_string(lone, "type-error"), text);
+					lone->symbols.tags.type_error, text);
 		}
 
 	validate_start:
@@ -348,7 +348,7 @@ LONE_LISP_PRIMITIVE(text_slice)
 			lone_lisp_machine_push_value(lone, machine, text);
 			lone_lisp_machine_push_value(lone, machine, has_end ? end_value : lone_lisp_nil());
 			return lone_lisp_signal_emit(lone, machine, 2,
-					lone_lisp_intern_c_string(lone, "type-error"), start_value);
+					lone->symbols.tags.type_error, start_value);
 		}
 
 		start_index = lone_lisp_integer_of(start_value);
@@ -360,7 +360,7 @@ LONE_LISP_PRIMITIVE(text_slice)
 				lone_lisp_machine_push_value(lone, machine, text);
 				lone_lisp_machine_push_value(lone, machine, start_value);
 				return lone_lisp_signal_emit(lone, machine, 3,
-						lone_lisp_intern_c_string(lone, "type-error"), end_value);
+						lone->symbols.tags.type_error, end_value);
 			}
 
 			end_index = lone_lisp_integer_of(end_value);
@@ -372,14 +372,14 @@ LONE_LISP_PRIMITIVE(text_slice)
 			lone_lisp_machine_push_value(lone, machine, text);
 			lone_lisp_machine_push_value(lone, machine, has_end ? end_value : lone_lisp_nil());
 			return lone_lisp_signal_emit(lone, machine, 2,
-					lone_lisp_intern_c_string(lone, "index-error"), start_value);
+					lone->symbols.tags.index_error, start_value);
 		}
 
 		if (end_index < 0 || (size_t) end_index > code_point_count) {
 			lone_lisp_machine_push_value(lone, machine, text);
 			lone_lisp_machine_push_value(lone, machine, start_value);
 			return lone_lisp_signal_emit(lone, machine, 3,
-					lone_lisp_intern_c_string(lone, "index-error"),
+					lone->symbols.tags.index_error,
 					lone_lisp_integer_create(end_index));
 		}
 
@@ -387,7 +387,7 @@ LONE_LISP_PRIMITIVE(text_slice)
 			lone_lisp_machine_push_value(lone, machine, text);
 			lone_lisp_machine_push_value(lone, machine, start_value);
 			return lone_lisp_signal_emit(lone, machine, 3,
-					lone_lisp_intern_c_string(lone, "index-error"),
+					lone->symbols.tags.index_error,
 					lone_lisp_integer_create(end_index));
 		}
 
