@@ -241,6 +241,8 @@ static void lone_lisp_kill_all_unmarked_values(struct lone_lisp *lone)
 
 			value = &lone->heap.values[i];
 
+			/* count + 1 because lone always allocates an extra trailing NUL byte */
+
 			switch (value->type) {
 			case LONE_LISP_TAG_BYTES:
 				if (value->should_deallocate_bytes) {
