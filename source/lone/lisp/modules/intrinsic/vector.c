@@ -179,6 +179,9 @@ LONE_LISP_PRIMITIVE(vector_each)
 		} else {
 			break;
 		}
+
+	default:
+		linux_exit(-1);
 	}
 
 	lone_lisp_machine_push_value(lone, machine, lone_lisp_nil());
