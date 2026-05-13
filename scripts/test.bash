@@ -208,7 +208,7 @@ run-test() {
 find-tests() {
   local test_suite="${1}"
 
-  find "${test_suite}" -type d -links 2 -print0
+  find "${test_suite}" -name input -type f -printf '%h\0'
 }
 
 run-all-tests() {
