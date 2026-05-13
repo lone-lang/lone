@@ -49,6 +49,7 @@ void lone_lisp_machine_push_interceptor_delimiter(struct lone_lisp *lone, struct
 void lone_lisp_machine_pop_interceptor_delimiter(struct lone_lisp *lone, struct lone_lisp_machine *machine);
 
 bool lone_lisp_machine_top_is_tail_return(struct lone_lisp_machine *machine);
+bool lone_lisp_machine_is_tail_application(struct lone_lisp_machine *machine);
 
 bool lone_lisp_machine_unwind_to_function_delimiter(struct lone_lisp *lone, struct lone_lisp_machine *machine);
 

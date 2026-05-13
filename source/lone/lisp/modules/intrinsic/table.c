@@ -90,8 +90,10 @@ LONE_LISP_PRIMITIVE(table_delete)
 
 LONE_LISP_PRIMITIVE(table_each)
 {
-	struct lone_lisp_value arguments, table, function;
+	struct lone_lisp_value arguments, table, function, key, value;
+	struct lone_lisp_heap_value *heap_value;
 	struct lone_lisp_table_entry *entry;
+	struct lone_lisp_shape *shape;
 	lone_lisp_integer i;
 
 	switch (step) {
@@ -116,15 +118,28 @@ LONE_LISP_PRIMITIVE(table_each)
 
 	advance:
 
-		while (   i < (lone_lisp_integer) lone_lisp_heap_value_of(lone, table)->as.table.used
-		       && lone_lisp_is_tombstone(lone_lisp_heap_value_of(lone, table)->as.table.entries[i].key)) { ++i; }
+		heap_value = lone_lisp_heap_value_of(lone, table);
 
-		if (i >= (lone_lisp_integer) lone_lisp_heap_value_of(lone, table)->as.table.used) { break; }
+		if (heap_value->shaped) {
+			shape = &lone_lisp_heap_value_of(lone, heap_value->as.table.shaped.shape)->as.shape;
 
-		entry = &lone_lisp_heap_value_of(lone, table)->as.table.entries[i];
+			if (i >= (lone_lisp_integer) shape->count) { break; }
+
+			key   = shape->keys[i];
+			value = heap_value->as.table.shaped.values[i];
+		} else {
+			while (   i < (lone_lisp_integer) heap_value->as.table.hash.used
+			       && lone_lisp_is_tombstone(heap_value->as.table.hash.entries[i].key)) { ++i; }
+
+			if (i >= (lone_lisp_integer) heap_value->as.table.hash.used) { break; }
+
+			entry = &heap_value->as.table.hash.entries[i];
+			key   = entry->key;
+			value = entry->value;
+		}
 
 		machine->applicable = function;
-		machine->list = lone_lisp_list_build(lone, 2, &entry->key, &entry->value);
+		machine->list = lone_lisp_list_build(lone, 2, &key, &value);
 		machine->step = LONE_LISP_MACHINE_STEP_APPLY;
 
 		lone_lisp_machine_push_integer(lone, machine, i);

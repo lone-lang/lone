@@ -141,6 +141,7 @@ retry:
 	value->frozen                  = false;
 	value->hash_cached             = false;
 	value->code_point_count_cached = false;
+	value->shaped                  = false;
 
 	return value;
 }

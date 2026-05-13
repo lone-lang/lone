@@ -23,6 +23,51 @@ static unsigned long lone_lisp_count_arguments(struct lone_lisp *lone,
 	return count;
 }
 
+static struct lone_lisp_value lone_lisp_shape_for_arguments(struct lone_lisp *lone,
+		struct lone_lisp_value arguments,
+		unsigned long *count_out, bool *variadic_out)
+{
+	struct lone_lisp_value keys[LONE_LISP_SHAPE_KEYS_MAX], current;
+	bool variadic, can_shape;
+	size_t count;
+
+	count     = 0;
+	variadic  = false;
+	can_shape = true;
+
+	while (!lone_lisp_is_nil(arguments)) {
+		current = lone_lisp_list_first(lone, arguments);
+		++count;
+
+		if (lone_lisp_is_list(lone, current)) {
+			variadic = true;
+			break;
+		}
+
+		if (count > sizeof(keys) / sizeof(keys[0])) {
+			can_shape = false;
+		} else {
+			keys[count - 1] = current;
+		}
+
+		arguments = lone_lisp_list_rest(lone, arguments);
+	}
+
+	*count_out    = count;
+	*variadic_out = variadic;
+
+	if (variadic || count == 0 || !can_shape) {
+		return lone_lisp_nil();
+	}
+
+	return lone_lisp_shape_create(lone, count, keys);
+}
+
+bool lone_lisp_function_is_variadic(struct lone_lisp_value function)
+{
+	return (function.tagged & LONE_LISP_METADATA_VARIADIC) != 0;
+}
+
 unsigned long lone_lisp_function_arity(struct lone_lisp *lone, struct lone_lisp_value function)
 {
 	unsigned long arity;
@@ -45,14 +90,25 @@ struct lone_lisp_value lone_lisp_function_create(struct lone_lisp *lone,
 		struct lone_lisp_value arguments, struct lone_lisp_value code,
 		struct lone_lisp_value environment, struct lone_lisp_function_flags flags)
 {
-	struct lone_lisp_heap_value *actual = lone_lisp_heap_allocate_value(lone);
+	struct lone_lisp_heap_value *actual;
 	struct lone_lisp_value value;
+	struct lone_lisp_value shape;
 	unsigned long arity;
+	bool variadic;
 
-	actual->as.function.arguments = arguments;
-	actual->as.function.code = code;
+	/* create the shape before allocating the function heap value
+	   shape_for_arguments transitively calls heap_allocate_value
+	   which may trigger garbage collection and invalidate pointers */
+	shape = lone_lisp_shape_for_arguments(lone, arguments, &arity, &variadic);
+
+	actual = lone_lisp_heap_allocate_value(lone);
+
+	actual->as.function.arguments   = arguments;
+	actual->as.function.code        = code;
 	actual->as.function.environment = environment;
-	actual->as.function.flags = flags;
+	actual->as.function.flags       = flags;
+	actual->as.function.shape       = shape;
+
 	value = lone_lisp_value_from_heap_value(lone, actual, LONE_LISP_TAG_FUNCTION);
 
 	/* Encode FEXPR flags in the metadata field at bits 8-9.
@@ -63,11 +119,14 @@ struct lone_lisp_value lone_lisp_function_create(struct lone_lisp *lone,
 	if (flags.evaluate_arguments) { value.tagged |= LONE_LISP_METADATA_EVALUATE_ARGUMENTS; }
 	if (flags.evaluate_result)    { value.tagged |= LONE_LISP_METADATA_EVALUATE_RESULT; }
 
+	/* encode variadic flag in metadata bit 14
+	   allows checking without heap dereference */
+	if (variadic) { value.tagged |= LONE_LISP_METADATA_VARIADIC; }
+
 	/* Encode function arity in metadata bits 10-13.
 	 * This allows determining the arity of most functions
 	 * without any heap access.
 	 */
-	arity = lone_lisp_count_arguments(lone, arguments);
 	if (arity > LONE_LISP_METADATA_ARITY_OVERFLOW) {
 		arity = LONE_LISP_METADATA_ARITY_OVERFLOW;
 	}

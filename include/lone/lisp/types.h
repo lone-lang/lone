@@ -72,6 +72,7 @@ enum lone_lisp_tag {
 	LONE_LISP_TAG_SYMBOL       = 0x10,
 	LONE_LISP_TAG_TEXT         = 0x12,
 	LONE_LISP_TAG_BYTES        = 0x14,
+	LONE_LISP_TAG_SHAPE        = 0x16,
 
 	/* non-heap value tags: bit 0 = 1 */
 	LONE_LISP_TAG_INTEGER = 0x01,
@@ -211,6 +212,7 @@ struct lone_lisp_function {
 	struct lone_lisp_value arguments;         /* the bindings */
 	struct lone_lisp_value code;              /* the lambda */
 	struct lone_lisp_value environment;       /* the closure */
+	struct lone_lisp_value shape;             /* environment shape for bind_arguments */
 	struct lone_lisp_function_flags flags;    /* how to evaluate & apply */
 };
 
@@ -287,24 +289,25 @@ static_assert(offsetof(struct lone_lisp_list, hash) == offsetof(struct lone_lisp
 
 /* ╭────────────────────────────────────────────────────────────────────────╮
    │                                                                        │
-   │    Lone tables are openly addressed, linearly probed hash tables.      │
+   │    Lone tables are openly addressed, linearly probed hash tables       │
+   │    that can optionally be shaped.                                      │
    │                                                                        │
-   │    Entries maintain insertion order in a separate array.               │
+   │    Hash tables maintain entries in insertion order.                    │
    │    Hashes index into a sparse array of indexes                         │
    │    that point into the ordered entries array.                          │
+   │    Deletion uses backward-shift and tombstones.                        │
+   │    Load factor is kept at most 0.7.                                    │
    │                                                                        │
-   │    Tables strive to maintain a load factor of at most 0.7:             │
-   │    they will be rehashed once they're above 70% capacity.              │
+   │    Shaped tables store values in a flat array                          │
+   │    indexed by position in a shape descriptor.                          │
+   │    Lookup is a linear scan of the shape's keys.                        │
    │                                                                        │
-   │    Deletion uses backward-shift on the index array                     │
-   │    to keep probe chains clean, then tombstones the entry.              │
-   │    Tombstones are compacted during resize.                             │
+   │    Tables may optionally inherit from a prototype table:               │
+   │    missing keys are looked up in the prototype chain.                  │
    │                                                                        │
-   │    Tables are able to inherit from another table:                      │
-   │    missing keys are also looked up in the parent table.                │
-   │    This is currently used to implement nested environments             │
-   │    but will also serve as a prototype-based object system              │
-   │    as in Javascript and Self.                                          │
+   │    Lone shapes describe the fixed set of keys of a table               │
+   │    and the position of each key in a flat values array.                │
+   │    They transform hash probes into direct array indexing.              │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
 
@@ -316,10 +319,26 @@ struct lone_lisp_table_entry {
 struct lone_lisp_table {
 	size_t count;
 	size_t capacity;
-	size_t used;
-	size_t *indexes;
-	struct lone_lisp_table_entry *entries;
+
+	union {
+		struct {
+			size_t used;
+			size_t *indexes;
+			struct lone_lisp_table_entry *entries;
+		} hash;
+
+		struct {
+			struct lone_lisp_value shape;
+			struct lone_lisp_value *values;
+		} shaped;
+	};
+
 	struct lone_lisp_value prototype;
+};
+
+struct lone_lisp_shape {
+	size_t count;
+	struct lone_lisp_value *keys;
 };
 
 struct lone_lisp_heap_value {
@@ -328,6 +347,7 @@ struct lone_lisp_heap_value {
 		bool frozen: 1;
 		bool hash_cached: 1;
 		bool code_point_count_cached: 1;
+		bool shaped: 1;
 	};
 
 	enum lone_lisp_tag type; /* tag byte, set at allocation for GC sweep */
@@ -341,6 +361,7 @@ struct lone_lisp_heap_value {
 		struct lone_lisp_list list;
 		struct lone_lisp_vector vector;
 		struct lone_lisp_table table;
+		struct lone_lisp_shape shape;
 		struct lone_lisp_symbol symbol;
 		struct lone_lisp_text text;
 		struct lone_lisp_bytes bytes;
@@ -513,6 +534,7 @@ struct lone_lisp_value lone_lisp_function_create(struct lone_lisp *lone,
 		struct lone_lisp_value environment, struct lone_lisp_function_flags flags);
 
 unsigned long lone_lisp_function_arity(struct lone_lisp *lone, struct lone_lisp_value function);
+bool lone_lisp_function_is_variadic(struct lone_lisp_value function);
 
 /* ╭────────────────────────────────────────────────────────────────────────╮
    │                                                                        │
@@ -643,6 +665,9 @@ struct lone_lisp_value lone_lisp_vector_build(struct lone_lisp *lone, size_t cou
 struct lone_lisp_value lone_lisp_table_create(struct lone_lisp *lone,
 		size_t capacity, struct lone_lisp_value prototype);
 
+struct lone_lisp_value lone_lisp_table_create_from_shape(struct lone_lisp *lone,
+		struct lone_lisp_value shape, struct lone_lisp_value prototype);
+
 struct lone_lisp_value lone_lisp_table_get(struct lone_lisp *lone, struct lone_lisp_value table,
 		struct lone_lisp_value key);
 
@@ -660,12 +685,16 @@ struct lone_lisp_value lone_lisp_table_get_by_bytes(struct lone_lisp *lone,
 		struct lone_lisp_value table, struct lone_bytes bytes);
 
 size_t lone_lisp_table_count(struct lone_lisp *lone, struct lone_lisp_value table);
-struct lone_lisp_table_entry *lone_lisp_table_next_entry(struct lone_lisp *lone,
-		struct lone_lisp_value table, size_t *i);
+bool lone_lisp_table_next_entry(struct lone_lisp *lone,
+		struct lone_lisp_value table, size_t *i,
+		struct lone_lisp_table_entry *entry);
+
+struct lone_lisp_value lone_lisp_shape_create(struct lone_lisp *lone,
+		size_t count, struct lone_lisp_value *keys);
 
 #define LONE_LISP_TABLE_FOR_EACH(__lone, __entry, __table, __i)                                    \
 	for ((__i) = 0;                                                                            \
-	     ((__entry) = lone_lisp_table_next_entry((__lone), (__table), &(__i)));                \
+	     lone_lisp_table_next_entry((__lone), (__table), &(__i), &(__entry));                  \
 	     ++(__i))
 
 /* ╭────────────────────────────────────────────────────────────────────────╮

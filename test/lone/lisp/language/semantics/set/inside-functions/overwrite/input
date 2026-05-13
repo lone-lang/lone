@@ -1,0 +1,3 @@
+(import (lone lambda set print) (math +))
+(set f (lambda (x) (set x (+ x 100)) x))
+(print (f 10))

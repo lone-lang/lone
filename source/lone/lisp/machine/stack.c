@@ -320,12 +320,26 @@ void lone_lisp_machine_restore_primitive_step(struct lone_lisp *lone, struct lon
 	machine->primitive.step = lone_lisp_machine_pop_primitive_step(lone, machine);
 }
 
+static bool lone_lisp_machine_is_step_at(struct lone_lisp_machine *machine,
+		int offset, enum lone_lisp_machine_step step)
+{
+	struct lone_lisp_machine_stack_frame *frame;
+
+	frame = machine->stack.top + offset;
+	if (frame < machine->stack.base || frame >= machine->stack.top) { return false; }
+
+	return    (frame->tagged  & LONE_LISP_TAG_MASK)   == LONE_LISP_TAG_STEP
+	       && (frame->tagged >> LONE_LISP_DATA_SHIFT) == step;
+}
+
 bool lone_lisp_machine_top_is_tail_return(struct lone_lisp_machine *machine)
 {
-	if (!lone_lisp_machine_can_pop(machine)) { return false; }
+	return lone_lisp_machine_is_step_at(machine, -1, LONE_LISP_MACHINE_STEP_TAIL_RETURN);
+}
 
-	return    (machine->stack.top[-1].tagged  & LONE_LISP_TAG_MASK)   == LONE_LISP_TAG_STEP
-	       && (machine->stack.top[-1].tagged >> LONE_LISP_DATA_SHIFT) == LONE_LISP_MACHINE_STEP_TAIL_RETURN;
+bool lone_lisp_machine_is_tail_application(struct lone_lisp_machine *machine)
+{
+	return lone_lisp_machine_is_step_at(machine, -2, LONE_LISP_MACHINE_STEP_TAIL_RETURN);
 }
 
 bool lone_lisp_machine_unwind_to_function_delimiter(struct lone_lisp *lone, struct lone_lisp_machine *machine)

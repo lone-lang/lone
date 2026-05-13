@@ -49,6 +49,7 @@ static void lone_lisp_mark_heap_value(struct lone_lisp *lone, struct lone_lisp_h
 		lone_lisp_mark_value(lone, value->as.function.arguments);
 		lone_lisp_mark_value(lone, value->as.function.code);
 		lone_lisp_mark_value(lone, value->as.function.environment);
+		lone_lisp_mark_value(lone, value->as.function.shape);
 		break;
 	case LONE_LISP_TAG_PRIMITIVE:
 		lone_lisp_mark_value(lone, value->as.primitive.name);
@@ -87,10 +88,22 @@ static void lone_lisp_mark_heap_value(struct lone_lisp *lone, struct lone_lisp_h
 		break;
 	case LONE_LISP_TAG_TABLE:
 		lone_lisp_mark_value(lone, value->as.table.prototype);
-		for (size_t i = 0; i < value->as.table.used; ++i) {
-			if (lone_lisp_is_tombstone(value->as.table.entries[i].key)) { continue; }
-			lone_lisp_mark_value(lone, value->as.table.entries[i].key);
-			lone_lisp_mark_value(lone, value->as.table.entries[i].value);
+		if (value->shaped) {
+			lone_lisp_mark_value(lone, value->as.table.shaped.shape);
+			for (size_t i = 0; i < value->as.table.count; ++i) {
+				lone_lisp_mark_value(lone, value->as.table.shaped.values[i]);
+			}
+		} else {
+			for (size_t i = 0; i < value->as.table.hash.used; ++i) {
+				if (lone_lisp_is_tombstone(value->as.table.hash.entries[i].key)) { continue; }
+				lone_lisp_mark_value(lone, value->as.table.hash.entries[i].key);
+				lone_lisp_mark_value(lone, value->as.table.hash.entries[i].value);
+			}
+		}
+		break;
+	case LONE_LISP_TAG_SHAPE:
+		for (size_t i = 0; i < value->as.shape.count; ++i) {
+			lone_lisp_mark_value(lone, value->as.shape.keys[i]);
 		}
 		break;
 	case LONE_LISP_TAG_SYMBOL:
@@ -265,15 +278,30 @@ static void lone_lisp_kill_all_unmarked_values(struct lone_lisp *lone)
 				);
 				break;
 			case LONE_LISP_TAG_TABLE:
+				if (value->shaped) {
+					lone_memory_deallocate(
+						lone->system, value->as.table.shaped.values,
+						value->as.table.count,
+						sizeof(*value->as.table.shaped.values), alignof(*value->as.table.shaped.values)
+					);
+				} else {
+					lone_memory_deallocate(
+						lone->system, value->as.table.hash.indexes,
+						value->as.table.capacity,
+						sizeof(*value->as.table.hash.indexes), alignof(*value->as.table.hash.indexes)
+					);
+					lone_memory_deallocate(
+						lone->system, value->as.table.hash.entries,
+						value->as.table.capacity,
+						sizeof(*value->as.table.hash.entries), alignof(*value->as.table.hash.entries)
+					);
+				}
+				break;
+			case LONE_LISP_TAG_SHAPE:
 				lone_memory_deallocate(
-					lone->system, value->as.table.indexes,
-					value->as.table.capacity,
-					sizeof(*value->as.table.indexes), alignof(*value->as.table.indexes)
-				);
-				lone_memory_deallocate(
-					lone->system, value->as.table.entries,
-					value->as.table.capacity,
-					sizeof(*value->as.table.entries), alignof(*value->as.table.entries)
+					lone->system, value->as.shape.keys,
+					value->as.shape.count,
+					sizeof(*value->as.shape.keys), alignof(*value->as.shape.keys)
 				);
 				break;
 			case LONE_LISP_TAG_CONTINUATION:
@@ -404,6 +432,7 @@ static void lone_lisp_rewrite_heap_value_interior(struct lone_lisp *lone, struct
 		value->as.function.arguments = lone_lisp_forward_value(lone, value->as.function.arguments);
 		value->as.function.code = lone_lisp_forward_value(lone, value->as.function.code);
 		value->as.function.environment = lone_lisp_forward_value(lone, value->as.function.environment);
+		value->as.function.shape = lone_lisp_forward_value(lone, value->as.function.shape);
 		break;
 	case LONE_LISP_TAG_PRIMITIVE:
 		value->as.primitive.name = lone_lisp_forward_value(lone, value->as.primitive.name);
@@ -443,10 +472,22 @@ static void lone_lisp_rewrite_heap_value_interior(struct lone_lisp *lone, struct
 		break;
 	case LONE_LISP_TAG_TABLE:
 		value->as.table.prototype = lone_lisp_forward_value(lone, value->as.table.prototype);
-		for (size_t i = 0; i < value->as.table.used; ++i) {
-			if (lone_lisp_is_tombstone(value->as.table.entries[i].key)) { continue; }
-			value->as.table.entries[i].key = lone_lisp_forward_value(lone, value->as.table.entries[i].key);
-			value->as.table.entries[i].value = lone_lisp_forward_value(lone, value->as.table.entries[i].value);
+		if (value->shaped) {
+			value->as.table.shaped.shape = lone_lisp_forward_value(lone, value->as.table.shaped.shape);
+			for (size_t i = 0; i < value->as.table.count; ++i) {
+				value->as.table.shaped.values[i] = lone_lisp_forward_value(lone, value->as.table.shaped.values[i]);
+			}
+		} else {
+			for (size_t i = 0; i < value->as.table.hash.used; ++i) {
+				if (lone_lisp_is_tombstone(value->as.table.hash.entries[i].key)) { continue; }
+				value->as.table.hash.entries[i].key = lone_lisp_forward_value(lone, value->as.table.hash.entries[i].key);
+				value->as.table.hash.entries[i].value = lone_lisp_forward_value(lone, value->as.table.hash.entries[i].value);
+			}
+		}
+		break;
+	case LONE_LISP_TAG_SHAPE:
+		for (size_t i = 0; i < value->as.shape.count; ++i) {
+			value->as.shape.keys[i] = lone_lisp_forward_value(lone, value->as.shape.keys[i]);
 		}
 		break;
 	case LONE_LISP_TAG_SYMBOL:

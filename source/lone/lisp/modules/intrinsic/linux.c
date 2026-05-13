@@ -340,6 +340,7 @@ static inline long lone_lisp_value_to_linux_system_call_number(struct lone_lisp 
 	case LONE_LISP_TAG_LIST:
 	case LONE_LISP_TAG_VECTOR:
 	case LONE_LISP_TAG_TABLE:
+	case LONE_LISP_TAG_SHAPE:
 	default:
 		linux_exit(-1);
 	}
@@ -376,6 +377,7 @@ static inline long lone_lisp_value_to_linux_system_call_argument(struct lone_lis
 	case LONE_LISP_TAG_LIST:
 	case LONE_LISP_TAG_VECTOR:
 	case LONE_LISP_TAG_TABLE:
+	case LONE_LISP_TAG_SHAPE:
 	case LONE_LISP_TAG_MODULE:
 	default:
 		linux_exit(-1);

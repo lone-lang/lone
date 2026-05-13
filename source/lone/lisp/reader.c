@@ -950,6 +950,7 @@ static struct lone_lisp_value lone_lisp_parse(struct lone_lisp *lone,
 	case LONE_LISP_TAG_LIST:
 	case LONE_LISP_TAG_VECTOR:
 	case LONE_LISP_TAG_TABLE:
+	case LONE_LISP_TAG_SHAPE:
 		/* unexpected value type from lexer */
 		goto error;
 	}

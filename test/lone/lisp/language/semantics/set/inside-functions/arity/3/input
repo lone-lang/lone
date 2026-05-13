@@ -1,0 +1,3 @@
+(import (lone lambda set print) (math +))
+(set f (lambda (a b c) (set sum (+ (+ a b) c)) sum))
+(print (f 1 2 3))
