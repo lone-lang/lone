@@ -80,7 +80,10 @@ destructure:
 	return 0;
 }
 
-LONE_LISP_PRIMITIVE(list_first)
+typedef struct lone_lisp_value (*lone_lisp_list_operation)(struct lone_lisp *, struct lone_lisp_value);
+
+static long list_unary(struct lone_lisp *lone, struct lone_lisp_machine *machine,
+		long step, lone_lisp_list_operation operation)
 {
 	struct lone_lisp_value arguments, argument;
 
@@ -104,10 +107,8 @@ LONE_LISP_PRIMITIVE(list_first)
 		goto destructure;
 
 	default:
-		break;
+		linux_exit(-1);
 	}
-
-	linux_exit(-1);
 
 destructure:
 
@@ -135,129 +136,24 @@ check_type:
 			);
 	}
 
-	lone_lisp_machine_push_value(lone, machine, lone_lisp_list_first(lone, argument));
+	lone_lisp_machine_push_value(lone, machine, operation(lone, argument));
 
 	return 0;
+}
+
+LONE_LISP_PRIMITIVE(list_first)
+{
+	return list_unary(lone, machine, step, lone_lisp_list_first);
 }
 
 LONE_LISP_PRIMITIVE(list_rest)
 {
-	struct lone_lisp_value arguments, argument;
-
-	switch (step) {
-	case 0:
-
-		arguments = lone_lisp_machine_pop_value(lone, machine);
-
-		goto destructure;
-
-	case 1: /* resumed with a replacement argument from type-error */
-
-		argument = machine->value;
-
-		goto check_type;
-
-	case 2: /* resumed with a replacement arguments list from arity-error */
-
-		arguments = machine->value;
-
-		goto destructure;
-
-	default:
-		break;
-	}
-
-	linux_exit(-1);
-
-destructure:
-
-	if (lone_lisp_list_destructure(lone, arguments, 1, &argument)) {
-		return
-			lone_lisp_signal_emit(
-				lone,
-				machine,
-				2,
-				lone_lisp_intern_c_string(lone, "arity-error"),
-				arguments
-			);
-	}
-
-check_type:
-
-	if (!lone_lisp_is_nil(argument) && !lone_lisp_is_list(lone, argument)) {
-		return
-			lone_lisp_signal_emit(
-				lone,
-				machine,
-				1,
-				lone_lisp_intern_c_string(lone, "type-error"),
-				argument
-			);
-	}
-
-	lone_lisp_machine_push_value(lone, machine, lone_lisp_list_rest(lone, argument));
-
-	return 0;
+	return list_unary(lone, machine, step, lone_lisp_list_rest);
 }
 
 LONE_LISP_PRIMITIVE(list_flatten)
 {
-	struct lone_lisp_value arguments, argument;
-
-	switch (step) {
-	case 0:
-
-		arguments = lone_lisp_machine_pop_value(lone, machine);
-
-		goto destructure;
-
-	case 1: /* resumed with a replacement argument from type-error */
-
-		argument = machine->value;
-
-		goto check_type;
-
-	case 2: /* resumed with a replacement arguments list from arity-error */
-
-		arguments = machine->value;
-
-		goto destructure;
-
-	default:
-		break;
-	}
-
-	linux_exit(-1);
-
-destructure:
-
-	if (lone_lisp_list_destructure(lone, arguments, 1, &argument)) {
-		return
-			lone_lisp_signal_emit(
-				lone,
-				machine,
-				2,
-				lone_lisp_intern_c_string(lone, "arity-error"),
-				arguments
-			);
-	}
-
-check_type:
-
-	if (!lone_lisp_is_nil(argument) && !lone_lisp_is_list(lone, argument)) {
-		return
-			lone_lisp_signal_emit(
-				lone,
-				machine,
-				1,
-				lone_lisp_intern_c_string(lone, "type-error"),
-				argument
-			);
-	}
-
-	lone_lisp_machine_push_value(lone, machine, lone_lisp_list_flatten(lone, argument));
-
-	return 0;
+	return list_unary(lone, machine, step, lone_lisp_list_flatten);
 }
 
 LONE_LISP_PRIMITIVE(list_map)
