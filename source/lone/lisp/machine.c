@@ -33,43 +33,46 @@ static bool should_evaluate_operands(struct lone_lisp *lone,
 	}
 }
 
-static struct lone_lisp_value apply_to_collection(struct lone_lisp *lone,
+static struct lone_lisp_optional_value apply_to_collection(struct lone_lisp *lone,
 		struct lone_lisp_value collection, struct lone_lisp_value arguments,
 		struct lone_lisp_value (*get)(struct lone_lisp *, struct lone_lisp_value, struct lone_lisp_value),
 		void (*set)(struct lone_lisp *, struct lone_lisp_value, struct lone_lisp_value, struct lone_lisp_value))
 {
 	struct lone_lisp_value key, value;
 
-	if (lone_lisp_is_nil(arguments)) { /* need at least the key: (collection) */ linux_exit(-1); }
+	/* need at least the key: (collection) */
+	if (lone_lisp_is_nil(arguments)) {
+		return (struct lone_lisp_optional_value) { .present = false, .value = arguments };
+	}
 
 	key = lone_lisp_list_first(lone, arguments);
 	arguments = lone_lisp_list_rest(lone, arguments);
 
+	/* collection get: (collection key) */
 	if (lone_lisp_is_nil(arguments)) {
-		return get(lone, collection, key);
-	} else {
-		/* at least one argument */
-		value = lone_lisp_list_first(lone, arguments);
-		arguments = lone_lisp_list_rest(lone, arguments);
-
-		if (lone_lisp_is_nil(arguments)) {
-			/* collection set: (collection key value) */
-			set(lone, collection, key, value);
-			return value;
-		} else {
-			/* too many arguments given: (collection key value extra) */
-			linux_exit(-1);
-		}
+		return (struct lone_lisp_optional_value) { .present = true, .value = get(lone, collection, key) };
 	}
+
+	value = lone_lisp_list_first(lone, arguments);
+	arguments = lone_lisp_list_rest(lone, arguments);
+
+	/* collection set: (collection key value) */
+	if (lone_lisp_is_nil(arguments)) {
+		set(lone, collection, key, value);
+		return (struct lone_lisp_optional_value) { .present = true, .value = value };
+	}
+
+	/* too many arguments: (collection key value extra ...) */
+	return (struct lone_lisp_optional_value) { .present = false, .value = arguments };
 }
 
-static struct lone_lisp_value apply_to_vector(struct lone_lisp *lone,
+static struct lone_lisp_optional_value apply_to_vector(struct lone_lisp *lone,
 		struct lone_lisp_value vector, struct lone_lisp_value arguments)
 {
 	return apply_to_collection(lone, vector, arguments, lone_lisp_vector_get, lone_lisp_vector_set);
 }
 
-static struct lone_lisp_value apply_to_table(struct lone_lisp *lone,
+static struct lone_lisp_optional_value apply_to_table(struct lone_lisp *lone,
 		struct lone_lisp_value table, struct lone_lisp_value arguments)
 {
 	return apply_to_collection(lone, table, arguments, lone_lisp_table_get, lone_lisp_table_set);
@@ -278,6 +281,7 @@ void lone_lisp_machine_reset(struct lone_lisp *lone, struct lone_lisp_machine *m
 
 bool lone_lisp_machine_cycle(struct lone_lisp *lone, struct lone_lisp_machine *machine)
 {
+	struct lone_lisp_optional_value result;
 	struct lone_lisp_generator *generator;
 	struct lone_lisp_value primitive, signal_tag, signal_value;
 	lone_lisp_integer count, i;
@@ -545,11 +549,17 @@ bool lone_lisp_machine_cycle(struct lone_lisp *lone, struct lone_lisp_machine *m
 			}
 			return true;
 		case LONE_LISP_TAG_VECTOR:
-			machine->value = apply_to_vector(lone, machine->applicable, machine->list);
-			lone_lisp_machine_restore_step(lone, machine);
-			break;
+			result = apply_to_vector(lone, machine->applicable, machine->list);
+			goto applied_to_collection;
 		case LONE_LISP_TAG_TABLE:
-			machine->value = apply_to_table(lone, machine->applicable, machine->list);
+			result = apply_to_table(lone, machine->applicable, machine->list);
+		applied_to_collection:
+			if (!result.present) {
+				signal_tag   = lone->symbols.tags.arity_error;
+				signal_value = result.value;
+				goto signal;
+			}
+			machine->value = result.value;
 			lone_lisp_machine_restore_step(lone, machine);
 			break;
 		}
