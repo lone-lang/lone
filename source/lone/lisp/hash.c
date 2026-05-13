@@ -134,6 +134,10 @@ lone_hash lone_lisp_value_compute_and_store_hash(struct lone_lisp *lone,
 	struct lone_lisp_heap_value *heap_value;
 	lone_hash hash;
 
+	if (value.tagged & 1) {
+		/* inline values have no heap entry to cache into */ linux_exit(-1);
+	}
+
 	heap_value = lone_lisp_heap_value_of(lone, value);
 	hash       = lone_lisp_hash_compute(lone, value);
 
