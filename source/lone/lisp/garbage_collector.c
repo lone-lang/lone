@@ -144,6 +144,8 @@ static bool lone_points_within_range(void *pointer, void *start, void *end)
 
 static bool lone_lisp_points_to_heap(struct lone_lisp *lone, void *pointer)
 {
+	if (((unsigned long) pointer) % alignof(struct lone_lisp_heap_value)) { return false; }
+
 	return lone_points_within_range(
 		pointer,
 		lone->heap.values,
@@ -170,7 +172,7 @@ static void lone_lisp_mark_native_stack_roots_in_range(struct lone_lisp *lone, v
 
 		word = (unsigned long) *pointer;
 
-		if (!(word & 1)) {
+		if (!(word & 1) && (word & 0xFF) <= LONE_LISP_TAG_HEAP_MAX) {
 			index = word >> LONE_LISP_INDEX_SHIFT;
 
 			if (index < lone->heap.count) {

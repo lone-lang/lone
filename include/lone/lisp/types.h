@@ -74,6 +74,9 @@ enum lone_lisp_tag {
 	LONE_LISP_TAG_BYTES        = 0x14,
 	LONE_LISP_TAG_SHAPE        = 0x16,
 
+	/* 16 heap value tag slots: even values within [0x00, 0x1E] */
+	#define LONE_LISP_TAG_HEAP_MAX 0x1E
+
 	/* non-heap value tags: bit 0 = 1 */
 	LONE_LISP_TAG_INTEGER = 0x01,
 	LONE_LISP_TAG_NIL     = 0x03,
