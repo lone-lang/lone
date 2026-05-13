@@ -43,7 +43,7 @@ linux_fstat(int fd, struct stat *buffer);
 
 ssize_t
 __attribute__((fd_arg_read(1), tainted_args))
-linux_read(int fd, const void *buffer, size_t count);
+linux_read(int fd, void *buffer, size_t count);
 
 /* Performs exactly one read system call.
  * Loops on EINTR and EAGAIN. Returns the kernel's value:

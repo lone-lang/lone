@@ -30,7 +30,7 @@ long linux_fstat(int fd, struct stat *buffer)
 	return linux_system_call_2(__NR_fstat, fd, (long) buffer);
 }
 
-ssize_t linux_read(int fd, const void *buffer, size_t count)
+ssize_t linux_read(int fd, void *buffer, size_t count)
 {
 	return linux_system_call_3(__NR_read, fd, (long) buffer, (long) count);
 }
