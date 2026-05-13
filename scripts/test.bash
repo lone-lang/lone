@@ -116,10 +116,12 @@ read-file-in-hierarchy() {
 }
 
 find-executable() {
+  local postfix prefix code
   postfix="$(read-file-in-hierarchy "${1}" executable)"
+  code="${?}"
   prefix="${2}"
 
-  if [[ "${?}" -eq 0 ]]; then
+  if [[ "${code}" -eq 0 ]]; then
     if [[ -n "${prefix}" ]]; then
       printf "%s/%s\n" "${prefix}" "${postfix}"
     else
