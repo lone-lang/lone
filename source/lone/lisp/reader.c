@@ -322,20 +322,16 @@ error:
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
 
-static bool lone_lisp_reader_consume_common_escape(
-		struct lone_lisp_reader *reader,
-		unsigned char escape, unsigned char *out)
+static bool lone_lisp_reader_map_common_escape_sequence(unsigned char escape, unsigned char *character)
 {
 	switch (escape) {
-	case '\\': *out = '\\'; return true;
-	case '"':  *out = '"';  return true;
-	case 'n':  *out = '\n'; return true;
-	case 't':  *out = '\t'; return true;
-	case '0':  *out = '\0'; return true;
-	default:                return false;
+	case '\\': *character = '\\'; return true;
+	case '"':  *character = '"';  return true;
+	case 'n':  *character = '\n'; return true;
+	case 't':  *character = '\t'; return true;
+	case '0':  *character = '\0'; return true;
+	default:                      return false;
 	}
-
-	(void) reader;
 }
 
 static size_t lone_lisp_reader_measure_quoted_content(
@@ -384,7 +380,7 @@ static struct lone_bytes lone_lisp_reader_consume_text_content(
 			current = lone_lisp_reader_peek(lone, reader);
 			if (!current) { goto deallocate_and_error; }
 
-			if (lone_lisp_reader_consume_common_escape(reader, *current, &character)) {
+			if (lone_lisp_reader_map_common_escape_sequence(*current, &character)) {
 				output[output_length++] = character;
 			} else if (*current == 'u') {
 				lone_lisp_reader_consume(reader);
@@ -465,7 +461,7 @@ static struct lone_bytes lone_lisp_reader_consume_bytes_content(
 			current = lone_lisp_reader_peek(lone, reader);
 			if (!current) { goto deallocate_and_error; }
 
-			if (lone_lisp_reader_consume_common_escape(reader, *current, &character)) {
+			if (lone_lisp_reader_map_common_escape_sequence(*current, &character)) {
 				output[output_length++] = character;
 			} else if (*current == 'x') {
 				unsigned char hi, lo;
