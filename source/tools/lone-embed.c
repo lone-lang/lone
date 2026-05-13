@@ -457,7 +457,7 @@ static void adjust_phdr_entry(struct elf *elf)
 			header,
 			phdr,
 			lone_elf_segment_write_flags,
-			LONE_ELF_SEGMENT_FLAGS_R
+			LONE_ELF_SEGMENT_FLAGS_READABLE
 		);
 		segment_write_umax(
 			header,
@@ -474,7 +474,7 @@ static void adjust_phdr_entry(struct elf *elf)
 	segment_write_umax(header, phdr, lone_elf_segment_write_size_in_memory, size);
 
 	segment_write_u32(header,  load, lone_elf_segment_write_type, LONE_ELF_SEGMENT_TYPE_LOAD);
-	segment_write_u32(header,  load, lone_elf_segment_write_flags, LONE_ELF_SEGMENT_FLAGS_R);
+	segment_write_u32(header,  load, lone_elf_segment_write_flags, LONE_ELF_SEGMENT_FLAGS_READABLE);
 	segment_write_umax(header, load, lone_elf_segment_write_file_offset, file_offset);
 	segment_write_umax(header, load, lone_elf_segment_write_virtual_address, virtual);
 	segment_write_umax(header, load, lone_elf_segment_write_physical_address, physical);
