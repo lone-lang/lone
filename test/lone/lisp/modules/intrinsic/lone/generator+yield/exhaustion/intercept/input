@@ -2,7 +2,7 @@
 
 (set g (generator (lambda () (yield 1))))
 
-(print (g))
+(g)
 (g)
 
 (print

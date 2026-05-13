@@ -11,5 +11,5 @@
 (print
   (intercept
     (('real-error (lambda (e) 42)))
-    (print (g))
+    (g)
     (g)))

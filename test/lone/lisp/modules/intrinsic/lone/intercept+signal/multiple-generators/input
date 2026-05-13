@@ -9,7 +9,6 @@
 (print
   (intercept
     (('failure (lambda (e) e)))
-    (print (g1))
-    (print (g2))
+    (g1)
     (print (g1))
     (g2)))

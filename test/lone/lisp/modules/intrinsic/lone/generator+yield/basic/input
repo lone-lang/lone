@@ -2,13 +2,13 @@
 
 (set f (lambda (a b c d e)
   (print (yield a))
-  (print (yield b c d))
+  (print (yield b))
   (print (yield))
   e))
 
-(set g (generator f))
+(set g (generator f 10 20 30 40 50))
 
-(print (g 10 20 30 40 50))
+(print (g))
 (print (g 60))
 (print (g 70))
 (print (g))

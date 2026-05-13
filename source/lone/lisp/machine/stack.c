@@ -80,15 +80,15 @@ void lone_lisp_machine_deallocate_stack(struct lone_lisp *lone, struct lone_lisp
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
 
-static bool lone_lisp_machine_grow_stack(struct lone_lisp *lone, struct lone_lisp_machine *machine)
+static bool lone_lisp_machine_stack_grow(struct lone_lisp *lone, struct lone_lisp_machine_stack *stack)
 {
 	struct lone_lisp_machine_stack_frame *old_base;
 	size_t old_count, new_count, old_size, new_size, top_offset;
 	intptr_t result;
 
-	old_base = machine->stack.base;
-	old_count = machine->stack.limit - machine->stack.base;
-	top_offset = machine->stack.top - machine->stack.base;
+	old_base   = stack->base;
+	old_count  = stack->limit - stack->base;
+	top_offset = stack->top   - stack->base;
 
 	if (__builtin_mul_overflow(old_count, LONE_LISP_MACHINE_STACK_GROWTH_FACTOR, &new_count))
 		goto overflow;
@@ -106,9 +106,9 @@ static bool lone_lisp_machine_grow_stack(struct lone_lisp *lone, struct lone_lis
 	if (result < 0)
 		return false;
 
-	machine->stack.base  = (void *) result;
-	machine->stack.top   = machine->stack.base + top_offset;
-	machine->stack.limit = machine->stack.base + new_count;
+	stack->base  = (void *) result;
+	stack->top   = stack->base + top_offset;
+	stack->limit = stack->base + new_count;
 
 	return true;
 
@@ -158,58 +158,76 @@ overflow:
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
 
-static bool lone_lisp_machine_can_push_bytes(struct lone_lisp_machine *machine, size_t bytes)
+static bool lone_lisp_machine_stack_can_push_bytes(struct lone_lisp_machine_stack *stack, size_t bytes)
 {
-	return lone_stack_can_push(machine->stack.top, machine->stack.limit, bytes);
+	return lone_stack_can_push(stack->top, stack->limit, bytes);
 }
 
-static bool lone_lisp_machine_can_push(struct lone_lisp_machine *machine)
+static bool lone_lisp_machine_stack_can_push(struct lone_lisp_machine_stack *stack)
 {
-	return lone_lisp_machine_can_push_bytes(machine, sizeof(struct lone_lisp_machine_stack_frame));
+	return lone_lisp_machine_stack_can_push_bytes(stack, sizeof(struct lone_lisp_machine_stack_frame));
 }
 
-static bool lone_lisp_machine_can_pop(struct lone_lisp_machine *machine)
+static bool lone_lisp_machine_stack_can_pop(struct lone_lisp_machine_stack *stack)
 {
-	return lone_stack_can_pop(machine->stack.top, machine->stack.base, sizeof(struct lone_lisp_machine_stack_frame));
+	return lone_stack_can_pop(stack->top, stack->base, sizeof(struct lone_lisp_machine_stack_frame));
 }
 
-static bool lone_lisp_machine_can_peek(struct lone_lisp_machine *machine, size_t depth)
+static bool lone_lisp_machine_stack_can_peek(struct lone_lisp_machine_stack *stack, size_t depth)
 {
-	return ((size_t) (machine->stack.top - machine->stack.base)) >= depth;
+	return ((size_t) (stack->top - stack->base)) >= depth;
+}
+
+void lone_lisp_machine_stack_push(struct lone_lisp *lone, struct lone_lisp_machine_stack *stack,
+		struct lone_lisp_machine_stack_frame frame)
+{
+	if (!lone_lisp_machine_stack_can_push(stack)) {
+		if (!lone_lisp_machine_stack_grow(lone, stack)) { linux_exit(-1); }
+	}
+	*stack->top++ = frame;
+}
+
+void lone_lisp_machine_stack_push_frames(struct lone_lisp *lone, struct lone_lisp_machine_stack *stack,
+		size_t frame_count, struct lone_lisp_machine_stack_frame *frames)
+{
+	size_t size = lone_memory_array_size_in_bytes(frame_count, sizeof(*frames));
+	while (!lone_lisp_machine_stack_can_push_bytes(stack, size)) {
+		if (!lone_lisp_machine_stack_grow(lone, stack)) { linux_exit(-1); }
+	}
+	lone_memory_move(frames, stack->top, size);
+	stack->top += frame_count;
 }
 
 void lone_lisp_machine_push(struct lone_lisp *lone, struct lone_lisp_machine *machine,
 		struct lone_lisp_machine_stack_frame frame)
 {
-	if (!lone_lisp_machine_can_push(machine)) {
-		if (!lone_lisp_machine_grow_stack(lone, machine)) { linux_exit(-1); }
-	}
-	*machine->stack.top++ = frame;
+	lone_lisp_machine_stack_push(lone, &machine->stack, frame);
 }
 
 void lone_lisp_machine_push_frames(struct lone_lisp *lone, struct lone_lisp_machine *machine,
 		size_t frame_count, struct lone_lisp_machine_stack_frame *frames)
 {
-	size_t size = lone_memory_array_size_in_bytes(frame_count, sizeof(*frames));
-	while (!lone_lisp_machine_can_push_bytes(machine, size)) {
-		if (!lone_lisp_machine_grow_stack(lone, machine)) { linux_exit(-1); }
-	}
-	lone_memory_move(frames, machine->stack.top, size);
-	machine->stack.top += frame_count;
+	lone_lisp_machine_stack_push_frames(lone, &machine->stack, frame_count, frames);
 }
 
 struct lone_lisp_machine_stack_frame lone_lisp_machine_pop(struct lone_lisp *lone, struct lone_lisp_machine *machine)
 {
-	if (!lone_lisp_machine_can_pop(machine)) { linux_exit(-1); }
+	if (!lone_lisp_machine_stack_can_pop(&machine->stack)) { linux_exit(-1); }
 	return *--machine->stack.top;
+}
+
+void lone_lisp_machine_stack_push_value(struct lone_lisp *lone, struct lone_lisp_machine_stack *stack,
+		struct lone_lisp_value value)
+{
+	lone_lisp_machine_stack_push(lone, stack, (struct lone_lisp_machine_stack_frame) {
+		.tagged = value.tagged,
+	});
 }
 
 void lone_lisp_machine_push_value(struct lone_lisp *lone, struct lone_lisp_machine *machine,
 		struct lone_lisp_value value)
 {
-	lone_lisp_machine_push(lone, machine, (struct lone_lisp_machine_stack_frame) {
-		.tagged = value.tagged,
-	});
+	lone_lisp_machine_stack_push_value(lone, &machine->stack, value);
 }
 
 void lone_lisp_machine_push_function_delimiter(struct lone_lisp *lone, struct lone_lisp_machine *machine,
@@ -240,7 +258,7 @@ struct lone_lisp_value lone_lisp_machine_pop_value(struct lone_lisp *lone, struc
 struct lone_lisp_value lone_lisp_machine_peek_value(struct lone_lisp *lone, struct lone_lisp_machine *machine,
 		size_t depth)
 {
-	if (!lone_lisp_machine_can_peek(machine, depth)) { linux_exit(-1); }
+	if (!lone_lisp_machine_stack_can_peek(&machine->stack, depth)) { linux_exit(-1); }
 	return (struct lone_lisp_value) { .tagged = (machine->stack.top - depth)->tagged };
 }
 
@@ -274,12 +292,18 @@ lone_lisp_integer lone_lisp_machine_pop_integer(struct lone_lisp *lone, struct l
 	return lone_lisp_machine_pop(lone, machine).tagged >> LONE_LISP_DATA_SHIFT;
 }
 
+void lone_lisp_machine_stack_push_step(struct lone_lisp *lone, struct lone_lisp_machine_stack *stack,
+		enum lone_lisp_machine_step step)
+{
+	lone_lisp_machine_stack_push(lone, stack, (struct lone_lisp_machine_stack_frame) {
+		.tagged = ((long) step << LONE_LISP_DATA_SHIFT) | LONE_LISP_TAG_STEP,
+	});
+}
+
 void lone_lisp_machine_push_step(struct lone_lisp *lone, struct lone_lisp_machine *machine,
 		enum lone_lisp_machine_step step)
 {
-	lone_lisp_machine_push(lone, machine, (struct lone_lisp_machine_stack_frame) {
-		.tagged = ((long) step << LONE_LISP_DATA_SHIFT) | LONE_LISP_TAG_STEP,
-	});
+	lone_lisp_machine_stack_push_step(lone, &machine->stack, step);
 }
 
 void lone_lisp_machine_save_step(struct lone_lisp *lone, struct lone_lisp_machine *machine)

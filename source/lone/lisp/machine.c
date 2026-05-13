@@ -526,27 +526,11 @@ bool lone_lisp_machine_cycle(struct lone_lisp *lone, struct lone_lisp_machine *m
 				signal_value = machine->applicable;
 				goto signal;
 			}
+			if (lone_lisp_list_has_rest(lone, machine->list)) { goto too_many_arguments; }
 			generator->stacks.caller = machine->stack;
-			if (generator->stacks.own.top == generator->stacks.own.base) {
-				/* generator not yet started, initialize its stack */
-				machine->stack = generator->stacks.own;
-				lone_lisp_machine_push(lone, machine, (struct lone_lisp_machine_stack_frame) {
-					.tagged =
-						lone_lisp_retag(
-							machine->applicable,
-							LONE_LISP_TAG_GENERATOR_DELIMITER
-						).tagged,
-				});
-				lone_lisp_machine_push_step(lone, machine, LONE_LISP_MACHINE_STEP_GENERATOR_RETURN);
-				machine->expression = lone_lisp_list_create(lone, generator->function, machine->list);
-				machine->step = LONE_LISP_MACHINE_STEP_EVALUATE;
-			} else {
-				/* generator has executed before */
-				if (lone_lisp_list_has_rest(lone, machine->list)) { goto too_many_arguments; }
-				machine->stack = generator->stacks.own;
-				machine->value = lone_lisp_list_first(lone, machine->list);
-				machine->step = LONE_LISP_MACHINE_STEP_AFTER_APPLICATION;
-			}
+			machine->stack = generator->stacks.own;
+			machine->value = lone_lisp_list_first(lone, machine->list);
+			machine->step = LONE_LISP_MACHINE_STEP_AFTER_APPLICATION;
 			break;
 		case LONE_LISP_TAG_VECTOR:
 			result = apply_to_vector(lone, machine->applicable, machine->list);
@@ -638,6 +622,18 @@ bool lone_lisp_machine_cycle(struct lone_lisp *lone, struct lone_lisp_machine *m
 		machine->stack = generator->stacks.caller;
 		generator->stacks.caller = (struct lone_lisp_machine_stack) { 0 };
 		lone_lisp_machine_restore_step(lone, machine);
+		lone_lisp_machine_restore_step(lone, machine);
+		return true;
+	case LONE_LISP_MACHINE_STEP_LOAD_EXPRESSION:
+		machine->expression = lone_lisp_machine_pop_value(lone, machine);
+		lone_lisp_machine_restore_step(lone, machine);
+		return true;
+	case LONE_LISP_MACHINE_STEP_LOAD_APPLICABLE:
+		machine->applicable = lone_lisp_machine_pop_value(lone, machine);
+		lone_lisp_machine_restore_step(lone, machine);
+		return true;
+	case LONE_LISP_MACHINE_STEP_LOAD_LIST:
+		machine->list = lone_lisp_machine_pop_value(lone, machine);
 		lone_lisp_machine_restore_step(lone, machine);
 		return true;
 	case LONE_LISP_MACHINE_STEP_HALT:
