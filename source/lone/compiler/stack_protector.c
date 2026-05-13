@@ -7,7 +7,7 @@
 
 unsigned long __attribute__((externally_visible)) __stack_chk_guard;
 
-void __attribute__((externally_visible)) __stack_chk_fail(void)
+void __attribute__((externally_visible, noreturn)) __stack_chk_fail(void)
 {
 	linux_exit(-1);
 }
