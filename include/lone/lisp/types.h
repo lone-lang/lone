@@ -920,6 +920,8 @@ struct lone_lisp {
 			struct lone_lisp_value range_error;
 			struct lone_lisp_value frozen_error;
 			struct lone_lisp_value invalid_unicode;
+			struct lone_lisp_value generator_exhausted;
+			struct lone_lisp_value generator_reentry;
 		} tags;
 	} symbols;
 };

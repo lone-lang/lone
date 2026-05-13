@@ -1,0 +1,11 @@
+(import (lone print set lambda generator yield intercept))
+
+(set g (generator (lambda () (yield 1))))
+
+(print (g))
+(g)
+
+(print
+  (intercept
+    ((generator-exhausted (lambda (gen) 42)))
+    (g)))

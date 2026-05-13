@@ -279,7 +279,7 @@ void lone_lisp_machine_reset(struct lone_lisp *lone, struct lone_lisp_machine *m
 bool lone_lisp_machine_cycle(struct lone_lisp *lone, struct lone_lisp_machine *machine)
 {
 	struct lone_lisp_generator *generator;
-	struct lone_lisp_value primitive;
+	struct lone_lisp_value primitive, signal_tag, signal_value;
 	lone_lisp_integer count, i;
 
 	switch (machine->step) {
@@ -512,8 +512,16 @@ bool lone_lisp_machine_cycle(struct lone_lisp *lone, struct lone_lisp_machine *m
 			return true;
 		case LONE_LISP_TAG_GENERATOR:
 			generator = &lone_lisp_heap_value_of(lone, machine->applicable)->as.generator;
-			if (!generator->stacks.own.top) { /* generator is finished */ linux_exit(-1); }
-			if (generator->stacks.caller.base) { /* generator is already running */ linux_exit(-1); }
+			if (!generator->stacks.own.top) {
+				signal_tag   = lone->symbols.tags.generator_exhausted;
+				signal_value = machine->applicable;
+				goto signal;
+			}
+			if (generator->stacks.caller.base) {
+				signal_tag   = lone->symbols.tags.generator_reentry;
+				signal_value = machine->applicable;
+				goto signal;
+			}
 			generator->stacks.caller = machine->stack;
 			if (generator->stacks.own.top == generator->stacks.own.base) {
 				/* generator not yet started, initialize its stack */
@@ -625,6 +633,12 @@ bool lone_lisp_machine_cycle(struct lone_lisp *lone, struct lone_lisp_machine *m
 	case LONE_LISP_MACHINE_STEP_HALT:
 		return false;
 	}
+
+signal:
+	machine->list       = lone_lisp_list_build(lone, 2, &signal_tag, &signal_value);
+	machine->applicable = lone->modules.signal_primitive;
+	machine->step       = LONE_LISP_MACHINE_STEP_APPLY;
+	return true;
 
 too_many_arguments:
 operator_not_applicable:
