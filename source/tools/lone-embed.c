@@ -84,9 +84,15 @@ hdr(struct elf *elf)
 	return (struct lone_elf_header *) elf->header.pointer;
 }
 
+static void overflow(void);
+
 static size_t pht_size_for(struct elf *elf, size_t entry_count)
 {
-	return elf->segments.table.segment.size * entry_count;
+	size_t result;
+	if (__builtin_mul_overflow((size_t) elf->segments.table.segment.size, entry_count, &result)) {
+		overflow();
+	}
+	return result;
 }
 
 static size_t pht_size(struct elf *elf)
@@ -104,7 +110,12 @@ static bool has_required_null_segments(struct elf *elf)
 	return elf->segments.nulls_count >= REQUIRED_PT_NULLS;
 }
 
-static size_t align(size_t n, size_t a) { return ((size_t) ((n + (a - 1)) / a)) * a; }
+static size_t align(size_t n, size_t a)
+{
+	size_t sum;
+	if (__builtin_add_overflow(n, a - 1, &sum)) { overflow(); }
+	return (sum / a) * a; /* no overflow: result <= sum */
+}
 static size_t align_to_page(struct elf *elf, size_t n) { return align(n, elf->page_size); }
 static lone_elf_umax min(lone_elf_umax x, lone_elf_umax y) { return x < y? x : y; }
 static lone_elf_umax max(lone_elf_umax x, lone_elf_umax y) { return x > y? x : y; }
@@ -309,6 +320,7 @@ static void analyze(struct elf *elf)
 	lone_u16 entry_count = elf->segments.table.segment.count;
 	struct lone_elf_segment *segment;
 	struct lone_optional_u32 type;
+	lone_elf_umax vaddr, offset;
 	bool found_first_load;
 	lone_u16 i;
 
@@ -333,9 +345,10 @@ static void analyze(struct elf *elf)
 		if (type.value == LONE_ELF_SEGMENT_TYPE_LOADABLE) {
 
 			if (!found_first_load) {
-				elf->load_address =
-					  segment_read_umax(header, segment, lone_elf_segment_read_virtual_address)
-					- segment_read_umax(header, segment, lone_elf_segment_read_file_offset);
+				vaddr  = segment_read_umax(header, segment, lone_elf_segment_read_virtual_address);
+				offset = segment_read_umax(header, segment, lone_elf_segment_read_file_offset);
+				if (offset > vaddr) { invalid_elf(); }
+				elf->load_address = vaddr - offset; /* no underflow: offset <= vaddr */
 				found_first_load = true;
 			}
 
@@ -371,7 +384,7 @@ static void adjust_phdr_entry(struct elf *elf)
 	struct lone_elf_segment *segment, *phdr, *load, *null_1, *null_2;
 	lone_elf_umax file_offset, required_file_offset;
 	lone_elf_umax alignment, size, size_aligned;
-	lone_elf_umax loaded_vaddr, loaded_offset;
+	lone_elf_umax loaded_vaddr, loaded_offset, expected;
 	lone_elf_umax virtual, physical;
 	lone_u32 type;
 	bool created_phdr;
@@ -428,7 +441,8 @@ static void adjust_phdr_entry(struct elf *elf)
 	size = pht_size(elf);
 	size_aligned = align_to_page(elf, size);
 
-	required_file_offset = align_to_page(elf, elf->limits.end.virtual - elf->load_address);
+	if (elf->load_address > elf->limits.end.virtual) { invalid_elf(); }
+	required_file_offset = align_to_page(elf, elf->limits.end.virtual - elf->load_address); /* no underflow: checked above */
 	file_offset = max(elf->segments.file_offset, required_file_offset);
 	elf->segments.file_offset = file_offset;
 
@@ -442,7 +456,7 @@ static void adjust_phdr_entry(struct elf *elf)
 	 * 	new_LOAD.p_offset = e_phoff
 	 *
 	 */
-	virtual = elf->load_address + file_offset;
+	if (__builtin_add_overflow(elf->load_address, file_offset, &virtual)) { overflow(); }
 
 	physical = virtual;
 
@@ -485,7 +499,8 @@ static void adjust_phdr_entry(struct elf *elf)
 	/* verify the linux < 5.18 invariant holds */
 	loaded_vaddr  = segment_read_umax(header, load, lone_elf_segment_read_virtual_address);
 	loaded_offset = segment_read_umax(header, load, lone_elf_segment_read_file_offset);
-	if (loaded_vaddr != elf->load_address + loaded_offset) {
+	if (__builtin_add_overflow(elf->load_address, loaded_offset, &expected)) { overflow(); }
+	if (loaded_vaddr != expected) {
 		linux_exit(LONE_TOOLS_EMBED_EXIT_INCORRECT_LOAD_BIAS);
 	}
 }
@@ -505,7 +520,7 @@ static void move_and_expand_pht_if_needed(struct elf *elf)
 
 	elf->segments.file_offset = elf->data.file_offset;
 	elf->segments.table.segment.count += extra;
-	elf->file.size = elf->segments.file_offset + pht_size(elf);
+	if (__builtin_add_overflow(elf->segments.file_offset, pht_size(elf), &elf->file.size)) { overflow(); }
 
 	lone_memory_zero(new_nulls, pht_size_for(elf, extra));
 	adjust_phdr_entry(elf);
