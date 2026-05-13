@@ -6,7 +6,7 @@
 
 #define MULTIPLICATION_OVERFLOWED(result, x, y) __builtin_mul_overflow((x), (y), (result))
 
-size_t __attribute__((const)) lone_memory_array_size_in_bytes(size_t element_count, size_t element_size)
+size_t lone_memory_array_size_in_bytes(size_t element_count, size_t element_size)
 {
 	size_t size_in_bytes;
 
