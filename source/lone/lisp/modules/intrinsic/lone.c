@@ -866,8 +866,10 @@ LONE_LISP_PRIMITIVE(lone_yield)
 
 		arguments = lone_lisp_machine_pop_value(lone, machine);
 
-		if (lone_lisp_list_destructure(lone, arguments, 1, &value)) {
-			value = arguments;
+		if (lone_lisp_is_nil(arguments)) {
+			value = lone_lisp_nil();
+		} else if (lone_lisp_list_destructure(lone, arguments, 1, &value)) {
+			/* wrong number of arguments: (yield a b c) */ linux_exit(-1);
 		}
 
 		/* generator delimiter is in a fixed position on the generator's stack */
