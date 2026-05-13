@@ -111,17 +111,24 @@ overflow:
    ╰────────────────────────────────────────────────────────────────────────╯ */
 static unsigned char *lone_lisp_reader_peek_k(struct lone_lisp *lone, struct lone_lisp_reader *reader, size_t k)
 {
-	if (reader->buffer.position.read + k >= reader->buffer.position.write) {
+	size_t position;
+
+	if (__builtin_add_overflow(reader->buffer.position.read, k, &position)) { return 0; }
+
+	if (position >= reader->buffer.position.write) {
 		/* we'd overrun the buffer because there's not enough input
 		 * fill it up by reading more first */
 		lone_lisp_reader_fill_buffer(lone, reader);
-		if (reader->buffer.position.read + k >= reader->buffer.position.write) {
+
+		if (__builtin_add_overflow(reader->buffer.position.read, k, &position)) { return 0; }
+
+		if (position >= reader->buffer.position.write) {
 			/* wanted at least k bytes but got less */
 			return 0;
 		}
 	}
 
-	return reader->buffer.bytes.pointer + reader->buffer.position.read + k;
+	return reader->buffer.bytes.pointer + position;
 }
 
 static unsigned char *lone_lisp_reader_peek(struct lone_lisp *lone, struct lone_lisp_reader *reader)
