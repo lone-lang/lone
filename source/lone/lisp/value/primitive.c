@@ -7,13 +7,21 @@ struct lone_lisp_value lone_lisp_primitive_create(struct lone_lisp *lone,
 		char *name, lone_lisp_primitive_function function,
 		struct lone_lisp_value closure, struct lone_lisp_function_flags flags)
 {
-	struct lone_lisp_heap_value *actual = lone_lisp_heap_allocate_value(lone);
-	struct lone_lisp_value value;
+	struct lone_lisp_heap_value *actual;
+	struct lone_lisp_value interned_name, value;
 
-	actual->as.primitive.name = lone_lisp_intern_c_string(lone, name);
+	/* intern the name before allocating the heap value
+	   interning transitively calls heap_allocate_value
+	   which may grow the heap and invalidate pointers  */
+	interned_name = lone_lisp_intern_c_string(lone, name);
+
+	actual = lone_lisp_heap_allocate_value(lone);
+
+	actual->as.primitive.name     = interned_name;
 	actual->as.primitive.function = function;
-	actual->as.primitive.closure = closure;
-	actual->as.primitive.flags = flags;
+	actual->as.primitive.closure  = closure;
+	actual->as.primitive.flags    = flags;
+
 	value = lone_lisp_value_from_heap_value(lone, actual, LONE_LISP_TAG_PRIMITIVE);
 
 	/* Encode FEXPR flags in the metadata field at bits 8-9,
