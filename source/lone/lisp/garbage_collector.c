@@ -64,17 +64,11 @@ static void lone_lisp_mark_heap_value(struct lone_lisp *lone, struct lone_lisp_h
 		break;
 	case LONE_LISP_TAG_GENERATOR:
 		lone_lisp_mark_value(lone, value->as.generator.function);
+		if (value->as.generator.stacks.own.base) {
+			lone_lisp_mark_lisp_stack_roots_of(lone, value->as.generator.stacks.own);
+		}
 		if (value->as.generator.stacks.caller.base) {
-			/* generator is running */
 			lone_lisp_mark_lisp_stack_roots_of(lone, value->as.generator.stacks.caller);
-		} else {
-			/* generator is not running */
-			if (value->as.generator.stacks.own.top) {
-				/* generator is suspended */
-				lone_lisp_mark_lisp_stack_roots_of(lone, value->as.generator.stacks.own);
-			} else {
-				/* generator is finished */
-			}
 		}
 		break;
 	case LONE_LISP_TAG_LIST:
@@ -468,7 +462,8 @@ static void lone_lisp_rewrite_heap_value_interior(struct lone_lisp *lone, struct
 				value->as.generator.stacks.caller.base,
 				value->as.generator.stacks.caller.top
 			);
-		} else if (value->as.generator.stacks.own.top) {
+		}
+		if (value->as.generator.stacks.own.base) {
 			lone_lisp_rewrite_stack_frames(
 				lone,
 				value->as.generator.stacks.own.base,
