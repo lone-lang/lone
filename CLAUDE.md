@@ -28,7 +28,7 @@ make TARGET=aarch64 UAPI=/path  # Cross-compile
 
 ## Tests
 
-540 tests live under `test/` as directory trees.
+664 tests live under `test/` as directory trees.
 Each leaf directory contains:
 
   - `input` — stdin (required)
@@ -77,6 +77,8 @@ applies to all descendants unless overridden.
   - `test/executable` → `lone` (default for most tests)
   - `test/lone/types/executable` → `tests/lone/types`
   - `test/lone/bits/executable` → `tests/lone/bits`
+  - `test/lone/stack/executable` → `tests/lone/stack`
+  - `test/lone/hash/siphash/executable` → `tests/lone/hash/siphash`
   - `test/lone/reader/executable` → `tests/reader`
   - `test/c/linux/system-call/executable` → `tests/system-call`
 
@@ -100,7 +102,7 @@ Lone separates low-level system state from the Lisp interpreter:
     each backed by 64 KiB slabs allocated via `mmap`.
     Allocations larger than 4096 bytes go directly to `mmap`.
     Each slab maintains a free list for O(1) reuse.
-    Hashing uses FNV-1a with a randomized offset basis
+    Hashing uses SipHash with a key
     derived from the auxiliary vector's `AT_RANDOM` bytes.
 
   - `struct lone_lisp` — the interpreter itself.
@@ -149,12 +151,13 @@ Non-heap tags:
   - `0xA1`..`0xAF` — inline bytes
 
 Heap tags (even, bit 0 = 0): module, function, primitive, continuation,
-generator, list, vector, table, symbol, text, bytes.
+generator, list, vector, table, shape, symbol, text, bytes.
 
 The 16-bit metadata field in a heap-value tagged word carries
 per-value flags that must survive garbage collection:
 FEXPR flags (`evaluate_arguments`, `evaluate_result`),
 function arity (4 bits with a 15-value overflow sentinel),
+variadic flag (bit 14),
 and symbol hash bits (8 bits, for hash-table lookup acceleration).
 
 Heap values live in a flat `mmap`'d array of `lone_lisp_heap_value`
@@ -165,7 +168,8 @@ Values encode 40-bit array **indexes**, not pointers,
 making them position-independent across remaps.
 
 Heap-allocated types: Module, Function, Primitive,
-Continuation, Generator, List, Vector, Table, Symbol, Text, Bytes.
+Continuation, Generator, List, Vector, Table, Shape,
+Symbol, Text, Bytes.
 
 Bytes values carry a `frozen` flag. Frozen bytes are immutable
 and may be hashed or used as table keys; unfrozen bytes cannot.
@@ -419,7 +423,8 @@ source/
     compiler/
       stack_protector.c         canary global + initialization
     hash/
-      fnv_1a.c                  FNV-1a hash
+      fnv_1a.c                  FNV-1a hash (unused, retained)
+      siphash.c                 SipHash-2-4
     memory/
       allocator.c               slab allocator (allocate, reallocate, deallocate)
       functions.c               memcpy, memset, memmove, memcmp
@@ -438,7 +443,7 @@ source/
         stack.c                 machine stack frames and delimiters
       value/
         symbol.c  integer.c  text.c  bytes.c
-        list.c  vector.c  table.c
+        list.c  vector.c  table.c  shape.c
         function.c  primitive.c  continuation.c
         generator.c  module.c
       modules/
@@ -464,6 +469,10 @@ source/tests/
     types.c                     type read/write test
     bits.c                      bitwise operation test
     stack.c                     stack operation test
+    hash/
+      siphash.c                 SipHash test vectors
+  lone-embed/
+    at-phdr-invariant.c         AT_PHDR coupling test
 ```
 
 ## Build output
@@ -487,6 +496,8 @@ build/$CONFIGURATION/
     lone/types
     lone/bits
     lone/stack
+    lone/hash/siphash
+    lone-embed/at-phdr-invariant
 ```
 
 ## Documentation
@@ -495,7 +506,7 @@ In-tree documentation lives under `documentation/`:
 
   - `tagged-values.md` — full tagged value encoding design
   - `machine.md` — explicit-control evaluator, steps, stack frames
-  - `table-shapes.md` — hash table implementation and shapes
+  - `table-shapes.md` — shapes: V8-style hidden classes for tables
   - `compiler/` — compiler support features (stack protector, etc.)
   - `hash/` — value hash caching architecture
   - `heap/` — heap design (static initialization)
