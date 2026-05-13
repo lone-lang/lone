@@ -382,6 +382,7 @@ static struct lone_bytes lone_lisp_reader_consume_text_content(
 		if (*current == '\\') {
 			lone_lisp_reader_consume(reader);
 			current = lone_lisp_reader_peek(lone, reader);
+			if (!current) { goto deallocate_and_error; }
 
 			if (lone_lisp_reader_consume_common_escape(reader, *current, &character)) {
 				output[output_length++] = character;
@@ -462,6 +463,7 @@ static struct lone_bytes lone_lisp_reader_consume_bytes_content(
 		if (*current == '\\') {
 			lone_lisp_reader_consume(reader);
 			current = lone_lisp_reader_peek(lone, reader);
+			if (!current) { goto deallocate_and_error; }
 
 			if (lone_lisp_reader_consume_common_escape(reader, *current, &character)) {
 				output[output_length++] = character;
