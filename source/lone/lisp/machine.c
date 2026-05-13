@@ -451,7 +451,7 @@ bool lone_lisp_machine_cycle(struct lone_lisp *lone, struct lone_lisp_machine *m
 			lone_lisp_machine_push_function_delimiter(lone, machine, machine->applicable);
 			machine->unevaluated = lone_lisp_heap_value_of(lone, machine->applicable)->as.function.code;
 			machine->step = LONE_LISP_MACHINE_STEP_SEQUENCE_EVALUATION;
-			return true;
+			break;
 		case LONE_LISP_TAG_PRIMITIVE:
 			/* primitives pop the list of arguments from the stack */
 			lone_lisp_machine_push_value(lone, machine, machine->list);
@@ -502,7 +502,7 @@ bool lone_lisp_machine_cycle(struct lone_lisp *lone, struct lone_lisp_machine *m
 				machine->value = lone_lisp_machine_pop_value(lone, machine);
 				goto after_application;
 			}
-			return true;
+			break;
 		case LONE_LISP_TAG_CONTINUATION:
 			if (lone_lisp_list_has_rest(lone, machine->list)) { goto too_many_arguments; }
 			lone_lisp_machine_push_frames(
@@ -513,7 +513,7 @@ bool lone_lisp_machine_cycle(struct lone_lisp *lone, struct lone_lisp_machine *m
 			);
 			lone_lisp_machine_restore_step(lone, machine);
 			machine->value = lone_lisp_list_first(lone, machine->list);
-			return true;
+			break;
 		case LONE_LISP_TAG_GENERATOR:
 			generator = &lone_lisp_heap_value_of(lone, machine->applicable)->as.generator;
 			if (!generator->stacks.own.top) {
@@ -547,7 +547,7 @@ bool lone_lisp_machine_cycle(struct lone_lisp *lone, struct lone_lisp_machine *m
 				machine->value = lone_lisp_list_first(lone, machine->list);
 				machine->step = LONE_LISP_MACHINE_STEP_AFTER_APPLICATION;
 			}
-			return true;
+			break;
 		case LONE_LISP_TAG_VECTOR:
 			result = apply_to_vector(lone, machine->applicable, machine->list);
 			goto applied_to_collection;
@@ -561,9 +561,9 @@ bool lone_lisp_machine_cycle(struct lone_lisp *lone, struct lone_lisp_machine *m
 			}
 			machine->value = result.value;
 			lone_lisp_machine_restore_step(lone, machine);
+			lone_lisp_machine_restore_step(lone, machine);
 			break;
 		}
-		lone_lisp_machine_restore_step(lone, machine);
 		return true;
 	case LONE_LISP_MACHINE_STEP_AFTER_APPLICATION:
 		/* Result of application is in machine->value.
