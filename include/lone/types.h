@@ -318,16 +318,10 @@ bool lone_bytes_write_s64be(struct lone_bytes bytes, lone_size offset, lone_s64 
 
 /* ╭────────────────────┨ LONE LISP MEMORY ALLOCATION ┠─────────────────────╮
    │                                                                        │
-   │    Lone implements a block-based memory allocator.                     │
-   │    Memory blocks are allocated on a first fit basis.                   │
-   │    They will be split into smaller units when allocated                │
-   │    and merged together with free neighbors when deallocated.           │
-   │                                                                        │
-   │    Memory blocks are segments prefixed by a block descriptor           │
-   │    that tracks its size, allocation status as well as pointers         │
-   │    to surrounding memory blocks. It is simple to obtain a pointer      │
-   │    to the block descriptor from a pointer to the memory block:         │
-   │    simply subtract the block descriptor's size from the pointer.       │
+   │    Lone implements a slab allocator with power of two size classes.    │
+   │    Each class is backed by 64 KiB slabs allocated via mmap.            │
+   │    Freed blocks are returned to per-class free lists for O(1) reuse.   │
+   │    Allocations larger than the maximum class go directly to mmap.      │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
 

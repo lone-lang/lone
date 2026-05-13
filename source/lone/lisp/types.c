@@ -405,7 +405,7 @@ bool lone_lisp_integer_is_less_than(struct lone_lisp *lone, struct lone_lisp_val
 	if (integers(lone, x, y)) {
 		return lone_lisp_integer_of(x) < lone_lisp_integer_of(y);
 	} else {
-		/* can't compare incompatible or non-integers integers */ linux_exit(-1);
+		/* can't compare non-integer values */ linux_exit(-1);
 	}
 }
 
@@ -414,7 +414,7 @@ bool lone_lisp_integer_is_less_than_or_equal_to(struct lone_lisp *lone, struct l
 	if (integers(lone, x, y)) {
 		return lone_lisp_integer_of(x) <= lone_lisp_integer_of(y);
 	} else {
-		/* can't compare incompatible or non-integers integers */ linux_exit(-1);
+		/* can't compare non-integer values */ linux_exit(-1);
 	}
 }
 
@@ -423,7 +423,7 @@ bool lone_lisp_integer_is_greater_than(struct lone_lisp *lone, struct lone_lisp_
 	if (integers(lone, x, y)) {
 		return lone_lisp_integer_of(x) > lone_lisp_integer_of(y);
 	} else {
-		/* can't compare incompatible or non-integers integers */ linux_exit(-1);
+		/* can't compare non-integer values */ linux_exit(-1);
 	}
 }
 
@@ -432,7 +432,7 @@ bool lone_lisp_integer_is_greater_than_or_equal_to(struct lone_lisp *lone, struc
 	if (integers(lone, x, y)) {
 		return lone_lisp_integer_of(x) >= lone_lisp_integer_of(y);
 	} else {
-		/* can't compare incompatible or non-integers integers */ linux_exit(-1);
+		/* can't compare non-integer values */ linux_exit(-1);
 	}
 }
 

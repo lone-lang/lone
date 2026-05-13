@@ -53,7 +53,7 @@ struct lone_lisp_reader {
    │    Tag byte values for tagged value words.                             │
    │                                                                        │
    │    Bit 0 discriminates heap (0) from non-heap (1) values.              │
-   │    For heap values, bits 1-4 encode the type (16 slots, 11 used).      │
+   │    For heap values, bits 1-4 encode the type (16 slots, 12 used).      │
    │    For non-heap values, the remaining bits distinguish type.           │
    │                                                                        │
    ╰────────────────────────────────────────────────────────────────────────╯ */
