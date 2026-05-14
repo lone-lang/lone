@@ -10,6 +10,15 @@ void lone_lisp_machine_deallocate_stack(struct lone_lisp *lone, struct lone_lisp
 
 void lone_lisp_machine_shrink_stack(struct lone_lisp *lone, struct lone_lisp_machine *machine);
 
+void lone_lisp_machine_stack_push(struct lone_lisp *lone, struct lone_lisp_machine_stack *stack,
+		struct lone_lisp_machine_stack_frame frame);
+void lone_lisp_machine_stack_push_frames(struct lone_lisp *lone, struct lone_lisp_machine_stack *stack,
+		size_t frame_count, struct lone_lisp_machine_stack_frame *frames);
+void lone_lisp_machine_stack_push_value(struct lone_lisp *lone, struct lone_lisp_machine_stack *stack,
+		struct lone_lisp_value value);
+void lone_lisp_machine_stack_push_step(struct lone_lisp *lone, struct lone_lisp_machine_stack *stack,
+		enum lone_lisp_machine_step step);
+
 void lone_lisp_machine_push(struct lone_lisp *lone, struct lone_lisp_machine *machine,
 		struct lone_lisp_machine_stack_frame frame);
 void lone_lisp_machine_push_frames(struct lone_lisp *lone, struct lone_lisp_machine *machine,
