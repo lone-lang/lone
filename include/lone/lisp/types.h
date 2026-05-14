@@ -411,6 +411,7 @@ bool lone_lisp_is_heap_value(struct lone_lisp_value value);
 bool lone_lisp_is_module(struct lone_lisp *lone, struct lone_lisp_value value);
 bool lone_lisp_is_function(struct lone_lisp *lone, struct lone_lisp_value value);
 bool lone_lisp_is_primitive(struct lone_lisp *lone, struct lone_lisp_value value);
+bool lone_lisp_is_generator(struct lone_lisp *lone, struct lone_lisp_value value);
 bool lone_lisp_is_applicable(struct lone_lisp *lone, struct lone_lisp_value value);
 bool lone_lisp_is_list(struct lone_lisp *lone, struct lone_lisp_value value);
 bool lone_lisp_is_vector(struct lone_lisp *lone, struct lone_lisp_value value);

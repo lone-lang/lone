@@ -73,6 +73,9 @@ void lone_lisp_modules_intrinsic_lone_initialize(struct lone_lisp *lone)
 	lone_lisp_module_export_primitive(lone, module, "yield",
 			"yield", lone_lisp_primitive_lone_yield, module, flags);
 
+	lone_lisp_module_export_primitive(lone, module, "finished?",
+			"is_finished", lone_lisp_primitive_lone_is_finished, module, flags);
+
 	lone->modules.signal_primitive =
 		lone_lisp_module_export_primitive(lone, module, "signal",
 				"signal", lone_lisp_primitive_lone_signal, module, flags);
@@ -1640,6 +1643,52 @@ LONE_LISP_PRIMITIVE(lone_is_frozen)
 	lone_lisp_machine_push_value(lone, machine,
 			lone_lisp_apply_predicate(lone,
 				lone_lisp_machine_pop_value(lone, machine), lone_lisp_is_frozen));
+	return 0;
+}
+
+LONE_LISP_PRIMITIVE(lone_is_finished)
+{
+	struct lone_lisp_value arguments, value;
+	struct lone_lisp_generator *generator;
+
+	switch (step) {
+	case 0:
+
+		arguments = lone_lisp_machine_pop_value(lone, machine);
+
+		goto destructure;
+
+	case 1:
+
+		arguments = machine->value;
+
+		goto destructure;
+
+	case 2:
+
+		value = machine->value;
+
+		goto check_type;
+
+	default:
+		linux_exit(-1);
+	}
+
+destructure:
+
+	if (lone_lisp_list_destructure(lone, arguments, 1, &value)) {
+		return lone_lisp_signal_emit(lone, machine, 1, lone->symbols.tags.arity_error, arguments);
+	}
+
+check_type:
+
+	if (!lone_lisp_is_generator(lone, value)) {
+		return lone_lisp_signal_emit(lone, machine, 2, lone->symbols.tags.type_error, value);
+	}
+
+	generator = &lone_lisp_heap_value_of(lone, value)->as.generator;
+
+	lone_lisp_machine_push_value(lone, machine, lone_lisp_boolean_for(!generator->stacks.own.top));
 	return 0;
 }
 

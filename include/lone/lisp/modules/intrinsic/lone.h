@@ -36,6 +36,7 @@ LONE_LISP_PRIMITIVE(lone_control);
 LONE_LISP_PRIMITIVE(lone_transfer);
 LONE_LISP_PRIMITIVE(lone_generator);
 LONE_LISP_PRIMITIVE(lone_yield);
+LONE_LISP_PRIMITIVE(lone_is_finished);
 LONE_LISP_PRIMITIVE(lone_intercept);
 LONE_LISP_PRIMITIVE(lone_signal);
 LONE_LISP_PRIMITIVE(lone_is_nil);

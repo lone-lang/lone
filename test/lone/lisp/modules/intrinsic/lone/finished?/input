@@ -1,0 +1,11 @@
+(import (lone print set lambda generator yield finished?))
+
+(set g (generator (lambda () (yield 1) (yield 2) 42)))
+
+(print (finished? g))
+(print (g))
+(print (finished? g))
+(print (g))
+(print (finished? g))
+(print (g))
+(print (finished? g))

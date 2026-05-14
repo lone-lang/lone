@@ -133,6 +133,12 @@ bool lone_lisp_is_primitive(struct lone_lisp *lone, struct lone_lisp_value value
 	return (value.tagged & LONE_LISP_TAG_MASK) == LONE_LISP_TAG_PRIMITIVE;
 }
 
+bool lone_lisp_is_generator(struct lone_lisp *lone, struct lone_lisp_value value)
+{
+	(void) lone;
+	return (value.tagged & LONE_LISP_TAG_MASK) == LONE_LISP_TAG_GENERATOR;
+}
+
 bool lone_lisp_is_applicable(struct lone_lisp *lone, struct lone_lisp_value value)
 {
 	(void) lone;
