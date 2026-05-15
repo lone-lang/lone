@@ -1,0 +1,7 @@
+(import (lone print intercept signal quote)
+        (list first))
+
+(print
+  (intercept
+    (('test first))
+    (signal 'test '(42 99))))

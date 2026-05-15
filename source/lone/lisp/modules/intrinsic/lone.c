@@ -1427,11 +1427,13 @@ LONE_LISP_PRIMITIVE(lone_signal)
 
 		handler = machine->value;
 
-		if (!lone_lisp_is_function(lone, handler)) {
-			/* handler must be a lambda */ linux_exit(-1);
+		if (lone_lisp_is_function(lone, handler)) {
+			arity = lone_lisp_function_arity(lone, handler);
+		} else if (lone_lisp_is_primitive(lone, handler)) {
+			arity = 1;
+		} else {
+			linux_exit(-1);
 		}
-
-		arity = lone_lisp_function_arity(lone, handler);
 		intercept_environment = lone_lisp_machine_pop_value(lone, machine);
 		delimiter_offset = lone_lisp_machine_pop_integer(lone, machine);
 

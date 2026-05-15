@@ -1,0 +1,7 @@
+(import (lone print intercept signal quote)
+        (math +))
+
+(print
+  (intercept
+    (('test +))
+    (signal 'test 10)))

@@ -1,0 +1,15 @@
+(import (lone print intercept signal quote)
+        (list first)
+        (math sign))
+
+(print
+  (intercept
+    (('a first)
+     ('b sign))
+    (signal 'b -99)))
+
+(print
+  (intercept
+    (('a first)
+     ('b sign))
+    (signal 'a '(42 99))))
