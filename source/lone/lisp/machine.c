@@ -544,9 +544,7 @@ bool lone_lisp_machine_cycle(struct lone_lisp *lone, struct lone_lisp_machine *m
 				goto signal;
 			}
 			machine->value = result.value;
-			lone_lisp_machine_restore_step(lone, machine);
-			lone_lisp_machine_restore_step(lone, machine);
-			break;
+			goto after_application;
 		}
 		return true;
 	case LONE_LISP_MACHINE_STEP_AFTER_APPLICATION:
@@ -621,9 +619,7 @@ bool lone_lisp_machine_cycle(struct lone_lisp *lone, struct lone_lisp_machine *m
 		generator->stacks.own.top = 0; /* generator has finished */
 		machine->stack = generator->stacks.caller;
 		generator->stacks.caller = (struct lone_lisp_machine_stack) { 0 };
-		lone_lisp_machine_restore_step(lone, machine);
-		lone_lisp_machine_restore_step(lone, machine);
-		return true;
+		goto after_application;
 	case LONE_LISP_MACHINE_STEP_LOAD_EXPRESSION:
 		machine->expression = lone_lisp_machine_pop_value(lone, machine);
 		lone_lisp_machine_restore_step(lone, machine);
