@@ -2,9 +2,9 @@
 
 (set deep-yield (lambda (n)
   (if (< n 1)
-      (yield 42)
-      (+ 1 (deep-yield (- n 1))))))
+      (yield n)
+      (deep-yield (- n 1)))))
 
-(set g (generator deep-yield))
+(set g (generator deep-yield 50))
 
-(print (g 50))
+(print (g))

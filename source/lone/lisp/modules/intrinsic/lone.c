@@ -813,21 +813,37 @@ LONE_LISP_PRIMITIVE(lone_transfer)
 LONE_LISP_PRIMITIVE(lone_generator)
 {
 	struct lone_lisp_value arguments, function, generator;
+	struct lone_lisp_machine_stack *stack;
 
 	switch (step) {
-	case 0: /* unpack arguments then create generator */
+	case 0: /* create generator and pre-load its stack */
 
 		arguments = lone_lisp_machine_pop_value(lone, machine);
 
-		if (lone_lisp_list_destructure(lone, arguments, 1, &function)) {
-			/* wrong number of arguments: (generator), (generator function extra) */ linux_exit(-1);
+		if (lone_lisp_is_nil(arguments)) {
+			/* need at least the function: (generator) */ linux_exit(-1);
 		}
+
+		function = lone_lisp_list_first(lone, arguments);
 
 		if (!lone_lisp_is_applicable(lone, function)) {
 			/* not passed a function: (generator 10) */ linux_exit(-1);
 		}
 
 		generator = lone_lisp_generator_create(lone, function, LONE_LISP_GENERATOR_STACK_INITIAL_SIZE);
+		stack = &lone_lisp_heap_value_of(lone, generator)->as.generator.stacks.own;
+		arguments = lone_lisp_list_rest(lone, arguments);
+
+		lone_lisp_machine_stack_push(lone, stack, (struct lone_lisp_machine_stack_frame) {
+			.tagged = lone_lisp_retag(generator, LONE_LISP_TAG_GENERATOR_DELIMITER).tagged,
+		});
+		lone_lisp_machine_stack_push_step(lone,  stack, LONE_LISP_MACHINE_STEP_GENERATOR_RETURN);
+		lone_lisp_machine_stack_push_step(lone,  stack, LONE_LISP_MACHINE_STEP_APPLY);
+		lone_lisp_machine_stack_push_value(lone, stack, function);
+		lone_lisp_machine_stack_push_step(lone,  stack, LONE_LISP_MACHINE_STEP_LOAD_APPLICABLE);
+		lone_lisp_machine_stack_push_value(lone, stack, arguments);
+		lone_lisp_machine_stack_push_step(lone,  stack, LONE_LISP_MACHINE_STEP_LOAD_LIST);
+		lone_lisp_machine_stack_push_step(lone,  stack, LONE_LISP_MACHINE_STEP_LOAD_LIST); /* ignored by the machine */
 
 		lone_lisp_machine_push_value(lone, machine, generator);
 		return 0;

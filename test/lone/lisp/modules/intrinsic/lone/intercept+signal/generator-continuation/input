@@ -7,5 +7,5 @@
 (print
   (intercept
     (('failure (lambda (e k) (k 42))))
-    (print (g))
+    (g)
     (g)))

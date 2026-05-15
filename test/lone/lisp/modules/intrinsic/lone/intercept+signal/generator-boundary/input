@@ -7,5 +7,5 @@
 (print
   (intercept
     (('generator-error (lambda (e) 42)))
-    (print (g))
+    (g)
     (g)))

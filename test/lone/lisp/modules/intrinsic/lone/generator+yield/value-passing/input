@@ -3,8 +3,8 @@
 (set g (generator (lambda (initial)
   (print initial)
   (print (yield 1))
-  (print (yield 2)))))
+  (print (yield 2))) 100))
 
-(print (g 100))
+(print (g))
 (print (g 200))
 (print (g 300))
