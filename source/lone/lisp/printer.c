@@ -40,11 +40,12 @@ static void lone_lisp_print_integer(int fd, long n)
 	linux_write_bytes(fd, LONE_BYTES_VALUE(count, digit));
 }
 
-static void lone_lisp_print_escaped_content(struct lone_bytes content, int fd, bool escape_non_ascii)
+static void lone_lisp_print_escaped_content(struct lone_bytes content, int fd,
+		bool escape_non_ascii, bool unicode_escapes)
 {
 	static const char hex[] = "0123456789abcdef";
 	unsigned char *byte;
-	unsigned char hex_buffer[4];
+	unsigned char hex_buffer[6];
 	char *escape;
 	size_t i, run_start, escape_length;
 
@@ -68,12 +69,28 @@ static void lone_lisp_print_escaped_content(struct lone_bytes content, int fd, b
 		default:
 			if (*byte >= 0x20 && *byte <= 0x7E) { continue; }
 			if (!escape_non_ascii && *byte >= 0x80) { continue; }
-			hex_buffer[0] = '\\';
-			hex_buffer[1] = 'x';
-			hex_buffer[2] = hex[(*byte >> 4) & 0xF];
-			hex_buffer[3] = hex[*byte & 0xF];
+			if (unicode_escapes) {
+				hex_buffer[0] = '\\';
+				hex_buffer[1] = 'u';
+				hex_buffer[2] = '{';
+				if (*byte >= 0x10) {
+					hex_buffer[3] = hex[(*byte >> 4) & 0xF];
+					hex_buffer[4] = hex[*byte & 0xF];
+					hex_buffer[5] = '}';
+					escape_length = 6;
+				} else {
+					hex_buffer[3] = hex[*byte & 0xF];
+					hex_buffer[4] = '}';
+					escape_length = 5;
+				}
+			} else {
+				hex_buffer[0] = '\\';
+				hex_buffer[1] = 'x';
+				hex_buffer[2] = hex[(*byte >> 4) & 0xF];
+				hex_buffer[3] = hex[*byte & 0xF];
+				escape_length = 4;
+			}
 			escape = (char *) hex_buffer;
-			escape_length = 4;
 			break;
 		}
 
@@ -99,7 +116,7 @@ static void lone_lisp_print_bytes(struct lone_lisp *lone, struct lone_lisp_value
 	content = lone_lisp_bytes_of(lone, &bytes);
 
 	linux_write_bytes(fd, LONE_BYTES_VALUE_FROM_LITERAL("b\""));
-	lone_lisp_print_escaped_content(content, fd, true);
+	lone_lisp_print_escaped_content(content, fd, true, false);
 	linux_write_bytes(fd, LONE_BYTES_VALUE_FROM_LITERAL("\""));
 }
 
@@ -187,7 +204,7 @@ static void lone_lisp_print_text(struct lone_lisp *lone, struct lone_lisp_value 
 	text = lone_lisp_bytes_of(lone, &value);
 
 	linux_write_bytes(fd, LONE_BYTES_VALUE_FROM_LITERAL("\""));
-	lone_lisp_print_escaped_content(text, fd, false);
+	lone_lisp_print_escaped_content(text, fd, false, true);
 	linux_write_bytes(fd, LONE_BYTES_VALUE_FROM_LITERAL("\""));
 }
 
