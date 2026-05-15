@@ -3,6 +3,10 @@
 #include <lone/memory/functions.h>
 #include <lone/types.h>
 
+#define LONE_PASTE(a, b) a##b
+#define LONE_CONCAT(a, b) LONE_PASTE(a, b)
+#define lone_long_read LONE_CONCAT(LONE_CONCAT(lone_u, __BITS_PER_LONG), _read)
+
 int lone_memory_compare(const void *a, const void *b, size_t count)
 {
 	size_t misalignment, leading, words, trailing, offset, i, j;
@@ -42,7 +46,7 @@ int lone_memory_compare(const void *a, const void *b, size_t count)
 	wp = (const unsigned long *) (p + leading);
 
 	for (i = 0; i < words; ++i) {
-		wq = lone_u64_read(q + leading + i * sizeof(unsigned long));
+		wq = lone_long_read(q + leading + i * sizeof(unsigned long));
 		if (wp[i] != wq) {
 			/* found mismatched word, now find mismatched byte */
 			offset = leading + i * sizeof(unsigned long);
@@ -166,7 +170,7 @@ void lone_memory_move(const void *from, void *to, size_t count)
 		aligned_destination = ((unsigned long *) (destination + leading));
 
 		for (i = 0; i < words; ++i) {
-			word = lone_u64_read(source + leading + i * sizeof(unsigned long));
+			word = lone_long_read(source + leading + i * sizeof(unsigned long));
 			aligned_destination[i] = word;
 		}
 
@@ -192,7 +196,7 @@ void lone_memory_move(const void *from, void *to, size_t count)
 		aligned_destination = ((unsigned long *) (destination + leading));
 
 		for (i = words; i > 0; --i) {
-			word = lone_u64_read(source + leading + (i - 1) * sizeof(unsigned long));
+			word = lone_long_read(source + leading + (i - 1) * sizeof(unsigned long));
 			aligned_destination[i - 1] = word;
 		}
 
