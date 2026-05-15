@@ -369,7 +369,7 @@ validate_offset_range:                                                          
 	}                                                                                          \
                                                                                                    \
 	read = lone_bytes_read_##sign##bits##endian(                                               \
-		lone_lisp_heap_value_of(lone, bytes)->as.bytes.data,                               \
+		lone_lisp_bytes_of(lone, &bytes),                                                  \
 		lone_lisp_integer_of(offset)                                                       \
 	);                                                                                         \
                                                                                                    \

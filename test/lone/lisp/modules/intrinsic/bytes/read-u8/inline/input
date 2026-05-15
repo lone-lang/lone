@@ -1,0 +1,4 @@
+(import (lone print) (bytes read-u8))
+
+(print (read-u8 b"AB" 0))
+(print (read-u8 b"AB" 1))
