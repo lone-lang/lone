@@ -640,6 +640,18 @@ bool lone_lisp_machine_cycle(struct lone_lisp *lone, struct lone_lisp_machine *m
 		lone_lisp_machine_restore_step(lone, machine);
 		lone_lisp_machine_restore_step(lone, machine);
 		return true;
+	case LONE_LISP_MACHINE_STEP_LOAD_EXPRESSION:
+		machine->expression = lone_lisp_machine_pop_value(lone, machine);
+		lone_lisp_machine_restore_step(lone, machine);
+		return true;
+	case LONE_LISP_MACHINE_STEP_LOAD_APPLICABLE:
+		machine->applicable = lone_lisp_machine_pop_value(lone, machine);
+		lone_lisp_machine_restore_step(lone, machine);
+		return true;
+	case LONE_LISP_MACHINE_STEP_LOAD_LIST:
+		machine->list = lone_lisp_machine_pop_value(lone, machine);
+		lone_lisp_machine_restore_step(lone, machine);
+		return true;
 	case LONE_LISP_MACHINE_STEP_HALT:
 		return false;
 	}
