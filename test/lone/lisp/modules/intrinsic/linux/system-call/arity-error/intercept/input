@@ -1,0 +1,2 @@
+(import (lone print intercept lambda quote) (linux system-call))
+(print (intercept (('arity-error (lambda (v) 42))) (system-call)))

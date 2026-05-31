@@ -1,0 +1,9 @@
+(import (lone print intercept lambda quote) (linux system-call))
+
+; the handler supplies a replacement argument list
+; the retried close on the invalid descriptor -1 returns -EBADF
+
+(print
+  (intercept
+    (('arity-error (lambda (v k) (k '(close -1)))))
+    (system-call)))

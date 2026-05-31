@@ -1,0 +1,9 @@
+(import (lone print intercept lambda quote) (linux system-call))
+
+; the system call number () is invalid
+; the handler supplies a replacement system call number
+
+(print
+  (intercept
+    (('type-error (lambda (v k) (k 'close))))
+    (system-call () -1)))

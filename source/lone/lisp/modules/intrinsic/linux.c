@@ -1,6 +1,7 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later */
 
 #include <lone/lisp/modules/intrinsic/linux.h>
+#include <lone/lisp/modules/intrinsic/lone.h>
 
 #include <lone/lisp/machine.h>
 #include <lone/lisp/machine/stack.h>
@@ -313,24 +314,27 @@ void lone_lisp_modules_intrinsic_linux_initialize(struct lone_lisp *lone,
 			"linux_system_call", lone_lisp_primitive_linux_system_call, linux_system_call_table, flags);
 }
 
-static inline long lone_lisp_value_to_linux_system_call_number(struct lone_lisp *lone,
+static inline struct lone_lisp_optional_value
+lone_lisp_value_to_linux_system_call_number(struct lone_lisp *lone,
 		struct lone_lisp_value linux_system_call_table, struct lone_lisp_value value)
 {
 	struct lone_lisp_value number;
 
 	switch (lone_lisp_type_of(value)) {
 	case LONE_LISP_TAG_INTEGER:
-		return lone_lisp_integer_of(value);
-	case LONE_LISP_TAG_NIL:
-	case LONE_LISP_TAG_FALSE:
-	case LONE_LISP_TAG_TRUE:
-		linux_exit(-1);
+		return (struct lone_lisp_optional_value) { .present = true, .value = value };
 	case LONE_LISP_TAG_TEXT:
 		value = lone_lisp_text_to_symbol(lone, value);
 		__attribute__((fallthrough));
 	case LONE_LISP_TAG_SYMBOL:
 		number = lone_lisp_table_get(lone, linux_system_call_table, value);
-		break;
+		if (lone_lisp_is_integer(lone, number)) {
+			return (struct lone_lisp_optional_value) { .present = true, .value = number };
+		}
+		__attribute__((fallthrough));
+	case LONE_LISP_TAG_NIL:
+	case LONE_LISP_TAG_FALSE:
+	case LONE_LISP_TAG_TRUE:
 	case LONE_LISP_TAG_BYTES:
 	case LONE_LISP_TAG_MODULE:
 	case LONE_LISP_TAG_FUNCTION:
@@ -341,36 +345,36 @@ static inline long lone_lisp_value_to_linux_system_call_number(struct lone_lisp 
 	case LONE_LISP_TAG_VECTOR:
 	case LONE_LISP_TAG_TABLE:
 	case LONE_LISP_TAG_SHAPE:
+		return (struct lone_lisp_optional_value) { .present = false, .value = value };
 	default:
-		linux_exit(-1);
+		__builtin_trap();
 	}
-
-	switch (lone_lisp_type_of(number)) {
-	case LONE_LISP_TAG_INTEGER:
-		return lone_lisp_integer_of(number);
-	default:
-		break;
-	}
-
-	linux_exit(-1);
 }
 
-static inline long lone_lisp_value_to_linux_system_call_argument(struct lone_lisp *lone, struct lone_lisp_value *value)
+static inline bool
+lone_lisp_value_to_linux_system_call_argument(struct lone_lisp *lone,
+		struct lone_lisp_value *value, long *number)
 {
 	switch (lone_lisp_type_of(*value)) {
 	case LONE_LISP_TAG_NIL:
 	case LONE_LISP_TAG_FALSE:
-		return 0;
+		*number = 0;
+		return true;
 	case LONE_LISP_TAG_TRUE:
-		return 1;
+		*number = 1;
+		return true;
 	case LONE_LISP_TAG_INTEGER:
-		return (long) lone_lisp_integer_of(*value);
+		*number = (long) lone_lisp_integer_of(*value);
+		return true;
 	case LONE_LISP_TAG_BYTES:
 	case LONE_LISP_TAG_TEXT:
 	case LONE_LISP_TAG_SYMBOL:
-		return (long) lone_lisp_bytes_of(lone, value).pointer;
+		*number = (long) lone_lisp_bytes_of(lone, value).pointer;
+		return true;
 	case LONE_LISP_TAG_PRIMITIVE:
-		return (long) lone_lisp_heap_value_of(lone, *value)->as.primitive.function;
+		*number = (long) lone_lisp_heap_value_of(lone, *value)->as.primitive.function;
+		return true;
+	case LONE_LISP_TAG_MODULE:
 	case LONE_LISP_TAG_FUNCTION:
 	case LONE_LISP_TAG_CONTINUATION:
 	case LONE_LISP_TAG_GENERATOR:
@@ -378,40 +382,164 @@ static inline long lone_lisp_value_to_linux_system_call_argument(struct lone_lis
 	case LONE_LISP_TAG_VECTOR:
 	case LONE_LISP_TAG_TABLE:
 	case LONE_LISP_TAG_SHAPE:
-	case LONE_LISP_TAG_MODULE:
+		return false;
 	default:
-		linux_exit(-1);
+		__builtin_trap();
 	}
 }
 
 LONE_LISP_PRIMITIVE(linux_system_call)
 {
-	struct lone_lisp_value linux_system_call_table, arguments, argument;
+	struct lone_lisp_value linux_system_call_table, arguments, number_value;
+	struct lone_lisp_optional_value number_result;
 	struct lone_lisp_value values[6]; /* must outlive args[] for inline symbol pointers */
 	long result, number, args[6];
-	unsigned char i;
-
-	arguments = lone_lisp_machine_pop_value(lone, machine);
+	unsigned char i, j;
 
 	linux_system_call_table = lone_lisp_heap_value_of(lone, machine->applicable)->as.primitive.closure;
 
-	if (lone_lisp_is_nil(arguments)) { /* need at least the system call number */ linux_exit(-1); }
-	argument = lone_lisp_list_first(lone, arguments);
-	number = lone_lisp_value_to_linux_system_call_number(lone, linux_system_call_table, argument);
-	arguments = lone_lisp_list_rest(lone, arguments);
+	switch (step) {
+	case 0:
 
-	for (i = 0; i < 6; ++i) {
-		if (lone_lisp_is_nil(arguments)) {
-			values[i] = lone_lisp_nil();
-			args[i] = 0;
-		} else {
-			values[i] = lone_lisp_list_first(lone, arguments);
-			args[i] = lone_lisp_value_to_linux_system_call_argument(lone, &values[i]);
-			arguments = lone_lisp_list_rest(lone, arguments);
+		arguments = lone_lisp_machine_pop_value(lone, machine);
+
+		goto parse_arguments;
+
+	case 1: /* resumed with replacement argument list */
+
+		arguments = machine->value;
+
+		if (!lone_lisp_list_is_proper(lone, arguments)) {
+			/* cannot parse */
+			return
+				lone_lisp_signal_emit(
+					lone,
+					machine,
+					1,
+					lone->symbols.tags.type_error,
+					arguments
+				);
 		}
+
+		goto parse_arguments;
+
+	case 2: /* resumed with replacement system call number */
+
+		arguments    = lone_lisp_machine_pop_value(lone, machine);
+		number_value = machine->value;
+
+		goto validate_number;
+
+	case 3: /* resumed with replacement system call argument */
+
+		i            = lone_lisp_machine_pop_integer(lone, machine);
+		arguments    = lone_lisp_machine_pop_value(lone,   machine);
+		number_value = lone_lisp_machine_pop_value(lone,   machine);
+
+		/* repopulate values[] with the validated prefix
+		   then repopulate args[] again by converting them */
+		for (j = i; j > 0; --j) {
+			values[j - 1] = lone_lisp_machine_pop_value(lone, machine);
+			if (!lone_lisp_value_to_linux_system_call_argument(lone, &values[j - 1], &args[j - 1])) {
+				__builtin_trap();
+			}
+		}
+
+		values[i] = machine->value;
+
+		goto validate_argument;
+
+	default:
+		__builtin_trap();
 	}
 
-	if (!lone_lisp_is_nil(arguments)) { /* too many arguments given */ linux_exit(-1); }
+parse_arguments:
+
+	if (lone_lisp_is_nil(arguments)) {
+		/* need at least the system call number */
+		return
+			lone_lisp_signal_emit(
+				lone,
+				machine,
+				1,
+				lone->symbols.tags.arity_error,
+				arguments
+			);
+	}
+
+	number_value = lone_lisp_list_first(lone, arguments);
+	arguments = lone_lisp_list_rest(lone, arguments);
+
+validate_number:
+
+	number_result = lone_lisp_value_to_linux_system_call_number(lone, linux_system_call_table, number_value);
+
+	if (!number_result.present) {
+		lone_lisp_machine_push_value(lone, machine, arguments);
+		return
+			lone_lisp_signal_emit(
+				lone,
+				machine,
+				2,
+				lone->symbols.tags.type_error,
+				number_value
+			);
+	}
+
+	number_value = number_result.value;
+	i = 0;
+
+iterate_arguments:
+
+	if (i >= 6) { goto check_extra_arguments; }
+
+	if (lone_lisp_is_nil(arguments)) {
+		values[i] = lone_lisp_nil();
+		args[i] = 0;
+		++i;
+		goto iterate_arguments;
+	}
+
+	values[i] = lone_lisp_list_first(lone, arguments);
+
+validate_argument:
+
+	if (!lone_lisp_value_to_linux_system_call_argument(lone, &values[i], &args[i])) {
+		for (j = 0; j < i; ++j) {
+			lone_lisp_machine_push_value(lone, machine, values[j]);
+		}
+		lone_lisp_machine_push_value(lone, machine, number_value);
+		lone_lisp_machine_push_value(lone, machine, arguments);
+		lone_lisp_machine_push_integer(lone, machine, i);
+		return
+			lone_lisp_signal_emit(
+				lone,
+				machine,
+				3,
+				lone->symbols.tags.type_error,
+				values[i]
+			);
+	}
+
+	arguments = lone_lisp_list_rest(lone, arguments);
+	++i;
+	goto iterate_arguments;
+
+check_extra_arguments:
+
+	if (!lone_lisp_is_nil(arguments)) {
+		/* too many arguments given */
+		return
+			lone_lisp_signal_emit(
+				lone,
+				machine,
+				1,
+				lone->symbols.tags.arity_error,
+				arguments
+			);
+	}
+
+	number = lone_lisp_integer_of(number_value);
 
 	result = linux_system_call_6(number, args[0], args[1], args[2], args[3], args[4], args[5]);
 

@@ -1,0 +1,2 @@
+(import (lone print intercept lambda quote) (linux system-call))
+(print (intercept (('type-error (lambda (v) 42))) (system-call ())))
