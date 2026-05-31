@@ -518,16 +518,16 @@ static void lone_lisp_rewrite_all_references(struct lone_lisp *lone, struct lone
 	lone->modules.path = lone_lisp_forward_value(lone, lone->modules.path);
 	lone->modules.signal_primitive = lone_lisp_forward_value(lone, lone->modules.signal_primitive);
 
-	lone->symbols.tags.type_error       = lone_lisp_forward_value(lone, lone->symbols.tags.type_error);
-	lone->symbols.tags.arity_error      = lone_lisp_forward_value(lone, lone->symbols.tags.arity_error);
-	lone->symbols.tags.integer_overflow = lone_lisp_forward_value(lone, lone->symbols.tags.integer_overflow);
-	lone->symbols.tags.division_by_zero = lone_lisp_forward_value(lone, lone->symbols.tags.division_by_zero);
-	lone->symbols.tags.index_error      = lone_lisp_forward_value(lone, lone->symbols.tags.index_error);
-	lone->symbols.tags.range_error      = lone_lisp_forward_value(lone, lone->symbols.tags.range_error);
-	lone->symbols.tags.frozen_error     = lone_lisp_forward_value(lone, lone->symbols.tags.frozen_error);
-	lone->symbols.tags.invalid_unicode  = lone_lisp_forward_value(lone, lone->symbols.tags.invalid_unicode);
-	lone->symbols.tags.generator_exhausted = lone_lisp_forward_value(lone, lone->symbols.tags.generator_exhausted);
-	lone->symbols.tags.generator_reentry   = lone_lisp_forward_value(lone, lone->symbols.tags.generator_reentry);
+	lone->symbols.tags.type_error             = lone_lisp_forward_value(lone, lone->symbols.tags.type_error);
+	lone->symbols.tags.arity_error            = lone_lisp_forward_value(lone, lone->symbols.tags.arity_error);
+	lone->symbols.tags.integer_overflow       = lone_lisp_forward_value(lone, lone->symbols.tags.integer_overflow);
+	lone->symbols.tags.division_by_zero       = lone_lisp_forward_value(lone, lone->symbols.tags.division_by_zero);
+	lone->symbols.tags.index_error            = lone_lisp_forward_value(lone, lone->symbols.tags.index_error);
+	lone->symbols.tags.range_error            = lone_lisp_forward_value(lone, lone->symbols.tags.range_error);
+	lone->symbols.tags.frozen_error           = lone_lisp_forward_value(lone, lone->symbols.tags.frozen_error);
+	lone->symbols.tags.invalid_unicode        = lone_lisp_forward_value(lone, lone->symbols.tags.invalid_unicode);
+	lone->symbols.tags.generator_exhausted    = lone_lisp_forward_value(lone, lone->symbols.tags.generator_exhausted);
+	lone->symbols.tags.generator_reentry      = lone_lisp_forward_value(lone, lone->symbols.tags.generator_reentry);
 
 	/* lisp machine registers */
 	machine->value = lone_lisp_forward_value(lone, machine->value);
