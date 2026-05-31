@@ -636,13 +636,15 @@ bool lone_lisp_machine_cycle(struct lone_lisp *lone, struct lone_lisp_machine *m
 		return false;
 	}
 
+too_many_arguments:
+	signal_tag   = lone->symbols.tags.arity_error;
+	signal_value = machine->list;
 signal:
 	machine->list       = lone_lisp_list_build(lone, 2, &signal_tag, &signal_value);
 	machine->applicable = lone->modules.signal_primitive;
 	machine->step       = LONE_LISP_MACHINE_STEP_APPLY;
 	return true;
 
-too_many_arguments:
 operator_not_applicable:
 	linux_exit(-1);
 }

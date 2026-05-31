@@ -1,0 +1,8 @@
+(import (lone print intercept lambda generator quote set))
+
+(set g (generator (lambda () 0)))
+
+(print
+  (intercept
+    (('arity-error (lambda (v) 42)))
+    (g 1 2 3)))

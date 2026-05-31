@@ -1,0 +1,9 @@
+(import (lone print intercept lambda control transfer quote))
+
+(print
+  (intercept
+    (('arity-error (lambda (v) 42)))
+    (control
+      (transfer 0)
+      (lambda (value continuation)
+        (continuation 1 2 3)))))
