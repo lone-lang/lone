@@ -1,0 +1,10 @@
+(import (lone print intercept lambda quote) (vector count))
+
+; resuming an arity-error with a non-list value must re-signal a catchable
+; type-error rather than aborting the interpreter
+
+(print
+  (intercept
+    (('arity-error (lambda (v k) (k 42)))
+     ('type-error  (lambda (v) 7)))
+    (count)))

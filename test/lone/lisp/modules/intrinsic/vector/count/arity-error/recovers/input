@@ -1,0 +1,9 @@
+(import (lone print intercept lambda quote) (vector count))
+
+; handler provides a replacement argument list
+; count returns the size of the supplied vector
+
+(print
+  (intercept
+    (('arity-error (lambda (v k) (k (quote ([1 2 3 4 5]))))))
+    (count)))

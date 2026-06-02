@@ -1,0 +1,9 @@
+(import (lone print intercept lambda quote) (vector count))
+
+; handler provides a vector to replace the non-vector argument
+; count returns its size
+
+(print
+  (intercept
+    (('type-error (lambda (v k) (k [1 2 3 4 5]))))
+    (count 0)))

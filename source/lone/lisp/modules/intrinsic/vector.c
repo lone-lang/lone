@@ -639,13 +639,68 @@ LONE_LISP_PRIMITIVE(vector_count)
 {
 	struct lone_lisp_value arguments, vector, count;
 
-	arguments = lone_lisp_machine_pop_value(lone, machine);
+	switch (step) {
+	case 0:
 
-	if (lone_lisp_list_destructure(lone, arguments, 1, &vector)) {
-		/* wrong number of arguments */ linux_exit(-1);
+		arguments = lone_lisp_machine_pop_value(lone, machine);
+
+		goto destructure;
+
+	case 1: /* resumed with replacement argument list */
+
+		arguments = machine->value;
+
+		if (!lone_lisp_is_list(lone, arguments)) {
+			/* cannot destructure */
+			return
+				lone_lisp_signal_emit(
+					lone,
+					machine,
+					1,
+					lone->symbols.tags.type_error,
+					arguments
+				);
+		}
+
+		goto destructure;
+
+	case 2: /* resumed with replacement vector from type-error */
+
+		vector = machine->value;
+
+		goto check_vector;
+
+	default:
+		__builtin_trap();
 	}
 
-	if (!lone_lisp_is_vector(lone, vector)) { /* vector not given: (count {}) */ linux_exit(-1); }
+destructure:
+
+	if (lone_lisp_list_destructure(lone, arguments, 1, &vector)) {
+		/* wrong number of arguments: (count), (count [] "extra") */
+		return
+			lone_lisp_signal_emit(
+				lone,
+				machine,
+				1,
+				lone->symbols.tags.arity_error,
+				arguments
+			);
+	}
+
+check_vector:
+
+	if (!lone_lisp_is_vector(lone, vector)) {
+		/* vector not given: (count {}) */
+		return
+			lone_lisp_signal_emit(
+				lone,
+				machine,
+				2,
+				lone->symbols.tags.type_error,
+				vector
+			);
+	}
 
 	count = lone_lisp_integer_create(lone_lisp_vector_count(lone, vector));
 
