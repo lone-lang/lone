@@ -620,6 +620,7 @@ struct lone_lisp_value lone_lisp_list_append(struct lone_lisp *lone,
 		struct lone_lisp_value *first, struct lone_lisp_value *head,
 		struct lone_lisp_value value);
 
+bool lone_lisp_list_is_proper(struct lone_lisp *lone, struct lone_lisp_value list);
 bool lone_lisp_list_destructure(struct lone_lisp *lone, struct lone_lisp_value list, size_t count, ...);
 struct lone_lisp_value lone_lisp_list_build(struct lone_lisp *lone, size_t count, ...);
 struct lone_lisp_value lone_lisp_list_flatten(struct lone_lisp *lone, struct lone_lisp_value list);

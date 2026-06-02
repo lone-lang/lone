@@ -146,6 +146,16 @@ bool lone_lisp_list_has_rest(struct lone_lisp *lone, struct lone_lisp_value valu
 	}
 }
 
+bool lone_lisp_list_is_proper(struct lone_lisp *lone, struct lone_lisp_value list)
+{
+	while (!lone_lisp_is_nil(list)) {
+		if (!lone_lisp_is_list(lone, list)) { return false; }
+		list = lone_lisp_list_rest(lone, list);
+	}
+
+	return true;
+}
+
 bool lone_lisp_list_destructure(struct lone_lisp *lone, struct lone_lisp_value list, size_t count, ...)
 {
 	va_list arguments;
