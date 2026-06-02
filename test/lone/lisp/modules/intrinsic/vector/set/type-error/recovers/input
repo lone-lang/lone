@@ -1,0 +1,9 @@
+(import (lone print intercept lambda quote) (vector set))
+
+; handler provides a vector to replace the non-vector argument
+; set stores the value in the replacement vector
+
+(print
+  (intercept
+    (('type-error (lambda (v k) (k [10 20 30]))))
+    (set 0 1 99)))

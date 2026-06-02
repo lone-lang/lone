@@ -1,0 +1,6 @@
+(import (lone print intercept lambda quote) (vector set))
+
+(print
+  (intercept
+    (('arity-error (lambda (v) 42)))
+    (set [1 2 3])))

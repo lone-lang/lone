@@ -1,0 +1,6 @@
+(import (lone print intercept lambda quote) (vector set))
+
+(print
+  (intercept
+    (('type-error (lambda (v) 42)))
+    (set {} 0 99)))
