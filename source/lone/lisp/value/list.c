@@ -172,10 +172,14 @@ bool lone_lisp_list_destructure(struct lone_lisp *lone, struct lone_lisp_value l
 		}
 	}
 
-	if (!lone_lisp_is_list(lone, list)) { /* expected a list */ goto error; }
+	if (!lone_lisp_is_list(lone, list)) { /* not a proper list */ result = true; goto return_result; }
 
 	i = 0;
 	while (!lone_lisp_is_nil(list)) {
+		if (!lone_lisp_is_list(lone, list)) {
+			/* improper list: atom where a pair was expected */ result = true; goto return_result;
+		}
+
 		*va_arg(arguments, struct lone_lisp_value *) = lone_lisp_list_first(lone, list);
 		++i;
 
@@ -199,7 +203,4 @@ bool lone_lisp_list_destructure(struct lone_lisp *lone, struct lone_lisp_value l
 return_result:
 	va_end(arguments);
 	return result;
-
-error:
-	linux_exit(-1);
 }
