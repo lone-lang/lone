@@ -1,0 +1,9 @@
+(import (lone print intercept lambda quote) (table count))
+
+; handler provides a table to replace the non-table argument
+; count returns the number of entries
+
+(print
+  (intercept
+    (('type-error (lambda (v k) (k {a 1 b 2 c 3}))))
+    (count 0)))
