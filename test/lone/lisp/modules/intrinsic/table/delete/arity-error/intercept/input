@@ -1,0 +1,2 @@
+(import (lone print intercept lambda quote) (table delete))
+(print (intercept (('arity-error (lambda (v) 42))) (delete {a 1})))

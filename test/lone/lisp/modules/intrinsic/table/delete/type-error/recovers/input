@@ -1,0 +1,9 @@
+(import (lone print intercept lambda quote) (table delete))
+
+; handler provides a table to replace the non-table argument
+; delete retries and returns nil
+
+(print
+  (intercept
+    (('type-error (lambda (v k) (k {a 1 b 2}))))
+    (delete 0 'a)))

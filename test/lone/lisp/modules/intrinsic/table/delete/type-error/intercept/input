@@ -1,0 +1,2 @@
+(import (lone print intercept lambda quote) (table delete))
+(print (intercept (('type-error (lambda (v) 42))) (delete [] 'a)))

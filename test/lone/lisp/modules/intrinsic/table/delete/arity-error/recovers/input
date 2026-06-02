@@ -1,0 +1,9 @@
+(import (lone print intercept lambda quote) (table delete))
+
+; handler provides a replacement argument list
+; delete retries and returns nil after removing the key
+
+(print
+  (intercept
+    (('arity-error (lambda (v k) (k (quote ({a 1 b 2} 'a))))))
+    (delete)))
