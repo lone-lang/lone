@@ -1,6 +1,7 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later */
 
 #include <lone/lisp/modules/intrinsic/vector.h>
+#include <lone/lisp/modules/intrinsic/lone.h>
 
 #include <lone/lisp/machine.h>
 #include <lone/lisp/machine/stack.h>
@@ -38,14 +39,92 @@ LONE_LISP_PRIMITIVE(vector_get)
 {
 	struct lone_lisp_value arguments, vector, index, value;
 
-	arguments = lone_lisp_machine_pop_value(lone, machine);
+	switch (step) {
+	case 0:
 
-	if (lone_lisp_list_destructure(lone, arguments, 2, &vector, &index)) {
-		/* wrong number of arguments */ linux_exit(-1);
+		arguments = lone_lisp_machine_pop_value(lone, machine);
+
+		goto destructure;
+
+	case 1: /* resumed with replacement argument list */
+
+		arguments = machine->value;
+
+		if (!lone_lisp_is_list(lone, arguments)) {
+			/* cannot destructure */
+			return
+				lone_lisp_signal_emit(
+					lone,
+					machine,
+					1,
+					lone->symbols.tags.type_error,
+					arguments
+				);
+		}
+
+		goto destructure;
+
+	case 2: /* resumed with replacement vector from type-error */
+
+		index  = lone_lisp_machine_pop_value(lone, machine);
+		vector = machine->value;
+
+		goto check_vector;
+
+	case 3: /* resumed with replacement index from type-error */
+
+		vector = lone_lisp_machine_pop_value(lone, machine);
+		index  = machine->value;
+
+		goto check_index;
+
+	default:
+		__builtin_trap();
 	}
 
-	if (!lone_lisp_is_vector(lone, vector)) { /* vector not given: (get {}) */ linux_exit(-1); }
-	if (!lone_lisp_is_integer(lone, index)) { /* integer index not given: (get [1 2 3] "invalid") */ linux_exit(-1); }
+destructure:
+
+	if (lone_lisp_list_destructure(lone, arguments, 2, &vector, &index)) {
+		/* wrong number of arguments: (get), (get [] 0 "extra") */
+		return
+			lone_lisp_signal_emit(
+				lone,
+				machine,
+				1,
+				lone->symbols.tags.arity_error,
+				arguments
+			);
+	}
+
+check_vector:
+
+	if (!lone_lisp_is_vector(lone, vector)) {
+		/* vector not given: (get {}) */
+		lone_lisp_machine_push_value(lone, machine, index);
+		return
+			lone_lisp_signal_emit(
+				lone,
+				machine,
+				2,
+				lone->symbols.tags.type_error,
+				vector
+			);
+	}
+
+check_index:
+
+	if (!lone_lisp_is_integer(lone, index)) {
+		/* integer index not given: (get [1 2 3] "invalid") */
+		lone_lisp_machine_push_value(lone, machine, vector);
+		return
+			lone_lisp_signal_emit(
+				lone,
+				machine,
+				3,
+				lone->symbols.tags.type_error,
+				index
+			);
+	}
 
 	value = lone_lisp_vector_get(lone, vector, index);
 

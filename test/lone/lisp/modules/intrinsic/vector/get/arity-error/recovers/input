@@ -1,0 +1,9 @@
+(import (lone print intercept lambda quote) (vector get))
+
+; handler provides a replacement argument list
+; get retries with the new arguments and succeeds
+
+(print
+  (intercept
+    (('arity-error (lambda (v k) (k (quote ([10 20 30] 1))))))
+    (get)))

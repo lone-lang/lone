@@ -1,0 +1,6 @@
+(import (lone print intercept lambda quote) (vector get))
+
+(print
+  (intercept
+    (('type-error (lambda (v k) (k [10 20 30]))))
+    (get {} 1)))
