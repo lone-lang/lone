@@ -114,13 +114,72 @@ LONE_LISP_PRIMITIVE(table_set)
 {
 	struct lone_lisp_value arguments, table, key, value;
 
-	arguments = lone_lisp_machine_pop_value(lone, machine);
+	switch (step) {
+	case 0:
 
-	if (lone_lisp_list_destructure(lone, arguments, 3, &table, &key, &value)) {
-		/* wrong number of arguments */ linux_exit(-1);
+		arguments = lone_lisp_machine_pop_value(lone, machine);
+
+		goto destructure;
+
+	case 1: /* resumed with replacement argument list */
+
+		arguments = machine->value;
+
+		if (!lone_lisp_is_list(lone, arguments)) {
+			/* cannot destructure */
+			return
+				lone_lisp_signal_emit(
+					lone,
+					machine,
+					1,
+					lone->symbols.tags.type_error,
+					arguments
+				);
+		}
+
+		goto destructure;
+
+	case 2: /* resumed with replacement table from type-error */
+
+		value = lone_lisp_machine_pop_value(lone, machine);
+		key   = lone_lisp_machine_pop_value(lone, machine);
+		table = machine->value;
+
+		goto check_table;
+
+	default:
+		__builtin_trap();
 	}
 
-	if (!lone_lisp_is_table(lone, table)) { /* table not given: (set []) */ linux_exit(-1); }
+destructure:
+
+	if (lone_lisp_list_destructure(lone, arguments, 3, &table, &key, &value)) {
+		/* wrong number of arguments: (set), (set {} 0 1 "extra") */
+		return
+			lone_lisp_signal_emit(
+				lone,
+				machine,
+				1,
+				lone->symbols.tags.arity_error,
+				arguments
+			);
+	}
+
+check_table:
+
+	if (!lone_lisp_is_table(lone, table)) {
+		/* table not given: (set []) */
+		lone_lisp_machine_push_value(lone, machine, key);
+		lone_lisp_machine_push_value(lone, machine, value);
+		return
+			lone_lisp_signal_emit(
+				lone,
+				machine,
+				2,
+				lone->symbols.tags.type_error,
+				table
+			);
+	}
 
 	lone_lisp_table_set(lone, table, key, value);
 

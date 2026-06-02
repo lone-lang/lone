@@ -1,0 +1,9 @@
+(import (lone print intercept lambda quote) (table set))
+
+; handler provides a table to replace the non-table argument
+; set stores the value in the replacement table
+
+(print
+  (intercept
+    (('type-error (lambda (v k) (k {}))))
+    (set 0 "key" 42)))
