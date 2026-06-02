@@ -1,0 +1,6 @@
+(import (lone print intercept lambda quote) (table get))
+
+(print
+  (intercept
+    (('type-error (lambda (v) 42)))
+    (get [] 'key)))

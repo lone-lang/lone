@@ -1,0 +1,9 @@
+(import (lone print intercept lambda quote) (table get))
+
+; handler provides a replacement argument list
+; get retries and returns the value for the supplied key
+
+(print
+  (intercept
+    (('arity-error (lambda (v k) (k (quote ({"a" 1 "b" 2} "b"))))))
+    (get)))

@@ -1,0 +1,9 @@
+(import (lone print intercept lambda quote) (table get))
+
+; handler provides a table to replace the non-table argument
+; get returns the value for the supplied key
+
+(print
+  (intercept
+    (('type-error (lambda (v k) (k {"a" 1 "b" 2}))))
+    (get 0 "b")))
