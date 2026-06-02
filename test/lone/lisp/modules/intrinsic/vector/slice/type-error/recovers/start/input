@@ -1,0 +1,9 @@
+(import (lone print intercept lambda quote) (vector slice))
+
+; handler provides an integer to replace the non-integer start
+; slice produces the sub-vector starting at the replacement
+
+(print
+  (intercept
+    (('type-error (lambda (v k) (k 1))))
+    (slice [10 20 30 40] 'x 3)))

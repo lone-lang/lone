@@ -1,0 +1,9 @@
+(import (lone print intercept lambda quote) (vector slice))
+
+; handler provides a vector to replace the non-vector argument
+; slice produces the sub-vector between the requested indexes
+
+(print
+  (intercept
+    (('type-error (lambda (v k) (k [10 20 30 40]))))
+    (slice 0 1 3)))

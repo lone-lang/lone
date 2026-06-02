@@ -1,0 +1,9 @@
+(import (lone print intercept lambda quote) (vector slice))
+
+; handler provides a replacement argument list
+; slice retries with the new arguments
+
+(print
+  (intercept
+    (('arity-error (lambda (v k) (k (quote ([10 20 30 40] 1 3))))))
+    (slice)))

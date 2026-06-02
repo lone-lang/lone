@@ -236,48 +236,262 @@ check_index:
 LONE_LISP_PRIMITIVE(vector_slice)
 {
 	struct lone_lisp_value arguments, vector, start, end, slice;
-	size_t i, j, k;
+	size_t i, j, k, count;
 	lone_lisp_integer index;
+	bool has_end;
 
-	arguments = lone_lisp_machine_pop_value(lone, machine);
+	switch (step) {
+	case 0:
 
-	if (lone_lisp_is_nil(arguments)) { /* arguments not given: (slice) */ linux_exit(-1); }
+		arguments = lone_lisp_machine_pop_value(lone, machine);
+
+		goto parse_arguments;
+
+	case 1: /* resumed with replacement argument list */
+
+		arguments = machine->value;
+
+		if (!lone_lisp_list_is_proper(lone, arguments)) {
+			/* cannot parse */
+			return
+				lone_lisp_signal_emit(
+					lone,
+					machine,
+					1,
+					lone->symbols.tags.type_error,
+					arguments
+				);
+		}
+
+		goto parse_arguments;
+
+	case 2: /* resumed with replacement vector from type-error */
+
+		has_end = lone_lisp_machine_pop_integer(lone, machine);
+		end     = lone_lisp_machine_pop_value(lone, machine);
+		start   = lone_lisp_machine_pop_value(lone, machine);
+		vector  = machine->value;
+
+		goto validate_vector;
+
+	case 3: /* resumed with replacement start from type-error or index-error */
+
+		has_end = lone_lisp_machine_pop_integer(lone, machine);
+		end     = lone_lisp_machine_pop_value(lone, machine);
+		vector  = lone_lisp_machine_pop_value(lone, machine);
+		start   = machine->value;
+
+		goto validate_start;
+
+	case 4: /* resumed with replacement end from type-error or index-error */
+
+		start   = lone_lisp_machine_pop_value(lone, machine);
+		vector  = lone_lisp_machine_pop_value(lone, machine);
+		end     = machine->value;
+		has_end = true;
+
+		goto validate_end;
+
+	default:
+		__builtin_trap();
+	}
+
+parse_arguments:
+
+	if (lone_lisp_is_nil(arguments)) {
+		/* arguments not given: (slice) */
+		return
+			lone_lisp_signal_emit(
+				lone,
+				machine,
+				1,
+				lone->symbols.tags.arity_error,
+				arguments
+			);
+	}
 
 	vector = lone_lisp_list_first(lone, arguments);
 	arguments = lone_lisp_list_rest(lone, arguments);
-	if (!lone_lisp_is_vector(lone, vector)) { /* vector not given: (slice {}) */ linux_exit(-1); }
-	if (lone_lisp_is_nil(arguments)) { /* start index not given: (slice vector) */ linux_exit(-1); }
+
+	if (lone_lisp_is_nil(arguments)) {
+		/* start index not given: (slice vector) */
+		return
+			lone_lisp_signal_emit(
+				lone,
+				machine,
+				1,
+				lone->symbols.tags.arity_error,
+				arguments
+			);
+	}
 
 	start = lone_lisp_list_first(lone, arguments);
 	arguments = lone_lisp_list_rest(lone, arguments);
-	if (!lone_lisp_is_integer(lone, start)) { /* start is not an integer: (slice vector "error") */ linux_exit(-1); }
 
-	index = lone_lisp_integer_of(start);
-	if (index < 0) { /* negative indexes not supported: (slice vector -10) */ linux_exit(-1); }
-	i = (size_t) index;
+	has_end = !lone_lisp_is_nil(arguments);
 
-	if (lone_lisp_is_nil(arguments)) {
-		j = lone_lisp_vector_count(lone, vector);
-	} else {
+	if (has_end) {
 		end = lone_lisp_list_first(lone, arguments);
 		arguments = lone_lisp_list_rest(lone, arguments);
 
 		if (!lone_lisp_is_nil(arguments)) {
-			/* too many arguments given: (slice vector start end extra) */ linux_exit(-1);
+			/* too many arguments given: (slice vector start end extra) */
+			return
+				lone_lisp_signal_emit(
+					lone,
+					machine,
+					1,
+					lone->symbols.tags.arity_error,
+					arguments
+				);
 		}
-
-		if (!lone_lisp_is_integer(lone, end)) {
-			/* end is not an integer: (slice vector 10 "error") */ linux_exit(-1);
-		}
-
-		index = lone_lisp_integer_of(end);
-		if (index < 0) { /* negative indexes not supported: (slice vector 0 -10) */ linux_exit(-1); }
-		j = (size_t) index;
+	} else {
+		end = lone_lisp_nil();
 	}
 
-	if (i > lone_lisp_vector_count(lone, vector)) { /* start past end of vector */ linux_exit(-1); }
-	if (j > lone_lisp_vector_count(lone, vector)) { /* end past end of vector */ linux_exit(-1); }
-	if (j < i) { /* end before start: (slice vector 10 5) */ linux_exit(-1); }
+validate_vector:
+
+	if (!lone_lisp_is_vector(lone, vector)) {
+		/* vector not given: (slice {}) */
+		lone_lisp_machine_push_value(lone, machine, start);
+		lone_lisp_machine_push_value(lone, machine, end);
+		lone_lisp_machine_push_integer(lone, machine, has_end);
+		return
+			lone_lisp_signal_emit(
+				lone,
+				machine,
+				2,
+				lone->symbols.tags.type_error,
+				vector
+			);
+	}
+
+validate_start:
+
+	if (!lone_lisp_is_integer(lone, start)) {
+		/* start is not an integer: (slice vector "error") */
+		lone_lisp_machine_push_value(lone, machine, vector);
+		lone_lisp_machine_push_value(lone, machine, end);
+		lone_lisp_machine_push_integer(lone, machine, has_end);
+		return
+			lone_lisp_signal_emit(
+				lone,
+				machine,
+				3,
+				lone->symbols.tags.type_error,
+				start
+			);
+	}
+
+	index = lone_lisp_integer_of(start);
+	count = lone_lisp_vector_count(lone, vector);
+
+	if (index < 0) {
+		/* negative indexes not supported: (slice vector -10) */
+		lone_lisp_machine_push_value(lone, machine, vector);
+		lone_lisp_machine_push_value(lone, machine, end);
+		lone_lisp_machine_push_integer(lone, machine, has_end);
+		return
+			lone_lisp_signal_emit(
+				lone,
+				machine,
+				3,
+				lone->symbols.tags.index_error,
+				start
+			);
+	}
+
+	if ((size_t) index > count) {
+		/* start past end of vector: (slice [] 1 2) */
+		lone_lisp_machine_push_value(lone, machine, vector);
+		lone_lisp_machine_push_value(lone, machine, end);
+		lone_lisp_machine_push_integer(lone, machine, has_end);
+		return
+			lone_lisp_signal_emit(
+				lone,
+				machine,
+				3,
+				lone->symbols.tags.index_error,
+				start
+			);
+	}
+
+	i = (size_t) index;
+
+	if (!has_end) {
+		j = count;
+		goto build_slice;
+	}
+
+validate_end:
+
+	/* case 4 resumes here with uninitialized index, count and i
+	   derive them from the already validated start and vector   */
+	index = lone_lisp_integer_of(start);
+	count = lone_lisp_vector_count(lone, vector);
+	i = (size_t) index;
+
+	if (!lone_lisp_is_integer(lone, end)) {
+		/* end is not an integer: (slice vector 10 "error") */
+		lone_lisp_machine_push_value(lone, machine, vector);
+		lone_lisp_machine_push_value(lone, machine, start);
+		return
+			lone_lisp_signal_emit(
+				lone,
+				machine,
+				4,
+				lone->symbols.tags.type_error,
+				end
+			);
+	}
+
+	index = lone_lisp_integer_of(end);
+
+	if (index < 0) {
+		/* negative indexes not supported: (slice vector 0 -10) */
+		lone_lisp_machine_push_value(lone, machine, vector);
+		lone_lisp_machine_push_value(lone, machine, start);
+		return
+			lone_lisp_signal_emit(
+				lone,
+				machine,
+				4,
+				lone->symbols.tags.index_error,
+				end
+			);
+	}
+
+	if ((size_t) index > count) {
+		/* end past end of vector */
+		lone_lisp_machine_push_value(lone, machine, vector);
+		lone_lisp_machine_push_value(lone, machine, start);
+		return
+			lone_lisp_signal_emit(
+				lone,
+				machine,
+				4,
+				lone->symbols.tags.index_error,
+				end
+			);
+	}
+
+	j = (size_t) index;
+
+	if (j < i) {
+		/* end before start: (slice vector 10 5) */
+		lone_lisp_machine_push_value(lone, machine, vector);
+		lone_lisp_machine_push_value(lone, machine, start);
+		return
+			lone_lisp_signal_emit(
+				lone,
+				machine,
+				4,
+				lone->symbols.tags.index_error,
+				end
+			);
+	}
+
+build_slice:
 
 	slice = lone_lisp_vector_create(lone, j - i);
 

@@ -1,0 +1,9 @@
+(import (lone print intercept lambda quote) (vector slice))
+
+; handler provides a valid index to replace the out-of-range start
+; slice produces the requested sub-vector
+
+(print
+  (intercept
+    (('index-error (lambda (v k) (k 1))))
+    (slice [10 20 30 40] -1 3)))

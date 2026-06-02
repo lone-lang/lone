@@ -1,0 +1,9 @@
+(import (lone print intercept lambda quote nil? if) (vector slice))
+
+; handler recovers the non-integer start, but not the explicit nil end
+; the nil end stays a type-error after recovery, not silently dropped
+
+(print
+  (intercept
+    (('type-error (lambda (v k) (if (nil? v) 42 (k 1)))))
+    (slice [10 20 30 40] 'bad ())))

@@ -1,0 +1,2 @@
+(import (lone print intercept lambda quote) (vector slice))
+(print (intercept (('type-error (lambda (v) 42))) (slice {} 0)))
