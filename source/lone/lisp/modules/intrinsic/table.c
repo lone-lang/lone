@@ -271,56 +271,11 @@ LONE_LISP_PRIMITIVE(table_each)
 	lone_lisp_integer i;
 
 	switch (step) {
-	case 0: /* destructure arguments and initialize */
+	case 0: /* destructure arguments */
 
 		arguments = lone_lisp_machine_pop_value(lone, machine);
 
-		if (lone_lisp_list_destructure(lone, arguments, 2, &table, &function)) {
-			/* wrong number of arguments */ linux_exit(-1);
-		}
-
-		if (!lone_lisp_is_table(lone, table)) { /* table not given: (each []) */ linux_exit(-1); }
-		if (!lone_lisp_is_applicable(lone, function)) {
-			/* applicable not given: (each table []) */ linux_exit(-1);
-		}
-
-		if (lone_lisp_heap_value_of(lone, table)->as.table.count < 1) {
-			/* nothing to do */ break;
-		}
-
-		i = 0;
-
-	advance:
-
-		heap_value = lone_lisp_heap_value_of(lone, table);
-
-		if (heap_value->shaped) {
-			shape = &lone_lisp_heap_value_of(lone, heap_value->as.table.shaped.shape)->as.shape;
-
-			if (i >= (lone_lisp_integer) shape->count) { break; }
-
-			key   = shape->keys[i];
-			value = heap_value->as.table.shaped.values[i];
-		} else {
-			while (   i < (lone_lisp_integer) heap_value->as.table.hash.used
-			       && lone_lisp_is_tombstone(heap_value->as.table.hash.entries[i].key)) { ++i; }
-
-			if (i >= (lone_lisp_integer) heap_value->as.table.hash.used) { break; }
-
-			entry = &heap_value->as.table.hash.entries[i];
-			key   = entry->key;
-			value = entry->value;
-		}
-
-		machine->applicable = function;
-		machine->list = lone_lisp_list_build(lone, 2, &key, &value);
-		machine->step = LONE_LISP_MACHINE_STEP_APPLY;
-
-		lone_lisp_machine_push_integer(lone, machine, i);
-		lone_lisp_machine_push_value(lone, machine, function);
-		lone_lisp_machine_push_value(lone, machine, table);
-
-		return 1;
+		goto destructure;
 
 	case 1: /* advance or finish iteration */
 
@@ -332,9 +287,125 @@ LONE_LISP_PRIMITIVE(table_each)
 
 		goto advance;
 
+	case 2: /* resumed with replacement argument list */
+
+		arguments = machine->value;
+
+		if (!lone_lisp_is_list(lone, arguments)) {
+			/* cannot destructure */
+			return
+				lone_lisp_signal_emit(
+					lone,
+					machine,
+					2,
+					lone->symbols.tags.type_error,
+					arguments
+				);
+		}
+
+		goto destructure;
+
+	case 3: /* resumed with replacement table from type-error */
+
+		function = lone_lisp_machine_pop_value(lone, machine);
+		table    = machine->value;
+
+		goto check_table;
+
+	case 4: /* resumed with replacement function from type-error */
+
+		table    = lone_lisp_machine_pop_value(lone, machine);
+		function = machine->value;
+
+		goto check_function;
+
 	default:
-		linux_exit(-1);
+		__builtin_trap();
 	}
+
+destructure:
+
+	if (lone_lisp_list_destructure(lone, arguments, 2, &table, &function)) {
+		/* wrong number of arguments: (each), (each {} [] "extra") */
+		return
+			lone_lisp_signal_emit(
+				lone,
+				machine,
+				2,
+				lone->symbols.tags.arity_error,
+				arguments
+			);
+	}
+
+check_table:
+
+	if (!lone_lisp_is_table(lone, table)) {
+		/* table not given: (each []) */
+		lone_lisp_machine_push_value(lone, machine, function);
+		return
+			lone_lisp_signal_emit(
+				lone,
+				machine,
+				3,
+				lone->symbols.tags.type_error,
+				table
+			);
+	}
+
+check_function:
+
+	if (!lone_lisp_is_applicable(lone, function)) {
+		/* applicable not given: (each table []) */
+		lone_lisp_machine_push_value(lone, machine, table);
+		return
+			lone_lisp_signal_emit(
+				lone,
+				machine,
+				4,
+				lone->symbols.tags.type_error,
+				function
+			);
+	}
+
+	if (lone_lisp_heap_value_of(lone, table)->as.table.count < 1) {
+		/* nothing to do */ goto done;
+	}
+
+	i = 0;
+
+advance:
+
+	heap_value = lone_lisp_heap_value_of(lone, table);
+
+	if (heap_value->shaped) {
+		shape = &lone_lisp_heap_value_of(lone, heap_value->as.table.shaped.shape)->as.shape;
+
+		if (i >= (lone_lisp_integer) shape->count) { goto done; }
+
+		key   = shape->keys[i];
+		value = heap_value->as.table.shaped.values[i];
+	} else {
+		while (   i < (lone_lisp_integer) heap_value->as.table.hash.used
+		       && lone_lisp_is_tombstone(heap_value->as.table.hash.entries[i].key)) { ++i; }
+
+		if (i >= (lone_lisp_integer) heap_value->as.table.hash.used) { goto done; }
+
+		entry = &heap_value->as.table.hash.entries[i];
+		key   = entry->key;
+		value = entry->value;
+	}
+
+	machine->applicable = function;
+	machine->list = lone_lisp_list_build(lone, 2, &key, &value);
+	machine->step = LONE_LISP_MACHINE_STEP_APPLY;
+
+	lone_lisp_machine_push_integer(lone, machine, i);
+	lone_lisp_machine_push_value(lone, machine, function);
+	lone_lisp_machine_push_value(lone, machine, table);
+
+	return 1;
+
+done:
 
 	lone_lisp_machine_push_value(lone, machine, lone_lisp_nil());
 	return 0;

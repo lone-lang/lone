@@ -1,0 +1,2 @@
+(import (lone print intercept lambda quote) (table each))
+(print (intercept (('type-error (lambda (v) 42))) (each [] (lambda (k v) v))))

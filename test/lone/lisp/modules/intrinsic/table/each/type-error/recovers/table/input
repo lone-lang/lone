@@ -1,0 +1,8 @@
+(import (lone print intercept lambda quote) (table each))
+
+; handler provides a table to replace the non-table argument
+; each iterates over the replacement
+
+(intercept
+  (('type-error (lambda (v k) (k {a 1}))))
+  (each 0 print))
