@@ -1,0 +1,2 @@
+(import (lone print intercept lambda quote) (vector each))
+(print (intercept (('arity-error (lambda (v) 42))) (each [1 2 3])))

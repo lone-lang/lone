@@ -509,37 +509,11 @@ LONE_LISP_PRIMITIVE(vector_each)
 	lone_lisp_integer i;
 
 	switch (step) {
-	case 0:
+	case 0: /* destructure arguments */
+
 		arguments = lone_lisp_machine_pop_value(lone, machine);
 
-		if (lone_lisp_list_destructure(lone, arguments, 2, &vector, &function)) {
-			/* wrong number of arguments */ linux_exit(-1);
-		}
-
-		if (!lone_lisp_is_vector(lone, vector)) { /* vector not given: (each {}) */ linux_exit(-1); }
-		if (!lone_lisp_is_applicable(lone, function)) {
-			/* applicable not given: (each vector []) */ linux_exit(-1);
-		}
-
-		if (lone_lisp_vector_count(lone, vector) < 1) {
-			/* nothing to do */ break;
-		}
-
-		i = 0;
-
-	iteration:
-
-		entry = lone_lisp_vector_get_value_at(lone, vector, i);
-
-		machine->applicable = function;
-		machine->list = lone_lisp_list_build(lone, 1, &entry);
-		machine->step = LONE_LISP_MACHINE_STEP_APPLY;
-
-		lone_lisp_machine_push_integer(lone, machine, i);
-		lone_lisp_machine_push_value(lone, machine, function);
-		lone_lisp_machine_push_value(lone, machine, vector);
-
-		return 1;
+		goto destructure;
 
 	case 1: /* advance or finish iteration */
 
@@ -552,12 +526,110 @@ LONE_LISP_PRIMITIVE(vector_each)
 		if (i < lone_lisp_vector_count(lone, vector)) {
 			goto iteration;
 		} else {
-			break;
+			goto done;
 		}
 
+	case 2: /* resumed with replacement argument list */
+
+		arguments = machine->value;
+
+		if (!lone_lisp_is_list(lone, arguments)) {
+			/* cannot destructure */
+			return
+				lone_lisp_signal_emit(
+					lone,
+					machine,
+					2,
+					lone->symbols.tags.type_error,
+					arguments
+				);
+		}
+
+		goto destructure;
+
+	case 3: /* resumed with replacement vector from type-error */
+
+		function = lone_lisp_machine_pop_value(lone, machine);
+		vector   = machine->value;
+
+		goto check_vector;
+
+	case 4: /* resumed with replacement function from type-error */
+
+		vector   = lone_lisp_machine_pop_value(lone, machine);
+		function = machine->value;
+
+		goto check_function;
+
 	default:
-		linux_exit(-1);
+		__builtin_trap();
 	}
+
+destructure:
+
+	if (lone_lisp_list_destructure(lone, arguments, 2, &vector, &function)) {
+		/* wrong number of arguments: (each), (each [] [] "extra") */
+		return
+			lone_lisp_signal_emit(
+				lone,
+				machine,
+				2,
+				lone->symbols.tags.arity_error,
+				arguments
+			);
+	}
+
+check_vector:
+
+	if (!lone_lisp_is_vector(lone, vector)) {
+		/* vector not given: (each {}) */
+		lone_lisp_machine_push_value(lone, machine, function);
+		return
+			lone_lisp_signal_emit(
+				lone,
+				machine,
+				3,
+				lone->symbols.tags.type_error,
+				vector
+			);
+	}
+
+check_function:
+
+	if (!lone_lisp_is_applicable(lone, function)) {
+		/* applicable not given: (each vector []) */
+		lone_lisp_machine_push_value(lone, machine, vector);
+		return
+			lone_lisp_signal_emit(
+				lone,
+				machine,
+				4,
+				lone->symbols.tags.type_error,
+				function
+			);
+	}
+
+	if (lone_lisp_vector_count(lone, vector) < 1) {
+		/* nothing to do */ goto done;
+	}
+
+	i = 0;
+
+iteration:
+
+	entry = lone_lisp_vector_get_value_at(lone, vector, i);
+
+	machine->applicable = function;
+	machine->list = lone_lisp_list_build(lone, 1, &entry);
+	machine->step = LONE_LISP_MACHINE_STEP_APPLY;
+
+	lone_lisp_machine_push_integer(lone, machine, i);
+	lone_lisp_machine_push_value(lone, machine, function);
+	lone_lisp_machine_push_value(lone, machine, vector);
+
+	return 1;
+
+done:
 
 	lone_lisp_machine_push_value(lone, machine, lone_lisp_nil());
 	return 0;

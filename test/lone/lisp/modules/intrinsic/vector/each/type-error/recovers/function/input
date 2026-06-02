@@ -1,0 +1,8 @@
+(import (lone print intercept lambda quote) (vector each))
+
+; handler provides an applicable to replace the non-function argument
+; each iterates over the vector, calling the supplied function on each entry
+
+(intercept
+  (('type-error (lambda (v k) (k print))))
+  (each [10 20 30] 0))
