@@ -256,30 +256,72 @@ LONE_LISP_PRIMITIVE(text_code_unit_count)
 
 	switch (step) {
 	case 0:
+
 		arguments = lone_lisp_machine_pop_value(lone, machine);
 
-		if (lone_lisp_list_destructure(lone, arguments, 1, &text)) {
-			/* wrong number of arguments */ linux_exit(-1);
+		goto destructure;
+
+	case 1: /* resumed with replacement argument list */
+
+		arguments = machine->value;
+
+		if (!lone_lisp_is_list(lone, arguments)) {
+			/* cannot destructure */
+			return
+				lone_lisp_signal_emit(
+					lone,
+					machine,
+					1,
+					lone->symbols.tags.type_error,
+					arguments
+				);
 		}
 
-	validate:
-		if (!lone_lisp_is_text(lone, text)) {
-			return lone_lisp_signal_emit(lone, machine, 1,
-					lone->symbols.tags.type_error, text);
-		}
+		goto destructure;
 
-		bytes = lone_lisp_bytes_of(lone, &text);
-		count = lone_lisp_integer_create(bytes.count);
+	case 2: /* resumed with replacement text from type-error */
 
-		lone_lisp_machine_push_value(lone, machine, count);
-		return 0;
-
-	case 1:
 		text = machine->value;
-		goto validate;
+
+		goto check_text;
+
+	default:
+		__builtin_trap();
 	}
 
-	linux_exit(-1);
+destructure:
+
+	if (lone_lisp_list_destructure(lone, arguments, 1, &text)) {
+		/* wrong number of arguments: (code-unit-count), (code-unit-count "" "extra") */
+		return
+			lone_lisp_signal_emit(
+				lone,
+				machine,
+				1,
+				lone->symbols.tags.arity_error,
+				arguments
+			);
+	}
+
+check_text:
+
+	if (!lone_lisp_is_text(lone, text)) {
+		/* text not given: (code-unit-count 123) */
+		return
+			lone_lisp_signal_emit(
+				lone,
+				machine,
+				2,
+				lone->symbols.tags.type_error,
+				text
+			);
+	}
+
+	bytes = lone_lisp_bytes_of(lone, &text);
+	count = lone_lisp_integer_create(bytes.count);
+
+	lone_lisp_machine_push_value(lone, machine, count);
+	return 0;
 }
 
 LONE_LISP_PRIMITIVE(text_code_point_at)

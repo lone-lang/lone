@@ -1,0 +1,9 @@
+(import (lone print intercept lambda quote) (text code-unit-count))
+
+; handler provides a replacement argument list
+; code-unit-count returns the byte size of the supplied text
+
+(print
+  (intercept
+    (('arity-error (lambda (v k) (k (quote ("hello"))))))
+    (code-unit-count)))
