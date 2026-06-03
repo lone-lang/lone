@@ -17,6 +17,8 @@ fi
 
 code=0
 
+readonly default_timeout=60
+
 declare -A styles tests pids
 
 # C tests in source/tests/
@@ -92,6 +94,7 @@ compare-status() {
 test-script() {
   local name="${1}"
   local test="${2}"
+  local time_limit="${3}"
   local script="${test}"/script
 
   if [[ ! -x "${script}" ]]; then
@@ -101,7 +104,7 @@ test-script() {
 
   local actual="${tmp}/${name}"
   local result=PASS
-  "${script}" > "${actual}"/output 2> "${actual}"/error || result=FAIL
+  timeout "${time_limit}" "${script}" > "${actual}"/output 2> "${actual}"/error || result=FAIL
 
   report-test-result "${name}" "${script}" "${result}"
 
@@ -116,15 +119,16 @@ test-script() {
 resolve-attributes() {
   local test_case="${1}"
 
-  # Resolves into the caller's protocol and executable locals,
+  # Resolves into the caller's protocol, executable and time_limit locals,
   # walking up to the suite root in a single pass.
-  protocol="" executable=""
+  protocol="" executable="" time_limit=""
 
   while true; do
     [[ -z "${protocol}"   && -r "${test_case}/protocol"   && ! -x "${test_case}/protocol"   ]] && read -r protocol   < "${test_case}/protocol"
     [[ -z "${executable}" && -r "${test_case}/executable" && ! -x "${test_case}/executable" ]] && read -r executable < "${test_case}/executable"
+    [[ -z "${time_limit}" && -r "${test_case}/timeout"    && ! -x "${test_case}/timeout"    ]] && read -r time_limit < "${test_case}/timeout"
 
-    [[ -n "${protocol}" && -n "${executable}" ]] && break
+    [[ -n "${protocol}" && -n "${executable}" && -n "${time_limit}" ]] && break
     [[ "${test_case}" == "${suite}" || "${test_case}" != */* ]] && break
     test_case="${test_case%/*}"
   done
@@ -135,6 +139,7 @@ execute-test() {
   local test="${2}"
   local executable="${3}"
   local input="${4}"
+  local time_limit="${5}"
 
   if [[ ! -x "${executable}" ]]; then
     return 3
@@ -157,7 +162,7 @@ execute-test() {
 
   local actual="${tmp}/${name}"
 
-  env --argv0 "${program_name}" --ignore-environment "${environment[@]}" "${executable}" "${arguments[@]}" < "${input}" > "${actual}/output" 2> "${actual}/error"
+  timeout "${time_limit}" env --argv0 "${program_name}" --ignore-environment "${environment[@]}" "${executable}" "${arguments[@]}" < "${input}" > "${actual}/output" 2> "${actual}/error"
   printf '%d\n' "${?}" > "${actual}/status"
 }
 
@@ -182,13 +187,14 @@ test-executable() {
   local name="${1}"
   local test="${2}"
   local executable="${3}"
+  local time_limit="${4}"
 
   local input="${test}"/input
   if [[ ! -r "${input}" ]]; then
     input=/dev/null
   fi
 
-  execute-test "${name}" "${test}" "${executable}" "${input}"
+  execute-test "${name}" "${test}" "${executable}" "${input}" "${time_limit}"
   if [[ "${?}" -eq 3 ]]; then
     report-test-result "${name}" "${executable}" SKIP
     return 2
@@ -211,8 +217,9 @@ test-lone-test() {
   local name="${1}"
   local test="${2}"
   local executable="${3}"
+  local time_limit="${4}"
 
-  execute-test "${name}" "${test}" "${executable}" /dev/null
+  execute-test "${name}" "${test}" "${executable}" /dev/null "${time_limit}"
   if [[ "${?}" -eq 3 ]]; then
     report-test-result "${name}" "${executable}" SKIP
     return 2
@@ -256,20 +263,21 @@ test-lone-test() {
 classify-tests() {
   local test_suite="${1}"
   local prefix="${2}"
-  local test_case test_name protocol executable resolved
+  local test_case test_name protocol executable time_limit resolved
 
   while IFS= read -r -d '' test_case; do
     resolve-attributes "${test_case}"
     : "${protocol:=standard}"
+    : "${time_limit:=${default_timeout}}"
 
     test_name="${test_case#"${test_suite}"/}"
     resolved="${executable:+${prefix}/${executable}}"
 
     case "${protocol}" in
-      standard)  standard_tests+=("${test_name}:${resolved}")  ;;
-      script)    script_tests+=("${test_name}")                ;;
-      lone/test) lone_tests+=("${test_name}:${resolved}")      ;;
-      *)         tests["${test_name}"]=3                       ;;
+      standard)  standard_tests+=("${test_name}:${resolved}:${time_limit}")  ;;
+      script)    script_tests+=("${test_name}:${time_limit}")                ;;
+      lone/test) lone_tests+=("${test_name}:${resolved}:${time_limit}")      ;;
+      *)         tests["${test_name}"]=3                                     ;;
     esac
   done < <(find "${test_suite}" -mindepth 1 -type d -links 2 -print0)
 }
@@ -279,11 +287,12 @@ run-test() {
   local test_case="${2}"
   local executable="${3}"
   local protocol="${4}"
+  local time_limit="${5}"
 
   case "${protocol}" in
-    standard)  test-executable "${name}" "${test_case}" "${executable}" & ;;
-    lone/test) test-lone-test  "${name}" "${test_case}" "${executable}" & ;;
-    script)    test-script     "${name}" "${test_case}"                 & ;;
+    standard)  test-executable "${name}" "${test_case}" "${executable}" "${time_limit}" & ;;
+    lone/test) test-lone-test  "${name}" "${test_case}" "${executable}" "${time_limit}" & ;;
+    script)    test-script     "${name}" "${test_case}" "${time_limit}"                 & ;;
     *)
       tests["${name}"]=3
       return
@@ -296,7 +305,7 @@ run-test() {
 run-all-tests() {
   local test_suite="${1%/}"
   local prefix="${2%/}"
-  local entry test_name executable
+  local entry test_name executable time_limit rest
 
   local -a standard_tests=() script_tests=() lone_tests=()
   classify-tests "${test_suite}" "${prefix}"
@@ -309,19 +318,24 @@ run-all-tests() {
 
   for entry in "${standard_tests[@]}"; do
     test_name="${entry%%:*}"
-    executable="${entry#*:}"
-    run-test "${test_name}" "${test_suite}/${test_name}" "${executable}" standard
+    rest="${entry#*:}"
+    executable="${rest%%:*}"
+    time_limit="${rest#*:}"
+    run-test "${test_name}" "${test_suite}/${test_name}" "${executable}" standard "${time_limit}"
   done
 
   for entry in "${lone_tests[@]}"; do
     test_name="${entry%%:*}"
-    executable="${entry#*:}"
-    run-test "${test_name}" "${test_suite}/${test_name}" "${executable}" lone/test
+    rest="${entry#*:}"
+    executable="${rest%%:*}"
+    time_limit="${rest#*:}"
+    run-test "${test_name}" "${test_suite}/${test_name}" "${executable}" lone/test "${time_limit}"
   done
 
   for entry in "${script_tests[@]}"; do
-    test_name="${entry}"
-    run-test "${test_name}" "${test_suite}/${test_name}" "" script
+    test_name="${entry%%:*}"
+    time_limit="${entry#*:}"
+    run-test "${test_name}" "${test_suite}/${test_name}" "" script "${time_limit}"
   done
 
   collect-parallel-results
@@ -409,7 +423,7 @@ run-single-test() {
   local test_name="${1}"
   local test_case="${2}"
   local prefix="${3}"
-  local protocol executable resolved
+  local protocol executable time_limit resolved
 
   if [[ ! -d "${test_case}" ]]; then
     >&2 printf "Test not found: %s\n" "${test_name}"
@@ -419,11 +433,12 @@ run-single-test() {
 
   resolve-attributes "${test_case}"
   : "${protocol:=standard}"
+  : "${time_limit:=${default_timeout}}"
   resolved="${executable:+${prefix}/${executable}}"
 
   mkdir -p "${tmp}/${test_name}"
 
-  run-test "${test_name}" "${test_case}" "${resolved}" "${protocol}"
+  run-test "${test_name}" "${test_case}" "${resolved}" "${protocol}" "${time_limit}"
   collect-parallel-results
 }
 
