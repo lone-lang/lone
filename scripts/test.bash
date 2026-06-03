@@ -39,6 +39,17 @@ remove-prefix() {
 compare() {
   [[ ! -r "${1}" ]] && return 0
   [[ ! -r "${2}" ]] && return 2
+
+  local expected actual expected_code actual_code
+  IFS= read -rd '' expected < "${1}"; expected_code="${?}"
+  IFS= read -rd '' actual   < "${2}"; actual_code="${?}"
+
+  if (( expected_code == 1 && actual_code == 1 )); then
+    [[ "${expected}" == "${actual}" ]] && return 0
+  else
+    cmp -s "${1}" "${2}" && return 0
+  fi
+
   diff \
     --color \
     --new-file --side-by-side --suppress-common-lines \
