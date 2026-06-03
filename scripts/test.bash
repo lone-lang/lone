@@ -2,11 +2,18 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 suite="${1}"
-prefix="${2}"
+prefix="${2%/}"
 name="${3}"
 
 tmp="${TMPDIR:-/dev/shm}/lone/test/${prefix##*/}/$$"
 rm -rf "${tmp}"
+
+if [[ -n "${prefix}" && -d "${prefix}" ]]; then
+  while IFS= read -r -d '' directory; do
+    PATH="${directory}:${PATH}"
+  done < <(find "${prefix}" -type f -executable -printf '%h\0' | sort -uz)
+  export PATH
+fi
 
 code=0
 
