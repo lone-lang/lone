@@ -107,7 +107,8 @@ find-file-in-hierarchy() {
 }
 
 read-file-in-hierarchy() {
-  local file="$(find-file-in-hierarchy "${@}")"
+  local file
+  file="$(find-file-in-hierarchy "${@}")"
   if [[ "${?}" -eq 0 ]]; then
     echo -E "$(< "${file}")"
   else
