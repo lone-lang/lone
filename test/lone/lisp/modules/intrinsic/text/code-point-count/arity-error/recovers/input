@@ -1,0 +1,9 @@
+(import (lone print intercept lambda quote) (text code-point-count))
+
+; handler provides a replacement argument list
+; code-point-count returns the number of code points in the supplied text
+
+(print
+  (intercept
+    (('arity-error (lambda (v k) (k (quote ("hello"))))))
+    (code-point-count)))
