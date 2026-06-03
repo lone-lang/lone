@@ -1,0 +1,9 @@
+(import (lone print intercept lambda quote) (math /))
+
+; handler provides an integer to replace the non-integer divisor
+; / retries the division and returns the quotient
+
+(print
+  (intercept
+    (('type-error (lambda (v k) (k 2))))
+    (/ 10 'x)))

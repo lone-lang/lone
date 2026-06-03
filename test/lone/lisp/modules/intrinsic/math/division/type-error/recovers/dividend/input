@@ -1,0 +1,9 @@
+(import (lone print intercept lambda quote) (math /))
+
+; handler provides an integer to replace the non-integer dividend
+; / retries the division and returns the quotient
+
+(print
+  (intercept
+    (('type-error (lambda (v k) (k 10))))
+    (/ 'x 2)))

@@ -322,11 +322,7 @@ LONE_LISP_PRIMITIVE(math_divide)
 
 		arguments = lone_lisp_machine_pop_value(lone, machine);
 
-		if (lone_lisp_is_nil(arguments)) { /* at least the dividend is required, (/) is invalid */ goto no_arguments; }
-		dividend = lone_lisp_list_first(lone, arguments);
-		arguments = lone_lisp_list_rest(lone, arguments);
-
-		goto validate_dividend;
+		goto check_arity;
 
 	case 1: /* resumed with a replacement divisor */
 
@@ -342,11 +338,48 @@ LONE_LISP_PRIMITIVE(math_divide)
 
 		goto validate_dividend;
 
+	case 3: /* resumed with replacement arguments from arity-error */
+
+		arguments = machine->value;
+
+		if (!lone_lisp_list_is_proper(lone, arguments)) {
+			/* cannot parse */
+			return
+				lone_lisp_signal_emit(
+					lone,
+					machine,
+					3,
+					lone->symbols.tags.type_error,
+					arguments
+				);
+		}
+
+		goto check_arity;
+
 	default:
 		break;
 	}
 
-	linux_exit(-1);
+	__builtin_trap();
+
+check_arity:
+
+	if (lone_lisp_is_nil(arguments)) {
+		/* at least the dividend is required, (/) is invalid */
+		return
+			lone_lisp_signal_emit(
+				lone,
+				machine,
+				3,
+				lone->symbols.tags.arity_error,
+				arguments
+			);
+	}
+
+	dividend = lone_lisp_list_first(lone, arguments);
+	arguments = lone_lisp_list_rest(lone, arguments);
+
+	goto validate_dividend;
 
 validate_dividend:
 
@@ -437,9 +470,6 @@ validate_divisor:
 
 	lone_lisp_machine_push_value(lone, machine, result);
 	return 0;
-
-no_arguments:
-		linux_exit(-1);
 }
 
 static long apply_and_return(struct lone_lisp *lone, struct lone_lisp_machine *machine,

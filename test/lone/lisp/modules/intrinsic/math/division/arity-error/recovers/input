@@ -1,0 +1,9 @@
+(import (lone print intercept lambda quote) (math /))
+
+; handler provides a replacement argument list
+; / retries the division and returns the quotient
+
+(print
+  (intercept
+    (('arity-error (lambda (v k) (k (quote (10 2))))))
+    (/)))
