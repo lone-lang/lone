@@ -1,0 +1,9 @@
+(import (lone print intercept lambda quote) (text slice))
+
+; handler provides an integer to replace the non-integer end
+; slice produces the substring ending at the replacement
+
+(print
+  (intercept
+    (('type-error (lambda (v k) (k 4))))
+    (slice "hello" 1 'x)))

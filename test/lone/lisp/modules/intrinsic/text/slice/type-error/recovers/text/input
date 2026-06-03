@@ -1,0 +1,9 @@
+(import (lone print intercept lambda quote) (text slice))
+
+; handler provides text to replace the non-text argument
+; slice produces the substring between the requested indexes
+
+(print
+  (intercept
+    (('type-error (lambda (v k) (k "hello"))))
+    (slice 0 1 4)))
