@@ -1,0 +1,2 @@
+(import (lone print intercept lambda quote) (text from-code-point))
+(print (intercept (('arity-error (lambda (v) 42))) (from-code-point)))

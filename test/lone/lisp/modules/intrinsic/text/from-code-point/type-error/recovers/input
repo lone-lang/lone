@@ -1,0 +1,9 @@
+(import (lone print intercept lambda quote) (text from-code-point))
+
+; handler provides an integer to replace the non-integer argument
+; from-code-point returns the encoded text
+
+(print
+  (intercept
+    (('type-error (lambda (v k) (k 97))))
+    (from-code-point 'x)))

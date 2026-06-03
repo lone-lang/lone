@@ -1,0 +1,9 @@
+(import (lone print intercept lambda quote) (text from-code-point))
+
+; handler provides a replacement argument list
+; from-code-point returns the encoded text
+
+(print
+  (intercept
+    (('arity-error (lambda (v k) (k (quote (97))))))
+    (from-code-point)))

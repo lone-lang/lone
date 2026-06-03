@@ -472,37 +472,86 @@ LONE_LISP_PRIMITIVE(text_from_code_point)
 
 	switch (step) {
 	case 0:
+
 		arguments = lone_lisp_machine_pop_value(lone, machine);
 
-		if (lone_lisp_list_destructure(lone, arguments, 1, &integer)) {
-			/* wrong number of arguments */ linux_exit(-1);
+		goto destructure;
+
+	case 1: /* resumed with replacement argument list */
+
+		arguments = machine->value;
+
+		if (!lone_lisp_is_list(lone, arguments)) {
+			/* cannot destructure */
+			return
+				lone_lisp_signal_emit(
+					lone,
+					machine,
+					1,
+					lone->symbols.tags.type_error,
+					arguments
+				);
 		}
 
-	validate:
-		if (!lone_lisp_is_integer(lone, integer)) {
-			return lone_lisp_signal_emit(lone, machine, 1,
-					lone->symbols.tags.type_error, integer);
-		}
+		goto destructure;
 
-		code_point = lone_lisp_integer_of(integer);
+	case 2: /* resumed with replacement integer from type-error or invalid-unicode */
 
-		if (code_point < 0 || !lone_unicode_is_valid_code_point((lone_u32) code_point)) {
-			return lone_lisp_signal_emit(lone, machine, 1,
-					lone->symbols.tags.invalid_unicode, integer);
-		}
-
-		encoded = lone_unicode_utf8_encode((lone_u32) code_point);
-
-		lone_lisp_machine_push_value(lone, machine,
-				lone_lisp_text_copy(lone, encoded.bytes, encoded.bytes_written));
-		return 0;
-
-	case 1:
 		integer = machine->value;
-		goto validate;
+
+		goto check_integer;
+
+	default:
+		__builtin_trap();
 	}
 
-	linux_exit(-1);
+destructure:
+
+	if (lone_lisp_list_destructure(lone, arguments, 1, &integer)) {
+		/* wrong number of arguments: (from-code-point), (from-code-point 0 "extra") */
+		return
+			lone_lisp_signal_emit(
+				lone,
+				machine,
+				1,
+				lone->symbols.tags.arity_error,
+				arguments
+			);
+	}
+
+check_integer:
+
+	if (!lone_lisp_is_integer(lone, integer)) {
+		/* integer not given: (from-code-point "invalid") */
+		return
+			lone_lisp_signal_emit(
+				lone,
+				machine,
+				2,
+				lone->symbols.tags.type_error,
+				integer
+			);
+	}
+
+	code_point = lone_lisp_integer_of(integer);
+
+	if (code_point < 0 || !lone_unicode_is_valid_code_point((lone_u32) code_point)) {
+		/* not a valid code point: (from-code-point -1) */
+		return
+			lone_lisp_signal_emit(
+				lone,
+				machine,
+				2,
+				lone->symbols.tags.invalid_unicode,
+				integer
+			);
+	}
+
+	encoded = lone_unicode_utf8_encode((lone_u32) code_point);
+
+	lone_lisp_machine_push_value(lone, machine,
+			lone_lisp_text_copy(lone, encoded.bytes, encoded.bytes_written));
+	return 0;
 }
 
 LONE_LISP_PRIMITIVE(text_slice)
