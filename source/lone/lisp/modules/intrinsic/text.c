@@ -334,67 +334,134 @@ LONE_LISP_PRIMITIVE(text_code_point_at)
 
 	switch (step) {
 	case 0:
+
 		arguments = lone_lisp_machine_pop_value(lone, machine);
 
-		if (lone_lisp_list_destructure(lone, arguments, 2, &text, &index_value)) {
-			/* wrong number of arguments */ linux_exit(-1);
+		goto destructure;
+
+	case 1: /* resumed with replacement argument list */
+
+		arguments = machine->value;
+
+		if (!lone_lisp_is_list(lone, arguments)) {
+			/* cannot destructure */
+			return
+				lone_lisp_signal_emit(
+					lone,
+					machine,
+					1,
+					lone->symbols.tags.type_error,
+					arguments
+				);
 		}
 
-	validate_text:
-		if (!lone_lisp_is_text(lone, text)) {
-			lone_lisp_machine_push_value(lone, machine, index_value);
-			return lone_lisp_signal_emit(lone, machine, 1,
-					lone->symbols.tags.type_error, text);
-		}
+		goto destructure;
 
-	validate_index:
-		if (!lone_lisp_is_integer(lone, index_value)) {
-			lone_lisp_machine_push_value(lone, machine, text);
-			return lone_lisp_signal_emit(lone, machine, 2,
-					lone->symbols.tags.type_error, index_value);
-		}
+	case 2: /* resumed with replacement text from type-error */
 
-		index = lone_lisp_integer_of(index_value);
-
-		if (index < 0) {
-			lone_lisp_machine_push_value(lone, machine, text);
-			return lone_lisp_signal_emit(lone, machine, 2,
-					lone->symbols.tags.index_error, index_value);
-		}
-
-		code_point_count = lone_lisp_text_code_point_count_of(lone, text);
-		if ((size_t) index >= code_point_count) {
-			lone_lisp_machine_push_value(lone, machine, text);
-			return lone_lisp_signal_emit(lone, machine, 2,
-					lone->symbols.tags.index_error, index_value);
-		}
-
-		bytes = lone_lisp_bytes_of(lone, &text);
-
-		for (i = 0; i < (size_t) index; ++i) {
-			decoded = lone_unicode_utf8_decode(bytes);
-			bytes.pointer += decoded.bytes_read;
-			bytes.count   -= decoded.bytes_read;
-		}
-
-		decoded = lone_unicode_utf8_decode(bytes);
-
-		lone_lisp_machine_push_value(lone, machine,
-				lone_lisp_integer_create(decoded.code_point));
-		return 0;
-
-	case 1:
-		text = machine->value;
 		index_value = lone_lisp_machine_pop_value(lone, machine);
-		goto validate_text;
+		text        = machine->value;
 
-	case 2:
+		goto check_text;
+
+	case 3: /* resumed with replacement index from type-error or index-error */
+
+		text        = lone_lisp_machine_pop_value(lone, machine);
 		index_value = machine->value;
-		text = lone_lisp_machine_pop_value(lone, machine);
-		goto validate_index;
+
+		goto check_index;
+
+	default:
+		__builtin_trap();
 	}
 
-	linux_exit(-1);
+destructure:
+
+	if (lone_lisp_list_destructure(lone, arguments, 2, &text, &index_value)) {
+		/* wrong number of arguments: (code-point-at), (code-point-at "" 0 "extra") */
+		return
+			lone_lisp_signal_emit(
+				lone,
+				machine,
+				1,
+				lone->symbols.tags.arity_error,
+				arguments
+			);
+	}
+
+check_text:
+
+	if (!lone_lisp_is_text(lone, text)) {
+		/* text not given: (code-point-at 123 0) */
+		lone_lisp_machine_push_value(lone, machine, index_value);
+		return
+			lone_lisp_signal_emit(
+				lone,
+				machine,
+				2,
+				lone->symbols.tags.type_error,
+				text
+			);
+	}
+
+check_index:
+
+	if (!lone_lisp_is_integer(lone, index_value)) {
+		/* integer index not given: (code-point-at "" "invalid") */
+		lone_lisp_machine_push_value(lone, machine, text);
+		return
+			lone_lisp_signal_emit(
+				lone,
+				machine,
+				3,
+				lone->symbols.tags.type_error,
+				index_value
+			);
+	}
+
+	index = lone_lisp_integer_of(index_value);
+
+	if (index < 0) {
+		/* negative indexes not supported: (code-point-at "" -1) */
+		lone_lisp_machine_push_value(lone, machine, text);
+		return
+			lone_lisp_signal_emit(
+				lone,
+				machine,
+				3,
+				lone->symbols.tags.index_error,
+				index_value
+			);
+	}
+
+	code_point_count = lone_lisp_text_code_point_count_of(lone, text);
+
+	if ((size_t) index >= code_point_count) {
+		/* index past end of text: (code-point-at "" 0) */
+		lone_lisp_machine_push_value(lone, machine, text);
+		return
+			lone_lisp_signal_emit(
+				lone,
+				machine,
+				3,
+				lone->symbols.tags.index_error,
+				index_value
+			);
+	}
+
+	bytes = lone_lisp_bytes_of(lone, &text);
+
+	for (i = 0; i < (size_t) index; ++i) {
+		decoded = lone_unicode_utf8_decode(bytes);
+		bytes.pointer += decoded.bytes_read;
+		bytes.count   -= decoded.bytes_read;
+	}
+
+	decoded = lone_unicode_utf8_decode(bytes);
+
+	lone_lisp_machine_push_value(lone, machine,
+			lone_lisp_integer_create(decoded.code_point));
+	return 0;
 }
 
 LONE_LISP_PRIMITIVE(text_from_code_point)

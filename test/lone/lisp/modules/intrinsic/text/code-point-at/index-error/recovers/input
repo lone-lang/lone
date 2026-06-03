@@ -1,0 +1,9 @@
+(import (lone print intercept lambda quote) (text code-point-at))
+
+; handler provides a valid index to replace the out-of-range index
+; code-point-at returns the code point at the replacement
+
+(print
+  (intercept
+    (('index-error (lambda (v k) (k 1))))
+    (code-point-at "hello" -1)))

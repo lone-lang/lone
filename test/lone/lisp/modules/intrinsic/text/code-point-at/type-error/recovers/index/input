@@ -1,0 +1,9 @@
+(import (lone print intercept lambda quote) (text code-point-at))
+
+; handler provides an integer to replace the non-integer index
+; code-point-at returns the code point at the replacement index
+
+(print
+  (intercept
+    (('type-error (lambda (v k) (k 1))))
+    (code-point-at "hello" 'x)))
