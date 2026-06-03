@@ -1,0 +1,9 @@
+(import (lone print intercept lambda quote) (math sign))
+
+; handler provides an integer to replace the non-integer argument
+; sign returns the sign of the replacement
+
+(print
+  (intercept
+    (('type-error (lambda (v k) (k 42))))
+    (sign 'x)))

@@ -518,53 +518,110 @@ static struct lone_lisp_value sign_of(struct lone_lisp_value value)
 	}
 }
 
-static struct lone_lisp_value compute_sign(struct lone_lisp *lone, struct lone_lisp_machine *machine)
+static long unary_integer_operation(struct lone_lisp *lone,
+		struct lone_lisp_machine *machine, long step,
+		struct lone_lisp_value (*operation)(struct lone_lisp_value))
 {
 	struct lone_lisp_value arguments, value;
 
-	arguments = lone_lisp_machine_pop_value(lone, machine);
+	switch (step) {
+	case 0:
 
-	if (lone_lisp_list_destructure(lone, arguments, 1, &value)) {
-		/* wrong number of arguments */ linux_exit(-1);
-	}
+		arguments = lone_lisp_machine_pop_value(lone, machine);
 
-	switch (lone_lisp_type_of(value)) {
-	case LONE_LISP_TAG_INTEGER:
-		return sign_of(value);
+		goto destructure;
+
+	case 1: /* resumed with replacement argument list */
+
+		arguments = machine->value;
+
+		if (!lone_lisp_is_list(lone, arguments)) {
+			/* cannot destructure */
+			return
+				lone_lisp_signal_emit(
+					lone,
+					machine,
+					1,
+					lone->symbols.tags.type_error,
+					arguments
+				);
+		}
+
+		goto destructure;
+
+	case 2: /* resumed with replacement value */
+
+		value = machine->value;
+
+		goto check_type;
 
 	default:
-		/* value is not a number */ linux_exit(-1);
+		__builtin_trap();
 	}
+
+destructure:
+
+	if (lone_lisp_list_destructure(lone, arguments, 1, &value)) {
+		/* wrong number of arguments: (sign), (sign 0 "extra") */
+		return
+			lone_lisp_signal_emit(
+				lone,
+				machine,
+				1,
+				lone->symbols.tags.arity_error,
+				arguments
+			);
+	}
+
+check_type:
+
+	if (!lone_lisp_is_integer(lone, value)) {
+		/* value is not a number: (sign "x") */
+		return
+			lone_lisp_signal_emit(
+				lone,
+				machine,
+				2,
+				lone->symbols.tags.type_error,
+				value
+			);
+	}
+
+	lone_lisp_machine_push_value(lone, machine, operation(value));
+	return 0;
 }
 
 LONE_LISP_PRIMITIVE(math_sign)
 {
-	lone_lisp_machine_push_value(lone, machine, compute_sign(lone, machine));
-	return 0;
+	return unary_integer_operation(lone, machine, step, sign_of);
 }
 
-static long sign_predicate(struct lone_lisp *lone, struct lone_lisp_machine *machine, struct lone_lisp_value sign)
+static struct lone_lisp_value is_zero(struct lone_lisp_value value)
 {
-	lone_lisp_integer x, y;
+	return lone_lisp_boolean_for(lone_lisp_integer_of(value) == 0);
+}
 
-	x = lone_lisp_integer_of(compute_sign(lone, machine));
-	y = lone_lisp_integer_of(sign);
+static struct lone_lisp_value is_positive(struct lone_lisp_value value)
+{
+	return lone_lisp_boolean_for(lone_lisp_integer_of(value) > 0);
+}
 
-	lone_lisp_machine_push_value(lone, machine, lone_lisp_boolean_for(x == y));
-	return 0;
+static struct lone_lisp_value is_negative(struct lone_lisp_value value)
+{
+	return lone_lisp_boolean_for(lone_lisp_integer_of(value) < 0);
 }
 
 LONE_LISP_PRIMITIVE(math_is_zero)
 {
-	return sign_predicate(lone, machine, lone_lisp_zero());
+	return unary_integer_operation(lone, machine, step, is_zero);
 }
 
 LONE_LISP_PRIMITIVE(math_is_positive)
 {
-	return sign_predicate(lone, machine, lone_lisp_one());
+	return unary_integer_operation(lone, machine, step, is_positive);
 }
 
 LONE_LISP_PRIMITIVE(math_is_negative)
 {
-	return sign_predicate(lone, machine, lone_lisp_minus_one());
+	return unary_integer_operation(lone, machine, step, is_negative);
 }

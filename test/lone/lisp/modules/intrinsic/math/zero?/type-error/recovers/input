@@ -1,0 +1,9 @@
+(import (lone print intercept lambda quote) (math zero?))
+
+; handler provides an integer to replace the non-integer argument
+; zero? returns the predicate result for the replacement
+
+(print
+  (intercept
+    (('type-error (lambda (v k) (k 0))))
+    (zero? 'x)))

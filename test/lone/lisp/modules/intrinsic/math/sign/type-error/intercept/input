@@ -1,0 +1,2 @@
+(import (lone print intercept lambda quote) (math sign))
+(print (intercept (('type-error (lambda (v) 42))) (sign "hello")))
