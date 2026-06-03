@@ -60,10 +60,10 @@ compare-status() {
     return 2
   fi
 
-  if [[ "${expected}" -eq "${got}" ]]; then
+  if [[ "${expected}" = "${got}" ]]; then
     return 0
   else
-    printf "Expected status: %d\tReturned status: %d\n" "${expected}" "${got}"
+    printf "Expected status: %s\tReturned status: %s\n" "${expected}" "${got}"
     return 1
   fi
 }
