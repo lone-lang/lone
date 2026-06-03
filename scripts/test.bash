@@ -90,7 +90,7 @@ find-file-in-hierarchy() {
   local test_case="${1}"
   local file="${2}"
 
-  while [[ "${test_case}" != "." ]]; do
+  while [[ "${test_case}" != "." && "${test_case}" != "/" ]]; do
 
     local entry="${test_case}"/"${file}"
 
