@@ -1,12 +1,33 @@
 #!/usr/bin/bash
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
+readonly tmp_root="${TMPDIR:-/dev/shm}/lone/test"
+
+remove-tree() {
+  local tree="${tmp_root}${1:+/${1}}"
+
+  # target is always the tmp_root tor a path inside it
+  # only .. in the argument can escape it
+  if [[ "${1-}" == *..* ]]; then
+    >&2 printf 'remove-tree: refusing to remove %q\n' "${tree}"
+    return 1
+  fi
+
+  rm -rf -- "${tree}"
+}
+
+if [[ "${1}" = --clean ]]; then
+  remove-tree
+  exit 0
+fi
+
 suite="${1}"
 prefix="${2%/}"
 name="${3}"
 
-tmp="${TMPDIR:-/dev/shm}/lone/test/${prefix##*/}/$$"
-rm -rf "${tmp}"
+run="${prefix##*/}/$$"
+tmp="${tmp_root}/${run}"
+remove-tree "${run}"
 
 if [[ -n "${prefix}" && -d "${prefix}" ]]; then
   while IFS= read -r -d '' directory; do
