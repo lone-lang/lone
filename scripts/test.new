@@ -30,7 +30,7 @@ parameters[input]="$(test-file-path input)"
 
 for parameter in "${!parameters[@]}"; do
   case "${parameter}" in
-    input | output | error | status | arguments | environment)
+    input | output | error | status | arguments | environment | protocol | program-name | executable | script)
       ;;
     *)
       1>&2 printf "Invalid test parameter file: '%s'\n" "${parameter}"

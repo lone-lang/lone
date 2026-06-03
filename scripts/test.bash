@@ -17,31 +17,34 @@ fi
 
 code=0
 
-declare -A styles tests
+declare -A styles tests pids
+
+# C tests in source/tests/
+# have matching exit codes
+declare -ra outcomes=(PASS FAIL SKIP ERROR)   # exit code -> outcome word
+declare -A  outcome_code                      # outcome word -> exit code
+for outcome_index in "${!outcomes[@]}"; do
+  outcome_code["${outcomes[outcome_index]}"]="${outcome_index}"
+done
+
+declare -rA outcome_color=([PASS]=2 [FAIL]=1 [SKIP]=3 [ERROR]=1)
+
+diff_color=never
 
 if [[ -t 1 ]]; then
+  diff_color=always
   styles=(
     [reset]="$(tput sgr0)"
     [test.name]="$(tput setaf 4)"
     [test.executable]="$(tput dim)$(tput setaf 7)"
-    [test.PASS]="$(tput setaf 2)"
-    [test.FAIL]="$(tput rev)$(tput setaf 1)"
-    [test.SKIP]="$(tput rev)$(tput setaf 3)"
-    [report.pass]="$(tput setaf 2)"
-    [report.fail]="$(tput setaf 1)"
-    [report.skip]="$(tput setaf 3)"
     [report.total]="$(tput setaf 4)"
-    [report.invalid]="$(tput setaf 1)"
   )
-fi
-
-remove-prefix() {
-  local prefix="${1}"
-  shift
-  for path in "$@"; do
-    echo "${path#"${prefix}"}"
+  for outcome in "${outcomes[@]}"; do
+    styles[test."${outcome}"]="$(tput rev)$(tput setaf "${outcome_color["${outcome}"]}")"
+    styles[report."${outcome}"]="$(tput setaf "${outcome_color["${outcome}"]}")"
   done
-}
+  styles[test.PASS]="$(tput setaf 2)"   # PASS line is not reverse-video
+fi
 
 compare() {
   [[ ! -r "${1}" ]] && return 0
@@ -58,7 +61,7 @@ compare() {
   fi
 
   diff \
-    --color \
+    --color="${diff_color}" \
     --new-file --side-by-side --suppress-common-lines \
     --label=expected "${1}" \
     --label=got      "${2}"
@@ -89,90 +92,57 @@ compare-status() {
 test-script() {
   local name="${1}"
   local test="${2}"
-  local script="${3}"
+  local script="${test}"/script
 
-  local result code
-  if "${script}"; then
-    result=PASS
-    code=0
-  else
-    result=FAIL
-    code=1
-  fi
-
-  report-test-result "${name}" "${script}" "${result}"
-  return "${code}"
-}
-
-find-file-in-hierarchy() {
-  local test_case="${1}"
-  local file="${2}"
-
-  while [[ "${test_case}" != "." && "${test_case}" != "/" ]]; do
-
-    local entry="${test_case}"/"${file}"
-
-    if [[ -r "${entry}" && ! -x "${entry}" ]]; then
-      echo "${entry}"
-      return 0
-    else
-      test_case="$(dirname "${test_case}")"
-    fi
-
-  done
-
-  return 1
-}
-
-read-file-in-hierarchy() {
-  local file
-  file="$(find-file-in-hierarchy "${@}")"
-  if [[ "${?}" -eq 0 ]]; then
-    echo -E "$(< "${file}")"
-  else
-    return 1
-  fi
-}
-
-find-executable() {
-  local postfix prefix code
-  postfix="$(read-file-in-hierarchy "${1}" executable)"
-  code="${?}"
-  prefix="${2}"
-
-  if [[ "${code}" -eq 0 ]]; then
-    if [[ -n "${prefix}" ]]; then
-      printf "%s/%s\n" "${prefix}" "${postfix}"
-    else
-      printf "%s\n" "${postfix}"
-    fi
-  else
-    return 1
-  fi
-}
-
-test-executable() {
-  local name="${1}"
-  local test="${2}"
-  local prefix="${3}"
-
-  local executable program_name input
-  local result=SKIP
-
-  executable="$(find-executable "${test}" "${prefix}")"
-  if [[ "${?}" -ne 0 ]]; then
-    report-test-result "${name}" "${executable}" "${result}"
+  if [[ ! -x "${script}" ]]; then
+    report-test-result "${name}" "" SKIP
     return 2
   fi
 
-  input="${test}"/input
-  if [[ ! -r "${input}" ]]; then
-    input=/dev/null
+  local actual="${tmp}/${name}"
+  local result=PASS
+  "${script}" > "${actual}"/output 2> "${actual}"/error || result=FAIL
+
+  report-test-result "${name}" "${script}" "${result}"
+
+  if [[ "${result}" == FAIL ]]; then
+    [[ -s "${actual}"/error  ]] && cat "${actual}"/error >&2
+    [[ -s "${actual}"/output ]] && cat "${actual}"/output
   fi
 
-  program_name="$(basename "${executable}")"
+  result-to-code "${result}"
+}
+
+resolve-attributes() {
+  local test_case="${1}"
+
+  # Resolves into the caller's protocol and executable locals,
+  # walking up to the suite root in a single pass.
+  protocol="" executable=""
+
+  while true; do
+    [[ -z "${protocol}"   && -r "${test_case}/protocol"   && ! -x "${test_case}/protocol"   ]] && read -r protocol   < "${test_case}/protocol"
+    [[ -z "${executable}" && -r "${test_case}/executable" && ! -x "${test_case}/executable" ]] && read -r executable < "${test_case}/executable"
+
+    [[ -n "${protocol}" && -n "${executable}" ]] && break
+    [[ "${test_case}" == "${suite}" || "${test_case}" != */* ]] && break
+    test_case="${test_case%/*}"
+  done
+}
+
+execute-test() {
+  local name="${1}"
+  local test="${2}"
+  local executable="${3}"
+  local input="${4}"
+
+  if [[ ! -x "${executable}" ]]; then
+    return 3
+  fi
+
+  local program_name="${executable##*/}"
   if [[ -r "${test}"/program-name ]]; then
-    read program_name < "${test}"/program-name
+    read -r program_name < "${test}"/program-name
   fi
 
   local -a arguments=()
@@ -185,67 +155,183 @@ test-executable() {
     readarray -t environment < "${test}"/environment
   fi
 
-  local -a command=(env --argv0 "${program_name}" --ignore-environment "${environment[@]}" "${executable}" "${arguments[@]}")
+  local actual="${tmp}/${name}"
+
+  env --argv0 "${program_name}" --ignore-environment "${environment[@]}" "${executable}" "${arguments[@]}" < "${input}" > "${actual}/output" 2> "${actual}/error"
+  printf '%d\n' "${?}" > "${actual}/status"
+}
+
+compare-outputs() {
+  local test="${1}"
+  local actual="${2}"
+  local result=0
+
+  compare        "${test}"/output "${actual}"/output  || result=1
+  compare        "${test}"/error  "${actual}"/error   || result=1
+  compare-status "${test}"/status "${actual}"/status  || result=1
+
+  return "${result}"
+}
+
+result-to-code() {
+  local outcome="${1:-ERROR}"
+  return "${outcome_code["${outcome}"]:-3}"
+}
+
+test-executable() {
+  local name="${1}"
+  local test="${2}"
+  local executable="${3}"
+
+  local input="${test}"/input
+  if [[ ! -r "${input}" ]]; then
+    input=/dev/null
+  fi
+
+  execute-test "${name}" "${test}" "${executable}" "${input}"
+  if [[ "${?}" -eq 3 ]]; then
+    report-test-result "${name}" "${executable}" SKIP
+    return 2
+  fi
 
   local actual="${tmp}/${name}"
-  mkdir -p "${actual}"
+  local report_file="${actual}/report"
+  local result=PASS
 
-  "${command[@]}" < "${input}" > "${actual}/output" 2> "${actual}/error"
-  printf '%d\n' "${?}" > "${actual}/status"
+  compare-outputs "${test}" "${actual}" > "${actual}/diff" || result=FAIL
 
-  result=PASS
+  report-test-result "${name}" "${executable}" "${result}" > "${report_file}"
+  [[ "${result}" == FAIL ]] && cat "${actual}/diff" >> "${report_file}"
+  printf '%s\n' "$(< "${report_file}")"
 
-  compare        "${test}"/output "${actual}"/output  || result=FAIL
-  compare        "${test}"/error  "${actual}"/error   || result=FAIL
-  compare-status "${test}"/status "${actual}"/status  || result=FAIL
+  result-to-code "${result}"
+}
 
-  report-test-result "${name}" "${executable}" "${result}"
+test-lone-test() {
+  local name="${1}"
+  local test="${2}"
+  local executable="${3}"
 
-  case "${result}" in
-    PASS) return 0; ;;
-    FAIL) return 1; ;;
-    SKIP) return 2; ;;
-    *)    return 3; ;;
-  esac
+  execute-test "${name}" "${test}" "${executable}" /dev/null
+  if [[ "${?}" -eq 3 ]]; then
+    report-test-result "${name}" "${executable}" SKIP
+    return 2
+  fi
+
+  local actual="${tmp}/${name}"
+  local report_file="${actual}/report"
+
+  local aggregate status
+  status="$(< "${actual}/status")"
+  aggregate="${outcomes[status]:-ERROR}"
+
+  local -A subtotals=([PASS]=0 [FAIL]=0 [SKIP]=0 [ERROR]=0)
+  local current_test="" subtest_result bucket line
+
+  while IFS= read -r line; do
+    if [[ "${line}" =~ ^TEST\ (.+)$ ]]; then
+      current_test="${BASH_REMATCH[1]}"
+    elif [[ "${line}" =~ ^$'\t'RESULT\ (.+)$ ]]; then
+      subtest_result="${BASH_REMATCH[1]}"
+      bucket="${subtest_result}"
+      [[ -v subtotals["${bucket}"] ]] || bucket=ERROR
+      subtotals["${bucket}"]=$(( subtotals["${bucket}"] + 1 ))
+      { printf "\t"; report-test-result "${current_test}" "" "${subtest_result}"; } >> "${report_file}"
+    fi
+  done < "${actual}/output"
+
+  (( subtotals["${aggregate}"] )) || subtotals["${aggregate}"]=1
+
+  report-test-result "${name}" "${executable}" "${aggregate}" >> "${report_file}"
+  printf '%s\n' "$(<"${report_file}")"
+
+  local outcome
+  for outcome in "${outcomes[@]}"; do
+    printf '%s %d\n' "${outcome}" "${subtotals["${outcome}"]}"
+  done > "${actual}/subtotals"
+
+  result-to-code "${aggregate}"
+}
+
+classify-tests() {
+  local test_suite="${1}"
+  local prefix="${2}"
+  local test_case test_name protocol executable resolved
+
+  while IFS= read -r -d '' test_case; do
+    resolve-attributes "${test_case}"
+    : "${protocol:=standard}"
+
+    test_name="${test_case#"${test_suite}"/}"
+    resolved="${executable:+${prefix}/${executable}}"
+
+    case "${protocol}" in
+      standard)  standard_tests+=("${test_name}:${resolved}")  ;;
+      script)    script_tests+=("${test_name}")                ;;
+      lone/test) lone_tests+=("${test_name}:${resolved}")      ;;
+      *)         tests["${test_name}"]=3                       ;;
+    esac
+  done < <(find "${test_suite}" -mindepth 1 -type d -links 2 -print0)
 }
 
 run-test() {
-  local test_name="${1}"
+  local name="${1}"
   local test_case="${2}"
-  local prefix="${3}"
+  local executable="${3}"
+  local protocol="${4}"
 
-  local test_script="${test_case}"/script
-  if [[ -x "${test_script}" ]]; then
-    test-script "${test_name}" "${test_case}" "${test_script}" &
-  else
-    test-executable "${test_name}" "${test_case}" "${prefix}" &
-  fi
+  case "${protocol}" in
+    standard)  test-executable "${name}" "${test_case}" "${executable}" & ;;
+    lone/test) test-lone-test  "${name}" "${test_case}" "${executable}" & ;;
+    script)    test-script     "${name}" "${test_case}"                 & ;;
+    *)
+      tests["${name}"]=3
+      return
+      ;;
+  esac
 
-  tests["${test_name}"]="${!}"
-}
-
-find-tests() {
-  local test_suite="${1}"
-
-  find "${test_suite}" -name input -type f -printf '%h\0'
+  pids["${name}"]="${!}"
 }
 
 run-all-tests() {
-  local test_suite="${1}"
-  local prefix="${2}"
-  local test_name
+  local test_suite="${1%/}"
+  local prefix="${2%/}"
+  local entry test_name executable
 
-  while IFS= read -r -d '' test_case; do
-    test_name="$(remove-prefix "${test_suite}"/ "${test_case}")"
-    run-test "${test_name}" "${test_case}" "${prefix}"
-  done < <(find-tests "${test_suite}")
+  local -a standard_tests=() script_tests=() lone_tests=()
+  classify-tests "${test_suite}" "${prefix}"
+
+  local -a tmp_dirs=()
+  for entry in "${standard_tests[@]}" "${lone_tests[@]}" "${script_tests[@]}"; do
+    tmp_dirs+=("${tmp}/${entry%%:*}")
+  done
+  (( ${#tmp_dirs[@]} )) && mkdir -p "${tmp_dirs[@]}"
+
+  for entry in "${standard_tests[@]}"; do
+    test_name="${entry%%:*}"
+    executable="${entry#*:}"
+    run-test "${test_name}" "${test_suite}/${test_name}" "${executable}" standard
+  done
+
+  for entry in "${lone_tests[@]}"; do
+    test_name="${entry%%:*}"
+    executable="${entry#*:}"
+    run-test "${test_name}" "${test_suite}/${test_name}" "${executable}" lone/test
+  done
+
+  for entry in "${script_tests[@]}"; do
+    test_name="${entry}"
+    run-test "${test_name}" "${test_suite}/${test_name}" "" script
+  done
+
+  collect-parallel-results
 }
 
-collect-test-results() {
+collect-parallel-results() {
   local returned
 
-  for test_name in "${!tests[@]}"; do
-    wait "${tests[${test_name}]}"
+  for test_name in "${!pids[@]}"; do
+    wait "${pids[${test_name}]}"
     returned="${?}"
 
     tests["${test_name}"]="${returned}"
@@ -270,61 +356,89 @@ report-test-result() {
   local name="${1}"
   local executable="${2}"
   local result="${3}"
+  local reset="${styles[reset]}"
 
-  result="$(    stylize "${result}"     test."${result}")"
-  name="$(      stylize "${name}"       test.name)"
-  executable="$(stylize "${executable}" test.executable)"
-
-  printf "%s %s %s\n" "${result}" "${name}" "${executable}"
+  printf "%s%s%s %s%s%s %s%s%s\n" \
+         "${styles[test."${result}"]}" "${result}"     "${reset}" \
+         "${styles[test.name]}"        "${name}"       "${reset}" \
+         "${styles[test.executable]}"  "${executable}" "${reset}"
 }
 
 report() {
-  local total=0 pass=0 fail=0 skip=0 invalid=0
+  local -A counts=([PASS]=0 [FAIL]=0 [SKIP]=0 [ERROR]=0)
+  local name outcome word n total
 
   for name in "${!tests[@]}"; do
-    case "${tests[${name}]}" in
-      0)
-        pass=$((pass + 1))
-        ;;
-      1)
-        fail=$((fail + 1))
+    local subtotals_file="${tmp}/${name}/subtotals"
+
+    if [[ -r "${subtotals_file}" ]]; then
+      while read -r word n; do
+        counts["${word}"]=$(( counts["${word}"] + n ))
+      done < "${subtotals_file}"
+      if [[ "${tests[${name}]}" -ne 0 ]]; then
         code=1
-        ;;
-      2)
-        skip=$((skip + 1))
-        ;;
-      *)
-        invalid=$((invalid + 1))
-        printf "Invalid test result: %s = %d\n" "${name}" "${tests[${name}]}"
-        ;;
-    esac
+      fi
+    else
+      outcome="${outcomes[${tests[${name}]}]:-ERROR}"
+      counts["${outcome}"]=$(( counts["${outcome}"] + 1 ))
+      case "${outcome}" in
+        FAIL)
+          code=1
+          ;;
+        ERROR)
+          printf "Invalid test result: %s = %d\n" "${name}" "${tests[${name}]}"
+          ;;
+      esac
+    fi
   done
 
-  total=$((pass + fail))
+  total=$(( counts[PASS] + counts[FAIL] ))
 
-  pass="$(   stylize "${pass}"    report.pass)"
-  fail="$(   stylize "${fail}"    report.fail)"
-  total="$(  stylize "${total}"   report.total)"
-  skip="$(   stylize "${skip}"    report.skip)"
-  invalid="$(stylize "${invalid}" report.invalid)"
+  local pass fail skip invalid
+  pass="$(   stylize "${counts[PASS]}"  report.PASS)"
+  fail="$(   stylize "${counts[FAIL]}"  report.FAIL)"
+  total="$(  stylize "${total}"         report.total)"
+  skip="$(   stylize "${counts[SKIP]}"  report.SKIP)"
+  invalid="$(stylize "${counts[ERROR]}" report.ERROR)"
 
   printf "%s + %s = %s | %s + %s\n" \
          "${pass}" "${fail}" "${total}" "${skip}" "${invalid}"
 }
 
+run-single-test() {
+  local test_name="${1}"
+  local test_case="${2}"
+  local prefix="${3}"
+  local protocol executable resolved
+
+  if [[ ! -d "${test_case}" ]]; then
+    >&2 printf "Test not found: %s\n" "${test_name}"
+    code=1
+    return 1
+  fi
+
+  resolve-attributes "${test_case}"
+  : "${protocol:=standard}"
+  resolved="${executable:+${prefix}/${executable}}"
+
+  mkdir -p "${tmp}/${test_name}"
+
+  run-test "${test_name}" "${test_case}" "${resolved}" "${protocol}"
+  collect-parallel-results
+}
+
 test-suite() {
-  local root="${1}"
-  local prefix="${2}"
+  local root="${1%/}"
+  local prefix="${2%/}"
   local name="${3}"
 
   if [[ -n "${name}" ]]; then
-    run-test "${name}" "${root}"/"${name}" "${prefix}"
+    run-single-test "${name}" "${root}"/"${name}" "${prefix}"
   else
     run-all-tests "${root}" "${prefix}"
   fi
 }
 
 test-suite "${suite}" "${prefix}" "${name}"
-collect-test-results
 report
 exit "${code}"
