@@ -168,8 +168,7 @@ static bool lone_test_assert_equal(struct lone_test_suite *suite,
 
 	case LONE_TYPES_C_UNDEFINED:
 	default:
-		test->result = LONE_TEST_RESULT_ERROR;
-		return false;
+		__builtin_trap();
 	}
 }
 
@@ -185,6 +184,8 @@ bool lone_test_assert(struct lone_test_suite *suite,
 	case LONE_TEST_ASSERTION_TYPE_NOT_EQUAL:
 		result = lone_test_result_for(!lone_test_assert_equal(suite, test, assertion));
 		break;
+	default:
+		__builtin_trap();
 	}
 
 	lone_test_result_override(result, &test->result);
@@ -278,9 +279,10 @@ void lone_test_suite_default_test_finished_handler(struct lone_test_suite *suite
 		break;
 	case LONE_TEST_RESULT_ERROR:
 	case LONE_TEST_RESULT_PENDING:
-	default:
 		result = LONE_BYTES_VALUE_FROM_LITERAL("ERROR");
 		break;
+	default:
+		__builtin_trap();
 	}
 
 	LINUX_WRITE_LITERAL(1, "\tRESULT ");
