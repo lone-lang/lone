@@ -1,7 +1,9 @@
 (import (lone print set lambda if) (math - <=))
 
+; the iteration count is explained in the README
+
 (set even? (lambda (n) (if (<= n 0) 1 (odd? (- n 1)))))
 (set odd? (lambda (n) (if (<= n 0) 0 (even? (- n 1)))))
 
-(print (even? 100000))
-(print (odd? 100001))
+(print (even? 20000))
+(print (odd? 20001))

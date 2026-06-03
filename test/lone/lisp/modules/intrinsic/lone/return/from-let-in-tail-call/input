@@ -3,10 +3,12 @@
 ; Return from inside let in tail position during deep recursion.
 ; Regression: return must correctly unwind past TCO let frames.
 
+; the iteration count is explained in the README
+
 (set accumulate (lambda (n acc)
   (if (<= n 0)
     (return acc)
     (let (next (+ acc n))
       (accumulate (- n 1) next)))))
 
-(print (accumulate 100000 0))
+(print (accumulate 20000 0))

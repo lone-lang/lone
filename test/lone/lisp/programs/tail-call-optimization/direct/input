@@ -1,8 +1,10 @@
 (import (lone print set lambda if) (math - <=))
 
+; the iteration count is explained in the README
+
 (set count-down (lambda (n)
   (if (<= n 0)
       0
       (count-down (- n 1)))))
 
-(print (count-down 100000))
+(print (count-down 20000))

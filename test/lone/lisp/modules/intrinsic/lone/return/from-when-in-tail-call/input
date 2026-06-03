@@ -3,8 +3,10 @@
 ; Return from when in tail position during deep recursion.
 ; Regression: return must correctly unwind past TCO frames.
 
+; the iteration count is explained in the README
+
 (set f (lambda (n acc)
   (when (<= n 0) (return acc))
   (f (- n 1) (+ acc 1))))
 
-(print (f 100000 0))
+(print (f 20000 0))

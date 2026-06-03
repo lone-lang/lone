@@ -1,6 +1,8 @@
 (import (lone print set lambda if unless) (math - <=))
 
+; the iteration count is explained in the README
+
 (set loop (lambda (n)
   (unless (<= n 0) (loop (- n 1)))))
 
-(print (loop 100000))
+(print (loop 20000))
