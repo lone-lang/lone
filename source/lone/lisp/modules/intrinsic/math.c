@@ -75,7 +75,7 @@ static struct lone_lisp_optional_value combine_integers(struct lone_lisp *lone,
 	lone_lisp_integer x, y, result;
 
 	if (lone_lisp_type_of(argument) != LONE_LISP_TAG_INTEGER) { goto offending; }
-	if (lone_lisp_type_of(accumulator) != LONE_LISP_TAG_INTEGER) { linux_exit(-1); }
+	if (lone_lisp_type_of(accumulator) != LONE_LISP_TAG_INTEGER) { __builtin_trap(); }
 
 	x = lone_lisp_integer_of(accumulator);
 	y = lone_lisp_integer_of(argument);
@@ -91,7 +91,7 @@ static struct lone_lisp_optional_value combine_integers(struct lone_lisp *lone,
 		if (__builtin_mul_overflow(x, y, &result)) { goto offending; }
 		break;
 	default:
-		/* invalid primitive integer operation */ linux_exit(-1);
+		/* invalid primitive integer operation */ __builtin_trap();
 	}
 
 	if (result < LONE_LISP_INTEGER_MIN || result > LONE_LISP_INTEGER_MAX) { goto offending; }
@@ -127,7 +127,7 @@ LONE_LISP_PRIMITIVE(math_add)
 		break;
 	}
 
-	linux_exit(-1);
+	__builtin_trap();
 
 iterate:
 
@@ -202,7 +202,7 @@ LONE_LISP_PRIMITIVE(math_subtract)
 		break;
 	}
 
-	linux_exit(-1);
+	__builtin_trap();
 
 validate_first:
 
@@ -277,7 +277,7 @@ LONE_LISP_PRIMITIVE(math_multiply)
 		break;
 	}
 
-	linux_exit(-1);
+	__builtin_trap();
 
 iterate:
 
