@@ -190,7 +190,7 @@ bool lone_test_assert(struct lone_test_suite *suite,
 
 	lone_test_result_override(result, &test->result);
 
-	return result;
+	return result == LONE_TEST_RESULT_PASSED;
 }
 
 bool lone_test_assert_true(struct lone_test_suite *suite,
