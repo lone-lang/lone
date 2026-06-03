@@ -52,14 +52,67 @@ LONE_LISP_PRIMITIVE(text_to_symbol)
 {
 	struct lone_lisp_value arguments, text, symbol;
 
-	arguments = lone_lisp_machine_pop_value(lone, machine);
+	switch (step) {
+	case 0:
 
-	if (lone_lisp_list_destructure(lone, arguments, 1, &text)) {
-		/* wrong number of arguments */ linux_exit(-1);
+		arguments = lone_lisp_machine_pop_value(lone, machine);
+
+		goto destructure;
+
+	case 1: /* resumed with replacement argument list */
+
+		arguments = machine->value;
+
+		if (!lone_lisp_is_list(lone, arguments)) {
+			/* cannot destructure */
+			return
+				lone_lisp_signal_emit(
+					lone,
+					machine,
+					1,
+					lone->symbols.tags.type_error,
+					arguments
+				);
+		}
+
+		goto destructure;
+
+	case 2: /* resumed with replacement text from type-error */
+
+		text = machine->value;
+
+		goto check_text;
+
+	default:
+		__builtin_trap();
 	}
 
+destructure:
+
+	if (lone_lisp_list_destructure(lone, arguments, 1, &text)) {
+		/* wrong number of arguments: (to-symbol), (to-symbol "" "extra") */
+		return
+			lone_lisp_signal_emit(
+				lone,
+				machine,
+				1,
+				lone->symbols.tags.arity_error,
+				arguments
+			);
+	}
+
+check_text:
+
 	if (!lone_lisp_is_text(lone, text)) {
-		/* argument not a text value: (to-symbol 123) */ linux_exit(-1);
+		/* text not given: (to-symbol 123) */
+		return
+			lone_lisp_signal_emit(
+				lone,
+				machine,
+				2,
+				lone->symbols.tags.type_error,
+				text
+			);
 	}
 
 	symbol = lone_lisp_text_to_symbol(lone, text);

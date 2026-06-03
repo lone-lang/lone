@@ -1,0 +1,9 @@
+(import (lone print intercept lambda quote) (text to-symbol))
+
+; handler provides text to replace the non-text argument
+; to-symbol returns the interned symbol
+
+(print
+  (intercept
+    (('type-error (lambda (v k) (k "greeting"))))
+    (to-symbol 0)))

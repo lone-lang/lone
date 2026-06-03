@@ -1,0 +1,9 @@
+(import (lone print intercept lambda quote) (text to-symbol))
+
+; handler provides a replacement argument list
+; to-symbol returns the interned symbol
+
+(print
+  (intercept
+    (('arity-error (lambda (v k) (k (quote ("greeting"))))))
+    (to-symbol)))

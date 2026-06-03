@@ -1,0 +1,2 @@
+(import (lone print intercept lambda quote) (text to-symbol))
+(print (intercept (('arity-error (lambda (v) 42))) (to-symbol)))
