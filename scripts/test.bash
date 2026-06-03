@@ -342,17 +342,9 @@ run-all-tests() {
 }
 
 collect-parallel-results() {
-  local returned
-
   for test_name in "${!pids[@]}"; do
     wait "${pids[${test_name}]}"
-    returned="${?}"
-
-    tests["${test_name}"]="${returned}"
-
-    if [[ "${returned}" -ne 0 ]]; then
-      code="${returned}"
-    fi
+    tests["${test_name}"]="${?}"
   done
 }
 
@@ -389,16 +381,10 @@ report() {
       while read -r word n; do
         counts["${word}"]=$(( counts["${word}"] + n ))
       done < "${subtotals_file}"
-      if [[ "${tests[${name}]}" -ne 0 ]]; then
-        code=1
-      fi
     else
       outcome="${outcomes[${tests[${name}]}]:-ERROR}"
       counts["${outcome}"]=$(( counts["${outcome}"] + 1 ))
       case "${outcome}" in
-        FAIL)
-          code=1
-          ;;
         ERROR)
           printf "Invalid test result: %s = %d\n" "${name}" "${tests[${name}]}"
           ;;
@@ -407,6 +393,10 @@ report() {
   done
 
   total=$(( counts[PASS] + counts[FAIL] ))
+
+  if (( counts[FAIL] > 0 || counts[ERROR] > 0 )); then
+    code=1
+  fi
 
   local pass fail skip invalid
   pass="$(   stylize "${counts[PASS]}"  report.PASS)"
