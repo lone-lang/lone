@@ -5,7 +5,7 @@ suite="${1}"
 prefix="${2}"
 name="${3}"
 
-tmp="${TMPDIR:-/dev/shm}/lone/test/${prefix##*/}"
+tmp="${TMPDIR:-/dev/shm}/lone/test/${prefix##*/}/$$"
 rm -rf "${tmp}"
 
 code=0
