@@ -1,0 +1,78 @@
+(import (lone)
+        (math)
+        (bytes)
+        (linux system-call))
+
+;; --- CONSTANTS ---
+(set AF_INET 2)
+(set SOCK_STREAM 1)
+(set IPPROTO_TCP 0)
+(set SOCKADDR_LEN 16)
+(set BUFFER_SIZE 1024)
+
+;; --- SETUP ---
+
+;; 1. Request a network socket from the Linux kernel
+(set server-fd (system-call 'socket AF_INET SOCK_STREAM IPPROTO_TCP))
+
+;; Exit if the kernel couldn't create the socket
+(if (< server-fd 0)
+    (system-call 'exit 1))
+
+;; 2. Construct the struct sockaddr_in manually.
+(set sockaddr (new SOCKADDR_LEN))
+
+;; Write the Family (AF_INET = 2)
+(write-u16 sockaddr 0 AF_INET); sin_family, host byte order
+
+;; Write the Port (8080 = 0x1F90) at offset 2 (Big-Endian / Network order)
+(write-u16be sockaddr 2 8080); sin_port, network byte order
+
+;; 3. Bind the socket to the address and port
+(set bind-status (system-call 'bind server-fd sockaddr SOCKADDR_LEN))
+
+(if (< bind-status 0)
+    (system-call 'exit 1))
+
+;; 4. Tell the kernel to listen and queue up to 5 incoming connections
+(system-call 'listen server-fd 5)
+
+;; Allocate a fixed byte buffer for incoming text
+(set buffer (new BUFFER_SIZE))
+
+
+;; --- EXECUTION (The Event Loop) ---
+
+;; Define our infinite server loop
+(set serve (lambda ()
+
+  ;; 5. Block and wait for a client to connect (passing 0 for empty sockaddr args)
+  (set client-fd (system-call 'accept server-fd 0 0))
+
+  (if (> client-fd 0)
+      (begin
+        ;; Inner loop: Keep echoing data as long as this client is connected
+        (set echo-loop (lambda ()
+
+          ;; 6. Read what the client sends into our buffer
+          (set bytes-read (system-call 'read client-fd buffer BUFFER_SIZE))
+
+          (if (> bytes-read 0)
+              (begin
+                ;; 7. Write the exact same data back to the client
+                (system-call 'write client-fd buffer bytes-read)
+
+                ;; Loop back to read more data from this client
+                (echo-loop))
+
+              ;; 8. The client disconnected (bytes_read == 0). Clean up.
+              (system-call 'close client-fd))))
+
+        ;; Trigger the inner loop for the newly connected client
+        (echo-loop)))
+
+  ;; Loop back to accept the next client connection
+  (serve)))
+
+;; Start the server
+(serve)
