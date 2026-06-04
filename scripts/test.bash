@@ -42,8 +42,11 @@ fi
 code=0
 
 readonly default_timeout=60
+max_jobs="${LONE_TEST_JOBS:-$(( 2 * $(nproc 2>/dev/null || echo 1) ))}"
+[[ "${max_jobs}" =~ ^[1-9][0-9]*$ ]] || max_jobs=1
+readonly max_jobs
 
-declare -A styles tests pids
+declare -A styles tests pid_to_name
 
 # C tests in source/tests/
 # have matching exit codes
@@ -315,6 +318,7 @@ run-test() {
   local executable="${3}"
   local protocol="${4}"
   local time_limit="${5}"
+  local pid
 
   case "${protocol}" in
     standard)  test-executable "${name}" "${test_case}" "${executable}" "${time_limit}" & ;;
@@ -326,7 +330,12 @@ run-test() {
       ;;
   esac
 
-  pids["${name}"]="${!}"
+  pid="${!}"
+  pid_to_name["${pid}"]="${name}"
+
+  while (( ${#pid_to_name[@]} >= max_jobs )); do
+    reap-test
+  done
 }
 
 run-all-tests() {
@@ -368,10 +377,21 @@ run-all-tests() {
   collect-parallel-results
 }
 
+reap-test() {
+  local pid code
+
+  wait -n -p pid
+  code="${?}"
+
+  [[ -z "${pid}" ]] && return
+  [[ -v pid_to_name["${pid}"] ]] || return
+  tests["${pid_to_name[${pid}]}"]="${code}"
+  unset "pid_to_name[${pid}]"
+}
+
 collect-parallel-results() {
-  for test_name in "${!pids[@]}"; do
-    wait "${pids[${test_name}]}"
-    tests["${test_name}"]="${?}"
+  while (( ${#pid_to_name[@]} > 0 )); do
+    reap-test
   done
 }
 
