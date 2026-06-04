@@ -127,8 +127,11 @@ test-script() {
   fi
 
   local actual="${tmp}/${name}"
+  local work="${actual}/work"
+  mkdir -p "${work}"
+
   local result=PASS
-  timeout "${time_limit}" "${script}" > "${actual}"/output 2> "${actual}"/error || result=FAIL
+  ( cd "${work}" && timeout "${time_limit}" "${script}" ) > "${actual}"/output 2> "${actual}"/error || result=FAIL
 
   report-test-result "${name}" "${script}" "${result}"
 
