@@ -193,7 +193,7 @@ execute-test() {
 
   local actual="${tmp}/${name}"
 
-  timeout "${time_limit}" env --argv0 "${program_name}" --ignore-environment "${environment[@]}" "${executable}" "${arguments[@]}" < "${input}" > "${actual}/output" 2> "${actual}/error"
+  timeout "${time_limit}" env --argv0 "${program_name}" --ignore-environment -- "${environment[@]}" "${executable}" "${arguments[@]}" < "${input}" > "${actual}/output" 2> "${actual}/error"
   printf '%d\n' "${?}" > "${actual}/status"
 }
 
