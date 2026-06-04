@@ -291,6 +291,22 @@ test-lone-test() {
   result-to-code "${aggregate}"
 }
 
+find-test-cases() {
+  # Test cases are leaf directories. A directory is a leaf when it is not
+  # the parent of any other directory: the set difference between every
+  # directory and every directory's parent. This avoids the link-count
+  # trick (a childless directory has nlink 2), which btrfs and overlayfs
+  # defeat by reporting nlink 1 for every directory regardless of subdirs.
+  comm -z -23 \
+    <(find "${1}" -mindepth 1 -type d -print0        | sort -z) \
+    <(find "${1}" -mindepth 1 -type d -printf '%h\0' | sort -zu)
+}
+
+is-test-case() {
+  # A test case is a leaf directory: it exists and has no subdirectories.
+  [[ -d "${1}" && -z "$(find "${1}" -mindepth 1 -maxdepth 1 -type d -print -quit)" ]]
+}
+
 classify-tests() {
   local test_suite="${1}"
   local prefix="${2}"
@@ -310,7 +326,7 @@ classify-tests() {
       lone/test) lone_tests+=("${test_name}:${resolved}:${time_limit}")      ;;
       *)         tests["${test_name}"]=3                                     ;;
     esac
-  done < <(find "${test_suite}" -mindepth 1 -type d -links 2 -print0)
+  done < <(find-test-cases "${test_suite}")
 }
 
 run-test() {
@@ -463,7 +479,7 @@ run-single-test() {
   local prefix="${3}"
   local protocol executable time_limit resolved
 
-  if [[ ! -d "${test_case}" ]]; then
+  if ! is-test-case "${test_case}"; then
     >&2 printf "Test not found: %s\n" "${test_name}"
     code=1
     return 1

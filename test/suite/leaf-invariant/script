@@ -2,9 +2,10 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 # Validate that every test attribute file lives in a leaf directory.
-# Test discovery uses 'find -links 2' to identify test cases:
-# a directory with subdirectories has link count greater than two,
-# so attributes in non-leaf directories would be silently skipped.
+# Test discovery treats a leaf directory -- one with no subdirectories
+# -- as a test case, so an attribute in a non-leaf directory would never
+# run. Flag any non-leaf directory, which is precisely a directory that
+# is the parent of another directory, that holds an attribute file.
 
 suite="$(cd -- "$(dirname -- "${0}")"/../.. && pwd)"
 
@@ -16,7 +17,7 @@ while IFS= read -r -d '' dir; do
       break
     fi
   done
-done < <(find "${suite}" -mindepth 1 -type d \! -links 2 -print0)
+done < <(find "${suite}" -mindepth 1 -type d -printf '%h\0' | sort -zu)
 
 if (( ${#violations[@]} > 0 )); then
   >&2 printf 'Non-leaf test directories detected:\n'
