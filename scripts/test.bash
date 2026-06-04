@@ -30,6 +30,7 @@ name="${3}"
 run="${prefix##*/}/$$"
 tmp="${tmp_root}/${run}"
 remove-tree "${run}"
+trap 'remove-tree "${run}"' EXIT
 
 if [[ -n "${prefix}" && -d "${prefix}" ]]; then
   prefix="$(cd "${prefix}" && pwd)"
