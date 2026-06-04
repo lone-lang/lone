@@ -494,4 +494,10 @@ test-suite() {
 
 test-suite "${suite}" "${prefix}" "${name}"
 report
+
+if (( ${#tests[@]} == 0 && code == 0 )); then
+  >&2 printf 'No tests found: %s\n' "${suite}${name:+/${name}}"
+  code=1
+fi
+
 exit "${code}"
