@@ -25,11 +25,14 @@ suite="${1}"
 prefix="${2%/}"
 name="${3}"
 
+[[ -d "${suite}" ]] && suite="$(cd "${suite}" && pwd)"
+
 run="${prefix##*/}/$$"
 tmp="${tmp_root}/${run}"
 remove-tree "${run}"
 
 if [[ -n "${prefix}" && -d "${prefix}" ]]; then
+  prefix="$(cd "${prefix}" && pwd)"
   while IFS= read -r -d '' directory; do
     PATH="${directory}:${PATH}"
   done < <(find "${prefix}" -type f -executable -printf '%h\0' | sort -uz)
