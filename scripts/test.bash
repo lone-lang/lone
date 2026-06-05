@@ -1,14 +1,29 @@
 #!/usr/bin/bash
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
+suite="${1}"
+prefix="${2%/}"
+name="${3}"
+
+[[ -d "${suite}" ]] && suite="$(cd "${suite}" && pwd)"
+# absolute build dir, or empty when there is no build tree
+prefix="$([[ -d "${prefix}" ]] && cd "${prefix}" && pwd)"
+
+# work directories live in the build tree
+# since tempfs could be mounted noexec
 readonly tmp_root="${TMPDIR:-/dev/shm}/lone/test"
+readonly tmp="${tmp_root}/${prefix:+${prefix##*/}/}$$"
+readonly work_directory="${prefix:+${prefix}/work}"
+readonly exec_work="${work_directory:+${work_directory}/$$}"
 
+# recursively removes a path
+# rejects paths with .. in them
+# empty path does nothing
 remove-tree() {
-  local tree="${tmp_root}${1:+/${1}}"
+  local tree="${1}"
 
-  # target is always the tmp_root tor a path inside it
-  # only .. in the argument can escape it
-  if [[ "${1-}" == *..* ]]; then
+  [[ -z "${tree}" ]] && return 0
+  if [[ "${tree}" == *..* ]]; then
     >&2 printf 'remove-tree: refusing to remove %q\n' "${tree}"
     return 1
   fi
@@ -16,24 +31,27 @@ remove-tree() {
   rm -rf -- "${tree}"
 }
 
+# remove this instance's work directories
+remove-run() {
+  remove-tree "${tmp}"
+  remove-tree "${exec_work}"
+}
+
+# remove all work directories
+remove-all() {
+  remove-tree "${tmp_root}"
+  remove-tree "${work_directory}"
+}
+
 if [[ "${1}" = --clean ]]; then
-  remove-tree
+  remove-all
   exit 0
 fi
 
-suite="${1}"
-prefix="${2%/}"
-name="${3}"
+remove-run
+trap remove-run EXIT
 
-[[ -d "${suite}" ]] && suite="$(cd "${suite}" && pwd)"
-
-run="${prefix##*/}/$$"
-tmp="${tmp_root}/${run}"
-remove-tree "${run}"
-trap 'remove-tree "${run}"' EXIT
-
-if [[ -n "${prefix}" && -d "${prefix}" ]]; then
-  prefix="$(cd "${prefix}" && pwd)"
+if [[ -n "${work_directory}" ]]; then
   while IFS= read -r -d '' directory; do
     PATH="${directory}:${PATH}"
   done < <(find "${prefix}" -type f -executable -printf '%h\0' | sort -uz)
@@ -130,9 +148,15 @@ test-script() {
     return 2
   fi
 
+  if [[ -z "${exec_work-}" ]]; then
+    # no build tree means no exec-capable work directory
+    report-test-result "${name}" "${script}" SKIP
+    return 2
+  fi
+
   local actual="${tmp}/${name}"
-  local work="${actual}/work"
-  mkdir -p "${work}"
+  local work="${exec_work}/${name}"
+  mkdir -p "${actual}" "${work}"
 
   local result=PASS
   ( cd "${work}" && timeout "${time_limit}" "${script}" ) > "${actual}"/output 2> "${actual}"/error || result=FAIL
