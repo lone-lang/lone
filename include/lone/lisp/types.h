@@ -322,6 +322,7 @@ struct lone_lisp_table_entry {
 struct lone_lisp_table {
 	size_t count;
 	size_t capacity;
+	lone_lisp_integer generation; /* bumped on entries reallocation */
 
 	union {
 		struct {

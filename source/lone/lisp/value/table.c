@@ -61,10 +61,11 @@ struct lone_lisp_value lone_lisp_table_create(struct lone_lisp *lone,
 	 */
 	if (capacity < 2) { capacity = 2; }
 
-	actual->prototype = prototype;
-	actual->count     = 0;
-	actual->capacity  = capacity;
-	actual->hash.used = 0;
+	actual->prototype  = prototype;
+	actual->count      = 0;
+	actual->capacity   = capacity;
+	actual->generation = 0;
+	actual->hash.used  = 0;
 
 	lone_lisp_table_allocate_hash_storage(
 		lone->system,
@@ -87,9 +88,10 @@ struct lone_lisp_value lone_lisp_table_create_from_shape(struct lone_lisp *lone,
 	actual_table = &heap_value->as.table;
 	actual_shape = &lone_lisp_heap_value_of(lone, shape)->as.shape;
 
-	actual_table->prototype = prototype;
-	actual_table->count     = actual_shape->count;
-	actual_table->capacity  = 0;
+	actual_table->prototype  = prototype;
+	actual_table->count      = actual_shape->count;
+	actual_table->capacity   = 0;
+	actual_table->generation = 0;
 
 	actual_table->shaped.shape  = shape;
 	actual_table->shaped.values = lone_memory_array(
@@ -307,6 +309,9 @@ static void lone_lisp_table_resize(struct lone_lisp *lone, struct lone_lisp_valu
 	actual->hash.entries = new_entries;
 	actual->capacity     = new_capacity;
 	actual->hash.used    = j;
+
+	/* entries array moved, invalidate iterators */
+	actual->generation += 1;
 }
 
 /* Convert a shaped table to normal hash table.
@@ -363,6 +368,9 @@ static void lone_lisp_table_deoptimize(struct lone_lisp *lone, struct lone_lisp_
 	}
 
 	heap_value->shaped = false;
+
+	/* shapes moved into entries, invalidate iterators */
+	actual->generation += 1;
 
 	lone_memory_deallocate(
 		lone->system,
