@@ -1,8 +1,8 @@
 #!/usr/bin/bash
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-cp -f "$(type -P lone)" lone.patched || exit 1
-lone-embed lone.patched "$(dirname "${0}")/../segment" || exit 2
+cp -f "${LONE_BUILD}/lone" lone.patched || exit 1
+lone-embed lone.patched "${LONE_TEST_CASE}/segment" || exit 2
 
 ./lone.patched < /dev/null
 code="${?}"

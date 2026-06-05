@@ -158,8 +158,17 @@ test-script() {
   local work="${exec_work}/${name}"
   mkdir -p "${actual}" "${work}"
 
+  # reads inputs from the case directory
+  # writes outputs to the work directory
+  # finds the rest through LONE_* and PATH
   local result=PASS
-  ( cd "${work}" && timeout "${time_limit}" "${script}" ) > "${actual}"/output 2> "${actual}"/error || result=FAIL
+  (
+    cd "${work}" &&
+    LONE_BUILD="${prefix}" \
+    LONE_TEST_CASE="${test}" \
+    LONE_TEST_SUITE="${suite}" \
+    timeout "${time_limit}" "${script}"
+  ) > "${actual}"/output 2> "${actual}"/error || result=FAIL
 
   report-test-result "${name}" "${script}" "${result}"
 

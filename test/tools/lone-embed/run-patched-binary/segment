@@ -1,0 +1,4 @@
+{ run (1 . 53) }
+(import (linux system-call))
+
+(system-call "exit" 42)

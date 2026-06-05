@@ -66,6 +66,27 @@ scripts/test.new $TEST_NAME [input output error status arguments environment]
 ```
 This creates the directory and opens the files in `$EDITOR`.
 
+### Script test environment
+
+A test case whose `script` attribute is present and
+executable runs the script instead of comparing captured
+output. The script's exit code is the result: zero passes,
+nonzero fails.
+
+The harness runs the script in an isolated working
+directory, wiped afterward, where it writes its outputs.
+It reads its inputs and finds the build tree and suite
+root through the environment:
+
+  - `LONE_BUILD` — build tree prefix (`${LONE_BUILD}/lone`)
+  - `LONE_TEST_CASE` — the test case's directory, holding its fixtures
+  - `LONE_TEST_SUITE` — the test suite's root directory
+
+The work directory lives under the build tree so
+produced binaries can be executed — CI mounts
+`/dev/shm` noexec. Executables under test are
+also on `PATH`.
+
 ### Test executable selection
 
 Tests don't all run against the `lone` interpreter.

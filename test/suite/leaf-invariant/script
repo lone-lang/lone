@@ -7,7 +7,7 @@
 # run. Flag any non-leaf directory, which is precisely a directory that
 # is the parent of another directory, that holds an attribute file.
 
-suite="$(cd -- "$(dirname -- "${0}")"/../.. && pwd)"
+suite="${LONE_TEST_SUITE}"
 
 violations=()
 while IFS= read -r -d '' dir; do
