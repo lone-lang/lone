@@ -928,6 +928,7 @@ struct lone_lisp {
 			struct lone_lisp_value invalid_unicode;
 			struct lone_lisp_value generator_exhausted;
 			struct lone_lisp_value generator_reentry;
+			struct lone_lisp_value iteration_invalidated;
 		} tags;
 	} symbols;
 };

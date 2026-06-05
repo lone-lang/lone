@@ -140,6 +140,7 @@ static void lone_lisp_mark_known_roots(struct lone_lisp *lone)
 	lone_lisp_mark_value(lone, lone->symbols.tags.invalid_unicode);
 	lone_lisp_mark_value(lone, lone->symbols.tags.generator_exhausted);
 	lone_lisp_mark_value(lone, lone->symbols.tags.generator_reentry);
+	lone_lisp_mark_value(lone, lone->symbols.tags.iteration_invalidated);
 }
 
 static bool lone_points_within_range(void *pointer, void *start, void *end)
@@ -535,6 +536,7 @@ static void lone_lisp_rewrite_all_references(struct lone_lisp *lone, struct lone
 	lone->symbols.tags.invalid_unicode        = lone_lisp_forward_value(lone, lone->symbols.tags.invalid_unicode);
 	lone->symbols.tags.generator_exhausted    = lone_lisp_forward_value(lone, lone->symbols.tags.generator_exhausted);
 	lone->symbols.tags.generator_reentry      = lone_lisp_forward_value(lone, lone->symbols.tags.generator_reentry);
+	lone->symbols.tags.iteration_invalidated  = lone_lisp_forward_value(lone, lone->symbols.tags.iteration_invalidated);
 
 	/* lisp machine registers */
 	machine->value = lone_lisp_forward_value(lone, machine->value);

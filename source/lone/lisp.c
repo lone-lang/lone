@@ -38,6 +38,7 @@ void lone_lisp_initialize(struct lone_lisp *lone, struct lone_system *system, vo
 	lone->symbols.tags.invalid_unicode        = lone_lisp_intern_c_string(lone, "invalid-unicode");
 	lone->symbols.tags.generator_exhausted    = lone_lisp_intern_c_string(lone, "generator-exhausted");
 	lone->symbols.tags.generator_reentry      = lone_lisp_intern_c_string(lone, "generator-reentry");
+	lone->symbols.tags.iteration_invalidated  = lone_lisp_intern_c_string(lone, "iteration-invalidated");
 
 	import = lone_lisp_primitive_create(lone, "import", lone_lisp_primitive_module_import, lone_lisp_nil(), flags);
 	export = lone_lisp_primitive_create(lone, "export", lone_lisp_primitive_module_export, lone_lisp_nil(), flags);
