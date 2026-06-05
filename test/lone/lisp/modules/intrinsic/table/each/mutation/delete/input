@@ -1,0 +1,7 @@
+(import (lone print set lambda) (table each delete count))
+
+(set t { a 1 b 2 c 3 d 4 })
+
+(each t (lambda (k v) (print k) (delete t k)))
+
+(print (count t))

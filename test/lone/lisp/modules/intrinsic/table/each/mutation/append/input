@@ -1,0 +1,5 @@
+(import (lone print lambda let) (table each set count))
+
+(let (t { a 1 b 2 c 3 })
+  (each t (lambda (k v) (print k) (set t v v)))
+  (print (count t)))

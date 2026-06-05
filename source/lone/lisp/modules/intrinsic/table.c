@@ -268,7 +268,7 @@ LONE_LISP_PRIMITIVE(table_each)
 	struct lone_lisp_heap_value *heap_value;
 	struct lone_lisp_table_entry *entry;
 	struct lone_lisp_shape *shape;
-	lone_lisp_integer i;
+	lone_lisp_integer generation, i;
 
 	switch (step) {
 	case 0: /* destructure arguments */
@@ -279,9 +279,24 @@ LONE_LISP_PRIMITIVE(table_each)
 
 	case 1: /* advance or finish iteration */
 
-		table    = lone_lisp_machine_pop_value(lone, machine);
-		function = lone_lisp_machine_pop_value(lone, machine);
-		i        = lone_lisp_machine_pop_integer(lone, machine);
+		table      = lone_lisp_machine_pop_value(lone, machine);
+		function   = lone_lisp_machine_pop_value(lone, machine);
+		i          = lone_lisp_machine_pop_integer(lone, machine);
+		generation = lone_lisp_machine_pop_integer(lone, machine);
+
+		if (lone_lisp_heap_value_of(lone, table)->as.table.generation != generation) {
+			/* resize/deoptimization deallocated entries
+			   position index can no longer be trusted
+			   handler cannot supply meaningful substitute */
+			return
+				lone_lisp_signal_emit(
+					lone,
+					machine,
+					-2,
+					lone->symbols.tags.iteration_invalidated,
+					table
+				);
+		}
 
 		++i;
 
@@ -371,7 +386,8 @@ check_function:
 		/* nothing to do */ goto done;
 	}
 
-	i = 0;
+	i          = 0;
+	generation = lone_lisp_heap_value_of(lone, table)->as.table.generation;
 
 advance:
 
@@ -399,6 +415,7 @@ advance:
 	machine->list = lone_lisp_list_build(lone, 2, &key, &value);
 	machine->step = LONE_LISP_MACHINE_STEP_APPLY;
 
+	lone_lisp_machine_push_integer(lone, machine, generation);
 	lone_lisp_machine_push_integer(lone, machine, i);
 	lone_lisp_machine_push_value(lone, machine, function);
 	lone_lisp_machine_push_value(lone, machine, table);
