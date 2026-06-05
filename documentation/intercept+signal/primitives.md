@@ -80,6 +80,14 @@ Use `-2` when the primitive has no meaningful way to continue:
 a type mismatch that cannot be corrected from the handler's reply,
 or an unrecoverable invariant violation.
 
+A real example is `table/each`: it snapshots a table's generation
+before each callback, and if the callback reallocates the entries
+array (a resize or a shape deoptimization) the iterator's position
+index no longer maps to the layout. No substitute can repair it,
+so `each` abandons with `iteration-invalidated`. A handler recovers
+by re-calling `each` on the reordered table. A continuation, if
+captured and resumed, returns its value as the result of `each`.
+
 ### Resuming
 
 Passing a positive step value makes the machine
