@@ -365,6 +365,13 @@ static struct lone_optional_size lone_lisp_find_first_dead(struct lone_lisp *lon
 	index = lone_bits_find_first_zero(bits, bitmap_bytes - byte_offset);
 	if (index.present) {
 		index.value = byte_offset * CHAR_BIT + index.value;
+
+		/* trailing bits in the bitmap's final byte
+		   sit past heap.count, zeroes found there
+		   are padding, not real dead slots         */
+		if (index.value >= lone->heap.count) {
+			return LONE_OPTIONAL_ABSENT_VALUE(size);
+		}
 	}
 
 	return index;
