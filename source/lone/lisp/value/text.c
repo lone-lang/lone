@@ -11,8 +11,7 @@
 
 #include <lone/linux.h>
 
-static void lone_lisp_text_validate_utf8(struct lone_bytes bytes,
-		struct lone_lisp_heap_value *actual)
+static struct lone_unicode_utf8_validation_result lone_lisp_text_validate_utf8(struct lone_bytes bytes)
 {
 	struct lone_unicode_utf8_validation_result validation;
 
@@ -20,15 +19,17 @@ static void lone_lisp_text_validate_utf8(struct lone_bytes bytes,
 
 	if (!validation.valid) { linux_exit(-1); }
 
-	actual->as.text.code_point_count = validation.code_point_count;
-	actual->code_point_count_cached = true;
+	return validation;
 }
 
 struct lone_lisp_value lone_lisp_text_transfer(struct lone_lisp *lone,
 		unsigned char *text, size_t length, bool should_deallocate)
 {
+	struct lone_unicode_utf8_validation_result validation;
 	struct lone_lisp_heap_value *actual;
 	struct lone_lisp_value value;
+
+	validation = lone_lisp_text_validate_utf8(LONE_BYTES_VALUE(length, text));
 
 	if (length <= LONE_LISP_INLINE_MAX_LENGTH) {
 		value = lone_lisp_inline_text_create(text, length);
@@ -40,7 +41,8 @@ struct lone_lisp_value lone_lisp_text_transfer(struct lone_lisp *lone,
 
 	actual = lone_lisp_heap_allocate_value(lone);
 
-	lone_lisp_text_validate_utf8(LONE_BYTES_VALUE(length, text), actual);
+	actual->as.text.code_point_count = validation.code_point_count;
+	actual->code_point_count_cached = true;
 
 	return lone_lisp_buffer_transfer(lone, actual, &actual->as.text.bytes,
 			text, length, should_deallocate, LONE_LISP_TAG_TEXT);
@@ -54,7 +56,10 @@ struct lone_lisp_value lone_lisp_text_transfer_bytes(struct lone_lisp *lone,
 
 struct lone_lisp_value lone_lisp_text_copy(struct lone_lisp *lone, unsigned char *text, size_t length)
 {
+	struct lone_unicode_utf8_validation_result validation;
 	struct lone_lisp_heap_value *actual;
+
+	validation = lone_lisp_text_validate_utf8(LONE_BYTES_VALUE(length, text));
 
 	if (length <= LONE_LISP_INLINE_MAX_LENGTH) {
 		return lone_lisp_inline_text_create(text, length);
@@ -62,7 +67,8 @@ struct lone_lisp_value lone_lisp_text_copy(struct lone_lisp *lone, unsigned char
 
 	actual = lone_lisp_heap_allocate_value(lone);
 
-	lone_lisp_text_validate_utf8(LONE_BYTES_VALUE(length, text), actual);
+	actual->as.text.code_point_count = validation.code_point_count;
+	actual->code_point_count_cached = true;
 
 	return lone_lisp_buffer_copy(lone, actual, &actual->as.text.bytes,
 			text, length, LONE_LISP_TAG_TEXT);
