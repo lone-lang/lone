@@ -29,3 +29,5 @@ assert-no-sigsegv 'moderate nesting (10 levels)' '((((((((((1))))))))))' || exit
 # Deeply nested input (5000 levels) must not crash the interpreter
 deep="$(printf '%5000s' | tr ' ' '(')1$(printf '%5000s' | tr ' ' ')')"
 assert-no-sigsegv 'deeply nested input (5000 levels)' "${deep}" || exit 1
+
+exit 0
