@@ -807,7 +807,26 @@ error:
 	return lone_lisp_nil();
 }
 
+static struct lone_lisp_value lone_lisp_parse_list_body(struct lone_lisp *lone,
+		struct lone_lisp_reader *reader);
+
 static struct lone_lisp_value lone_lisp_parse_list(struct lone_lisp *lone,
+		struct lone_lisp_reader *reader)
+{
+	struct lone_lisp_value result;
+
+	if (reader->depth >= LONE_LISP_READER_DEPTH_MAX) {
+		reader->status.error = true;
+		return lone_lisp_nil();
+	}
+
+	++reader->depth;
+	result = lone_lisp_parse_list_body(lone, reader);
+	--reader->depth;
+	return result;
+}
+
+static struct lone_lisp_value lone_lisp_parse_list_body(struct lone_lisp *lone,
 		struct lone_lisp_reader *reader)
 {
 	struct lone_lisp_value first, head, next;
