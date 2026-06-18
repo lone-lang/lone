@@ -1,0 +1,33 @@
+#!/usr/bin/bash
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+# Verify that the reader recursion depth limit prevents stack overflow
+# when processing deeply nested Lisp expressions.
+# The interpreter must not terminate with SIGSEGV (exit code 139)
+# regardless of how deeply nested the input is.
+
+lone="$(type -P lone)" || exit 1
+
+assert-no-sigsegv() {
+    local description="${1}"
+    local input="${2}"
+    printf '%s' "${input}" | "${lone}"
+    local code="${PIPESTATUS[1]}"
+    if (( code == 139 )); then
+        >&2 printf 'SIGSEGV crash on: %s\n' "${description}"
+        return 1
+    fi
+    return 0
+}
+
+# Simple valid input
+assert-no-sigsegv 'simple valid input' '(+ 1 2)' || exit 1
+
+# Moderate nesting (10 levels)
+assert-no-sigsegv 'moderate nesting (10 levels)' '((((((((((1))))))))))' || exit 1
+
+# Deeply nested input (5000 levels) must not crash the interpreter
+deep="$(printf '%5000s' | tr ' ' '(')1$(printf '%5000s' | tr ' ' ')')"
+assert-no-sigsegv 'deeply nested input (5000 levels)' "${deep}" || exit 1
+
+exit 0

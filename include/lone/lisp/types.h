@@ -24,6 +24,7 @@ struct lone_lisp_reader {
 		bool end_of_input: 1;
 		bool error: 1;
 	} status;
+	size_t depth;
 };
 
 /* ╭──────────────────────────┨ LONE LISP TYPES ┠───────────────────────────╮
